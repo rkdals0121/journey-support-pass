@@ -1,5 +1,4 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { hashCode } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { endEncounter, getCase, listForZone, recordScan, startEncounter } from "@/lib/encounters";
 import { seedZones } from "@/lib/zones";

@@ -115,6 +115,19 @@ export async function reissue(
   return { ok: true, passNo: pass.pass_no };
 }
 
+/**
+ * 안내데스크에서 카메라를 쓸 수 없을 때, 패스에 인쇄된 번호로 미사용 패스를 찾는다.
+ * 연결·재발급에만 쓴다. 여객 정보는 열지 않는다.
+ */
+export async function idleTokenByPassNo(db: Db, passNo: string): Promise<string | null> {
+  if (!/^\d{4}$/.test(passNo)) return null;
+  const [row] = await db.query<{ token: string }>(
+    "select token from passes where pass_no = $1 and state = 'idle'",
+    [passNo],
+  );
+  return row?.token ?? null;
+}
+
 export type Resolved =
   | { kind: "unknown" }
   | { kind: "idle"; pass: Pass }
