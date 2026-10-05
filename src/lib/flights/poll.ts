@@ -5,11 +5,23 @@ import { addDays, kstDate, normalizeRow, type FlightRow } from "./normalize";
 
 type Fetcher = (apiKey: string, now: Date) => Promise<{ rows: Record<string, unknown>[]; pages: number }>;
 
+/** 한 회차에서 받은 자료의 모양. 수집 주기와 "실시간" 표현을 정할 때 본다. */
+export interface PollStats {
+  pages: number; // API 호출 횟수
+  rawRows: number; // 받은 전체 행 (API 는 날짜 인자와 무관하게 여러 날 치를 준다)
+  todayRows: number;
+  todayWithGate: number;
+  todayDelayed: number; // 변경 출발 시각이 예정보다 늦은 편
+  statuses: Record<string, number>; // 오늘 편의 상태 문구별 편 수
+  durationMs: number;
+}
+
 export interface PollResult {
   ok: boolean;
   rowCount: number;
   gateChanges: number;
   error?: string;
+  stats?: PollStats;
 }
 
 /** 한 번 수집한다. 오늘과 내일(한국 날짜) 출발편만 남긴다. 실패해도 수집 기록은 남긴다. */
@@ -22,7 +34,7 @@ export async function runPoll(
 ): Promise<PollResult> {
   const started = clock();
   try {
-    const { rows: raw } = await fetcher(apiKey, now);
+    const { rows: raw, pages } = await fetcher(apiKey, now);
     const today = kstDate(now);
     const keep = new Set([today, addDays(today, 1)]);
     const rows = raw
@@ -31,9 +43,30 @@ export async function runPoll(
     // 정상 응답이면 하루 출발편이 천 편을 넘는다. 0건은 장애로 본다.
     if (rows.length === 0) throw new Error("오늘·내일 출발편이 0건입니다");
 
+    const todayRows = rows.filter((r) => r.flightDate === today);
+    const statuses: Record<string, number> = {};
+    for (const r of todayRows) {
+      const key = r.status || "(빈 값)";
+      statuses[key] = (statuses[key] ?? 0) + 1;
+    }
+
     const { upserted, gateChanges } = await ingestFlights(db, rows, now);
-    await recordPoll(db, { at: now, ok: true, rowCount: upserted, durationMs: clock() - started, gateChanges });
-    return { ok: true, rowCount: upserted, gateChanges };
+    const durationMs = clock() - started;
+    await recordPoll(db, { at: now, ok: true, rowCount: upserted, durationMs, gateChanges });
+    return {
+      ok: true,
+      rowCount: upserted,
+      gateChanges,
+      stats: {
+        pages,
+        rawRows: raw.length,
+        todayRows: todayRows.length,
+        todayWithGate: todayRows.filter((r) => r.gate !== null).length,
+        todayDelayed: todayRows.filter((r) => r.estAt !== null && r.estAt.getTime() > r.schedAt.getTime()).length,
+        statuses,
+        durationMs,
+      },
+    };
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
     await recordPoll(db, { at: now, ok: false, rowCount: 0, durationMs: clock() - started, gateChanges: 0, error });

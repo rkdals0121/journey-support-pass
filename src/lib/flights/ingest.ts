@@ -3,11 +3,18 @@ import type { FlightRow } from "./normalize";
 
 // 받은 값으로 덮어쓰되, 탑승구가 실제로 바뀐 경우에만 이전 탑승구와 변경 시각을 남긴다.
 // 응답에서 탑승구가 비어 온 경우에는 알고 있던 값을 유지한다.
-const UPSERT = `
+const COLS = 12;
+const BATCH = 200;
+
+// 한 편씩 넣으면 하루 2천여 편에 30초 넘게 걸린다. 여러 편을 한 문장으로 넣는다.
+const upsertSql = (n: number) => `
   insert into flights
     (flight_date, flight_no, master_no, airline, dest_code, dest_name, terminal, gate,
      sched_at, est_at, status, updated_at)
-  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+  values ${Array.from(
+    { length: n },
+    (_, i) => `(${Array.from({ length: COLS }, (_, c) => `$${i * COLS + c + 1}`).join(", ")})`,
+  ).join(", ")}
   on conflict (flight_date, flight_no) do update set
     master_no = excluded.master_no,
     airline = excluded.airline,
@@ -36,9 +43,11 @@ export async function ingestFlights(
   const unique = new Map<string, FlightRow>();
   for (const r of rows) unique.set(`${r.flightDate}|${r.flightNo}`, r);
 
+  const all = [...unique.values()];
   let gateChanges = 0;
-  for (const r of unique.values()) {
-    const [res] = await db.query<{ changed: boolean }>(UPSERT, [
+  for (let i = 0; i < all.length; i += BATCH) {
+    const chunk = all.slice(i, i + BATCH);
+    const params = chunk.flatMap((r) => [
       r.flightDate,
       r.flightNo,
       r.masterNo,
@@ -52,9 +61,10 @@ export async function ingestFlights(
       r.status,
       now,
     ]);
-    if (res?.changed) gateChanges += 1;
+    const res = await db.query<{ changed: boolean }>(upsertSql(chunk.length), params);
+    gateChanges += res.filter((x) => x.changed).length;
   }
-  return { upserted: unique.size, gateChanges };
+  return { upserted: all.length, gateChanges };
 }
 
 export interface PollRecord {
