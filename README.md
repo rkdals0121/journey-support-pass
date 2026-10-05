@@ -98,7 +98,7 @@ npm test
 
 | 이름 | 용도 |
 |---|---|
-| `DATABASE_URL` | 비우면 로컬 내장 DB. 배포 시 Supabase 연결 문자열 |
+| `DATABASE_URL` | 비우면 로컬 내장 DB. 없으면 `POSTGRES_URL` 을 쓴다 (Vercel 의 Supabase 연동이 넣어 주는 이름) |
 | `SESSION_SECRET` | 세션 쿠키 서명. 배포 시 32자 이상 무작위 값 |
 | `CRON_SECRET` | 예약 실행 경로 호출용 |
 | `ICN_API_KEY` | 공공데이터포털 여객기 운항 현황 상세 조회 서비스 디코딩 키 |
@@ -124,17 +124,50 @@ ICN_API_KEY="디코딩 키" npx tsx scripts/probe-poll.ts
 
 ## 배포
 
-아직 하지 않았다. 순서만 적어 둔다.
+**주소: https://journey-support-pass.vercel.app** (2026-10-05 배포, 모의 데이터 전용)
 
-1. Supabase에서 서울 리전 프로젝트를 만들고 SQL 편집기에서 [db/schema.sql](db/schema.sql) 을 실행한다.
-2. Vercel에서 이 저장소로 새 프로젝트를 만들고 위 환경 변수를 넣는다.
-3. 로컬에서 `DATABASE_URL` 을 Supabase 값으로 두고 `npm run seed` 를 실행해 구역과 패스를 넣는다. **그 전에 `db/seed-zones.json` 의 접속 코드를 바꾼다.** 저장소에 있는 코드는 공개된 값이다.
-4. Supabase SQL 편집기에서 예약 실행을 건다. `pg_cron` 과 `pg_net` 확장을 켠 뒤:
+| 무엇 | 어디 |
+|---|---|
+| 화면과 서버 | Vercel 프로젝트 `journey-support-pass`, 서울 리전(icn1) |
+| DB | Vercel Storage 로 만든 Supabase `supabase-bisque-nest`, 서울 리전. 연결 주소는 Vercel 이 `POSTGRES_URL` 로 넣어 준다 |
+| 코드 올리기 | `vercel deploy --prod` (GitHub 연동 없이 이 컴퓨터에서 직접 올린다) |
+
+DB 연결 값은 Vercel 에서 "Sensitive" 로 잠겨 있어 꺼내 볼 수 없다. 그래서 이 컴퓨터에서 DB 에 직접 접속하지 않고, 배포된 서버의 초기 설정 통로(`/api/admin/setup`)를 불러 서버가 직접 넣게 한다.
+
+```bash
+npx tsx scripts/remote-setup.ts
+```
+
+테이블, 구역(접속 코드 포함), 패스 30장, 모의 운항을 넣는다. 여러 번 실행해도 안전하다.
+
+```bash
+npx tsx scripts/remote-setup.ts --flights
+```
+
+모의 운항만 지금 시각 기준으로 다시 채운다. **시연 직전에 실행한다.** 모의 운항은 넣은 시각부터 35분~3시간 20분 뒤에 출발하는 편들이라 시간이 지나면 검색되지 않는다.
+
+이 두 명령은 저장소에 올리지 않는 파일 두 개를 읽는다. 다른 컴퓨터에서 실행하려면 이 파일을 옮겨야 한다.
+
+| 파일 | 내용 |
+|---|---|
+| `.env.deploy.local` | `BASE_URL`(배포 주소), `CRON_SECRET`(Vercel 에 넣은 것과 같은 값) |
+| `db/zone-codes.local.json` | 배포용 구역 접속 코드. **직원 로그인에 쓰는 코드는 여기서 확인한다** |
+
+`db/seed-zones.json` 에 적힌 코드(`100100` 등)는 저장소에 공개된 값이라 배포 DB 에는 넣지 않는다. 이 컴퓨터의 `localhost:3000` 에서만 쓴다.
+
+### 예약 실행
+
+| 작업 | 지금 | 정식 운영 전에 |
+|---|---|---|
+| 삭제 (`/api/cron/purge`) | Vercel Cron 으로 하루 한 번(04:10). 무료 요금제는 하루 한 번까지만 된다 | 10분 간격으로 |
+| 운항 수집 (`/api/cron/poll-flights`) | 돌지 않는다. `ICN_API_KEY` 를 넣지 않았다 | 5분 간격으로 |
+
+간격을 줄이려면 Supabase SQL 편집기에서 `pg_cron` 과 `pg_net` 확장을 켜고 아래를 실행한다.
 
 ```sql
 select cron.schedule('poll-flights', '*/5 * * * *', $$
   select net.http_get(
-    url := 'https://배포주소/api/cron/poll-flights',
+    url := 'https://journey-support-pass.vercel.app/api/cron/poll-flights',
     headers := '{"Authorization": "Bearer CRON_SECRET값"}'::jsonb,
     timeout_milliseconds := 280000
   );
@@ -142,11 +175,17 @@ $$);
 
 select cron.schedule('purge', '*/10 * * * *', $$
   select net.http_get(
-    url := 'https://배포주소/api/cron/purge',
+    url := 'https://journey-support-pass.vercel.app/api/cron/purge',
     headers := '{"Authorization": "Bearer CRON_SECRET값"}'::jsonb
   );
 $$);
 ```
+
+### 배포 환경에서 아직 약한 곳
+
+- **DB 연결이 서버 인증서를 검증하지 않는다.** 통신은 암호화되지만 상대가 진짜 Supabase 인지 확인하지 않는다([src/lib/db.ts](src/lib/db.ts) 의 `pgOptions`). 실제 여객 정보를 받기 전에 Supabase 인증 기관 인증서를 넣어 검증을 켜야 한다.
+- **삭제가 하루 한 번만 돈다.** 출발 30분 뒤가 아니라 다음 날 새벽에 지워진다. 모의 데이터라 지금은 괜찮지만 실제 정보 전에 10분 간격으로 바꿔야 한다.
+- **실제 운항 정보가 연결되지 않았다.** 모의 운항만 있다.
 
 ## 구조
 
@@ -164,7 +203,8 @@ src/lib/                 업무 규칙. 모두 Db 와 now 를 인자로 받아 �
   auth.ts                접속 코드, 세션, 입력 차단, 조회 기록
   api/                   화면이 부르는 경로의 본체
 src/app/                 화면과 얇은 경로 처리기
-scripts/seed.ts          구역·패스·모의 운항 적재
+scripts/seed.ts          이 컴퓨터의 내장 DB 에 구역·패스·모의 운항 적재
+scripts/remote-setup.ts  배포 DB 초기 설정, 모의 운항 다시 채우기
 scripts/probe-poll.ts    운항 API 실측
 ```
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { migrate } from "@/lib/db";
+import { migrate, pgOptions } from "@/lib/db";
 import { createTestDb } from "./helpers/db";
 
 const insertPending = `
@@ -35,5 +35,21 @@ describe("스키마", () => {
 
     await db.query("update registrations set status = 'active' where id = $1", [first.id]);
     await expect(db.query(insertPending, ["0427"])).resolves.toHaveLength(1);
+  });
+});
+
+describe("Postgres 연결 옵션", () => {
+  it("sslmode 가 붙은 주소는 암호화 연결로 바꾸고 주소에서 뗀다", () => {
+    const o = pgOptions("postgres://u:p@host:6543/postgres?sslmode=require&supa=base-pooler.x");
+    expect(o.ssl).toEqual({ rejectUnauthorized: false });
+    expect(o.connectionString).not.toContain("sslmode");
+    expect(o.connectionString).toContain("supa=base-pooler.x");
+    expect(o.connectionString).toContain("host:6543");
+  });
+
+  it("sslmode 가 없으면 그대로 둔다", () => {
+    expect(pgOptions("postgres://u:p@localhost:5432/db")).toEqual({
+      connectionString: "postgres://u:p@localhost:5432/db",
+    });
   });
 });

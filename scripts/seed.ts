@@ -1,104 +1,38 @@
 /**
- * 구역·패스·(선택) 모의 운항을 적재한다. 미사용 패스는 30장이 되도록 채운다.
+ * 이 컴퓨터의 내장 DB 에 구역·패스·(선택) 모의 운항을 채운다. 미사용 패스는 30장이 되도록 채운다.
  *
  *   npm run seed                      구역과 패스만
  *   npm run seed -- --mock-flights    지금 시각 기준의 모의 운항까지
  *
  * 개발 서버가 떠 있으면 먼저 끄고 실행한다. 로컬 내장 DB 는 한 번에 한 프로세스만 연다.
  * 여러 번 실행해도 안전하다. 모의 운항은 실행할 때마다 지금 시각 기준으로 다시 맞춘다.
+ *
+ * 배포 DB 는 이 스크립트가 아니라 scripts/remote-setup.ts 로 채운다.
  */
-import { hashCode } from "../src/lib/auth";
-import { getDb, migrate } from "../src/lib/db";
-import { ingestFlights, recordPoll } from "../src/lib/flights/ingest";
-import { kstDate, type FlightRow } from "../src/lib/flights/normalize";
-import { generatePasses } from "../src/lib/passes";
-import { readLocalCodes, readSeedZones, seedZones } from "../src/lib/zones";
-
-const PASS_COUNT = 30;
-const MIN = 60_000;
-
-function mockFlights(now: Date): FlightRow[] {
-  // 초 단위를 버려 화면의 남은 시간이 깔끔하게 보이게 한다.
-  const base = Math.floor(now.getTime() / MIN) * MIN;
-  const at = (minutes: number) => new Date(base + minutes * MIN);
-  const f = (
-    flightNo: string,
-    afterMin: number,
-    terminal: FlightRow["terminal"],
-    gate: number | null,
-    destName: string,
-    over: Partial<FlightRow> = {},
-  ): FlightRow => {
-    const schedAt = at(afterMin);
-    return {
-      flightDate: kstDate(schedAt),
-      flightNo,
-      masterNo: "",
-      airline: "모의항공",
-      destCode: "",
-      destName,
-      terminal,
-      gate,
-      schedAt,
-      estAt: null,
-      status: "",
-      ...over,
-    };
-  };
-  return [
-    f("MK101", 35, "CONCOURSE", 101, "호찌민"), // 끝단, 마감 임박
-    f("MK102", 70, "CONCOURSE", 130, "방콕"), // 끝단
-    f("MK111", 120, "CONCOURSE", 115, "타이베이"), // 중앙부
-    f("MK112", 180, "CONCOURSE", 124, "마닐라"), // 중간
-    f("MK221", 90, "T2", 220, "뉴욕"),
-    f("MK250", 150, "T2", 250, "파리", { estAt: at(190), status: "지연" }),
-    f("MK900", 200, "CONCOURSE", null, "다낭"), // 탑승구 미정
-    f("MK300", 100, "CONCOURSE", 104, "하노이"), // 공동운항의 실제 운항 편
-    f("MC830", 100, "CONCOURSE", null, "하노이", { masterNo: "MK300", airline: "모의공동운항" }),
-  ];
-}
+import { getDb } from "../src/lib/db";
+import { runSetup } from "../src/lib/setup";
+import { readSeedZones } from "../src/lib/zones";
 
 (async () => {
-  const db = await getDb();
-  await migrate(db);
-
-  // 배포 DB 에는 저장소에 공개된 접속 코드를 넣지 않는다.
-  const remote = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-  const codes = remote ? readLocalCodes() : null;
-  if (remote) {
-    const missing = readSeedZones().filter((z) => z.active && !codes?.[z.id]);
-    if (missing.length > 0) {
-      console.error(
-        `배포 DB 에 넣을 접속 코드가 없습니다: ${missing.map((z) => z.id).join(", ")}\n` +
-          "db/zone-codes.local.json 에 { \"구역 id\": \"코드\" } 형태로 넣고 다시 실행하세요.",
-      );
-      process.exit(1);
-    }
+  if (process.env.DATABASE_URL || process.env.POSTGRES_URL) {
+    console.error("배포 DB 주소가 설정되어 있습니다. 배포 DB 는 scripts/remote-setup.ts 로 채우세요.");
+    process.exit(1);
   }
 
-  const zones = await seedZones(db, hashCode, codes ?? {});
-  console.log(`구역 ${zones}곳 적재${remote ? " (배포 DB)" : ""}`);
+  // 로컬에서는 seed-zones.json 에 적힌 시범용 코드를 그대로 쓴다.
+  const result = await runSetup(
+    await getDb(),
+    { codes: {}, requireAllCodes: false, mockFlights: process.argv.includes("--mock-flights") },
+    new Date(),
+  );
+  if (!result.ok) throw new Error(result.error);
 
-  // 패스는 일회용이라 쓸수록 줄어든다. 미사용 패스가 PASS_COUNT 장이 되도록 채운다.
-  const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from passes where state = 'idle'");
-  if (n < PASS_COUNT) await generatePasses(db, PASS_COUNT - n);
-  console.log(`미사용 패스 ${Math.max(n, PASS_COUNT)}장 (새로 만든 것 ${Math.max(PASS_COUNT - n, 0)}장)`);
+  console.log(`구역 ${result.zones}곳 적재`);
+  console.log(`미사용 패스 ${result.idlePasses}장 (새로 만든 것 ${result.newPasses}장)`);
+  if (result.mockFlights) console.log(`모의 운항 ${result.mockFlights.length}편 적재: ${result.mockFlights.join(", ")}`);
 
-  if (process.argv.includes("--mock-flights")) {
-    const now = new Date();
-    await db.query("delete from flights where airline like '모의%'");
-    const rows = mockFlights(now);
-    await ingestFlights(db, rows, now);
-    await recordPoll(db, { at: now, ok: true, rowCount: rows.length, durationMs: 0, gateChanges: 0 });
-    console.log(`모의 운항 ${rows.length}편 적재: ${rows.map((r) => r.flightNo).join(", ")}`);
-  }
-
-  if (remote) {
-    console.log("\n접속 코드는 db/zone-codes.local.json 의 값을 넣었습니다.");
-  } else {
-    console.log("\n시범용 접속 코드 (모의 데이터 전용)");
-    for (const z of readSeedZones().filter((z) => z.active)) console.log(`  ${z.code}  ${z.label}`);
-  }
+  console.log("\n시범용 접속 코드 (모의 데이터 전용)");
+  for (const z of readSeedZones().filter((z) => z.active)) console.log(`  ${z.code}  ${z.label}`);
   process.exit(0);
 })().catch((e) => {
   console.error(e);

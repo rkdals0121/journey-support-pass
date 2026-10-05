@@ -31,9 +31,23 @@ export async function openPglite(dataDir?: string): Promise<Db> {
   };
 }
 
+/**
+ * Supabase 연결 주소에는 sslmode=require 가 붙어 온다. 드라이버는 이를 인증서 검증까지 하는 것으로 읽는데,
+ * Supabase 의 인증서는 Node 기본 신뢰 목록에 없는 자체 인증 기관이 서명한 것이라 연결이 거부된다.
+ * 그래서 주소에서 sslmode 를 떼고, 암호화는 하되 인증서 검증은 하지 않게 한다.
+ * 실제 여객 정보를 받기 전에 Supabase 인증 기관 인증서를 넣어 검증을 켤 것 (README 참고).
+ */
+export function pgOptions(url: string): { connectionString: string; ssl?: { rejectUnauthorized: false } } {
+  const u = new URL(url);
+  const mode = u.searchParams.get("sslmode");
+  if (!mode || mode === "disable") return { connectionString: url };
+  u.searchParams.delete("sslmode");
+  return { connectionString: u.toString(), ssl: { rejectUnauthorized: false } };
+}
+
 async function openPg(url: string): Promise<Db> {
   const { Pool } = await import("pg");
-  const pool = new Pool({ connectionString: url, max: 3 });
+  const pool = new Pool({ ...pgOptions(url), max: 3 });
   // 유휴 연결이 끊겨도 서버가 죽지 않게 한다. 다음 질의에서 새 연결을 맺는다.
   pool.on("error", (e) => console.error("DB 연결 오류:", e.message));
   return {
