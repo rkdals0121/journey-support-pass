@@ -161,6 +161,13 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             {error}
           </p>
         )}
+        <p className="muted small">
+          패스 번호는 패스 뒷면 QR 아래에 인쇄된 네 자리입니다. 접수 번호와 다른 번호입니다.
+        </p>
+        {/* 새 창으로 연다. 이 화면을 벗어나면 조회해 둔 등록이 사라진다. */}
+        <a className="btn" href="/staff/desk/passes" target="_blank" rel="noopener">
+          미사용 패스 번호 보기 (새 창)
+        </a>
         <button className="btn" onClick={() => reset()}>
           취소
         </button>
