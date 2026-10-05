@@ -1,0 +1,17 @@
+{
+  "response": {
+    "header": { "resultCode": "00", "resultMsg": "NORMAL SERVICE." },
+    "body": {
+      "numOfRows": 1000,
+      "pageNo": 1,
+      "totalCount": 5,
+      "items": [
+        { "flightId": "MH039", "masterflightid": "", "codeshare": "Master", "airline": "말레이시아 항공", "gatenumber": "24", "terminalid": "P01", "scheduleDateTime": "202609180010", "estimatedDateTime": "202609180010", "airportCode": "KUL", "airport": "쿠알라룸푸르", "remark": "", "typeOfFlight": "I", "chkinrange": "M21-M25", "fstandposition": "24" },
+        { "flightId": "QR4497", "masterflightid": "MH039", "codeshare": "Slave", "airline": "카타르항공", "gatenumber": "24", "terminalid": "P01", "scheduleDateTime": "202609180010", "estimatedDateTime": "202609180010", "airportCode": "KUL", "airport": "쿠알라룸푸르", "remark": "", "typeOfFlight": "I", "chkinrange": "M21-M25", "fstandposition": "24" },
+        { "flightId": "9G401", "masterflightid": "", "codeshare": "Master", "airline": "썬푸꾸옥항공", "gatenumber": "112", "terminalid": "P02", "scheduleDateTime": "202609180010", "estimatedDateTime": "202609180040", "airportCode": "SGN", "airport": "호찌민", "remark": "지연", "typeOfFlight": "I", "chkinrange": "H09-H16", "fstandposition": "112" },
+        { "flightId": "KE081", "masterflightid": "", "codeshare": "Master", "airline": "대한항공", "gatenumber": "", "terminalid": "P03", "scheduleDateTime": "202609181000", "estimatedDateTime": "", "airportCode": "JFK", "airport": "뉴욕", "remark": "", "typeOfFlight": "I", "chkinrange": "", "fstandposition": "" },
+        { "flightId": "", "masterflightid": "", "airline": "", "gatenumber": "", "terminalid": "P01", "scheduleDateTime": "202609181100", "estimatedDateTime": "", "airportCode": "", "airport": "", "remark": "" }
+      ]
+    }
+  }
+}
