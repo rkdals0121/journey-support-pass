@@ -24,7 +24,8 @@ export default async function PassSheetPage() {
       svg: await QRCode.toString(`${config.baseUrl}/p/${p.token}`, {
         type: "svg",
         errorCorrectionLevel: "M",
-        margin: 1,
+        // 여백이 좁으면 어두운 화면이나 종이 가장자리에서 인식이 안 된다. 규격의 최소 여백(4칸)을 둔다.
+        margin: 4,
       }),
     })),
   );

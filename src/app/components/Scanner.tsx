@@ -16,6 +16,7 @@ interface Detector {
 
 const SCAN_INTERVAL_MS = 250;
 const REPEAT_GUARD_MS = 2000;
+const FRAME_MAX = 800;
 
 // 앱 설치 없이 브라우저 카메라로 읽는다. BarcodeDetector 가 없는 브라우저(iOS Safari 등)는 jsQR 로 읽는다.
 export function Scanner({ onScan, onNumber, paused = false }: Props) {
@@ -50,7 +51,9 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       } catch {
-        setCameraError("카메라를 쓸 수 없습니다. 패스 번호를 입력해 주세요.");
+        setCameraError(
+          "카메라를 쓸 수 없습니다. 카메라가 없는 컴퓨터이거나 브라우저에서 카메라 권한을 허용하지 않았습니다. 패스 번호를 입력해 주세요.",
+        );
         return;
       }
       if (stopped) {
@@ -74,13 +77,16 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
             if (found[0]?.rawValue) emit(found[0].rawValue);
             return;
           }
+          // 카메라 원본(수백만 화소)을 그대로 읽으면 휴대전화에서 한 장에 1초 가까이 걸려 놓친다.
+          // 긴 변을 FRAME_MAX 로 줄여 읽는다. 패스 QR 은 이 크기에서도 충분히 읽힌다.
+          const scale = Math.min(1, FRAME_MAX / Math.max(video.videoWidth, video.videoHeight));
           const canvas = canvasRef.current!;
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          canvas.width = Math.round(video.videoWidth * scale);
+          canvas.height = Math.round(video.videoHeight * scale);
           const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-          ctx.drawImage(video, 0, 0);
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR!(image.data, image.width, image.height);
+          const code = jsQR!(image.data, image.width, image.height, { inversionAttempts: "dontInvert" });
           if (code?.data) emit(code.data);
         } catch {
           // 한 프레임을 못 읽은 것은 무시한다.

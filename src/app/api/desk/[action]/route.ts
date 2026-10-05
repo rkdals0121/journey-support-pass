@@ -1,11 +1,11 @@
-import { deskRegisterHandler, linkHandler, receiptHandler, reissueHandler } from "@/lib/api/desk";
+import { deskListHandler, deskRegisterHandler, linkHandler, receiptHandler, reissueHandler } from "@/lib/api/desk";
 import { fail } from "@/lib/api/dto";
 import { getDb } from "@/lib/db";
 import { currentSession, json, readBody, requestDeviceKey } from "@/lib/session-server";
 
 export const dynamic = "force-dynamic";
 
-// /api/desk/receipt | link | register | reissue
+// /api/desk/list | receipt | link | register | reissue
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const now = new Date();
   const { action } = await params;
@@ -17,6 +17,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   ]);
 
   switch (action) {
+    case "list":
+      return json(await deskListHandler(db, session));
     case "receipt":
       return json(await receiptHandler(db, session, body, device, now));
     case "link":

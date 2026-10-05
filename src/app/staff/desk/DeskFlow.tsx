@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RegistrationSteps, type RegistrationPayload } from "../../components/RegistrationSteps";
 import { Scanner } from "../../components/Scanner";
 
@@ -14,6 +14,12 @@ interface Summary {
   timeLabel: string;
   categories: string[];
   needs: string[];
+}
+
+interface ListItem extends Summary {
+  receiptNo: string | null;
+  passNo: string | null;
+  submittedLabel: string;
 }
 
 type Tab = "link" | "new" | "reissue";
@@ -40,6 +46,21 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   const [candidates, setCandidates] = useState<Summary[] | null>(null);
   // 미연결 패스를 기본 카메라로 찍어 들어온 경우, 그 패스를 바로 쓴다.
   const [pendingToken, setPendingToken] = useState(scannedToken);
+  const [list, setList] = useState<{ pending: ListItem[]; active: ListItem[] } | null>(null);
+
+  // 접수 번호를 몰라도 등록을 찾을 수 있게 목록을 함께 보여준다.
+  const loadList = useCallback(async () => {
+    try {
+      const res = await fetch("/api/desk/list", { method: "POST" });
+      if (res.ok) setList(await res.json());
+    } catch {
+      // 목록을 못 받아도 접수 번호 입력은 그대로 쓸 수 있다.
+    }
+  }, []);
+
+  useEffect(() => {
+    loadList();
+  }, [loadList]);
 
   async function post(action: string, body: Record<string, unknown>) {
     setBusy(true);
@@ -78,6 +99,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     setName("");
     setFlightNo("");
     setCandidates(null);
+    loadList();
   }
 
   async function attach(pass: { scanned: string } | { passNo: string }) {
@@ -213,6 +235,28 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
         </form>
       )}
 
+      {tab === "link" && list && (
+        <section>
+          <h2>패스를 기다리는 등록 {list.pending.length}건</h2>
+          {list.pending.length === 0 && <p className="muted">패스 연결을 기다리는 등록이 없습니다.</p>}
+          {list.pending.map((r) => (
+            <button
+              key={r.registrationId}
+              className="choice choice-stack"
+              onClick={() => setTarget({ summary: r, mode: "link" })}
+            >
+              <span>
+                <strong>{r.name}</strong> · {r.flightNo} {r.destName} {r.timeLabel}
+              </span>
+              <span className="small muted">
+                접수 번호 {r.receiptNo} · {r.submittedLabel} 등록
+              </span>
+              <span className="small muted">{[...r.categories, ...r.needs].join(" / ")}</span>
+            </button>
+          ))}
+        </section>
+      )}
+
       {tab === "new" && !route && (
         <div>
           <h1>어떻게 등록하나요</h1>
@@ -249,6 +293,25 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
           {candidates && candidates.length === 0 && <p className="notice">패스가 연결된 등록을 찾지 못했습니다.</p>}
           {candidates && candidates.length > 1 && (
             <p className="notice">같은 이름의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</p>
+          )}
+          {list && !candidates && (
+            <section>
+              <h2>패스가 연결된 등록 {list.active.length}건</h2>
+              {list.active.length === 0 && <p className="muted">패스가 연결된 등록이 없습니다.</p>}
+              {list.active.map((r) => (
+                <button
+                  key={r.registrationId}
+                  className="choice choice-stack"
+                  onClick={() => setTarget({ summary: r, mode: "reissue" })}
+                >
+                  <span>
+                    <strong>{r.name}</strong> · {r.flightNo} {r.destName} {r.timeLabel}
+                  </span>
+                  <span className="small muted">지금 패스 번호 {r.passNo ?? "없음"}</span>
+                  <span className="small muted">{[...r.categories, ...r.needs].join(" / ")}</span>
+                </button>
+              ))}
+            </section>
           )}
           {candidates?.map((s) => (
             <button

@@ -149,3 +149,53 @@ export async function reissueHandler(
   });
   return ok({ ok: true, passNo: res.passNo });
 }
+
+interface DeskRow {
+  id: string;
+  receipt_no: string | null;
+  name: string | null;
+  flight_no: string | null;
+  categories: string[];
+  needs: string[];
+  status: "pending" | "active";
+  submitted_at: Date;
+  pass_no: string | null;
+  dest_name: string | null;
+  depart_at: Date | null;
+}
+
+/**
+ * 안내데스크용 등록 목록. 패스 연결을 기다리는 등록과 패스가 연결된 등록을 모두 보여준다.
+ * 여객이 접수 번호를 잊었거나 패스를 잃어버렸을 때 여기서 찾는다.
+ */
+export async function deskListHandler(db: Db, session: Session | null): Promise<ApiResult> {
+  const denied = guard(session);
+  if (denied) return denied;
+
+  const rows = await db.query<DeskRow>(
+    `select r.id, r.receipt_no, r.name, r.flight_no, r.categories, r.needs, r.status, r.submitted_at,
+            p.pass_no, f.dest_name, coalesce(f.est_at, f.sched_at) as depart_at
+     from registrations r
+     left join passes p on p.registration_id = r.id and p.state = 'active'
+     left join flights f on f.flight_date = r.flight_date and f.flight_no = r.flight_no
+     where r.status in ('pending', 'active')
+     order by r.submitted_at desc
+     limit 200`,
+  );
+  const item = (r: DeskRow) => ({
+    registrationId: r.id,
+    name: r.name ?? "",
+    flightNo: r.flight_no ?? "",
+    destName: r.dest_name ?? "",
+    timeLabel: r.depart_at ? kstTime(r.depart_at) : "",
+    categories: labelsIn(r.categories, "category"),
+    needs: NEED_GROUPS.flatMap((g) => labelsIn(r.needs, g)),
+    receiptNo: r.receipt_no,
+    passNo: r.pass_no,
+    submittedLabel: kstTime(r.submitted_at),
+  });
+  return ok({
+    pending: rows.filter((r) => r.status === "pending").map(item),
+    active: rows.filter((r) => r.status === "active").map(item),
+  });
+}

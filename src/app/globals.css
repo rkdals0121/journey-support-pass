@@ -442,8 +442,8 @@ input[type="password"] {
 
 .sheet {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
   margin-top: 20px;
 }
 
@@ -455,9 +455,13 @@ input[type="password"] {
   break-inside: avoid;
 }
 
+/* 화면에서는 휴대전화로 찍을 수 있게 크게 그린다. 인쇄할 때만 실제 패스 크기(25mm)로 줄인다. */
 .sheet-pass svg {
-  width: 25mm;
-  height: 25mm;
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  margin: 0 auto;
 }
 
 .sheet-no {
@@ -480,6 +484,11 @@ input[type="password"] {
   .sheet {
     grid-template-columns: repeat(4, 1fr);
     gap: 6mm;
+  }
+
+  .sheet-pass svg {
+    width: 25mm;
+    height: 25mm;
   }
 }
 

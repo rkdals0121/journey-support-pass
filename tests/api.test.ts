@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Session } from "@/lib/auth";
 import type { Db } from "@/lib/db";
-import { deskRegisterHandler, linkHandler, receiptHandler, reissueHandler } from "@/lib/api/desk";
+import { deskListHandler, deskRegisterHandler, linkHandler, receiptHandler, reissueHandler } from "@/lib/api/desk";
 import { allowRegistration, registerHandler, searchFlightsHandler } from "@/lib/api/public";
 import {
   caseHandler,
@@ -278,6 +278,32 @@ describe("안내데스크 경로", () => {
 
     const good = await linkHandler(db, desk, { registrationId: reg.id, passNo: idle.passNo }, "d", now);
     expect(good.body).toEqual({ ok: true, passNo: idle.passNo });
+  });
+
+  it("등록 목록: 패스를 기다리는 등록과 연결된 등록을 나눠 보여준다", async () => {
+    const waiting = await register(db, now, { name: "대기여객" });
+    const linked = await registerWithPass(db, now, { name: "연결여객" });
+    const gone = await register(db, now, { name: "만료여객" });
+    await db.query("update registrations set status = 'expired' where id = $1", [gone.id]);
+
+    const res = await deskListHandler(db, desk);
+    const pending = res.body.pending as Record<string, unknown>[];
+    const active = res.body.active as Record<string, unknown>[];
+    expect(pending).toHaveLength(1);
+    expect(pending[0]).toMatchObject({
+      registrationId: waiting.id,
+      name: "대기여객",
+      flightNo: "KE123",
+      destName: "뉴욕",
+      timeLabel: "14:30",
+      receiptNo: waiting.receiptNo,
+      passNo: null,
+    });
+    expect(active).toHaveLength(1);
+    expect(active[0]).toMatchObject({ name: "연결여객", passNo: linked.pass.passNo });
+
+    expect((await deskListHandler(db, staff)).status).toBe(403);
+    expect((await deskListHandler(db, null)).status).toBe(401);
   });
 
   it("재발급 검색은 이름과 편명이 모두 필요하다", async () => {
