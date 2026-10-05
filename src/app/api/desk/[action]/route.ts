@@ -18,7 +18,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
 
   switch (action) {
     case "list":
-      return json(await deskListHandler(db, session));
+      return json(await deskListHandler(db, session, device, now));
     case "receipt":
       return json(await receiptHandler(db, session, body, device, now));
     case "link":

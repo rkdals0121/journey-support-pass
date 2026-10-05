@@ -95,8 +95,11 @@ create table if not exists access_logs (
   at timestamptz not null,
   zone_id text,
   device_key text,
-  action text not null check (action in
-    ('scan_view','number_view','receipt_view','link','reissue','login_fail','number_fail')),
+  action text not null,
   registration_id uuid
 );
+-- 먼저 만들어진 DB 에도 같은 규칙이 걸리도록 이름으로 지웠다가 다시 건다.
+alter table access_logs drop constraint if exists access_logs_action_check;
+alter table access_logs add constraint access_logs_action_check check (action in
+  ('scan_view','number_view','receipt_view','list_view','link','reissue','login_fail','number_fail','register'));
 create index if not exists access_logs_device on access_logs (device_key, action, at);

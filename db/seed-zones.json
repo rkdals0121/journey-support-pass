@@ -2,37 +2,253 @@
   "_note": [
     "gateRanges 는 [시작, 끝] 묶음의 목록이다. 적재할 때 탑승구 번호 목록으로 펼친다.",
     "탑승동 세 구역은 임시값이다. 탑승구 번호가 중앙에서 먼 순서로 나눈 것이며, 팀 운항 집계의 끝단 12개 탑승구 목록으로 교체해야 한다.",
-    "제2여객터미널은 운항 조회 웹 data/zones.json 의 검증된 값이다. 제1여객터미널은 추정치라 꺼 두었다(active: false).",
+    "제2여객터미널은 운항 조회 웹 data/zones.json 의 검증된 값이다. 제1여객터미널은 탑승구 번호 순서로 나눈 추정치다. 실제 편의 여객이 현장 직원 목록에서 빠지지 않도록 켜 두었고, 기업탐방에서 확인해 고친다.",
     "code 는 모의 시범 전용 접속 코드다. 적재할 때 해시로 바꿔 저장한다. 실제 운영에 쓰지 말 것.",
     "facilities 는 구역 지원환경표가 나오면 채운다."
   ],
   "zones": [
-    { "id": "desk-t1", "terminal": "T1", "label": "제1여객터미널 안내데스크", "band": null, "gateRanges": [], "code": "100100", "isDesk": true, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-
-    { "id": "cc-center", "terminal": "CONCOURSE", "label": "탑승동 중앙부 (111~122)", "band": "중앙부", "gateRanges": [[111, 122]], "code": "211122", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "cc-mid", "terminal": "CONCOURSE", "label": "탑승동 중간 (107~110, 123~126)", "band": "중간", "gateRanges": [[107, 110], [123, 126]], "code": "207126", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "cc-end", "terminal": "CONCOURSE", "label": "탑승동 끝단 (101~106, 127~132)", "band": "끝단", "gateRanges": [[101, 106], [127, 132]], "code": "201132", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-
-    { "id": "t2-wend", "terminal": "T2", "label": "제2여객터미널 서편 끝 (208~218)", "band": null, "gateRanges": [[208, 218]], "code": "308218", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "t2-wam", "terminal": "T2", "label": "제2여객터미널 서편 AM 구간 (219~224)", "band": null, "gateRanges": [[219, 224]], "code": "319224", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "t2-mid", "terminal": "T2", "label": "제2여객터미널 중앙 (225~275)", "band": null, "gateRanges": [[225, 275]], "code": "325275", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "t2-eam", "terminal": "T2", "label": "제2여객터미널 동편 AM 구간 (276~280)", "band": null, "gateRanges": [[276, 280]], "code": "376280", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "t2-eend", "terminal": "T2", "label": "제2여객터미널 동편 끝 (281~291)", "band": null, "gateRanges": [[281, 291]], "code": "381291", "isDesk": false, "active": true,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-
-    { "id": "t1-w", "terminal": "T1", "label": "제1여객터미널 서편 (1~14)", "band": null, "gateRanges": [[1, 14]], "code": "101014", "isDesk": false, "active": false,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "t1-c", "terminal": "T1", "label": "제1여객터미널 중앙 (15~36)", "band": null, "gateRanges": [[15, 36]], "code": "115036", "isDesk": false, "active": false,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } },
-    { "id": "t1-e", "terminal": "T1", "label": "제1여객터미널 동편 (37~50)", "band": null, "gateRanges": [[37, 50]], "code": "137050", "isDesk": false, "active": false,
-      "facilities": { "elevators": [], "restrooms": [], "waitingPoints": [] } }
+    {
+      "id": "desk-t1",
+      "terminal": "T1",
+      "label": "제1여객터미널 안내데스크",
+      "band": null,
+      "gateRanges": [],
+      "code": "100100",
+      "isDesk": true,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "cc-center",
+      "terminal": "CONCOURSE",
+      "label": "탑승동 중앙부 (111~122)",
+      "band": "중앙부",
+      "gateRanges": [
+        [
+          111,
+          122
+        ]
+      ],
+      "code": "211122",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "cc-mid",
+      "terminal": "CONCOURSE",
+      "label": "탑승동 중간 (107~110, 123~126)",
+      "band": "중간",
+      "gateRanges": [
+        [
+          107,
+          110
+        ],
+        [
+          123,
+          126
+        ]
+      ],
+      "code": "207126",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "cc-end",
+      "terminal": "CONCOURSE",
+      "label": "탑승동 끝단 (101~106, 127~132)",
+      "band": "끝단",
+      "gateRanges": [
+        [
+          101,
+          106
+        ],
+        [
+          127,
+          132
+        ]
+      ],
+      "code": "201132",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t2-wend",
+      "terminal": "T2",
+      "label": "제2여객터미널 서편 끝 (208~218)",
+      "band": null,
+      "gateRanges": [
+        [
+          208,
+          218
+        ]
+      ],
+      "code": "308218",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t2-wam",
+      "terminal": "T2",
+      "label": "제2여객터미널 서편 AM 구간 (219~224)",
+      "band": null,
+      "gateRanges": [
+        [
+          219,
+          224
+        ]
+      ],
+      "code": "319224",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t2-mid",
+      "terminal": "T2",
+      "label": "제2여객터미널 중앙 (225~275)",
+      "band": null,
+      "gateRanges": [
+        [
+          225,
+          275
+        ]
+      ],
+      "code": "325275",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t2-eam",
+      "terminal": "T2",
+      "label": "제2여객터미널 동편 AM 구간 (276~280)",
+      "band": null,
+      "gateRanges": [
+        [
+          276,
+          280
+        ]
+      ],
+      "code": "376280",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t2-eend",
+      "terminal": "T2",
+      "label": "제2여객터미널 동편 끝 (281~291)",
+      "band": null,
+      "gateRanges": [
+        [
+          281,
+          291
+        ]
+      ],
+      "code": "381291",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t1-w",
+      "terminal": "T1",
+      "label": "제1여객터미널 서편 (1~14, 경계 추정)",
+      "band": null,
+      "gateRanges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "code": "101014",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t1-c",
+      "terminal": "T1",
+      "label": "제1여객터미널 중앙 (15~36, 경계 추정)",
+      "band": null,
+      "gateRanges": [
+        [
+          15,
+          36
+        ]
+      ],
+      "code": "115036",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "t1-e",
+      "terminal": "T1",
+      "label": "제1여객터미널 동편 (37~50, 경계 추정)",
+      "band": null,
+      "gateRanges": [
+        [
+          37,
+          50
+        ]
+      ],
+      "code": "137050",
+      "isDesk": false,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    }
   ]
 }

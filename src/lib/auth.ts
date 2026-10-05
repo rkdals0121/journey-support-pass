@@ -24,9 +24,19 @@ export function verifyCode(code: string, stored: string): boolean {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-/** 차단 판정에만 쓰는 값. 원래의 IP 와 User-Agent 는 저장하지 않는다. */
+const sha = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 32);
+
+/**
+ * 차단 판정에만 쓰는 값. "접속 주소 해시:기기 해시" 형태이며 원래의 IP 와 User-Agent 는 저장하지 않는다.
+ * 기기 해시만 쓰면 브라우저 표시(User-Agent)를 바꿔 가며 잠금을 피할 수 있으므로 접속 주소 부분을 따로 둔다.
+ */
 export function deviceKey(ip: string, userAgent: string): string {
-  return createHash("sha256").update(`${ip}|${userAgent}`).digest("hex");
+  return `${sha(ip)}:${sha(`${ip}|${userAgent}`)}`;
+}
+
+/** 기기 키에서 접속 주소 부분. */
+export function ipPart(device: string): string {
+  return device.split(":")[0];
 }
 
 function sign(payload: string): string {
@@ -59,6 +69,8 @@ export type LogAction =
   | "scan_view"
   | "number_view"
   | "receipt_view"
+  | "list_view"
+  | "register"
   | "link"
   | "reissue"
   | "login_fail"
@@ -74,7 +86,11 @@ export async function logAccess(
   );
 }
 
-/** 최근 lockMinutes 안에 같은 기기의 실패가 lockMaxFails 건 이상이면 잠근다. */
+/**
+ * 최근 lockMinutes 안에 같은 기기의 실패가 lockMaxFails 건 이상이거나,
+ * 같은 접속 주소의 실패가 lockIpMaxFails 건 이상이면 잠근다.
+ * 공항 안에서는 여러 직원이 한 접속 주소를 함께 쓰므로 주소 쪽 기준은 넉넉하게 둔다.
+ */
 export async function isLocked(
   db: Db,
   device: string,
@@ -82,11 +98,13 @@ export async function isLocked(
   now: Date,
 ): Promise<boolean> {
   const since = new Date(now.getTime() - config.lockMinutes * 60_000);
-  const [row] = await db.query<{ n: number }>(
-    "select count(*)::int as n from access_logs where device_key = $1 and action = $2 and at > $3",
-    [device, failAction, since],
+  const [row] = await db.query<{ by_device: number; by_ip: number }>(
+    `select count(*) filter (where device_key = $1)::int as by_device, count(*)::int as by_ip
+     from access_logs
+     where split_part(device_key, ':', 1) = $2 and action = $3 and at > $4`,
+    [device, ipPart(device), failAction, since],
   );
-  return (row?.n ?? 0) >= config.lockMaxFails;
+  return (row?.by_device ?? 0) >= config.lockMaxFails || (row?.by_ip ?? 0) >= config.lockIpMaxFails;
 }
 
 export type LoginResult =

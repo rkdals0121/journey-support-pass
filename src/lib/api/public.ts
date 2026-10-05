@@ -1,24 +1,22 @@
+import { ipPart, logAccess } from "../auth";
+import { config } from "../config";
 import type { Db } from "../db";
 import { findFlights } from "../flights/search";
 import { createRegistration, type Route } from "../registrations";
 import { fail, ok, toFlightDto, type ApiResult } from "./dto";
 
-// 등록 남용 방지. 프로세스 메모리에만 두므로 서버가 여러 대면 대수만큼 느슨해진다.
-// 정식 운영 전에 공용 저장소 기반으로 바꿀 것.
-const WINDOW_MS = 10 * 60_000;
-const MAX_PER_WINDOW = 20;
-const hits = new Map<string, number[]>();
-
-export function allowRegistration(key: string, now: Date): boolean {
-  const t = now.getTime();
-  const recent = (hits.get(key) ?? []).filter((x) => t - x < WINDOW_MS);
-  if (recent.length >= MAX_PER_WINDOW) {
-    hits.set(key, recent);
-    return false;
-  }
-  recent.push(t);
-  hits.set(key, recent);
-  return true;
+/**
+ * 등록 남용 방지. 같은 접속 주소에서 정한 시간 안에 받은 등록 수를 DB 에서 센다.
+ * 배포된 서버는 요청마다 다른 서버가 받을 수 있어 메모리에 세면 소용이 없다.
+ */
+export async function allowRegistration(db: Db, clientKey: string, now: Date): Promise<boolean> {
+  const since = new Date(now.getTime() - config.registerWindowMin * 60_000);
+  const [row] = await db.query<{ n: number }>(
+    `select count(*)::int as n from access_logs
+     where action = 'register' and split_part(device_key, ':', 1) = $1 and at > $2`,
+    [ipPart(clientKey), since],
+  );
+  return (row?.n ?? 0) < config.registerMaxPerIp;
 }
 
 export async function searchFlightsHandler(db: Db, q: string, now: Date): Promise<ApiResult> {
@@ -59,8 +57,9 @@ export async function submitRegistration(db: Db, body: RegisterBody, route: Rout
 }
 
 export async function registerHandler(db: Db, body: RegisterBody, clientKey: string, now: Date): Promise<ApiResult> {
-  if (!allowRegistration(clientKey, now)) return fail(429, "잠시 후 다시 시도해 주세요");
+  if (!(await allowRegistration(db, clientKey, now))) return fail(429, "잠시 후 다시 시도해 주세요");
   const res = await submitRegistration(db, body, "web", now);
   if (!res.ok) return fail(400, res.error);
+  await logAccess(db, { at: now, deviceKey: clientKey, action: "register", registrationId: res.registration.id });
   return ok({ receiptNo: res.registration.receiptNo });
 }

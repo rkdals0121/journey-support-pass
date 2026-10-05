@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CaseDto } from "@/lib/api/dto";
 import { PollBar, type PollInfo } from "../../../components/PollBar";
-import { closeLabel } from "../../StaffList";
 
 interface CaseData {
   case: CaseDto;
@@ -155,9 +154,12 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
           {c.gate ?? "미정"}
         </p>
         {c.prevGate !== null && <p className="card-gate-changed">변경됨 · 이전 {c.prevGate}</p>}
-        <p className={c.urgent ? "case-close-urgent" : ""}>
-          {c.cancelled ? "결항" : c.minutesToClose !== null ? `탑승 ${closeLabel(c)}` : closeLabel(c)}
-        </p>
+        <p className={c.urgent ? "case-close-urgent" : ""}>{c.closeLabel}</p>
+        {c.status && !c.cancelled && c.status !== "탑승마감" && (
+          <p>
+            현재 상태 <strong>{c.status}</strong>
+          </p>
+        )}
         <PollBar poll={data.poll} />
       </section>
 

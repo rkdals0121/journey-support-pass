@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { hashCode, isLocked, login, readSession, signSession, verifyCode } from "@/lib/auth";
+import { deviceKey, hashCode, isLocked, login, readSession, signSession, verifyCode } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { applyCodeOverrides, expandGates, getZone, readSeedZones, seedZones, zoneForGate } from "@/lib/zones";
 import { createTestDb, kst } from "./helpers/db";
@@ -20,9 +20,11 @@ describe("구역", () => {
   });
 
   it("꺼 둔 구역과 없는 탑승구는 찾지 않는다", async () => {
-    expect(await zoneForGate(db, "T1", 10)).toBeNull();
+    expect((await zoneForGate(db, "T1", 40))?.id).toBe("t1-e");
+    await db.query("update zones set active = false where id = 't1-e'");
+    expect(await zoneForGate(db, "T1", 40)).toBeNull();
+    expect(await getZone(db, "t1-e")).toBeNull();
     expect(await zoneForGate(db, "T2", 999)).toBeNull();
-    expect(await getZone(db, "t1-w")).toBeNull();
   });
 
   it("탑승구 번호가 같아도 터미널이 다르면 찾지 않는다", async () => {
@@ -115,8 +117,34 @@ describe("로그인", () => {
   });
 
   it("꺼 둔 구역의 코드로는 로그인할 수 없다", async () => {
+    expect((await login(db, "101014", "dev-on", kst("2026-10-05 09:00"))).ok).toBe(true);
+    await db.query("update zones set active = false where id = 't1-w'");
     const res = await login(db, "101014", "dev-off", kst("2026-10-05 09:00"));
     expect(res).toEqual({ ok: false, reason: "invalid" });
+  });
+
+  it("브라우저 표시를 바꿔 가며 시도해도 같은 접속 주소에서 20회면 잠긴다", async () => {
+    const t0 = kst("2026-10-05 13:00");
+    const key = (ua: string) => deviceKey("203.0.113.7", ua);
+    // 기기마다 4회씩만 틀려 기기 기준(5회)은 피한다.
+    for (let ua = 0; ua < 5; ua++) {
+      for (let i = 0; i < 4; i++) {
+        expect((await login(db, "000000", key(`ua-${ua}`), t0)).ok).toBe(false);
+      }
+    }
+    expect(await isLocked(db, key("ua-new"), "login_fail", t0)).toBe(true);
+    expect(await login(db, "201132", key("ua-new"), t0)).toEqual({ ok: false, reason: "locked" });
+    // 다른 접속 주소는 영향이 없다.
+    expect((await login(db, "201132", deviceKey("198.51.100.9", "ua-0"), t0)).ok).toBe(true);
+    // 10분이 지나면 풀린다.
+    expect((await login(db, "201132", key("ua-new"), new Date(t0.getTime() + 11 * 60_000))).ok).toBe(true);
+  });
+
+  it("기기 키에 원래의 접속 주소와 브라우저 표시가 남지 않는다", () => {
+    const k = deviceKey("203.0.113.7", "Mozilla/5.0 Test");
+    expect(k).toMatch(/^[0-9a-f]{32}:[0-9a-f]{32}$/);
+    expect(k).not.toContain("203.0.113.7");
+    expect(k).not.toContain("Mozilla");
   });
 
   it("5회 틀리면 10분 동안 잠기고, 다른 기기는 영향이 없다", async () => {

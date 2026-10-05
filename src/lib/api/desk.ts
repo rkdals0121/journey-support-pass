@@ -168,9 +168,16 @@ interface DeskRow {
  * 안내데스크용 등록 목록. 패스 연결을 기다리는 등록과 패스가 연결된 등록을 모두 보여준다.
  * 여객이 접수 번호를 잊었거나 패스를 잃어버렸을 때 여기서 찾는다.
  */
-export async function deskListHandler(db: Db, session: Session | null): Promise<ApiResult> {
+export async function deskListHandler(
+  db: Db,
+  session: Session | null,
+  device: string,
+  now: Date,
+): Promise<ApiResult> {
   const denied = guard(session);
   if (denied) return denied;
+  // 여러 여객의 이름이 한꺼번에 보이는 화면이다. 누가 언제 열었는지 남긴다.
+  await logAccess(db, { at: now, zoneId: session!.zoneId, deviceKey: device, action: "list_view" });
 
   const rows = await db.query<DeskRow>(
     `select r.id, r.receipt_no, r.name, r.flight_no, r.categories, r.needs, r.status, r.submitted_at,

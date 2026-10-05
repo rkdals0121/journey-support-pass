@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { Session } from "@/lib/auth";
+import { deviceKey, type Session } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { deskListHandler, deskRegisterHandler, linkHandler, receiptHandler, reissueHandler } from "@/lib/api/desk";
 import { allowRegistration, registerHandler, searchFlightsHandler } from "@/lib/api/public";
@@ -64,11 +64,16 @@ describe("공개 경로", () => {
     expect((await registerHandler(db, webBody({ consent: "true" }), "ip-3", now)).status).toBe(400);
   });
 
-  it("같은 곳에서 10분에 20건을 넘기면 막는다", () => {
-    for (let i = 0; i < 20; i++) expect(allowRegistration("ip-4", now)).toBe(true);
-    expect(allowRegistration("ip-4", now)).toBe(false);
-    expect(allowRegistration("ip-5", now)).toBe(true);
-    expect(allowRegistration("ip-4", new Date(now.getTime() + 10 * 60_000))).toBe(true);
+  it("같은 접속 주소에서 10분에 20건을 넘기면 막는다. 브라우저 표시를 바꿔도 같다", async () => {
+    const key = (ua: string) => deviceKey("203.0.113.7", ua);
+    for (let i = 0; i < 20; i++) {
+      expect((await registerHandler(db, webBody(), key(`ua-${i}`), now)).status).toBe(200);
+    }
+    expect((await registerHandler(db, webBody(), key("ua-new"), now)).status).toBe(429);
+    expect(await allowRegistration(db, deviceKey("198.51.100.9", "ua-0"), now)).toBe(true);
+    expect(await allowRegistration(db, key("ua-new"), new Date(now.getTime() + 10 * 60_000))).toBe(true);
+    // 거부된 등록은 저장되지 않는다.
+    expect(await db.query("select 1 from registrations")).toHaveLength(20);
   });
 });
 
@@ -139,6 +144,27 @@ describe("직원 경로", () => {
       estTime: null,
       minutesToClose: 140,
     });
+  });
+
+  it("공공데이터가 탑승 마감을 알려 주면 추정 대신 그 값을 보여준다", async () => {
+    await addFlights(
+      db,
+      [
+        flightRow("CL1", "2026-10-05 13:00", { gate: 102, status: "탑승마감" }),
+        flightRow("BD1", "2026-10-05 16:00", { gate: 103, status: "탑승중" }),
+        flightRow("CX1", "2026-10-05 16:00", { gate: 104, status: "결항" }),
+      ],
+      now,
+    );
+    const open = async (flightNo: string) => {
+      const { registration } = await registerWithPass(db, now, { flightNo });
+      return (await caseHandler(db, staff, registration.id, now)).body.case as Record<string, unknown>;
+    };
+    expect(await open("CL1")).toMatchObject({ closeLabel: "탑승 마감됨", urgent: true, status: "탑승마감" });
+    // 출발까지 4시간 남았어도 탑승 중이면 급한 여객이다.
+    expect(await open("BD1")).toMatchObject({ closeLabel: "탑승 마감까지 230분 (추정)", urgent: true, status: "탑승중" });
+    expect(await open("CX1")).toMatchObject({ closeLabel: "결항", urgent: false });
+    expect(await open("KE123")).toMatchObject({ closeLabel: "탑승 마감까지 140분 (추정)", urgent: false, status: "" });
   });
 
   it("응대는 시작한 뒤에만 완료된다", async () => {
@@ -286,7 +312,7 @@ describe("안내데스크 경로", () => {
     const gone = await register(db, now, { name: "만료여객" });
     await db.query("update registrations set status = 'expired' where id = $1", [gone.id]);
 
-    const res = await deskListHandler(db, desk);
+    const res = await deskListHandler(db, desk, "d", now);
     const pending = res.body.pending as Record<string, unknown>[];
     const active = res.body.active as Record<string, unknown>[];
     expect(pending).toHaveLength(1);
@@ -302,8 +328,11 @@ describe("안내데스크 경로", () => {
     expect(active).toHaveLength(1);
     expect(active[0]).toMatchObject({ name: "연결여객", passNo: linked.pass.passNo });
 
-    expect((await deskListHandler(db, staff)).status).toBe(403);
-    expect((await deskListHandler(db, null)).status).toBe(401);
+    // 여러 여객의 이름이 보이는 화면이므로 열어 본 기록을 남긴다.
+    expect(await logCount("list_view")).toBe(1);
+    expect((await deskListHandler(db, staff, "d", now)).status).toBe(403);
+    expect((await deskListHandler(db, null, "d", now)).status).toBe(401);
+    expect(await logCount("list_view")).toBe(1);
   });
 
   it("재발급 검색은 이름과 편명이 모두 필요하다", async () => {

@@ -25,8 +25,11 @@ export const config = {
   logRetentionDays: 90,
 
   sessionHours: 12,
-  lockMaxFails: 5,
+  lockMaxFails: 5, // 같은 기기에서
+  lockIpMaxFails: 20, // 같은 접속 주소에서 (기기 표시를 바꿔 가며 시도하는 것을 막는다)
   lockMinutes: 10,
+  registerMaxPerIp: 20, // 같은 접속 주소에서 registerWindowMin 분 동안 받을 등록 수
+  registerWindowMin: 10,
 
   cardTimeoutSec: 120,
   listRefreshSec: 30,

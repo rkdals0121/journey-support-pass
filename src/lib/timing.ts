@@ -34,8 +34,19 @@ export function isDelayed(f: FlightTimes): boolean {
   return f.estAt !== null && f.estAt.getTime() > f.schedAt.getTime();
 }
 
+/** 공공데이터가 "탑승마감" 상태를 주면 추정이 아니라 실제로 마감된 것이다. */
+export function isBoardingClosed(f: FlightTimes): boolean {
+  return f.status.includes("탑승마감");
+}
+
+/** 탑승이 진행 중이거나 곧 마감된다고 공공데이터가 알려 준 상태. */
+export function isBoardingNow(f: FlightTimes): boolean {
+  return f.status.includes("탑승중") || f.status.includes("마감예정");
+}
+
 export function isUrgent(f: FlightTimes, now: Date): boolean {
-  return !isCancelled(f) && minutesToClose(f, now) <= config.urgentMin;
+  if (isCancelled(f)) return false;
+  return isBoardingNow(f) || isBoardingClosed(f) || minutesToClose(f, now) <= config.urgentMin;
 }
 
 const KST_TIME = new Intl.DateTimeFormat("ko-KR", {

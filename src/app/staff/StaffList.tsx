@@ -14,13 +14,6 @@ interface ListData {
   gateUnknown: CaseDto[];
 }
 
-export function closeLabel(c: CaseDto): string {
-  if (c.cancelled) return "결항";
-  if (c.minutesToClose === null) return "운항 정보 없음";
-  if (c.minutesToClose < 0) return "마감 지남 (추정)";
-  return `마감까지 ${c.minutesToClose}분 (추정)`;
-}
-
 export function StaffList({ refreshSec }: { refreshSec: number }) {
   const router = useRouter();
   const [data, setData] = useState<ListData | null>(null);
@@ -126,7 +119,10 @@ function CaseRow({ c }: { c: CaseDto }) {
         <span className="case-main">
           <strong>{c.name}</strong> · {c.flightNo}
           <br />
-          <span className={c.urgent ? "case-close-urgent" : "muted"}>{closeLabel(c)}</span>
+          <span className={c.urgent ? "case-close-urgent" : "muted"}>
+            {c.closeLabel}
+            {c.status && !c.cancelled && c.status !== "탑승마감" && ` · ${c.status}`}
+          </span>
           {c.comm.length > 0 && (
             <>
               <br />

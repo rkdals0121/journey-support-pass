@@ -1,6 +1,6 @@
 import type { Db } from "./db";
 import { isUuid } from "./registrations";
-import { isCancelled, isDelayed, isUrgent, minutesToClose } from "./timing";
+import { isBoardingClosed, isCancelled, isDelayed, isUrgent, minutesToClose } from "./timing";
 import type { Facilities } from "./zones";
 
 export interface CaseView {
@@ -23,6 +23,7 @@ export interface CaseView {
   urgent: boolean;
   cancelled: boolean;
   delayed: boolean;
+  boardingClosed: boolean; // 공공데이터가 알려 준 실제 탑승 마감
   zoneId: string | null; // 탑승구가 속한 구역
   zoneLabel: string | null;
   gateBand: string | null;
@@ -137,6 +138,7 @@ function toCase(r: CaseRow, zones: ZoneLite[], now: Date): CaseView {
     urgent: times ? isUrgent(times, now) : false,
     cancelled,
     delayed: times ? isDelayed(times) : false,
+    boardingClosed: times ? isBoardingClosed(times) : false,
     zoneId: zone?.id ?? null,
     zoneLabel: zone?.label ?? null,
     gateBand: zone?.band ?? null,

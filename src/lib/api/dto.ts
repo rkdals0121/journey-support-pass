@@ -28,12 +28,28 @@ export interface CaseDto {
   estTime: string | null;
   delayed: boolean;
   cancelled: boolean;
+  /** 공공데이터의 상태 문구 그대로 (탑승중, 마감예정, 탑승마감, 지연 …). 없으면 빈 글자. */
+  status: string;
+  /** 남은 시간 한 줄. 화면은 이 글자를 그대로 보여준다. */
+  closeLabel: string;
   gate: number | null;
   prevGate: number | null;
   minutesToClose: number | null;
   urgent: boolean;
   zoneLabel: string | null;
   facilities: Facilities | null;
+}
+
+/**
+ * 탑승 마감 안내 한 줄. 공공데이터가 실제 마감을 알려 주면 그 값을 쓰고,
+ * 그렇지 않으면 출발 시각에서 계산한 값에 "추정"을 붙인다.
+ */
+export function closeLabelOf(c: CaseView): string {
+  if (c.cancelled) return "결항";
+  if (c.boardingClosed) return "탑승 마감됨";
+  if (c.minutesToClose === null) return "운항 정보 없음";
+  if (c.minutesToClose < 0) return "탑승 마감 지남 (추정)";
+  return `탑승 마감까지 ${c.minutesToClose}분 (추정)`;
 }
 
 export function toCaseDto(c: CaseView): CaseDto {
@@ -51,6 +67,8 @@ export function toCaseDto(c: CaseView): CaseDto {
     estTime: c.delayed && c.estAt ? kstTime(c.estAt) : null,
     delayed: c.delayed,
     cancelled: c.cancelled,
+    status: c.status,
+    closeLabel: closeLabelOf(c),
     gate: c.gate,
     prevGate: c.gateChangedAt ? c.prevGate : null,
     minutesToClose: c.minutesToClose,
