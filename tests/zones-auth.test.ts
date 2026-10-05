@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { hashCode, isLocked, login, readSession, signSession, verifyCode } from "@/lib/auth";
 import type { Db } from "@/lib/db";
-import { expandGates, getZone, readSeedZones, seedZones, zoneForGate } from "@/lib/zones";
+import { applyCodeOverrides, expandGates, getZone, readSeedZones, seedZones, zoneForGate } from "@/lib/zones";
 import { createTestDb, kst } from "./helpers/db";
 
 // scrypt 는 느리다. 검사에서는 구역 적재를 한 번만 한다.
@@ -48,6 +48,14 @@ describe("구역", () => {
   it("접속 코드는 구역마다 다르다", () => {
     const codes = readSeedZones().map((z) => z.code);
     expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  it("따로 둔 접속 코드가 있으면 그 구역만 바꾼다", () => {
+    const zones = readSeedZones();
+    const changed = applyCodeOverrides(zones, { "cc-end": "999001", "desk-t1": "" });
+    expect(changed.find((z) => z.id === "cc-end")?.code).toBe("999001");
+    expect(changed.find((z) => z.id === "desk-t1")?.code).toBe(zones.find((z) => z.id === "desk-t1")?.code);
+    expect(changed.find((z) => z.id === "cc-mid")?.code).toBe(zones.find((z) => z.id === "cc-mid")?.code);
   });
 
   it("다시 적재해도 행이 늘지 않는다", async () => {

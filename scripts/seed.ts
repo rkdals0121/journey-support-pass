@@ -12,7 +12,7 @@ import { getDb, migrate } from "../src/lib/db";
 import { ingestFlights, recordPoll } from "../src/lib/flights/ingest";
 import { kstDate, type FlightRow } from "../src/lib/flights/normalize";
 import { generatePasses } from "../src/lib/passes";
-import { readSeedZones, seedZones } from "../src/lib/zones";
+import { readLocalCodes, readSeedZones, seedZones } from "../src/lib/zones";
 
 const PASS_COUNT = 30;
 const MIN = 60_000;
@@ -62,8 +62,22 @@ function mockFlights(now: Date): FlightRow[] {
   const db = await getDb();
   await migrate(db);
 
-  const zones = await seedZones(db, hashCode);
-  console.log(`구역 ${zones}곳 적재`);
+  // 배포 DB 에는 저장소에 공개된 접속 코드를 넣지 않는다.
+  const remote = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+  const codes = remote ? readLocalCodes() : null;
+  if (remote) {
+    const missing = readSeedZones().filter((z) => z.active && !codes?.[z.id]);
+    if (missing.length > 0) {
+      console.error(
+        `배포 DB 에 넣을 접속 코드가 없습니다: ${missing.map((z) => z.id).join(", ")}\n` +
+          "db/zone-codes.local.json 에 { \"구역 id\": \"코드\" } 형태로 넣고 다시 실행하세요.",
+      );
+      process.exit(1);
+    }
+  }
+
+  const zones = await seedZones(db, hashCode, codes ?? {});
+  console.log(`구역 ${zones}곳 적재${remote ? " (배포 DB)" : ""}`);
 
   // 패스는 일회용이라 쓸수록 줄어든다. 미사용 패스가 PASS_COUNT 장이 되도록 채운다.
   const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from passes where state = 'idle'");
@@ -79,8 +93,12 @@ function mockFlights(now: Date): FlightRow[] {
     console.log(`모의 운항 ${rows.length}편 적재: ${rows.map((r) => r.flightNo).join(", ")}`);
   }
 
-  console.log("\n시범용 접속 코드 (모의 데이터 전용)");
-  for (const z of readSeedZones().filter((z) => z.active)) console.log(`  ${z.code}  ${z.label}`);
+  if (remote) {
+    console.log("\n접속 코드는 db/zone-codes.local.json 의 값을 넣었습니다.");
+  } else {
+    console.log("\n시범용 접속 코드 (모의 데이터 전용)");
+    for (const z of readSeedZones().filter((z) => z.active)) console.log(`  ${z.code}  ${z.label}`);
+  }
   process.exit(0);
 })().catch((e) => {
   console.error(e);

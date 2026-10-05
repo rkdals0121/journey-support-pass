@@ -78,14 +78,33 @@ export function expandGates(ranges: [number, number][]): number[] {
   return gates;
 }
 
+const CODES_FILE = "zone-codes.local.json";
+
+/**
+ * 저장소에 올리지 않는 배포용 접속 코드 ({ "구역 id": "코드" }). 없으면 null.
+ * seed-zones.json 의 코드는 저장소에 공개된 값이라 배포 DB 에는 넣지 않는다.
+ */
+export function readLocalCodes(): Record<string, string> | null {
+  const file = path.join(process.cwd(), "db", CODES_FILE);
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf-8")) : null;
+}
+
+export function applyCodeOverrides(zones: SeedZone[], codes: Record<string, string>): SeedZone[] {
+  return zones.map((z) => (typeof codes[z.id] === "string" && codes[z.id] ? { ...z, code: codes[z.id] } : z));
+}
+
 export function readSeedZones(): SeedZone[] {
   const file = path.join(process.cwd(), "db", "seed-zones.json");
   return JSON.parse(fs.readFileSync(file, "utf-8")).zones;
 }
 
-/** db/seed-zones.json 을 적재한다. 접속 코드는 해시로 바꿔 저장한다. */
-export async function seedZones(db: Db, hash: (code: string) => string): Promise<number> {
-  const zones = readSeedZones();
+/** db/seed-zones.json 을 적재한다. 접속 코드는 해시로 바꿔 저장한다. codes 를 주면 그 구역의 코드를 바꿔 넣는다. */
+export async function seedZones(
+  db: Db,
+  hash: (code: string) => string,
+  codes: Record<string, string> = {},
+): Promise<number> {
+  const zones = applyCodeOverrides(readSeedZones(), codes);
   for (const z of zones) {
     await db.query(
       `insert into zones (id, terminal, label, band, gates, facilities, code_hash, is_desk, active)

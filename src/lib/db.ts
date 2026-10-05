@@ -34,6 +34,8 @@ export async function openPglite(dataDir?: string): Promise<Db> {
 async function openPg(url: string): Promise<Db> {
   const { Pool } = await import("pg");
   const pool = new Pool({ connectionString: url, max: 3 });
+  // 유휴 연결이 끊겨도 서버가 죽지 않게 한다. 다음 질의에서 새 연결을 맺는다.
+  pool.on("error", (e) => console.error("DB 연결 오류:", e.message));
   return {
     async query<T>(sql: string, params: unknown[] = []) {
       const res = await pool.query(sql, params);
@@ -50,7 +52,10 @@ const holder = globalThis as unknown as { __jspDb?: Promise<Db> };
 
 export function getDb(): Promise<Db> {
   if (!holder.__jspDb) {
-    const url = process.env.DATABASE_URL;
+    // Vercel 의 Postgres 연동은 POSTGRES_URL 이름으로 넣어 준다.
+    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    // 배포 환경의 파일 시스템은 요청마다 사라진다. 내장 DB 로 조용히 넘어가면 등록이 저장되지 않는다.
+    if (!url && process.env.VERCEL) throw new Error("DATABASE_URL 이 설정되지 않았습니다");
     holder.__jspDb = url
       ? openPg(url)
       : (async () => {

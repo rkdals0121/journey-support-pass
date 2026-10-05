@@ -43,3 +43,6 @@ next-env.d.ts
 
 # 로컬 DB, 스크립트 출력
 /.data/
+
+# 배포용 접속 코드 (저장소에 올리지 않는다)
+/db/*.local.json
