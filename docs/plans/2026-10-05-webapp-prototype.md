@@ -572,3 +572,14 @@ export function purge(db: Db, now: Date): Promise<{ purged: number; unlinkedPurg
 ## spec과 달라진 구현 세부
 
 - spec 3장은 예약 실행을 "Supabase pg_cron + Edge Function"으로 적었다. 이 계획은 pg_cron이 Next.js의 `/api/cron/*` 경로를 호출하게 한다. 수집·삭제 로직을 한 언어, 한 곳에 두고 같은 테스트로 검증하기 위해서다. 동작과 주기는 같다.
+
+## 실행하면서 달라진 점 (2026-10-05)
+
+- 경로 처리기의 본체를 `src/lib/api/{public,staff,desk}.ts` 에 두고 `src/app/api/**/route.ts` 는 그것을 부르기만 한다. 검사는 `tests/api.test.ts` 한 파일에 모았다.
+- `/api/desk/*` 네 경로는 `src/app/api/desk/[action]/route.ts` 하나로 받는다.
+- `scripts/print-passes.ts` 대신 안내데스크 화면 `/staff/desk/passes` 를 만들었다. 로컬 내장 DB 는 한 프로세스만 열 수 있어, 서버가 떠 있는 동안 스크립트로는 패스를 볼 수 없기 때문이다.
+- 안내데스크의 연결·재발급이 QR 스캔 외에 패스 번호 입력도 받는다(`idleTokenByPassNo`). 미사용 패스만 받는다.
+- 수집 한 회를 `src/lib/flights/poll.ts` 의 `runPoll` 로 뺐다. 0건 응답은 실패로 기록한다.
+- `ingestFlights` 는 응답에서 탑승구가 비어 와도 알고 있던 탑승구를 지우지 않는다.
+- `CaseView.openEncounterId` 대신 `recordScan` 이 `{ id, started }` 를 돌려준다.
+- 구역 seed 파일은 탑승구 목록 대신 `gateRanges` (시작·끝 묶음)로 적는다.

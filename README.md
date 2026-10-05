@@ -1,36 +1,188 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Journey Support Pass
 
-## Getting Started
+여객이 필요한 도움을 한 번 등록하면, 인천공항운영서비스 직원이 패스의 QR을 스캔해 그 내용과 항공편·탑승구를 한 화면에서 확인하는 웹앱 시제품.
 
-First, run the development server:
+설계는 [docs/spec.md](docs/spec.md), 만든 순서는 [docs/plans/2026-10-05-webapp-prototype.md](docs/plans/2026-10-05-webapp-prototype.md)에 있다.
+
+**지금은 모의 데이터 전용이다.** 실제 여객 정보는 기관의 개인정보 검토가 끝난 뒤에만 받는다.
+
+## 화면
+
+| 주소 | 누가 | 무엇을 |
+|---|---|---|
+| `/register` | 여객 | 동의 → 교통약자 구분 → 필요한 도움 → 이름과 편명 → 접수 번호 |
+| `/staff/login` | 직원 | 구역 접속 코드로 로그인 |
+| `/staff` | 현장 직원 | 내 구역 탑승구로 가는 등록 여객 목록 (마감 임박 순) |
+| `/staff/scan` | 현장 직원 | 패스 QR 스캔, 또는 패스 번호 네 자리 입력 |
+| `/staff/case/{id}` | 현장 직원 | 여객 카드, 응대 시작·완료 |
+| `/staff/desk` | 안내데스크 | 패스 연결, 종이 체크리스트·대신 입력, 분실 재발급 |
+| `/staff/desk/passes` | 안내데스크 | 미사용 패스 QR 인쇄 |
+| `/p/{token}` | 누구나 | 패스 QR이 가리키는 주소. 직원이 아니면 "직원 전용 화면입니다"만 보인다 |
+
+## 로컬에서 실행
+
+계정이나 외부 서비스 없이 이 컴퓨터 안에서 돈다. DB는 `.data/pglite` 폴더에 저장된다.
+
+```bash
+npm install
+```
+
+```bash
+npm run seed -- --mock-flights
+```
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`http://localhost:3000` 을 연다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`seed`는 구역, 패스 30장, 지금 시각 기준의 모의 운항 9편을 넣고 시범용 접속 코드를 출력한다. 접속 코드는 [db/seed-zones.json](db/seed-zones.json)에도 있다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 접속 코드 | 구역 |
+|---|---|
+| `100100` | 제1여객터미널 안내데스크 |
+| `201132` | 탑승동 끝단 |
+| `211122` | 탑승동 중앙부 |
+| `207126` | 탑승동 중간 |
+| `319224` | 제2여객터미널 서편 AM 구간 |
 
-## Learn More
+모의 운항 편명은 `MK101`, `MK102`, `MK111`, `MK112`, `MK221`, `MK250`, `MK900`, `MK300`, `MC830` 이다.
 
-To learn more about Next.js, take a look at the following resources:
+### 한 번 따라 해 보기
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. `/register` 에서 등록한다. 편명에 `MK101` 을 넣는다. 접수 번호가 나온다.
+2. `/staff/login` 에 `100100` 을 넣어 안내데스크로 들어간다.
+3. "패스 연결·등록" → "미사용 패스 보기·인쇄" 에서 패스 번호 하나를 골라 둔다.
+4. "패스 연결" 탭에 접수 번호를 넣고, 카메라 아래 입력란에 고른 패스 번호를 넣는다. (휴대전화라면 QR을 찍으면 된다.)
+5. 로그아웃하고 `201132` 로 다시 들어간다. 목록에 방금 여객이 보인다.
+6. "QR 스캔" 에서 패스 번호를 넣거나 목록의 여객을 눌러 카드를 열고, 응대 시작과 응대 완료를 누른다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 알아 둘 것
 
-## Deploy on Vercel
+- **`seed`는 개발 서버를 끄고 실행한다.** 로컬 내장 DB는 한 번에 한 프로그램만 열 수 있다.
+- **모의 운항은 시간이 지나면 떠난 편이 된다.** 편명이 검색되지 않으면 서버를 끄고 `npm run seed -- --mock-flights` 를 다시 실행한다. 이미 등록한 여객은 출발 30분 뒤 삭제 작업이 돌 때 지워진다.
+- **로컬에서는 운항 수집과 삭제 작업이 자동으로 돌지 않는다.** 그래서 seed 후 15분이 지나면 "운항 정보가 늦어지고 있습니다" 경고가 뜬다. 정상이다. 삭제는 아래 명령으로 직접 돌린다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+curl -H "Authorization: Bearer dev-only-secret-change-me" http://localhost:3000/api/cron/purge
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **휴대전화로 카메라 스캔을 시험하려면 https 주소가 필요하다.** 브라우저는 `localhost` 가 아닌 http 주소에서 카메라를 열어 주지 않는다. 배포한 주소에서 시험한다.
+- **패스 QR은 `BASE_URL` 로 만들어진다.** 주소가 바뀌면 인쇄한 QR은 못 쓴다. 배포 주소가 정해진 뒤에 인쇄한다.
+
+## 검사
+
+```bash
+npm test
+```
+
+업무 규칙(등록, 패스, 차단, 구역, 탑승 마감 계산, 삭제)을 메모리 DB로 검사한다.
+
+## 설정
+
+숫자는 모두 [src/lib/config.ts](src/lib/config.ts) 한 곳에 있다. 기업탐방에서 기관 기준을 확인하면 여기만 고친다.
+
+| 값 | 기본 |
+|---|---|
+| 탑승 마감 추정 | 출발 10분 전 |
+| 마감 임박 표시 | 마감 30분 이내 |
+| 운항 정보 지연 경고 | 15분 |
+| 출발 후 삭제 | 30분 뒤 |
+| 로그인 유지 | 12시간 |
+| 입력 실패 차단 | 5회 틀리면 10분 |
+| 여객 카드 자동 닫힘 | 120초 |
+
+환경 변수는 [.env.example](.env.example) 참고.
+
+| 이름 | 용도 |
+|---|---|
+| `DATABASE_URL` | 비우면 로컬 내장 DB. 배포 시 Supabase 연결 문자열 |
+| `SESSION_SECRET` | 세션 쿠키 서명. 배포 시 32자 이상 무작위 값 |
+| `CRON_SECRET` | 예약 실행 경로 호출용 |
+| `ICN_API_KEY` | 공공데이터포털 여객기 운항 현황 상세 조회 서비스 디코딩 키 |
+| `DATA_MODE` | `mock`(기본) 또는 `live` |
+| `BASE_URL` | 패스 QR에 들어갈 주소 |
+
+## 운항 API 실측 (명세 10장)
+
+시제품을 실제 운항 정보에 붙이기 전에 하루 돌려 본다.
+
+```bash
+ICN_API_KEY="디코딩 키" npx tsx scripts/probe-poll.ts
+```
+
+5분마다 받아 `out/probe-YYYYMMDD.jsonl` 에 한 줄씩 남긴다. 한 번만 받아 보려면 끝에 `--once` 를 붙인다. 이 기록으로 다음을 확인한다.
+
+- `pages` 합계 × 하루 288회가 인증키 일일 한도 안에 드는가
+- `gateChanges` 가 실제로 잡히는가, 하루 몇 건인가
+- `todayDelayed`, `timeChanges`, `statuses` 에 값이 들어오는가
+- `ok: false` 와 `durationMs` 가 큰 회차의 비율
+
+**마지막 항목이 중요하다.** 운항 조회 웹이 9월에 모은 자료에서는 상태 문구가 한 번도 채워진 적이 없고, 변경 출발 시각은 늘 예정 시각과 같았다. 하루 한 번 받은 자료라 그런 것인지, 이 API가 원래 주지 않는 것인지 아직 모른다. 주지 않는다면 지연·결항·출발 표시는 작동하지 않고, 화면은 예정 시각만으로 계산한다. 삭제는 시각 기준이라 영향이 없다.
+
+## 배포
+
+아직 하지 않았다. 순서만 적어 둔다.
+
+1. Supabase에서 서울 리전 프로젝트를 만들고 SQL 편집기에서 [db/schema.sql](db/schema.sql) 을 실행한다.
+2. Vercel에서 이 저장소로 새 프로젝트를 만들고 위 환경 변수를 넣는다.
+3. 로컬에서 `DATABASE_URL` 을 Supabase 값으로 두고 `npm run seed` 를 실행해 구역과 패스를 넣는다. **그 전에 `db/seed-zones.json` 의 접속 코드를 바꾼다.** 저장소에 있는 코드는 공개된 값이다.
+4. Supabase SQL 편집기에서 예약 실행을 건다. `pg_cron` 과 `pg_net` 확장을 켠 뒤:
+
+```sql
+select cron.schedule('poll-flights', '*/5 * * * *', $$
+  select net.http_get(
+    url := 'https://배포주소/api/cron/poll-flights',
+    headers := '{"Authorization": "Bearer CRON_SECRET값"}'::jsonb,
+    timeout_milliseconds := 280000
+  );
+$$);
+
+select cron.schedule('purge', '*/10 * * * *', $$
+  select net.http_get(
+    url := 'https://배포주소/api/cron/purge',
+    headers := '{"Authorization": "Bearer CRON_SECRET값"}'::jsonb
+  );
+$$);
+```
+
+## 구조
+
+```
+db/schema.sql            테이블 정의
+db/seed-zones.json       구역, 탑승구, 시설, 시범용 접속 코드
+src/lib/                 업무 규칙. 모두 Db 와 now 를 인자로 받아 검사에서 바꿔 끼운다
+  catalog.ts             선택 항목 19개. 종이 체크리스트와 문구·순서가 같아야 한다
+  flights/               운항 수집, 탑승구 변경 추적, 편명 검색
+  timing.ts              탑승 마감 추정, 운항 정보 신선도
+  registrations.ts       등록, 접수 번호
+  passes.ts              패스 연결, QR 분기, 재발급
+  encounters.ts          응대 기록, 구역별 목록
+  purge.ts               출발 후 삭제
+  auth.ts                접속 코드, 세션, 입력 차단, 조회 기록
+  api/                   화면이 부르는 경로의 본체
+src/app/                 화면과 얇은 경로 처리기
+scripts/seed.ts          구역·패스·모의 운항 적재
+scripts/probe-poll.ts    운항 API 실측
+```
+
+## 아직 임시이거나 확인이 필요한 것
+
+- **탑승동 세 구역(중앙부·중간·끝단)은 임시값이다.** 탑승구 번호가 중앙에서 먼 순서로 나눴다. 팀 운항 집계의 끝단 12개 탑승구 목록을 받아 `db/seed-zones.json` 을 고쳐야 한다.
+- **구역별 시설 정보가 비어 있다.** 구역 지원환경표가 나오면 같은 파일의 `facilities` 에 넣는다. 여객 카드의 "가까운 교통약자 시설"에 그대로 나온다.
+- **제1여객터미널 구역은 꺼 두었다.** 경계가 추정치다.
+- **탑승 마감은 추정값이다.** 공공데이터에 탑승 마감 시각이 없어 출발 10분 전으로 계산하고 화면에 "추정"이라고 적는다.
+- **등록 남용 방지(10분에 20건)는 서버 메모리에만 둔다.** 서버가 여러 대로 늘면 느슨해진다. 정식 운영 전에 바꿔야 한다.
+- **직원 로그인은 구역 접속 코드다.** 정식 운영 시 직원 계정 인증으로 바꾼다(명세 A-2).
+
+## 명세와 달라진 구현
+
+- 예약 실행을 Supabase Edge Function 대신 이 앱의 `/api/cron/*` 경로로 받는다. 수집·삭제 로직을 한 곳에 두고 같은 검사로 확인하기 위해서다.
+- 패스 인쇄를 스크립트가 아니라 안내데스크 화면(`/staff/desk/passes`)으로 만들었다. 서버를 끄지 않고 볼 수 있다.
+- 안내데스크에서 패스를 연결할 때 QR 스캔 외에 패스 번호 입력도 받는다. 업무용 단말의 카메라가 막혀 있을 때를 위한 것이며, 미사용 패스만 받는다.
+
+## 출처
+
+- 운항 데이터: 공공데이터포털 인천국제공항공사 여객기 운항 현황 상세 조회 서비스
+- 응답 해석 규칙과 제2여객터미널 구역: 팀의 인천공항 출도착 조회 웹

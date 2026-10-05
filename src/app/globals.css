@@ -432,3 +432,53 @@ input[type="password"] {
   font-size: 20px;
   font-weight: 800;
 }
+
+/* 패스 인쇄 */
+.sheet-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.sheet-pass {
+  padding: 8px;
+  border: 1px dashed #999;
+  background: #fff;
+  text-align: center;
+  break-inside: avoid;
+}
+
+.sheet-pass svg {
+  width: 25mm;
+  height: 25mm;
+}
+
+.sheet-no {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  .no-print,
+  .mock-banner {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .sheet {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6mm;
+  }
+}

@@ -57,9 +57,10 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
     }
   };
 
-  const toggle = (list: string[], set: (v: string[]) => void, code: string) => {
+  // 직전 값을 받아 바꾼다. 두 항목을 빠르게 연달아 눌러도 하나가 빠지지 않는다.
+  const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>, code: string) => {
     touched();
-    set(list.includes(code) ? list.filter((c) => c !== code) : [...list, code]);
+    set((list) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]));
   };
 
   const back = () => {
@@ -166,7 +167,7 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
                 key={i.code}
                 label={i.label}
                 checked={categories.includes(i.code)}
-                onToggle={() => toggle(categories, setCategories, i.code)}
+                onToggle={() => toggle(setCategories, i.code)}
               />
             ))}
           </div>
@@ -186,7 +187,7 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
                   key={i.code}
                   label={i.label}
                   checked={needs.includes(i.code)}
-                  onToggle={() => toggle(needs, setNeeds, i.code)}
+                  onToggle={() => toggle(setNeeds, i.code)}
                 />
               ))}
             </div>

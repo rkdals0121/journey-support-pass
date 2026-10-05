@@ -253,6 +253,9 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
           {error}
         </p>
       )}
+      <Link className="btn" href="/staff/desk/passes">
+        미사용 패스 보기·인쇄
+      </Link>
       <Link className="btn" href="/staff">
         목록으로
       </Link>
