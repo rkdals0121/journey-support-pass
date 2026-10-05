@@ -2,8 +2,12 @@
  * 배포된 서버의 초기 설정 통로(/api/admin/setup)를 부른다.
  * DB 비밀번호는 이 컴퓨터로 내려오지 않는다. 서버가 직접 테이블과 자료를 넣는다.
  *
- *   npx tsx scripts/remote-setup.ts              처음 한 번: 테이블, 구역(접속 코드 포함), 패스, 모의 운항
- *   npx tsx scripts/remote-setup.ts --flights    모의 운항만 지금 시각 기준으로 다시 채운다 (시연 직전)
+ *   npx tsx scripts/remote-setup.ts                 테이블, 구역(접속 코드 포함), 패스. 여러 번 실행해도 안전하다
+ *   npx tsx scripts/remote-setup.ts --mock-flights  모의 운항을 지금 시각 기준으로 채운다
+ *   npx tsx scripts/remote-setup.ts --clear-mock    모의 운항을 지운다
+ *
+ * 배포된 곳은 실제 운항 정보를 받으므로 모의 운항은 평소에 넣지 않는다.
+ * 정해진 장면(마감 임박, 공동운항, 탑승구 미정)을 보여줘야 하는 시연 때만 넣었다가 지운다.
  *
  * 필요한 것 (.env.deploy.local, 저장소에 올리지 않는다):
  *   BASE_URL      배포 주소
@@ -32,9 +36,10 @@ function loadDeployEnv() {
     process.exit(1);
   }
 
-  const flightsOnly = process.argv.includes("--flights");
-  const body: Record<string, unknown> = { mockFlights: true };
-  if (!flightsOnly) {
+  const mock = process.argv.includes("--mock-flights");
+  const clear = process.argv.includes("--clear-mock");
+  const body: Record<string, unknown> = mock ? { mockFlights: true } : clear ? { clearMockFlights: true } : {};
+  if (!mock && !clear) {
     const codes = readLocalCodes();
     if (!codes) {
       console.error("db/zone-codes.local.json 이 없습니다. 배포용 접속 코드를 먼저 만드세요.");

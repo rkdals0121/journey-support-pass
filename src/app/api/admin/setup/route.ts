@@ -10,8 +10,9 @@ export const maxDuration = 60;
 // 배포 DB 의 초기 설정과 모의 운항 다시 채우기. DB 비밀번호를 운영자 컴퓨터로 내려받지 않고
 // 서버가 직접 넣게 하려는 통로다. CRON_SECRET 을 아는 사람만 부를 수 있다.
 //
-//   POST { "codes": { "구역 id": "코드", ... }, "mockFlights": true }   처음 한 번
-//   POST { "mockFlights": true }                                        모의 운항만 다시 채울 때
+//   POST { "codes": { "구역 id": "코드", ... } }   처음 한 번 (테이블, 구역, 패스)
+//   POST { "mockFlights": true }                   모의 운항을 지금 시각 기준으로 채울 때
+//   POST { "clearMockFlights": true }              모의 운항을 지울 때
 export async function POST(request: Request) {
   if (!isCronAuthorized(request)) return Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       codes,
       requireAllCodes: true,
       mockFlights: wantsMock,
+      clearMockFlights: body.clearMockFlights === true,
       passCount: typeof body.passCount === "number" ? body.passCount : undefined,
     },
     new Date(),

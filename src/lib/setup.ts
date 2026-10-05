@@ -57,6 +57,8 @@ export interface SetupOptions {
   /** true 면 모든 켜진 구역의 코드가 codes 에 있어야 한다. 저장소에 공개된 코드가 배포 DB 에 들어가는 것을 막는다. */
   requireAllCodes: boolean;
   mockFlights: boolean;
+  /** true 면 모의 운항을 지운다. 실제 운항 정보를 연결한 뒤에 쓴다. */
+  clearMockFlights?: boolean;
   passCount?: number;
 }
 
@@ -67,6 +69,7 @@ export interface SetupResult {
   idlePasses?: number;
   newPasses?: number;
   mockFlights?: string[];
+  clearedMockFlights?: number;
 }
 
 /** 테이블을 만들고 구역·패스·(선택) 모의 운항을 채운다. 여러 번 실행해도 안전하다. */
@@ -95,6 +98,11 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
   const newPasses = Math.max(want - idle, 0);
   if (newPasses > 0) await generatePasses(db, newPasses);
 
+  let cleared: number | undefined;
+  if (opts.clearMockFlights && !opts.mockFlights) {
+    cleared = (await db.query("delete from flights where airline like '모의%' returning flight_no")).length;
+  }
+
   let flights: string[] | undefined;
   if (opts.mockFlights) {
     await db.query("delete from flights where airline like '모의%'");
@@ -104,5 +112,12 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
     flights = rows.map((r) => r.flightNo);
   }
 
-  return { ok: true, zones, idlePasses: Math.max(idle, want), newPasses, mockFlights: flights };
+  return {
+    ok: true,
+    zones,
+    idlePasses: Math.max(idle, want),
+    newPasses,
+    mockFlights: flights,
+    clearedMockFlights: cleared,
+  };
 }
