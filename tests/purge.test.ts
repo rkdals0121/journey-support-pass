@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { logAccess } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { recordScan, startEncounter, endEncounter } from "@/lib/encounters";
-import { generatePasses, linkPass, reissue, resolveToken } from "@/lib/passes";
+import { generatePasses, idleTokenByPassNo, linkPass, reissue, resolveToken } from "@/lib/passes";
 import { purge } from "@/lib/purge";
 import { getRegistration } from "@/lib/registrations";
 import { seedZones } from "@/lib/zones";
@@ -46,8 +46,13 @@ describe("출발 후 삭제", () => {
     });
     expect(row.purged_at).toEqual(kst("2026-10-05 15:00"));
 
-    // 패스는 다시 쓸 수 있는 상태로 돌아간다.
-    expect(await resolveToken(db, pass.token)).toMatchObject({ kind: "idle" });
+    // 패스는 일회용이다. 출발 후에는 끝난 패스가 되어 다시 열리지 않는다.
+    expect(await resolveToken(db, pass.token)).toEqual({ kind: "unusable" });
+    const [p] = await db.query<{ state: string; registration_id: string | null }>(
+      "select state, registration_id from passes where token = $1",
+      [pass.token],
+    );
+    expect(p).toEqual({ state: "expired", registration_id: null });
   });
 
   it("지연되면 변경된 출발 시각을 따른다", async () => {
@@ -154,19 +159,36 @@ describe("삭제 뒤에 남는 것", () => {
 
     await purge(db, kst("2026-10-05 15:00"));
     expect(await resolveToken(db, oldPass.token)).toEqual({ kind: "unusable" });
-    expect(await resolveToken(db, newPass.token)).toMatchObject({ kind: "idle" });
+    expect(await resolveToken(db, newPass.token)).toEqual({ kind: "unusable" });
+    const states = await db.query<{ state: string }>("select state from passes order by state");
+    expect(states.map((s) => s.state)).toEqual(["expired", "revoked"]);
     const rows = await db.query("select 1 from passes where registration_id is not null");
     expect(rows).toHaveLength(0);
   });
 
-  it("되돌아온 패스를 다른 여객에게 다시 연결할 수 있다", async () => {
+  it("끝난 패스는 다른 여객에게 다시 연결할 수 없다", async () => {
     const db = await setup(flightRow("KE123", "2026-10-05 14:30"), flightRow("KE999", "2026-10-05 20:00"));
     const { pass } = await registerWithPass(db, t0);
     await purge(db, kst("2026-10-05 15:00"));
 
     const next = await register(db, kst("2026-10-05 15:10"), { flightNo: "KE999", name: "다음 여객" });
-    expect((await linkPass(db, pass.token, next.id, kst("2026-10-05 15:11"))).ok).toBe(true);
-    expect(await resolveToken(db, pass.token)).toMatchObject({ kind: "active", registrationId: next.id });
+    expect(await linkPass(db, pass.token, next.id, kst("2026-10-05 15:11"))).toEqual({
+      ok: false,
+      error: "pass_revoked",
+    });
+    expect(await idleTokenByPassNo(db, pass.passNo)).toBeNull();
+  });
+
+  it("끝난 패스의 번호는 새 패스가 다시 쓸 수 있다. 살아 있는 패스의 번호는 못 쓴다", async () => {
+    const db = await setup(flightRow("KE123", "2026-10-05 14:30"));
+    const { pass } = await registerWithPass(db, t0);
+    const [idle] = await generatePasses(db, 1);
+    await purge(db, kst("2026-10-05 15:00"));
+
+    const insert = "insert into passes (token, pass_no) values ($1, $2)";
+    await expect(db.query(insert, ["a".repeat(24), pass.passNo])).resolves.toBeDefined();
+    await expect(db.query(insert, ["b".repeat(24), idle.passNo])).rejects.toThrow();
+    expect(await idleTokenByPassNo(db, pass.passNo)).toBe("a".repeat(24));
   });
 });
 

@@ -2,7 +2,7 @@ import { randomBytes, randomInt } from "node:crypto";
 import type { Db } from "./db";
 import { isUuid } from "./registrations";
 
-export type PassState = "idle" | "active" | "revoked";
+export type PassState = "idle" | "active" | "revoked" | "expired";
 
 export interface Pass {
   id: string;
@@ -27,7 +27,10 @@ function toPass(r: Row): Pass {
   return { id: r.id, token: r.token, passNo: r.pass_no, registrationId: r.registration_id, state: r.state };
 }
 
-/** 패스를 미리 만들어 둔다. QR 에는 token 만, 패스에는 passNo 만 인쇄한다. */
+/**
+ * 패스를 미리 만들어 둔다. QR 에는 token 만, 패스에는 passNo 만 인쇄한다.
+ * 패스 번호는 살아 있는 패스(미사용·사용 중)와만 겹치지 않게 뽑는다. 끝난 패스의 번호는 다시 쓴다.
+ */
 export async function generatePasses(db: Db, count: number): Promise<Pass[]> {
   const made: Pass[] = [];
   let tries = 0;
@@ -57,7 +60,7 @@ async function passProblem(db: Db, token: string): Promise<LinkError | null> {
   const [pass] = await db.query<Row>(`select ${COLUMNS} from passes where token = $1`, [token]);
   if (!pass) return "not_a_pass";
   if (pass.state === "active") return "pass_in_use";
-  if (pass.state === "revoked") return "pass_revoked";
+  if (pass.state === "revoked" || pass.state === "expired") return "pass_revoked";
   return null;
 }
 

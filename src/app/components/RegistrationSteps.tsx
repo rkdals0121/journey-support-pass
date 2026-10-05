@@ -142,7 +142,13 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
             <p>
               <strong>언제 지우나요</strong>
               <br />
-              항공편 출발 후 삭제합니다.
+              이름, 항공편, 필요한 도움은 항공편 출발 후 삭제합니다.
+            </p>
+            <p>
+              <strong>무엇이 남나요</strong>
+              <br />
+              교통약자 구분과 응대한 구역·시각은 서비스 개선을 위한 통계로 남습니다. 누구의 것인지는 알 수 없게
+              남깁니다.
             </p>
             <p className="muted small">
               필요한 도움은 건강과 관련된 정보일 수 있어 따로 동의를 받습니다. 동의하지 않아도 기존 안내와 지원은 그대로

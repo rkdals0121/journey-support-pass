@@ -240,9 +240,20 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             </button>
           </form>
           {candidates && candidates.length === 0 && <p className="notice">패스가 연결된 등록을 찾지 못했습니다.</p>}
+          {candidates && candidates.length > 1 && (
+            <p className="notice">같은 이름의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</p>
+          )}
           {candidates?.map((s) => (
-            <button key={s.registrationId} className="choice" onClick={() => setTarget({ summary: s, mode: "reissue" })}>
-              {s.name} · {s.flightNo} {s.destName} {s.timeLabel}
+            <button
+              key={s.registrationId}
+              className="choice choice-stack"
+              onClick={() => setTarget({ summary: s, mode: "reissue" })}
+            >
+              <span>
+                {s.name} · {s.flightNo} {s.destName} {s.timeLabel}
+              </span>
+              {/* 같은 편에 이름이 같은 여객이 있을 때 구분할 수 있게 등록 내용을 함께 보여준다. */}
+              <span className="small muted">{[...s.categories, ...s.needs].join(" / ")}</span>
             </button>
           ))}
         </div>

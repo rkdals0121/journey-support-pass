@@ -29,7 +29,11 @@ function shouldPurge(c: CaseView, now: Date): boolean {
 
 /**
  * 한 등록에서 사람을 알 수 있는 값을 지운다.
- * 응대 기록에는 지원 종류(묶음 단위)와 탑승구 위치 구분만 남기고 등록과의 연결을 끊는다.
+ *
+ * 지우는 것: 이름, 항공편, 필요한 도움, 접수 번호. 패스·응대 기록·조회 기록과 등록 사이의 연결.
+ * 남기는 것: 교통약자 구분, 등록 경로, 등록·연결 시각 (등록 행). 구역, 응대 시각, 지원 종류(묶음 단위),
+ *           탑승구 위치 구분 (응대 기록). 모두 누구의 것인지 알 수 없는 상태로 남는다.
+ * 패스는 일회용이므로 expired 로 끝내고 다시 쓰지 않는다.
  */
 async function purgeOne(db: Db, id: string, needs: string[], categories: string[], gateBand: string | null, now: Date) {
   await db.query(
@@ -38,7 +42,7 @@ async function purgeOne(db: Db, id: string, needs: string[], categories: string[
     [id, supportGroups(needs), categories, gateBand],
   );
   await db.query(
-    `update passes set state = 'idle', registration_id = null, linked_at = null
+    `update passes set state = 'expired', registration_id = null, linked_at = null
      where registration_id = $1 and state = 'active'`,
     [id],
   );

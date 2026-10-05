@@ -1,5 +1,5 @@
 /**
- * 구역·패스·(선택) 모의 운항을 적재한다.
+ * 구역·패스·(선택) 모의 운항을 적재한다. 미사용 패스는 30장이 되도록 채운다.
  *
  *   npm run seed                      구역과 패스만
  *   npm run seed -- --mock-flights    지금 시각 기준의 모의 운항까지
@@ -65,13 +65,10 @@ function mockFlights(now: Date): FlightRow[] {
   const zones = await seedZones(db, hashCode);
   console.log(`구역 ${zones}곳 적재`);
 
-  const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from passes");
-  if (n === 0) {
-    await generatePasses(db, PASS_COUNT);
-    console.log(`패스 ${PASS_COUNT}장 생성`);
-  } else {
-    console.log(`패스 ${n}장이 이미 있어 새로 만들지 않음`);
-  }
+  // 패스는 일회용이라 쓸수록 줄어든다. 미사용 패스가 PASS_COUNT 장이 되도록 채운다.
+  const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from passes where state = 'idle'");
+  if (n < PASS_COUNT) await generatePasses(db, PASS_COUNT - n);
+  console.log(`미사용 패스 ${Math.max(n, PASS_COUNT)}장 (새로 만든 것 ${Math.max(PASS_COUNT - n, 0)}장)`);
 
   if (process.argv.includes("--mock-flights")) {
     const now = new Date();

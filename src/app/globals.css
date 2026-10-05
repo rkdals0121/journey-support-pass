@@ -482,3 +482,9 @@ input[type="password"] {
     gap: 6mm;
   }
 }
+
+.choice-stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}

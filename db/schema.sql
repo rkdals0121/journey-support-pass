@@ -62,11 +62,21 @@ create unique index if not exists registrations_pending_receipt
 create table if not exists passes (
   id uuid primary key default gen_random_uuid(),
   token text not null unique,
-  pass_no text not null unique,
+  pass_no text not null,
   registration_id uuid references registrations(id),
-  state text not null default 'idle' check (state in ('idle','active','revoked')),
+  state text not null default 'idle',
   linked_at timestamptz
 );
+-- 패스는 일회용이다. 출발 후에는 expired, 분실 재발급으로 버린 것은 revoked 로 남고 다시 쓰지 않는다.
+-- 제약을 이름으로 지웠다가 다시 거는 것은, 먼저 만들어진 DB 에도 같은 규칙을 적용하기 위해서다.
+alter table passes drop constraint if exists passes_pass_no_key;
+alter table passes drop constraint if exists passes_state_check;
+alter table passes add constraint passes_state_check
+  check (state in ('idle','active','revoked','expired'));
+-- 패스 번호 네 자리는 살아 있는 패스(미사용·사용 중) 안에서만 겹치지 않으면 된다.
+-- 끝난 패스의 번호는 새 패스가 다시 쓴다.
+create unique index if not exists passes_live_pass_no
+  on passes (pass_no) where state in ('idle','active');
 
 create table if not exists encounters (
   id uuid primary key default gen_random_uuid(),
