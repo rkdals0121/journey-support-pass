@@ -314,6 +314,34 @@ function writeReport() {
   await waitText(page, "접속 코드가 맞지 않습니다");
   check("틀린 접속 코드는 받지 않는다", true);
 
+  // 접속 코드 잠금. 다른 기기인 것처럼 브라우저 표시를 바꾼 창에서 해 본다(이 창의 로그인은 막히지 않아야 한다).
+  const lockPage = await open(browser);
+  await lockPage.setUserAgent("jsp-e2e-lock-test");
+  await lockPage.goto(`${BASE}/staff/login`, { waitUntil: "load", timeout: 120_000 });
+  const tries: number[] = [];
+  for (let i = 0; i < 6; i++) {
+    tries.push(
+      await lockPage.evaluate(
+        (code) =>
+          fetch("/api/staff/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) }).then((r) => r.status),
+        `00000${i}`,
+      ),
+    );
+  }
+  check("접속 코드를 5회 틀리면 그 기기는 잠긴다", tries.join(",") === "401,401,401,401,401,429", tries.join(","));
+  const lockedRight = await lockPage.evaluate(
+    (code) =>
+      fetch("/api/staff/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) }).then((r) => r.status),
+    COMMON_CODE,
+  );
+  check("잠긴 동안에는 맞는 코드도 받지 않는다", lockedRight === 429, String(lockedRight));
+  await lockPage.close();
+
+  const cronOk = await fetch(`${BASE}/api/cron/purge`, {
+    headers: { Authorization: `Bearer ${process.env.CRON_SECRET ?? "dev-only-secret-change-me"}` },
+  });
+  check("예약 실행 경로는 비밀값이 맞으면 돈다 (출발 후 삭제)", cronOk.status === 200, String(cronOk.status));
+
   // ───────── 3. 현장 직원: 공통 코드 → 구역 고르기 → 목록 ─────────
   section("현장 직원");
   await login(page, COMMON_CODE);
@@ -336,6 +364,17 @@ function writeReport() {
   check("운항 정보 기준 시각이 보인다", /운항 정보 \d\d:\d\d 기준/.test(list1));
   check("소통 방식이 줄인 말로 보인다", list1.includes("듣기 어려움") && list1.includes("천천히 설명"));
   await shot(page, "직원-내구역목록", true);
+
+  // 통신이 끊기면 오래된 목록을 지우고 구두 확인을 안내한다.
+  await page.setOfflineMode(true);
+  await clickText(page, "button[aria-label='목록 새로 고침']", "");
+  await waitText(page, "연결할 수 없습니다");
+  check("통신이 끊기면 목록을 지우고 구두로 확인하라고 안내한다", !(await has(page, "김영희")));
+  await shot(page, "직원-통신끊김");
+  await page.setOfflineMode(false);
+  await clickText(page, "button", "다시 시도");
+  await waitText(page, "김영희");
+  check("다시 연결되면 목록이 돌아온다", true);
 
   await clickText(page, ".seg button", "전체");
   await waitText(page, "다른 구역");
@@ -422,6 +461,11 @@ function writeReport() {
   await clickText(page, ".case-row", "오대기");
   await waitText(page, "탑승구가 정해지면 표시됩니다");
   check("탑승구 미정 카드는 미정이라고 보여준다", await has(page, "미정"));
+  // 여객 카드를 열어 둔 채 두면 2분 뒤 목록으로 돌아간다.
+  const openedAt = Date.now();
+  await page.waitForFunction(() => location.pathname === "/staff", { timeout: 170_000 });
+  const closedAfter = Math.round((Date.now() - openedAt) / 1000);
+  check("여객 카드는 조작 없이 2분쯤 지나면 닫히고 목록으로 돌아간다", closedAfter >= 60 && closedAfter <= 150, `${closedAfter}초`);
   const bad = await page.evaluate(() => fetch("/api/staff/case/00000000-0000-4000-8000-000000000000").then((r) => r.status));
   check("없는 등록의 카드는 열리지 않는다 (404)", bad === 404, String(bad));
 
@@ -509,10 +553,45 @@ function writeReport() {
   await page.emulateMediaType("screen");
   check("인쇄할 때 QR 은 25mm 크기로 나온다", Math.abs(printed.mm - 25) < 0.6, `${printed.mm.toFixed(1)}mm`);
   check("인쇄할 때 메뉴·버튼·시범 띠는 찍히지 않는다", printed.hidden && fs.statSync(pdf).size > 5000);
+  // 휴대전화 기본 카메라로 찍으면 QR 에 담긴 주소(/p/토큰)가 열린다. 세 번째 패스의 QR 을 읽어 그 주소를 얻는다.
+  const linkPassNo = await page.evaluate(() => (document.querySelectorAll(".sheet-pass .sheet-no")[2] as HTMLElement).innerText.trim());
+  await page.addScriptTag({ path: path.join(process.cwd(), "node_modules", "jsqr", "dist", "jsQR.js") });
+  const qrUrl = await page.evaluate(async () => {
+    const svg = document.querySelectorAll(".sheet-pass svg")[2];
+    const img = new Image();
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = 600;
+    canvas.height = 600;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, 600, 600);
+    ctx.drawImage(img, 0, 0, 600, 600);
+    const data = ctx.getImageData(0, 0, 600, 600);
+    const read = (window as unknown as { jsQR: (d: Uint8ClampedArray, w: number, h: number) => { data: string } | null }).jsQR;
+    return read(data.data, 600, 600)?.data ?? "";
+  });
+  check("패스 QR 에는 /p/토큰 주소만 들어 있다 (이름·번호 없음)", /^http:\/\/localhost:3000\/p\/[A-Za-z0-9_-]{24}$/.test(qrUrl), qrUrl.replace(/\/p\/.*/, "/p/…"));
+
   await clickText(page, "button", "더 만들기");
   await waitText(page, "새로 만들었습니다");
   await page.waitForFunction((n) => document.querySelectorAll(".sheet-pass").length === n + 10, { timeout: WAIT }, idleBefore);
   check("패스 10장 더 만들기", true);
+
+  // 안내데스크가 미사용 패스를 기본 카메라로 찍은 경우: 연결 화면으로 가고, 등록을 고르면 그 패스로 바로 연결된다.
+  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
+  await waitText(page, "방금 찍은 패스는 아직 연결되지 않았습니다");
+  check("기본 카메라로 미사용 패스를 찍으면 안내데스크 연결 화면으로 간다", page.url().includes("/staff/desk?token="));
+  await clickText(page, ".reg-row", "ENGLISH GUEST");
+  await clickText(page, "button", "방금 찍은 패스로 연결");
+  await waitText(page, "님께 이 번호의 패스를 드리세요");
+  check("방금 찍은 패스로 연결된다", (await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim())) === linkPassNo, linkPassNo);
+  // 이제 같은 QR 을 기본 카메라로 찍으면 여객 카드가 열린다.
+  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
+  await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
+  await waitText(page, "ENGLISH GUEST");
+  check("기본 카메라로 연결된 패스를 찍으면 여객 카드가 열린다", await has(page, "임신 중입니다"));
 
   await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".reg-row", "서연결");
@@ -644,6 +723,20 @@ function writeReport() {
   await page.goto(`${BASE}/p/${"z".repeat(24)}`, { waitUntil: "load", timeout: 120_000 });
   check("없는 패스 QR 주소는 사용할 수 없는 패스라고 알려 준다", await has(page, "사용할 수 없는 패스입니다"));
   await shot(page, "패스QR-사용불가");
+
+  // 로그인하지 않은 직원이 기본 카메라로 패스를 찍은 경우: 로그인 → 구역 고르기 → 그 여객 카드로 이어진다.
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
+  await clickText(page, "button[aria-label='로그아웃']", "");
+  await page.waitForFunction(() => location.pathname === "/staff/login", { timeout: WAIT });
+  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
+  await clickText(page, "a", "직원 로그인");
+  await fill(page, "#code", COMMON_CODE);
+  await page.keyboard.press("Enter");
+  await waitText(page, "오늘 근무하는 구역을 골라 주세요");
+  await clickText(page, ".zone-opt", "서편 AM");
+  await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
+  await waitText(page, "ENGLISH GUEST");
+  check("패스를 먼저 찍고 로그인·구역 선택을 해도 그 여객 카드로 이어진다", true);
   await browser.close();
 
   // ───────── 5. 카메라로 QR 스캔 ─────────
