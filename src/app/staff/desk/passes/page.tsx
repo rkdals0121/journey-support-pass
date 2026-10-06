@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { config } from "@/lib/config";
 import { getDb } from "@/lib/db";
 import { currentSession } from "@/lib/session-server";
+import { MorePasses } from "./MorePasses";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ export default async function PassSheetPage() {
           QR 주소는 <code>{config.baseUrl}</code> 기준입니다. 배포 주소가 정해진 뒤에 인쇄하세요. 브라우저의 인쇄
           기능(Ctrl+P)으로 A4에 출력합니다.
         </p>
+        <MorePasses />
         <Link className="btn" href="/staff/desk">
           돌아가기
         </Link>

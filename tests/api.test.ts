@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { deviceKey, type Session } from "@/lib/auth";
 import type { Db } from "@/lib/db";
-import { deskListHandler, deskRegisterHandler, linkHandler, receiptHandler, reissueHandler } from "@/lib/api/desk";
+import {
+  cancelHandler,
+  deskListHandler,
+  deskRegisterHandler,
+  linkHandler,
+  morePassesHandler,
+  receiptHandler,
+  reissueHandler,
+} from "@/lib/api/desk";
 import { allowRegistration, registerHandler, searchFlightsHandler } from "@/lib/api/public";
 import {
   caseHandler,
@@ -96,7 +104,7 @@ describe("직원 경로", () => {
     await registerWithPass(db, now);
     const res = await listHandler(db, staff, now);
     expect(res.body.zoneLabel).toContain("끝단");
-    expect(res.body.poll).toEqual({ label: "운항 정보 없음", stale: true });
+    expect(res.body.poll).toEqual({ label: "운항 정보 없음", stale: true, aged: false });
     expect(res.body.assigned).toHaveLength(1);
   });
 
@@ -339,6 +347,38 @@ describe("안내데스크 경로", () => {
     expect((await deskListHandler(db, staff, "d", now)).status).toBe(403);
     expect((await deskListHandler(db, null, "d", now)).status).toBe(401);
     expect(await logCount("list_view")).toBe(1);
+  });
+
+  it("등록 취소: 사람을 알 수 있는 값을 지우고 패스를 끝낸다", async () => {
+    const waiting = await register(db, now, { name: "잘못등록" });
+    const linked = await registerWithPass(db, now, { name: "취소여객" });
+
+    expect((await cancelHandler(db, staff, { registrationId: waiting.id }, "d", now)).status).toBe(403);
+    expect((await cancelHandler(db, desk, { registrationId: waiting.id }, "d", now)).body).toEqual({ ok: true });
+    expect((await cancelHandler(db, desk, { registrationId: linked.registration.id }, "d", now)).status).toBe(200);
+    // 이미 취소한 등록은 다시 취소할 수 없다.
+    expect((await cancelHandler(db, desk, { registrationId: waiting.id }, "d", now)).status).toBe(404);
+
+    const rows = await db.query<{ name: string | null; status: string; receipt_no: string | null }>(
+      "select name, status, receipt_no from registrations order by submitted_at",
+    );
+    expect(rows).toEqual([
+      { name: null, status: "revoked", receipt_no: null },
+      { name: null, status: "revoked", receipt_no: null },
+    ]);
+    expect(await resolveToken(db, linked.pass.token)).toEqual({ kind: "unusable" });
+    const list = await deskListHandler(db, desk, "d", now);
+    expect(list.body.pending).toHaveLength(0);
+    expect(list.body.active).toHaveLength(0);
+    expect(await logCount("cancel")).toBe(2);
+  });
+
+  it("패스 더 만들기: 안내데스크만, 한 번에 50장까지", async () => {
+    expect((await morePassesHandler(db, staff, { count: 10 })).status).toBe(403);
+    expect((await morePassesHandler(db, desk, { count: 0 })).status).toBe(400);
+    expect((await morePassesHandler(db, desk, { count: 51 })).status).toBe(400);
+    expect((await morePassesHandler(db, desk, { count: 10 })).body).toEqual({ ok: true, made: 10 });
+    expect(await db.query("select 1 from passes where state = 'idle'")).toHaveLength(10);
   });
 
   it("재발급 검색은 이름과 편명이 모두 필요하다", async () => {

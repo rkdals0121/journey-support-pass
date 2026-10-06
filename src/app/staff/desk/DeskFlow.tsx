@@ -25,6 +25,8 @@ interface ListItem extends Summary {
 type Tab = "link" | "new" | "reissue";
 type Target = { summary: Summary; mode: "link" | "reissue" };
 
+const LIST_REFRESH_MS = 30_000;
+
 const TABS: { id: Tab; label: string }[] = [
   { id: "link", label: "패스 연결" },
   { id: "new", label: "새로 등록" },
@@ -58,9 +60,18 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     }
   }, []);
 
+  // 여객이 방금 등록한 건이 새로고침 없이 목록에 뜨도록 주기적으로 다시 읽는다.
   useEffect(() => {
     loadList();
+    const timer = setInterval(loadList, LIST_REFRESH_MS);
+    return () => clearInterval(timer);
   }, [loadList]);
+
+  async function cancelRegistration(r: ListItem) {
+    if (!window.confirm(`${r.name} · ${r.flightNo} 등록을 취소할까요? 되돌릴 수 없습니다.`)) return;
+    const data = await post("cancel", { registrationId: r.registrationId });
+    if (data) loadList();
+  }
 
   async function post(action: string, body: Record<string, unknown>) {
     setBusy(true);
@@ -255,6 +266,19 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             </button>
           ))}
         </section>
+      )}
+
+      {tab === "link" && list && list.pending.length > 0 && (
+        <details className="cancel-box">
+          <summary>잘못 들어온 등록 취소하기</summary>
+          {list.pending.map((r) => (
+            <div className="row-actions" key={r.registrationId}>
+              <button className="link-btn link-danger" onClick={() => cancelRegistration(r)} disabled={busy}>
+                {r.name} · {r.flightNo} (접수 번호 {r.receiptNo}) 취소
+              </button>
+            </div>
+          ))}
+        </details>
       )}
 
       {tab === "new" && !route && (

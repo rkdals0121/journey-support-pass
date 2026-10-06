@@ -2,7 +2,8 @@ import { logAccess, type Session } from "../auth";
 import { labelsIn, NEED_GROUPS } from "../catalog";
 import type { Db } from "../db";
 import { getFlight } from "../flights/search";
-import { extractToken, idleTokenByPassNo, linkPass, reissue } from "../passes";
+import { extractToken, generatePasses, idleTokenByPassNo, linkPass, reissue } from "../passes";
+import { eraseRegistration } from "../purge";
 import {
   findActiveByNameAndFlight,
   findPendingByReceipt,
@@ -205,4 +206,43 @@ export async function deskListHandler(
     pending: rows.filter((r) => r.status === "pending").map(item),
     active: rows.filter((r) => r.status === "active").map(item),
   });
+}
+
+/**
+ * 잘못 등록했거나 여객이 원하지 않을 때 등록을 취소한다.
+ * 출발 후 삭제와 같은 방식으로 사람을 알 수 있는 값을 지우고, 연결된 패스는 끝낸다(다시 쓰지 않는다).
+ * 등록 내용을 고치는 기능은 따로 두지 않는다. 취소하고 다시 등록한다.
+ */
+export async function cancelHandler(
+  db: Db,
+  session: Session | null,
+  body: { registrationId?: unknown },
+  device: string,
+  now: Date,
+): Promise<ApiResult> {
+  const denied = guard(session);
+  if (denied) return denied;
+  const reg = isUuid(body.registrationId) ? await getRegistration(db, body.registrationId) : null;
+  if (!reg || (reg.status !== "pending" && reg.status !== "active")) {
+    return fail(404, "취소할 수 있는 등록이 아닙니다");
+  }
+  await eraseRegistration(db, reg.id, reg.needs, reg.categories, null, now, "revoked");
+  await logAccess(db, { at: now, zoneId: session!.zoneId, deviceKey: device, action: "cancel" });
+  return ok({ ok: true });
+}
+
+const MAX_NEW_PASSES = 50;
+
+/** 미사용 패스를 더 만든다. 패스는 일회용이라 쓸수록 줄어든다. */
+export async function morePassesHandler(
+  db: Db,
+  session: Session | null,
+  body: { count?: unknown },
+): Promise<ApiResult> {
+  const denied = guard(session);
+  if (denied) return denied;
+  const count = typeof body.count === "number" && Number.isInteger(body.count) ? body.count : 0;
+  if (count < 1 || count > MAX_NEW_PASSES) return fail(400, `한 번에 1~${MAX_NEW_PASSES}장까지 만들 수 있습니다`);
+  const made = await generatePasses(db, count);
+  return ok({ ok: true, made: made.length });
 }

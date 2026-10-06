@@ -14,7 +14,15 @@ const FLIGHT_RETENTION_DAYS = 3;
  *           탑승구 위치 구분 (응대 기록). 모두 누구의 것인지 알 수 없는 상태로 남는다.
  * 패스는 일회용이므로 expired 로 끝내고 다시 쓰지 않는다.
  */
-async function purgeOne(db: Db, id: string, needs: string[], categories: string[], gateBand: string | null, now: Date) {
+export async function eraseRegistration(
+  db: Db,
+  id: string,
+  needs: string[],
+  categories: string[],
+  gateBand: string | null,
+  now: Date,
+  finalStatus: "expired" | "revoked" = "expired",
+) {
   await db.query(
     `update encounters set support_groups = $2, categories = $3, gate_band = $4, registration_id = null
      where registration_id = $1`,
@@ -29,9 +37,9 @@ async function purgeOne(db: Db, id: string, needs: string[], categories: string[
   await db.query("update access_logs set registration_id = null where registration_id = $1", [id]);
   await db.query(
     `update registrations set name = null, flight_date = null, flight_no = null, needs = '{}',
-       receipt_no = null, status = 'expired', purged_at = $2
+       receipt_no = null, status = $3, purged_at = $2
      where id = $1`,
-    [id, now],
+    [id, now, finalStatus],
   );
 }
 
@@ -42,7 +50,7 @@ export async function purge(
   let purged = 0;
   for (const c of await loadActiveCases(db, now)) {
     if (!isJourneyOver(c, now)) continue;
-    await purgeOne(db, c.registrationId, c.needs, c.categories, c.gateBand, now);
+    await eraseRegistration(db, c.registrationId, c.needs, c.categories, c.gateBand, now);
     purged += 1;
   }
 
@@ -51,7 +59,7 @@ export async function purge(
     "select id, needs, categories from registrations where status = 'pending' and submitted_at <= $1",
     [new Date(now.getTime() - config.unlinkedPurgeHours * HOUR)],
   );
-  for (const r of stale) await purgeOne(db, r.id, r.needs, r.categories, null, now);
+  for (const r of stale) await eraseRegistration(db, r.id, r.needs, r.categories, null, now);
 
   const logCutoff = new Date(now.getTime() - config.logRetentionDays * 24 * HOUR);
   const logs = await db.query("delete from access_logs where at < $1 returning id", [logCutoff]);

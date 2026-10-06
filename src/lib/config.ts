@@ -17,7 +17,7 @@ export const config = {
 
   boardingCloseMin: 10, // 탑승 마감 추정 = 출발 n분 전
   urgentMin: 30, // 마감 n분 이내면 임박
-  staleMin: 15, // 운항 수집이 n분 넘게 실패하면 경고
+  agedMin: 15, // 운항 정보가 n분보다 오래되면 전광판을 한 번 더 보라고 안내
 
   purgeAfterDepartureMin: 30,
   purgeSafetyHours: 24,
@@ -33,7 +33,12 @@ export const config = {
 
   cardTimeoutSec: 120,
   listRefreshSec: 30,
-  pollMin: 5,
+  // 지금 걸려 있는 운항 수집 간격(분). vercel.json 의 예약과 맞춘다. 5분 간격으로 줄이면 여기도 5 로 바꾼다.
+  pollMin: 60,
+  // 수집이 한 번 빠진 것으로 볼 시간. 이보다 오래되면 수집이 멈춘 것으로 보고 경고한다.
+  get staleMin() {
+    return this.pollMin + 15;
+  },
 
   get sessionSecret() {
     return secret("SESSION_SECRET");

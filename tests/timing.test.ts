@@ -8,6 +8,7 @@ import {
   minutesToClose,
   pollState,
 } from "@/lib/timing";
+import { config } from "@/lib/config";
 import { kst } from "./helpers/db";
 
 const flight = (sched: string, est: string | null = null, status = "") => ({
@@ -64,16 +65,28 @@ describe("탑승 마감 추정", () => {
 describe("운항 정보 신선도", () => {
   const now = kst("2026-10-05 14:50");
 
+  const ago = (min: number, extraMs = 0) => new Date(now.getTime() - min * 60_000 - extraMs);
+
   it("한국 시각으로 기준 시각을 적는다", () => {
-    expect(pollState(kst("2026-10-05 14:35"), now)).toEqual({ label: "운항 정보 14:35 기준", stale: false });
+    expect(pollState(kst("2026-10-05 14:45"), now)).toEqual({
+      label: "운항 정보 14:45 기준",
+      stale: false,
+      aged: false,
+    });
   });
 
-  it("15분을 넘기면 늦은 것으로 본다", () => {
-    expect(pollState(new Date(now.getTime() - 15 * 60_000), now).stale).toBe(false);
-    expect(pollState(new Date(now.getTime() - 15 * 60_000 - 1000), now).stale).toBe(true);
+  it("15분보다 오래되면 전광판을 한 번 더 보라고 안내한다", () => {
+    expect(pollState(ago(15), now)).toMatchObject({ aged: false, stale: false });
+    expect(pollState(ago(15, 1000), now)).toMatchObject({ aged: true, stale: false });
+  });
+
+  it("수집 간격에 15분을 더한 시간을 넘기면 수집이 멈춘 것으로 본다", () => {
+    expect(config.staleMin).toBe(config.pollMin + 15);
+    expect(pollState(ago(config.staleMin), now)).toMatchObject({ stale: false, aged: true });
+    expect(pollState(ago(config.staleMin, 1000), now)).toMatchObject({ stale: true, aged: false });
   });
 
   it("수집 기록이 없으면 늦은 것으로 본다", () => {
-    expect(pollState(null, now)).toEqual({ label: "운항 정보 없음", stale: true });
+    expect(pollState(null, now)).toEqual({ label: "운항 정보 없음", stale: true, aged: false });
   });
 });

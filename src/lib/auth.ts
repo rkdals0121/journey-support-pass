@@ -71,6 +71,7 @@ export type LogAction =
   | "receipt_view"
   | "list_view"
   | "register"
+  | "cancel"
   | "link"
   | "reissue"
   | "login_fail"

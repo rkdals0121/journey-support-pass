@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GROUP_LABEL, itemsOf, NEED_GROUPS } from "@/lib/catalog";
 
 export interface RegistrationPayload {
@@ -48,6 +48,23 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
   const [flight, setFlight] = useState<FlightOption | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 단계가 바뀌면 새 질문의 제목으로 초점을 옮긴다. 화면 읽기 프로그램이 새 질문을 바로 읽고,
+  // 화면이 길 때 맨 위에서 다시 시작한다. 첫 화면에서는 옮기지 않는다.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const heading = rootRef.current?.querySelector("h1");
+    if (heading) {
+      heading.setAttribute("tabindex", "-1");
+      heading.focus();
+      heading.scrollIntoView({ block: "start" });
+    }
+  }, [step]);
 
   // 이전 단계로 돌아가 값을 바꾼 횟수를 센다(오입력·재입력 지표).
   const touched = () => {
@@ -120,7 +137,7 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
   }
 
   return (
-    <div>
+    <div ref={rootRef}>
       <p className="step-count" aria-live="polite">
         {step + 1} / {STEPS.length} · {STEPS[step]}
       </p>

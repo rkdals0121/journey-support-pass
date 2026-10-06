@@ -497,3 +497,37 @@ input[type="password"] {
   align-items: flex-start;
   gap: 2px;
 }
+
+.poll-aged {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-weight: 700;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 2px 0 8px;
+}
+
+.link-danger {
+  color: var(--danger);
+}
+
+h1:focus {
+  outline: none;
+}
+
+.cancel-box {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.cancel-box summary {
+  min-height: 44px;
+  cursor: pointer;
+}

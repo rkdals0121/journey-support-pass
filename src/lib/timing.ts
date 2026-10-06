@@ -63,10 +63,21 @@ export function kstTime(d: Date): string {
   return `${get("hour")}:${get("minute")}`;
 }
 
-export function pollState(lastOk: Date | null, now: Date): { label: string; stale: boolean } {
-  if (!lastOk) return { label: "운항 정보 없음", stale: true };
+export interface PollState {
+  label: string;
+  /** 수집이 멈춘 것으로 보인다. 화면에 경고를 띄운다. */
+  stale: boolean;
+  /** 멈추지는 않았지만 받은 지 좀 됐다. 탑승구를 전광판에서 한 번 더 보라고 안내한다. */
+  aged: boolean;
+}
+
+export function pollState(lastOk: Date | null, now: Date): PollState {
+  if (!lastOk) return { label: "운항 정보 없음", stale: true, aged: false };
+  const age = now.getTime() - lastOk.getTime();
+  const stale = age > config.staleMin * MIN;
   return {
     label: `운항 정보 ${kstTime(lastOk)} 기준`,
-    stale: now.getTime() - lastOk.getTime() > config.staleMin * MIN,
+    stale,
+    aged: !stale && age > config.agedMin * MIN,
   };
 }
