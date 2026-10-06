@@ -40,6 +40,8 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
       const now = Date.now();
       if (text === last.text && now - last.at < REPEAT_GUARD_MS) return;
       last = { text, at: now };
+      // 읽었다는 것을 손으로 알 수 있게 한다. 지원하지 않는 기기에서는 아무 일도 없다.
+      navigator.vibrate?.(80);
       onScanRef.current(text);
     };
 
@@ -112,6 +114,11 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
           <video ref={videoRef} playsInline muted aria-label="QR 스캔 카메라" />
           <canvas ref={canvasRef} hidden />
         </div>
+      )}
+      {!cameraError && (
+        <p className="muted small scan-hint" aria-live="polite">
+          {paused ? "확인하는 중…" : "QR을 화면 가운데에 맞추면 자동으로 읽습니다. 20~30cm 거리가 알맞습니다."}
+        </p>
       )}
 
       {onNumber && (
