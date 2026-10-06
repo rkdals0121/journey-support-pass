@@ -130,7 +130,7 @@ ICN_API_KEY="디코딩 키" npx tsx scripts/probe-poll.ts
 |---|---|
 | 화면과 서버 | Vercel 프로젝트 `journey-support-pass`, 서울 리전(icn1) |
 | DB | Vercel Storage 로 만든 Supabase `supabase-bisque-nest`, 서울 리전. 연결 주소는 Vercel 이 `POSTGRES_URL` 로 넣어 준다 |
-| 코드 | GitHub 비공개 저장소 `rkdals0121/journey-support-pass`. 배포는 `vercel deploy --prod` 로 이 컴퓨터에서 직접 올린다 (push 한다고 자동 배포되지 않는다) |
+| 코드와 배포 | GitHub 비공개 저장소 `rkdals0121/journey-support-pass`. Vercel 프로젝트와 연결되어 있어 `main` 에 push 하면 자동으로 배포된다. 이 컴퓨터에서 `vercel deploy` 로 직접 올리면 커밋 작성자 확인에 걸려 막힌다 |
 
 DB 연결 값은 Vercel 에서 "Sensitive" 로 잠겨 있어 꺼내 볼 수 없다. 그래서 이 컴퓨터에서 DB 에 직접 접속하지 않고, 배포된 서버의 초기 설정 통로(`/api/admin/setup`)를 불러 서버가 직접 넣게 한다.
 
