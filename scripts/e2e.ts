@@ -45,11 +45,10 @@ function check(name: string, ok: boolean, note?: string) {
   console.log(`${ok ? "  통과" : "  실패"}  ${name}${note ? `  (${note})` : ""}`);
 }
 
-async function shot(page: Page, name: string, fullPage = false) {
+async function shot(page: Page, name: string) {
   shotNo += 1;
   const file = path.join(SHOTS, `${String(shotNo).padStart(2, "0")}-${name}.png`);
-  await page.screenshot({ path: file as `${string}.png`, fullPage: false });
-  void fullPage;
+  await page.screenshot({ path: file as `${string}.png` });
   await audit(page, name);
 }
 
@@ -182,7 +181,7 @@ function writeReport() {
   section("여객 등록");
   await page.goto(BASE, { waitUntil: "load", timeout: 120_000 });
   check("첫 화면이 열린다", await has(page, "한 번만 알려 주세요"));
-  await shot(page, "여객-첫화면", true);
+  await shot(page, "여객-첫화면");
   await clickText(page, "a", "지원 등록하기");
   await waitText(page, "등록 전에 확인해 주세요");
   check("등록 1단계: 동의 안내 네 가지가 보인다", (await has(page, "무엇을 받나요")) && (await has(page, "무엇이 남나요")));
@@ -212,7 +211,7 @@ function writeReport() {
   });
   const picked = await page.evaluate(() => document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length);
   check("빠르게 연달아 네 개를 눌러도 네 개가 모두 선택된다", picked === 4, `${picked}개`);
-  await shot(page, "여객-필요한도움", true);
+  await shot(page, "여객-필요한도움");
   await clickText(page, "button", "다음");
 
   await waitText(page, "이름과 항공편을 알려 주세요");
@@ -255,7 +254,7 @@ function writeReport() {
   check("등록을 마치면 접수 번호 네 자리가 나온다", /^\d{4}$/.test(receiptNo), receiptNo);
   check("접수 번호는 주소에 들어 있지 않다", !page.url().includes(receiptNo));
   check("완료 화면에 이름과 편명이 함께 나온다", (await has(page, "점검여객")) && (await has(page, "MK102")));
-  await shot(page, "여객-접수번호", true);
+  await shot(page, "여객-접수번호");
   await page.reload({ waitUntil: "load", timeout: 120_000 });
   await waitText(page, receiptNo);
   check("완료 화면을 새로 고쳐도 접수 번호가 남아 있다", true);
@@ -347,7 +346,7 @@ function writeReport() {
   await login(page, COMMON_CODE);
   await waitText(page, "오늘 근무하는 구역을 골라 주세요");
   check("공통 직원 코드로 들어오면 근무 구역을 고르는 화면이 나온다", page.url().includes("/staff/zone"));
-  await shot(page, "직원-구역고르기", true);
+  await shot(page, "직원-구역고르기");
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   check("구역을 고르기 전에는 여객 목록이 열리지 않는다", page.url().includes("/staff/zone"));
   const before = await page.evaluate(() => fetch("/api/staff/list?scope=all").then((r) => r.status));
@@ -363,7 +362,7 @@ function writeReport() {
   check("공동운항 여객은 실제 운항 편의 탑승구로 보인다", list1.includes("윤공동") && /104[\s\S]*윤공동/.test(list1));
   check("운항 정보 기준 시각이 보인다", /운항 정보 \d\d:\d\d 기준/.test(list1));
   check("소통 방식이 줄인 말로 보인다", list1.includes("듣기 어려움") && list1.includes("천천히 설명"));
-  await shot(page, "직원-내구역목록", true);
+  await shot(page, "직원-내구역목록");
 
   // 통신이 끊기면 오래된 목록을 지우고 구두 확인을 안내한다.
   await page.setOfflineMode(true);
@@ -380,7 +379,7 @@ function writeReport() {
   await waitText(page, "다른 구역");
   await waitText(page, "정하준");
   check("전체를 누르면 다른 구역 여객도 구역 이름과 함께 보인다", await has(page, "제2여객터미널 서편 AM"));
-  await shot(page, "직원-전체목록", true);
+  await shot(page, "직원-전체목록");
 
   await fill(page, 'input[type="search"]', "mk22");
   await waitText(page, "전체 구역에서 찾은 여객 1명");
@@ -433,7 +432,7 @@ function writeReport() {
     ["장애가 있습니다", "휠체어를 이용합니다", "동반자가 있습니다", "MK102", "방콕", "130", "탑승 마감까지"].every((s) => card.includes(s)),
   );
   check("여객 카드에 운항 정보 기준 시각이 나온다", /운항 정보 \d\d:\d\d 기준/.test(card));
-  await shot(page, "직원-여객카드", true);
+  await shot(page, "직원-여객카드");
   await clickText(page, "button", "응대 시작");
   await waitText(page, "응대 완료");
   check("응대 시작을 누르면 응대 완료 버튼으로 바뀐다", true);
@@ -452,7 +451,7 @@ function writeReport() {
   await waitText(page, "소통 방식");
   await waitText(page, "응대 시작");
   check("지연 편은 바뀐 출발 시각과 지연 표시가 나온다", (await page.$$("s")).length === 1 && (await has(page, "지연")));
-  await shot(page, "직원-여객카드-지연", true);
+  await shot(page, "직원-여객카드-지연");
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".case-row", "이정자");
   await waitText(page, "글자나 표지를 보기 어렵습니다");
@@ -494,7 +493,7 @@ function writeReport() {
   const deskText = await text(page);
   check("여객이 방금 등록한 건이 접수 번호와 함께 목록에 보인다", deskText.includes(receiptNo) && deskText.includes("서연결"));
   check("미사용 패스 장수가 보인다", /미사용 패스\s*\d+\s*장/.test(deskText));
-  await shot(page, "데스크-패스연결", true);
+  await shot(page, "데스크-패스연결");
 
   // 영어로 등록한 여객도 직원에게는 한국어로 보인다.
   await clickText(page, ".reg-row", "ENGLISH GUEST");
@@ -515,7 +514,7 @@ function writeReport() {
   await clickText(page, "button", "찾기");
   await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
   check("접수 번호로 찾으면 등록 내용을 대조할 수 있다", (await has(page, "점검여객")) && (await has(page, "휠체어를 이용합니다")));
-  await shot(page, "데스크-패스연결-여객확인", true);
+  await shot(page, "데스크-패스연결-여객확인");
   await clickText(page, "button", "자동 배정");
   await waitText(page, "님께 이 번호의 패스를 드리세요");
   const autoPass = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
