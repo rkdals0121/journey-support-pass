@@ -1213,7 +1213,7 @@ input[type="search"]:focus {
   align-items: center;
   gap: 12px;
   margin: 22px 0 4px;
-  color: var(--faint);
+  color: var(--muted);
   font-size: 13.5px;
   font-weight: 700;
 }
