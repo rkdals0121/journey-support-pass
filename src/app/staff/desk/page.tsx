@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { config } from "@/lib/config";
 import { currentSession } from "@/lib/session-server";
+import { StaffNav } from "../../components/StaffNav";
 import { DeskFlow } from "./DeskFlow";
 
 export const dynamic = "force-dynamic";
@@ -21,8 +22,11 @@ export default async function DeskPage({ searchParams }: { searchParams: Promise
   }
   const { token } = await searchParams;
   return (
-    <main className="page">
-      <DeskFlow mock={config.dataMode === "mock"} scannedToken={token ?? null} />
-    </main>
+    <>
+      <main className="page has-nav">
+        <DeskFlow mock={config.dataMode === "mock"} scannedToken={token ?? null} />
+      </main>
+      <StaffNav isDesk />
+    </>
   );
 }

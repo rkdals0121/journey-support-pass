@@ -94,16 +94,6 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
         </>
       )}
 
-      <nav className="bottom-bar">
-        {data.isDesk && (
-          <Link className="btn" href="/staff/desk">
-            패스 연결·등록
-          </Link>
-        )}
-        <Link className="btn btn-primary" href="/staff/scan">
-          QR 스캔
-        </Link>
-      </nav>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Brand } from "../../components/Sunflower";
 import { RECEIPT_KEY } from "../RegisterFlow";
 
 export default function RegisterDonePage() {
@@ -27,6 +28,7 @@ export default function RegisterDonePage() {
 
   return (
     <main className="page">
+      <Brand />
       <h1>등록을 마쳤습니다</h1>
       <p>안내데스크에서 이 화면을 보여 주세요.</p>
       <div className="receipt" aria-label={`접수 번호 ${receiptNo.split("").join(" ")}`}>

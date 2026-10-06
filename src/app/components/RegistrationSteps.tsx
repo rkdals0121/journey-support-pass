@@ -138,6 +138,11 @@ export function RegistrationSteps({ mock, byStaff = false, onSubmit }: Props) {
 
   return (
     <div ref={rootRef}>
+      <div className="steps" aria-hidden="true">
+        {STEPS.map((s, i) => (
+          <i key={s} className={i <= step ? "on" : ""} />
+        ))}
+      </div>
       <p className="step-count" aria-live="polite">
         {step + 1} / {STEPS.length} · {STEPS[step]}
       </p>

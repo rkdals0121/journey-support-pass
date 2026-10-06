@@ -1,17 +1,30 @@
+/*
+  공항 안내 표지판과 탑승권에서 가져온 모양.
+  색은 해바라기 표식(초록 목걸이, 노란 해바라기)에서 왔다.
+  - 잉크: 표지판의 짙은 바탕
+  - 목걸이 초록: 누르는 것
+  - 해바라기 노랑: 탑승구 판, 지금 봐야 할 것
+  숫자(탑승구, 시각, 편명, 번호)는 표지판처럼 굵고 좁은 글꼴로 쓴다.
+*/
 :root {
-  --bg: #f6f7f9;
+  --ink: #10241c;
+  --ink-2: #1b3a2d;
+  --green: #1f6b4a;
+  --green-press: #17543a;
+  --mint: #e3f0e8;
+  --sun: #f6c445;
+  --sun-deep: #8a6400;
+  --bg: #eef3ef;
   --surface: #ffffff;
-  --text: #16202b;
-  --muted: #55616e;
-  --line: #d5dbe2;
-  --primary: #0b4f8a;
-  --primary-text: #ffffff;
-  --danger: #b3261e;
-  --danger-bg: #fdecea;
-  --warn-bg: #fff4d6;
-  --warn-text: #5c4300;
-  --ok: #1b6e3c;
-  --radius: 12px;
+  --line: #c9d6ce;
+  --muted: #55675d;
+  --red: #c4321f;
+  --red-bg: #fde9e5;
+  --ok: #1f6b4a;
+  --radius: 14px;
+  --font-body: var(--font-body-loaded), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: var(--font-num-loaded), "Arial Narrow", sans-serif;
+  --nav-h: 68px;
 }
 
 * {
@@ -25,46 +38,78 @@ html {
 body {
   margin: 0;
   background: var(--bg);
-  color: var(--text);
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  color: var(--ink);
+  font-family: var(--font-body);
   font-size: 18px;
   line-height: 1.55;
   word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-  font-size: 26px;
-  line-height: 1.3;
   margin: 0 0 12px;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+
+h1:focus {
+  outline: none;
 }
 
 h2 {
-  font-size: 20px;
-  margin: 24px 0 8px;
+  margin: 28px 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
 }
 
 p {
   margin: 0 0 12px;
 }
 
-.mock-banner {
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-  padding: 6px 12px;
+code {
+  font-size: 0.9em;
 }
 
+/* 숫자와 편명 */
+.num,
+.receipt-no,
+.case-gate,
+.card-gate,
+.sheet-no,
+.step-count b {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 시범 운영 띠 ── */
+.mock-banner {
+  padding: 5px 12px;
+  background: var(--sun);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+/* ── 공통 틀 ── */
 .page {
   max-width: 560px;
   margin: 0 auto;
-  padding: 24px 16px 120px;
+  padding: 24px 18px 120px;
+}
+
+.has-nav {
+  padding-bottom: calc(var(--nav-h) + 40px);
 }
 
 .lead {
-  color: var(--muted);
   margin-bottom: 24px;
+  color: var(--muted);
 }
 
 .muted {
@@ -75,140 +120,73 @@ p {
   font-size: 15px;
 }
 
+/* 여객 화면 위쪽의 이름표 */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  color: var(--green);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.brand svg {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+/* ── 누르는 것 ── */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 56px;
+  min-height: 58px;
   margin-top: 12px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   border: 2px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--text);
+  color: var(--ink);
   font: inherit;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background 0.12s,
+    transform 0.06s;
+}
+
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn-primary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-text);
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+
+.btn-primary:active {
+  background: var(--green-press);
 }
 
 .btn-danger {
-  background: var(--danger);
-  border-color: var(--danger);
+  border-color: var(--red);
+  background: var(--red);
   color: #fff;
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  border-color: var(--line);
+  background: #dfe7e2;
+  color: #8a9a91;
   cursor: not-allowed;
-}
-
-.btn:focus-visible,
-.choice:focus-visible,
-input:focus-visible,
-a:focus-visible {
-  outline: 3px solid #f2a900;
-  outline-offset: 2px;
-}
-
-.row {
-  display: flex;
-  gap: 12px;
-}
-
-.row > * {
-  flex: 1;
-}
-
-label {
-  display: block;
-  font-weight: 700;
-  margin: 16px 0 6px;
-}
-
-input[type="text"],
-input[type="password"] {
-  width: 100%;
-  min-height: 56px;
-  padding: 12px 14px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-}
-
-.error {
-  background: var(--danger-bg);
-  color: var(--danger);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin: 12px 0;
-  font-weight: 700;
-}
-
-.notice {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin: 12px 0;
-}
-
-/* 등록 화면 */
-.step-count {
-  color: var(--muted);
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.choice {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 60px;
-  margin-top: 10px;
-  padding: 12px 14px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.choice-on {
-  border-color: var(--primary);
-  background: #e8f1fa;
-  font-weight: 700;
-}
-
-.choice-mark {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 2px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--primary);
-  font-weight: 700;
-}
-
-.choice-on .choice-mark {
-  border-color: var(--primary);
+  transform: none;
 }
 
 .btn-inline {
@@ -217,35 +195,269 @@ input[type="password"] {
   margin-top: 0;
 }
 
-.receipt {
+/* 흰 바탕과 초록 바탕 모두에서 보이는 초점 표시 */
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 7px var(--sun);
+}
+
+.row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 24px 0;
-  padding: 24px 12px;
-  border: 3px solid var(--primary);
+  gap: 10px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+label {
+  display: block;
+  margin: 18px 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: var(--green);
+}
+
+/* 숫자를 넣는 칸은 표지판 숫자로 */
+#pass-no,
+#receipt,
+#code {
+  font-family: var(--font-num);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.error {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-left: 6px solid var(--red);
+  border-radius: 6px var(--radius) var(--radius) 6px;
+  background: var(--red-bg);
+  color: var(--red);
+  font-weight: 700;
+}
+
+.notice {
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
 }
 
-.receipt-label {
+.notice p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── 첫 화면 ── */
+.home-hero {
+  margin: -24px -18px 24px;
+  padding: 44px 22px 34px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.home-hero svg {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 18px;
+}
+
+.home-hero h1 {
+  font-size: 29px;
+  line-height: 1.28;
+}
+
+.home-hero p {
+  margin: 0;
+  color: #c5d6cc;
+}
+
+.home-steps {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.home-steps li {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.home-steps b {
+  flex: none;
+  width: 22px;
+  font-family: var(--font-num);
+  font-size: 26px;
+  color: var(--green);
+}
+
+.home-staff {
+  display: block;
+  margin-top: 28px;
   color: var(--muted);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* ── 등록 ── */
+.steps {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.steps i {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.steps i.on {
+  background: var(--green);
+}
+
+.step-count {
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: 15px;
   font-weight: 700;
 }
 
-.receipt-no {
-  font-size: 96px;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 62px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
 }
 
-/* 스캔 */
+.choice-on {
+  border-color: var(--green);
+  background: var(--mint);
+  font-weight: 700;
+}
+
+.choice-mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.choice-on .choice-mark {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.choice-stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+/* 접수 번호: 절취선이 있는 탑승권 조각 */
+.receipt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 26px 0;
+  padding: 22px 12px 26px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.receipt::before {
+  content: "";
+  position: absolute;
+  top: 54px;
+  left: 14px;
+  right: 14px;
+  border-top: 2px dashed var(--line);
+}
+
+.receipt::after {
+  content: "";
+  position: absolute;
+  top: 43px;
+  left: -12px;
+  right: -12px;
+  height: 24px;
+  background:
+    radial-gradient(circle at 12px 50%, var(--bg) 11px, transparent 11.5px),
+    radial-gradient(circle at calc(100% - 12px) 50%, var(--bg) 11px, transparent 11.5px);
+  pointer-events: none;
+}
+
+.receipt-label {
+  margin-bottom: 28px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.receipt-no {
+  font-size: 116px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+
+/* ── 스캔 ── */
 .scanner {
+  position: relative;
   overflow: hidden;
   border-radius: var(--radius);
-  background: #000;
+  background: var(--ink);
   aspect-ratio: 1 / 1;
 }
 
@@ -255,21 +467,71 @@ input[type="password"] {
   object-fit: cover;
 }
 
-/* 직원 목록 */
+/* 가운데를 겨누는 네 모서리 */
+.scanner::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: 10px;
+  background:
+    linear-gradient(var(--sun), var(--sun)) top left / 34px 5px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) top left / 5px 34px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) top right / 34px 5px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) top right / 5px 34px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) bottom left / 34px 5px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) bottom left / 5px 34px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) bottom right / 34px 5px no-repeat,
+    linear-gradient(var(--sun), var(--sun)) bottom right / 5px 34px no-repeat;
+  pointer-events: none;
+}
+
+.scan-hint {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+/* ── 직원 화면: 위쪽 표지판 ── */
 .staff-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  margin: -24px -18px 16px;
+  padding: 18px 18px 14px;
+  background: var(--ink);
+  color: #fff;
 }
 
 .staff-head h1 {
-  font-size: 22px;
   margin-bottom: 2px;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.staff-head .poll-label {
+  margin: 0;
+  color: var(--sun);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.staff-head .error,
+.staff-head .poll-aged {
+  margin: 10px 0 0;
 }
 
 .poll-label {
   margin-bottom: 8px;
+}
+
+.poll-aged {
+  margin: 0 0 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--sun);
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .link-btn {
@@ -278,35 +540,39 @@ input[type="password"] {
   padding: 8px;
   border: 0;
   background: none;
-  color: var(--primary);
+  color: var(--green);
   font: inherit;
   font-size: 15px;
   text-decoration: underline;
   cursor: pointer;
 }
 
+.staff-head .link-btn {
+  color: #c5d6cc;
+}
+
+.link-danger {
+  color: var(--red);
+}
+
+/* ── 직원 화면: 여객 줄 (출발 안내판의 한 줄) ── */
 .case-list {
-  list-style: none;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
 
 .case-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 14px;
   margin-top: 10px;
-  padding: 12px 14px;
-  border: 2px solid var(--line);
+  padding: 10px;
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--text);
+  box-shadow: 0 1px 0 var(--line);
+  color: var(--ink);
   text-decoration: none;
-}
-
-.case-urgent {
-  border-color: var(--danger);
-  background: var(--danger-bg);
 }
 
 .case-gate {
@@ -314,222 +580,193 @@ input[type="password"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 72px;
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  width: 88px;
+  padding: 6px 4px 8px;
+  border-radius: 10px;
+  background: var(--sun);
+  color: var(--ink);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .case-gate-label,
 .card-gate-label {
-  color: var(--muted);
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.case-gate-label {
+  margin-bottom: 4px;
 }
 
 .case-main {
   min-width: 0;
+  padding: 2px 0;
+  line-height: 1.45;
+}
+
+
+.case-urgent .case-gate {
+  background: var(--red);
+  color: #fff;
 }
 
 .case-close-urgent {
-  color: var(--danger);
-  font-weight: 800;
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* ── 직원 화면: 아래 고정 메뉴 ── */
+.staff-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.staff-nav a {
+  position: relative;
+  flex: 1;
+  max-width: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--nav-h);
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.staff-nav a[aria-current="page"] {
+  color: var(--ink);
+}
+
+.staff-nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22%;
+  right: 22%;
+  height: 5px;
+  border-radius: 0 0 5px 5px;
+  background: var(--sun);
 }
 
 .bottom-bar {
   position: sticky;
   bottom: 0;
-  margin: 20px -16px 0;
-  padding: 4px 16px 16px;
+  margin: 20px -18px 0;
+  padding: 6px 18px 16px;
   background: linear-gradient(to bottom, transparent, var(--bg) 16px);
 }
 
-/* 여객 카드 */
+/* ── 여객 카드: 탑승권 ── */
 .card-block {
-  margin-top: 10px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  margin-top: 0;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
 
 .card-block h2 {
   margin: 0 0 4px;
-  color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
 }
 
 .card-block p {
   margin-bottom: 4px;
 }
 
+/* 맨 위: 어떻게 말을 걸지. 직원이 가장 먼저 본다. */
 .card-comm {
-  border: 2px solid var(--primary);
-  font-size: 21px;
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--ink);
+  color: #fff;
+  font-size: 22px;
   font-weight: 700;
+  line-height: 1.4;
+}
+
+.card-comm h2 {
+  color: var(--sun);
 }
 
 .card-name {
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 700;
 }
 
-.card-urgent {
-  border: 2px solid var(--danger);
-  background: var(--danger-bg);
+/* 절취선 아래: 항공편 */
+.card-flight {
+  position: relative;
+  margin-top: 0;
+  padding-top: 26px;
+  border-top: 2px dashed var(--line);
+}
+
+.card-flight::before {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: -12px;
+  right: -12px;
+  height: 24px;
+  background:
+    radial-gradient(circle at 12px 50%, var(--bg) 11px, transparent 11.5px),
+    radial-gradient(circle at calc(100% - 12px) 50%, var(--bg) 11px, transparent 11.5px);
+  pointer-events: none;
 }
 
 .card-gate {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
-  gap: 10px;
-  font-size: 44px;
-  font-weight: 800;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
+  gap: 12px;
+  margin: 8px 0 !important;
+  padding: 4px 18px 8px 14px;
+  border-radius: 12px;
+  background: var(--sun);
+  color: var(--ink);
+  font-size: 76px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card-urgent .card-gate {
+  background: var(--red);
+  color: #fff;
 }
 
 .card-gate-changed {
-  color: var(--danger);
-  font-weight: 800;
+  color: var(--red);
+  font-weight: 700;
+}
+
+.card .card-block:last-of-type {
+  border-bottom: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 .lines {
   margin: 0;
-  padding-left: 20px;
+  padding: 0;
+  list-style: none;
 }
 
-/* 안내데스크 */
-.tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
-}
-
-.tab {
-  flex: 1;
-  min-height: 48px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.tab-on {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--primary-text);
-}
-
-.done {
-  border: 2px solid var(--ok);
-  color: var(--ok);
-  font-size: 20px;
-  font-weight: 800;
-}
-
-/* 패스 인쇄 */
-.sheet-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 24px 16px;
-}
-
-.sheet {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.sheet-pass {
-  padding: 8px;
-  border: 1px dashed #999;
-  background: #fff;
-  text-align: center;
-  break-inside: avoid;
-}
-
-/* 화면에서는 휴대전화로 찍을 수 있게 크게 그린다. 인쇄할 때만 실제 패스 크기(25mm)로 줄인다. */
-.sheet-pass svg {
-  display: block;
-  width: 100%;
-  max-width: 240px;
-  height: auto;
-  margin: 0 auto;
-}
-
-.sheet-no {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  font-variant-numeric: tabular-nums;
-}
-
-@media print {
-  .no-print,
-  .mock-banner {
-    display: none;
-  }
-
-  body {
-    background: #fff;
-  }
-
-  .sheet {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6mm;
-  }
-
-  .sheet-pass svg {
-    width: 25mm;
-    height: 25mm;
-  }
-}
-
-.choice-stack {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.poll-aged {
-  margin: 0 0 8px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  font-weight: 700;
-}
-
-.row-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin: 2px 0 8px;
-}
-
-.link-danger {
-  color: var(--danger);
-}
-
-h1:focus {
-  outline: none;
-}
-
-.cancel-box {
-  margin-top: 16px;
-  color: var(--muted);
-  font-size: 15px;
-}
-
-.cancel-box summary {
-  min-height: 44px;
-  cursor: pointer;
+.lines li + li {
+  margin-top: 2px;
 }
 
 /* 여객 카드의 아래 버튼은 한 줄에 놓아 탑승구가 가려지지 않게 한다. */
@@ -550,7 +787,128 @@ h1:focus {
   flex: 2;
 }
 
-.scan-hint {
-  margin: 8px 0 0;
+/* ── 안내데스크 ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 22px;
+  padding: 4px;
+  border-radius: var(--radius);
+  background: #dbe5df;
+}
+
+.tab {
+  flex: 1;
+  min-height: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab-on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(16, 36, 28, 0.18);
+}
+
+.done {
+  border: 0;
+  border-left: 6px solid var(--green);
+  border-radius: 6px var(--radius) var(--radius) 6px;
+  background: var(--mint);
+  color: var(--ink);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 2px 0 8px;
+}
+
+.cancel-box {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.cancel-box summary {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+/* ── 패스 인쇄 ── */
+.sheet-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 18px calc(var(--nav-h) + 40px);
+}
+
+.sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.sheet-pass {
+  padding: 10px;
+  border: 1px dashed #999;
+  border-radius: 10px;
+  background: #fff;
   text-align: center;
+  break-inside: avoid;
+}
+
+/* 화면에서는 휴대전화로 찍을 수 있게 크게 그린다. 인쇄할 때만 실제 패스 크기(25mm)로 줄인다. */
+.sheet-pass svg {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.sheet-no {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+@media print {
+  .no-print,
+  .mock-banner,
+  .staff-nav {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .sheet {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6mm;
+  }
+
+  .sheet-pass svg {
+    width: 25mm;
+    height: 25mm;
+  }
+
+  .sheet-no {
+    font-size: 16pt;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }

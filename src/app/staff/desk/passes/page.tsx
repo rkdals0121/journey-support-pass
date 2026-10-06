@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { config } from "@/lib/config";
 import { getDb } from "@/lib/db";
 import { currentSession } from "@/lib/session-server";
+import { StaffNav } from "../../../components/StaffNav";
 import { MorePasses } from "./MorePasses";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export default async function PassSheetPage() {
           </div>
         ))}
       </div>
+      <StaffNav isDesk />
     </main>
   );
 }

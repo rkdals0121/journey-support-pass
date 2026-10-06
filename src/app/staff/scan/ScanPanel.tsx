@@ -63,9 +63,6 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
           패스 연결하러 가기
         </Link>
       )}
-      <Link className="btn" href="/staff">
-        목록으로
-      </Link>
     </div>
   );
 }
