@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowRight, Check, ChevronLeft, Eye, FileText, Plane, Search, Trash2, BarChart3 } from "lucide-react";
+import { ArrowRight, BarChart3, Check, ChevronLeft, Eye, FileText, Plane, Search, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { GROUP_LABEL, itemsOf, NEED_GROUPS } from "@/lib/catalog";
+import { GROUP_LABEL, itemsOf, NEED_GROUPS, type Group, type Item } from "@/lib/catalog";
+import { GROUP_EN, ITEM_EN, TEXT, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "./Alert";
 import { GROUP_ICON, NeedIcon } from "./NeedIcon";
 
@@ -21,6 +22,7 @@ export interface FlightOption {
   flightDate: string;
   flightNo: string;
   destName: string;
+  destCode?: string;
   label: string;
   day: string;
   time: string;
@@ -34,6 +36,8 @@ interface Props {
   byStaff?: boolean;
   /** 직원 화면처럼 아래에 고정 메뉴가 있으면 버튼을 그 위에 붙인다. */
   aboveNav?: boolean;
+  /** 여객 화면의 언어. 직원이 대신 입력할 때는 한국어만 쓴다. */
+  lang?: Lang;
   /** 이미 받은 등록을 고칠 때. 동의 단계를 건너뛰고 값을 채워서 시작한다. */
   initial?: { name: string; categories: string[]; needs: string[]; flight: FlightOption };
   /** 첫 단계에서 뒤로 가기를 눌렀을 때. */
@@ -42,16 +46,33 @@ interface Props {
   onSubmit: (payload: RegistrationPayload, flight: FlightOption) => Promise<string | null>;
 }
 
-const STEPS = ["동의", "교통약자 구분", "필요한 도움", "이름과 항공편", "확인"];
 const SEARCH_DELAY_MS = 250;
 const sameFlight = (a: FlightOption | null, b: FlightOption) =>
   a !== null && a.flightDate === b.flightDate && a.flightNo === b.flightNo;
 
 // 여객 등록 화면과 안내데스크 대신 입력 화면이 함께 쓴다.
 // 종이 체크리스트와 문구·순서가 같아야 하므로 질문은 여기 한 곳에만 둔다.
-export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, initial, onExit, onSubmit }: Props) {
+export function RegistrationSteps({
+  mock,
+  byStaff = false,
+  aboveNav = false,
+  lang = "ko",
+  initial,
+  onExit,
+  onSubmit,
+}: Props) {
+  const t = TEXT[lang];
+  const itemLabel = (i: Item) => (lang === "en" ? (ITEM_EN[i.code] ?? i.label) : i.label);
+  const groupLabel = (g: Group) => (lang === "en" ? GROUP_EN[g] : GROUP_LABEL[g]);
+  // 운항 정보의 도착지 이름은 한국어뿐이다. 영어 화면에서는 공항 코드를 쓴다.
+  const destOf = (f: FlightOption) => (lang === "en" && f.destCode ? f.destCode : f.destName);
+  const whenOf = (f: FlightOption) =>
+    [f.day === "오늘" ? t.today : f.day === "내일" ? t.tomorrow : f.day, f.time].filter(Boolean).join(" ");
+
   const editing = initial !== undefined;
   const firstStep = editing ? 1 : 0;
+  const steps = t.steps;
+
   const startedAt = useRef(new Date().toISOString());
   const revisiting = useRef(false);
   const [editCount, setEditCount] = useState(0);
@@ -87,6 +108,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
 
   // 편명을 치는 동안 후보를 찾는다. 찾기 버튼을 따로 누르지 않아도 된다.
   // 고른 편이 있으면(검색 칸에 그 편명이 들어 있다) 다시 찾지 않는다.
+  const offline = t.offline;
   useEffect(() => {
     const q = query.trim();
     if (flight || q.length < 2) {
@@ -103,7 +125,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
         setOptions(data.flights ?? []);
         setError(null);
       } catch {
-        if (!cancelled) setError("연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        if (!cancelled) setError(offline);
       } finally {
         if (!cancelled) setSearching(false);
       }
@@ -112,7 +134,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, flight]);
+  }, [query, flight, offline]);
 
   // 이전 단계로 돌아가 값을 바꾼 횟수를 센다(오입력·재입력 지표).
   const touched = () => {
@@ -163,10 +185,10 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
         <span className="bubble">
           <Check size={26} aria-hidden="true" />
         </span>
-        <strong>등록하지 않았습니다</strong>
-        <p>기존 안내와 지원은 그대로 받으실 수 있습니다. 도움이 필요하면 가까운 안내데스크나 직원에게 말씀해 주세요.</p>
+        <strong>{t.declinedTitle}</strong>
+        <p>{t.declinedBody}</p>
         <button className="btn" onClick={() => setDeclined(false)}>
-          다시 살펴보기
+          {t.declinedBack}
         </button>
       </div>
     );
@@ -174,39 +196,45 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
 
   const canNext =
     step === 1 ? categories.length > 0 : step === 3 ? name.trim().length > 0 && flight !== null : true;
+  const stepNo = step + 1 - firstStep;
+  const stepTotal = steps.length - firstStep;
 
   return (
     <div ref={rootRef}>
       <div className="topbar">
-        <button className="icon-btn" onClick={back} aria-label={step === firstStep ? "나가기" : "이전 단계"}>
+        <button className="icon-btn" onClick={back} aria-label={step === firstStep ? t.exit : t.prevStep}>
           <ChevronLeft size={26} aria-hidden="true" />
         </button>
         <div className="progress" aria-hidden="true">
-          {STEPS.slice(firstStep).map((s, i) => (
+          {steps.slice(firstStep).map((s, i) => (
             <i key={s} className={i + firstStep <= step ? "on" : ""} />
           ))}
         </div>
         <span
           className="step-count"
           aria-live="polite"
-          aria-label={`${STEPS.length - firstStep}단계 중 ${step + 1 - firstStep}단계, ${STEPS[step]}`}
+          aria-label={
+            lang === "en"
+              ? `Step ${stepNo} of ${stepTotal}, ${steps[step]}`
+              : `${stepTotal}단계 중 ${stepNo}단계, ${steps[step]}`
+          }
         >
-          {step + 1 - firstStep}/{STEPS.length - firstStep}
+          {stepNo}/{stepTotal}
         </span>
       </div>
 
       {step === 0 && (
         <section>
-          <p className="step-kicker">{STEPS[0]}</p>
-          <h1>{byStaff ? "여객께 동의를 받아 주세요" : "등록 전에 확인해 주세요"}</h1>
+          <p className="step-kicker">{steps[0]}</p>
+          <h1>{byStaff ? "여객께 동의를 받아 주세요" : t.consentTitle}</h1>
           <div className="panel">
             <div className="info-row">
               <span className="bubble">
                 <FileText size={20} aria-hidden="true" />
               </span>
               <div>
-                <strong>무엇을 받나요</strong>
-                <span>이름, 항공편, 교통약자 구분, 필요한 도움. 연락처와 진단명은 받지 않습니다.</span>
+                <strong>{t.whatTitle}</strong>
+                <span>{t.whatBody}</span>
               </div>
             </div>
             <div className="info-row">
@@ -214,8 +242,8 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
                 <Eye size={20} aria-hidden="true" />
               </span>
               <div>
-                <strong>누가 보나요</strong>
-                <span>인천공항운영서비스 직원이 패스의 QR을 스캔했을 때만 봅니다.</span>
+                <strong>{t.whoTitle}</strong>
+                <span>{t.whoBody}</span>
               </div>
             </div>
             <div className="info-row">
@@ -223,8 +251,8 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
                 <Trash2 size={20} aria-hidden="true" />
               </span>
               <div>
-                <strong>언제 지우나요</strong>
-                <span>이름, 항공편, 필요한 도움은 항공편 출발 후 삭제합니다.</span>
+                <strong>{t.whenTitle}</strong>
+                <span>{t.whenBody}</span>
               </div>
             </div>
             <div className="info-row">
@@ -232,35 +260,29 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
                 <BarChart3 size={20} aria-hidden="true" />
               </span>
               <div>
-                <strong>무엇이 남나요</strong>
-                <span>
-                  교통약자 구분과 응대한 구역·시각은 서비스 개선을 위한 통계로 남습니다. 누구의 것인지는 알 수 없게
-                  남깁니다.
-                </span>
+                <strong>{t.keepTitle}</strong>
+                <span>{t.keepBody}</span>
               </div>
             </div>
           </div>
-          <p className="muted small">
-            필요한 도움은 건강과 관련된 정보일 수 있어 따로 동의를 받습니다. 동의하지 않아도 기존 안내와 지원은 그대로
-            받으실 수 있습니다.
-          </p>
+          <p className="muted small">{t.consentNote}</p>
           <button className="btn btn-ghost" onClick={() => setDeclined(true)}>
-            동의하지 않습니다
+            {t.decline}
           </button>
         </section>
       )}
 
       {step === 1 && (
         <section>
-          <p className="step-kicker">{STEPS[1]}</p>
-          <h1>해당하는 것을 모두 골라 주세요</h1>
-          <p className="muted">여러 개를 고를 수 있습니다.</p>
-          <div role="group" aria-label={GROUP_LABEL.category}>
+          <p className="step-kicker">{steps[1]}</p>
+          <h1>{t.categoryTitle}</h1>
+          <p className="muted">{t.multi}</p>
+          <div role="group" aria-label={groupLabel("category")}>
             {itemsOf("category").map((i) => (
               <Choice
                 key={i.code}
                 code={i.code}
-                label={i.label}
+                label={itemLabel(i)}
                 checked={categories.includes(i.code)}
                 onToggle={() => toggle(setCategories, i.code)}
               />
@@ -271,22 +293,22 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
 
       {step === 2 && (
         <section>
-          <p className="step-kicker">{STEPS[2]}</p>
-          <h1>필요한 도움을 골라 주세요</h1>
-          <p className="muted">해당하는 것이 없으면 고르지 않고 넘어가셔도 됩니다.</p>
+          <p className="step-kicker">{steps[2]}</p>
+          <h1>{t.needsTitle}</h1>
+          <p className="muted">{t.needsHint}</p>
           {NEED_GROUPS.map((g) => {
             const GroupIcon = GROUP_ICON[g];
             return (
-              <div key={g} role="group" aria-label={GROUP_LABEL[g]}>
+              <div key={g} role="group" aria-label={groupLabel(g)}>
                 <h2 className="group-title">
                   <GroupIcon size={18} aria-hidden="true" />
-                  {GROUP_LABEL[g]}
+                  {groupLabel(g)}
                 </h2>
                 {itemsOf(g).map((i) => (
                   <Choice
                     key={i.code}
                     code={i.code}
-                    label={i.label}
+                    label={itemLabel(i)}
                     checked={needs.includes(i.code)}
                     onToggle={() => toggle(setNeeds, i.code)}
                   />
@@ -299,31 +321,31 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
 
       {step === 3 && (
         <section>
-          <p className="step-kicker">{STEPS[3]}</p>
-          <h1>이름과 항공편을 알려 주세요</h1>
-          <label htmlFor="reg-name">이름</label>
+          <p className="step-kicker">{steps[3]}</p>
+          <h1>{t.nameTitle}</h1>
+          <label htmlFor="reg-name">{t.name}</label>
           <input
             id="reg-name"
             type="text"
             value={name}
             maxLength={40}
             autoComplete="off"
-            placeholder="탑승권에 적힌 이름"
+            placeholder={t.namePlaceholder}
             onChange={(e) => {
               touched();
               setName(e.target.value);
             }}
           />
-          {mock && <p className="hint">시범 운영 중입니다. 실제 이름을 입력하지 마세요.</p>}
+          {mock && <p className="hint">{t.mockName}</p>}
 
-          <label htmlFor="reg-flight">편명</label>
+          <label htmlFor="reg-flight">{t.flight}</label>
           <div className="input-wrap">
             <Search size={20} aria-hidden="true" />
             <input
               id="reg-flight"
               type="text"
               value={query}
-              placeholder="예: KE123"
+              placeholder={t.flightPlaceholder}
               autoCapitalize="characters"
               autoCorrect="off"
               autoComplete="off"
@@ -339,22 +361,19 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
           </div>
           <p className="hint" id="flight-hint" aria-live="polite">
             {flight
-              ? "항공편을 골랐습니다. 바꾸려면 편명을 다시 입력하세요."
+              ? t.flightPicked
               : searching
-                ? "찾는 중…"
+                ? t.searching
                 : options && options.length > 0
-                  ? "맞는 항공편을 눌러 주세요."
-                  : "탑승권이나 예약 확인서에 있는 편명을 두 글자 이상 입력하면 자동으로 찾습니다."}
+                  ? t.pickFlight
+                  : t.flightHint}
           </p>
 
           {!flight && !searching && options && options.length === 0 && query.trim().length >= 2 && (
-            <ErrorNote>
-              오늘과 내일 출발하는 편 가운데 찾지 못했습니다. 편명을 다시 확인해 주세요. 찾기 어려우면 안내데스크에서
-              도와드립니다.
-            </ErrorNote>
+            <ErrorNote>{t.flightNotFound}</ErrorNote>
           )}
 
-          <div role="radiogroup" aria-label="항공편 선택">
+          <div role="radiogroup" aria-label={t.flightChoice}>
             {(flight ? [flight] : (options ?? [])).map((o) => (
               <button
                 key={`${o.flightDate}-${o.flightNo}`}
@@ -369,9 +388,9 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
               >
                 <span className="flight-opt-no">{o.flightNo}</span>
                 <span className="flight-opt-main">
-                  <strong>{o.destName}</strong>
+                  <strong>{destOf(o)}</strong>
                   <span>
-                    {[o.day, o.time].filter(Boolean).join(" ")} {o.cancelled ? "· 결항" : "출발"}
+                    {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
                   </span>
                 </span>
                 <span className="choice-mark" aria-hidden="true">
@@ -380,53 +399,52 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
               </button>
             ))}
           </div>
-          {flight?.cancelled && <ErrorNote>결항으로 표시된 편입니다. 항공사에 먼저 확인해 주세요.</ErrorNote>}
+          {flight?.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
         </section>
       )}
 
       {step === 4 && flight && (
         <section>
-          <p className="step-kicker">{STEPS[4]}</p>
-          <h1>{editing ? "이렇게 고칠까요?" : byStaff ? "여객과 함께 확인해 주세요" : "이대로 등록할까요?"}</h1>
+          <p className="step-kicker">{steps[4]}</p>
+          <h1>{editing ? "이렇게 고칠까요?" : byStaff ? "여객과 함께 확인해 주세요" : t.reviewTitle}</h1>
           <div className="panel">
             <dl className="review">
               <dt>
-                이름과 항공편
+                {t.reviewNameFlight}
                 <button className="review-edit" onClick={() => goTo(3, true)}>
-                  고치기
+                  {t.edit}
                 </button>
               </dt>
               <dd>{name.trim()}</dd>
               <dd>
-                <Plane size={16} aria-hidden="true" /> {flight.flightNo} · {flight.destName} ·{" "}
-                {[flight.day, flight.time].filter(Boolean).join(" ")}
+                <Plane size={16} aria-hidden="true" /> {flight.flightNo} · {destOf(flight)} · {whenOf(flight)}
               </dd>
               <dt>
-                교통약자 구분
+                {t.reviewCategory}
                 <button className="review-edit" onClick={() => goTo(1, true)}>
-                  고치기
+                  {t.edit}
                 </button>
               </dt>
               {itemsOf("category")
                 .filter((i) => categories.includes(i.code))
                 .map((i) => (
-                  <dd key={i.code}>{i.label}</dd>
+                  <dd key={i.code}>{itemLabel(i)}</dd>
                 ))}
               <dt>
-                필요한 도움
+                {t.reviewNeeds}
                 <button className="review-edit" onClick={() => goTo(2, true)}>
-                  고치기
+                  {t.edit}
                 </button>
               </dt>
-              {needs.length === 0 && <dd className="muted">고르지 않음</dd>}
+              {needs.length === 0 && <dd className="muted">{t.notPicked}</dd>}
               {NEED_GROUPS.flatMap((g) => itemsOf(g))
                 .filter((i) => needs.includes(i.code))
                 .map((i) => (
-                  <dd key={i.code}>{i.label}</dd>
+                  <dd key={i.code}>{itemLabel(i)}</dd>
                 ))}
             </dl>
           </div>
-          {!editing && <p className="muted small">등록한 뒤에 고치려면 안내데스크에 말씀해 주세요.</p>}
+          {!editing && <p className="muted small">{t.reviewNote}</p>}
         </section>
       )}
 
@@ -436,11 +454,11 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, ini
         <div className="cta-inner">
           {step === 4 ? (
             <button className="btn btn-primary" onClick={submit} disabled={busy}>
-              {busy ? "저장하는 중…" : editing ? "고친 내용 저장" : "등록하기"}
+              {editing ? (busy ? "저장하는 중…" : "고친 내용 저장") : busy ? t.submitting : t.submit}
             </button>
           ) : (
             <button className="btn btn-primary" onClick={next} disabled={!canNext}>
-              {step === 0 ? "동의하고 시작하기" : step === 2 && needs.length === 0 ? "해당 없음, 다음" : "다음"}
+              {step === 0 ? t.agree : step === 2 && needs.length === 0 ? t.noneNext : t.next}
               <ArrowRight size={20} aria-hidden="true" />
             </button>
           )}

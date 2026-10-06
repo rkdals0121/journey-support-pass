@@ -245,6 +245,35 @@ function writeReport() {
   await waitText(page, receiptNo);
   check("완료 화면을 새로 고쳐도 접수 번호가 남아 있다", true);
 
+  // 영어로 등록
+  await page.goto(BASE, { waitUntil: "load", timeout: 120_000 });
+  await clickText(page, "a", "English");
+  await waitText(page, "Tell us once.");
+  check("첫 화면을 영어로 바꿀 수 있다", await has(page, "Register for assistance"));
+  await shot(page, "여객-영어-첫화면");
+  await clickText(page, "a", "Register for assistance");
+  await waitText(page, "Before you register");
+  await clickText(page, "button", "Agree and start");
+  await clickText(page, "button", "I am pregnant");
+  await clickText(page, "button", "Next");
+  await waitText(page, "What help do you need?");
+  await clickText(page, "button", "I cannot stand for long");
+  await clickText(page, "button", "Please explain slowly");
+  await shot(page, "여객-영어-필요한도움");
+  await clickText(page, "button", "Next");
+  await fill(page, "#reg-name", "ENGLISH GUEST");
+  await fill(page, "#reg-flight", "MK221");
+  await clickText(page, ".flight-opt", "MK221");
+  await clickText(page, "button", "Next");
+  await waitText(page, "Is this correct?");
+  check("영어 화면은 도착지를 공항 코드로 보여준다", (await has(page, "JFK")) && !(await has(page, "뉴욕")));
+  check("영어 확인 화면에 고른 항목이 영어로 나온다", (await has(page, "I am pregnant")) && (await has(page, "Please explain slowly")));
+  await clickText(page, "button", "Register");
+  await waitText(page, "Show this screen at an information desk");
+  const enReceipt = await page.$eval(".ticket-no", (e) => (e as HTMLElement).innerText.trim());
+  check("영어로 등록해도 접수 번호가 나온다", /^\d{4}$/.test(enReceipt), enReceipt);
+  await shot(page, "여객-영어-접수번호");
+
   // ───────── 2. 로그인하지 않은 사람 ─────────
   section("로그인 전");
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
@@ -408,6 +437,17 @@ function writeReport() {
   check("미사용 패스 장수가 보인다", /미사용 패스\s*\d+\s*장/.test(deskText));
   await shot(page, "데스크-패스연결", true);
 
+  // 영어로 등록한 여객도 직원에게는 한국어로 보인다.
+  await clickText(page, ".reg-row", "ENGLISH GUEST");
+  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
+  const enGuest = await text(page);
+  check(
+    "영어로 등록한 여객의 내용이 직원에게는 한국어로 보인다",
+    enGuest.includes("임신 중입니다") && enGuest.includes("오래 서 있기 어렵습니다") && enGuest.includes("천천히 설명해 주세요"),
+  );
+  await clickText(page, "button[aria-label='뒤로']", "");
+  await waitText(page, "패스를 기다리는 등록");
+
   await fill(page, "#receipt", "0000");
   await clickText(page, "button", "찾기");
   await waitText(page, "접수 번호를 찾을 수 없습니다");
@@ -440,6 +480,20 @@ function writeReport() {
   const qrJpeg = path.join(os.tmpdir(), `jsp-qr-${Date.now()}.mjpeg`);
   await qrEl.evaluate((e) => e.scrollIntoView({ block: "center" }));
   fs.writeFileSync(qrJpeg, await qrEl.screenshot({ type: "jpeg", quality: 92 }));
+  // 인쇄 모양: A4 한 장에 실제 패스 크기(QR 25mm)로 나오는지 PDF 로 떠서 본다.
+  const pdf = path.join(SHOTS, "패스-인쇄.pdf");
+  await page.pdf({ path: pdf, format: "A4", margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" } });
+  await page.emulateMediaType("print");
+  const printed = await page.evaluate(() => {
+    const svg = document.querySelector(".sheet-pass svg")!.getBoundingClientRect();
+    const hidden = [".staff-nav", ".mock-banner", ".no-print"].every(
+      (sel) => getComputedStyle(document.querySelector(sel)!).display === "none",
+    );
+    return { mm: (svg.width / 96) * 25.4, hidden };
+  });
+  await page.emulateMediaType("screen");
+  check("인쇄할 때 QR 은 25mm 크기로 나온다", Math.abs(printed.mm - 25) < 0.6, `${printed.mm.toFixed(1)}mm`);
+  check("인쇄할 때 메뉴·버튼·시범 띠는 찍히지 않는다", printed.hidden && fs.statSync(pdf).size > 5000);
   await clickText(page, "button", "더 만들기");
   await waitText(page, "새로 만들었습니다");
   await page.waitForFunction((n) => document.querySelectorAll(".sheet-pass").length === n + 10, { timeout: WAIT }, idleBefore);

@@ -610,6 +610,35 @@ input[type="search"]:focus {
   font-size: 17px;
 }
 
+/* 불러오는 동안 자리를 잡아 두는 회색 칸 */
+.skel {
+  border-radius: 18px;
+  background: linear-gradient(100deg, #e6ebe8 40%, #f1f4f2 50%, #e6ebe8 60%) 0 0 / 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.skel-head {
+  height: 104px;
+  margin: -20px -20px 14px;
+  border-radius: 0;
+}
+
+.skel-row {
+  height: 96px;
+  margin-top: 8px;
+}
+
+.skel-card {
+  height: 420px;
+  border-radius: var(--radius-lg);
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 /* ── 첫 화면 ── */
 .hero {
   position: relative;
@@ -622,9 +651,34 @@ input[type="search"]:focus {
   color: #fff;
 }
 
-.hero .brand {
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 30px;
+}
+
+.hero .brand {
   color: #d8e8de;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ticket-bottom small {
+  text-transform: capitalize;
 }
 
 .hero h1 {

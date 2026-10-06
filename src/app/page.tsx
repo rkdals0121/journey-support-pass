@@ -1,18 +1,29 @@
-import { ArrowRight, ChevronRight, ClipboardList, PhoneOff, ScanLine, ShieldCheck, Ticket, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronRight, ClipboardList, Languages, PhoneOff, ScanLine, ShieldCheck, Ticket, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { langOf, TEXT } from "@/lib/i18n";
 import { Brand, PassArt } from "./components/Sunflower";
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
+  const lang = langOf((await searchParams).lang);
+  const t = TEXT[lang];
+  const q = lang === "en" ? "?lang=en" : "";
+
   return (
-    <main className="page has-cta">
+    <main className="page has-cta" lang={lang}>
       <div className="hero">
-        <Brand />
+        <div className="hero-top">
+          <Brand />
+          <Link className="lang-switch" href={lang === "en" ? "/" : "/?lang=en"} hrefLang={lang === "en" ? "ko" : "en"}>
+            <Languages size={15} aria-hidden="true" />
+            {t.otherLang}
+          </Link>
+        </div>
         <h1>
-          한 번만 알려 주세요.
+          {t.heroTitle1}
           <br />
-          <em>다시 묻지 않습니다.</em>
+          <em>{t.heroTitle2}</em>
         </h1>
-        <p>필요한 도움을 미리 등록하면, 인천공항 직원이 패스를 보고 먼저 다가와 안내합니다.</p>
+        <p>{t.heroBody}</p>
       </div>
       <PassArt />
 
@@ -22,8 +33,8 @@ export default function Home() {
             <ClipboardList size={20} aria-hidden="true" />
           </span>
           <div>
-            <strong>1. 필요한 도움을 등록합니다</strong>
-            <span>항공편과 필요한 도움을 고릅니다. 2분쯤 걸립니다.</span>
+            <strong>{t.step1}</strong>
+            <span>{t.step1Body}</span>
           </div>
         </li>
         <li>
@@ -31,8 +42,8 @@ export default function Home() {
             <Ticket size={20} aria-hidden="true" />
           </span>
           <div>
-            <strong>2. 안내데스크에서 패스를 받습니다</strong>
-            <span>접수 번호 네 자리를 보여 주시면 됩니다.</span>
+            <strong>{t.step2}</strong>
+            <span>{t.step2Body}</span>
           </div>
         </li>
         <li>
@@ -40,8 +51,8 @@ export default function Home() {
             <ScanLine size={20} aria-hidden="true" />
           </span>
           <div>
-            <strong>3. 직원이 알아보고 도와드립니다</strong>
-            <span>패스를 목에 걸거나 여권에 끼워 두세요. 같은 설명을 반복하지 않아도 됩니다.</span>
+            <strong>{t.step3}</strong>
+            <span>{t.step3Body}</span>
           </div>
         </li>
       </ol>
@@ -49,27 +60,27 @@ export default function Home() {
       <div className="trust">
         <span className="chip">
           <PhoneOff size={15} aria-hidden="true" />
-          연락처·진단명은 받지 않아요
+          {t.trust1}
         </span>
         <span className="chip">
           <Trash2 size={15} aria-hidden="true" />
-          출발 후 삭제
+          {t.trust2}
         </span>
         <span className="chip">
           <ShieldCheck size={15} aria-hidden="true" />
-          공항 직원만 열람
+          {t.trust3}
         </span>
       </div>
 
       <Link className="home-staff" href="/staff">
-        공항 직원이신가요? 직원 화면으로
+        {t.staffLink}
         <ChevronRight size={16} aria-hidden="true" />
       </Link>
 
       <div className="cta-bar">
         <div className="cta-inner">
-          <Link className="btn btn-primary" href="/register">
-            지원 등록하기
+          <Link className="btn btn-primary" href={`/register${q}`}>
+            {t.start}
             <ArrowRight size={20} aria-hidden="true" />
           </Link>
         </div>

@@ -9,6 +9,22 @@ export const DEFAULT_PASS_COUNT = 30;
 const MAX_PASS_COUNT = 500;
 const MIN = 60_000;
 
+// 영어 화면은 도착지 이름 대신 공항 코드를 보여준다.
+const MOCK_DEST_CODE: Record<string, string> = {
+  호찌민: "SGN",
+  방콕: "BKK",
+  타이베이: "TPE",
+  마닐라: "MNL",
+  뉴욕: "JFK",
+  파리: "CDG",
+  다낭: "DAD",
+  하노이: "HAN",
+  오사카: "KIX",
+  후쿠오카: "FUK",
+  싱가포르: "SIN",
+  도쿄: "NRT",
+};
+
 /** 지금 시각 기준으로 곧 출발하는 모의 운항. 실제 편명과 겹치지 않게 MK·MC 로 시작한다. */
 export function mockFlights(now: Date): FlightRow[] {
   // 초 단위를 버려 화면의 남은 시간이 깔끔하게 보이게 한다.
@@ -28,7 +44,7 @@ export function mockFlights(now: Date): FlightRow[] {
       flightNo,
       masterNo: "",
       airline: "모의항공",
-      destCode: "",
+      destCode: MOCK_DEST_CODE[destName] ?? "",
       destName,
       terminal,
       gate,

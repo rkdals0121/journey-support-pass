@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { RegistrationSteps, type FlightOption, type RegistrationPayload } from "../components/RegistrationSteps";
+import { TEXT, type Lang } from "@/lib/i18n";
 
 export const RECEIPT_KEY = "jsp:receipt";
 
@@ -12,10 +13,12 @@ export interface ReceiptInfo {
   flightNo: string;
   destName: string;
   when: string;
+  lang: Lang;
 }
 
-export function RegisterFlow({ mock }: { mock: boolean }) {
+export function RegisterFlow({ mock, lang }: { mock: boolean; lang: Lang }) {
   const router = useRouter();
+  const t = TEXT[lang];
 
   async function submit(payload: RegistrationPayload, flight: FlightOption): Promise<string | null> {
     try {
@@ -25,22 +28,32 @@ export function RegisterFlow({ mock }: { mock: boolean }) {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) return data.error ?? "등록하지 못했습니다. 다시 시도해 주세요.";
+      // 서버의 오류 문구는 한국어다. 영어 화면에서는 한 가지 안내로 바꿔 보여준다.
+      if (!res.ok) return lang === "en" ? t.failed : (data.error ?? t.failed);
       // 접수 번호는 주소에 넣지 않는다. 이 탭에만 둔다.
+      const day = flight.day === "오늘" ? t.today : flight.day === "내일" ? t.tomorrow : flight.day;
       const info: ReceiptInfo = {
         receiptNo: data.receiptNo,
         name: payload.name,
         flightNo: flight.flightNo,
-        destName: flight.destName,
-        when: `${flight.day} ${flight.time}`,
+        destName: lang === "en" && flight.destCode ? flight.destCode : flight.destName,
+        when: `${day} ${flight.time}`,
+        lang,
       };
       sessionStorage.setItem(RECEIPT_KEY, JSON.stringify(info));
       router.push("/register/done");
       return null;
     } catch {
-      return "연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+      return t.offline;
     }
   }
 
-  return <RegistrationSteps mock={mock} onExit={() => router.push("/")} onSubmit={submit} />;
+  return (
+    <RegistrationSteps
+      mock={mock}
+      lang={lang}
+      onExit={() => router.push(lang === "en" ? "/?lang=en" : "/")}
+      onSubmit={submit}
+    />
+  );
 }

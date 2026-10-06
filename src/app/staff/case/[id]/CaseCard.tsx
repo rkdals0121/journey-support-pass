@@ -119,7 +119,10 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
     return (
       <div>
         {top}
-        <p className="muted">불러오는 중…</p>
+        <div aria-busy="true">
+          <p className="sr-only">불러오는 중…</p>
+          <div className="skel skel-card" />
+        </div>
       </div>
     );
   }

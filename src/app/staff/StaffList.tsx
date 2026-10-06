@@ -80,7 +80,17 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
       </div>
     );
   }
-  if (!data) return <p className="muted">불러오는 중…</p>;
+  if (!data) {
+    return (
+      <div aria-busy="true">
+        <p className="sr-only">불러오는 중…</p>
+        <div className="skel skel-head" />
+        <div className="skel skel-row" />
+        <div className="skel skel-row" />
+        <div className="skel skel-row" />
+      </div>
+    );
+  }
 
   const mineCount = data.assigned.length + data.gateUnknown.length;
   const total = mineCount + data.otherCount;

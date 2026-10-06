@@ -6,6 +6,7 @@ export interface FlightChoice {
   flightNo: string;
   masterNo: string;
   airline: string;
+  destCode: string;
   destName: string;
   terminal: string;
   gate: number | null;
@@ -21,6 +22,7 @@ interface Row {
   flight_no: string;
   master_no: string;
   airline: string;
+  dest_code: string;
   dest_name: string;
   terminal: string;
   gate: number | null;
@@ -32,7 +34,7 @@ interface Row {
 }
 
 // flight_date 는 드라이버마다 Date 로 바뀌는 방식이 달라 글자로 받는다.
-const COLUMNS = `flight_date::text as flight_date, flight_no, master_no, airline, dest_name, terminal,
+const COLUMNS = `flight_date::text as flight_date, flight_no, master_no, airline, dest_code, dest_name, terminal,
   gate, prev_gate, gate_changed_at, sched_at, est_at, status`;
 
 function toChoice(r: Row): FlightChoice {
@@ -41,6 +43,7 @@ function toChoice(r: Row): FlightChoice {
     flightNo: r.flight_no,
     masterNo: r.master_no,
     airline: r.airline,
+    destCode: r.dest_code,
     destName: r.dest_name,
     terminal: r.terminal,
     gate: r.gate,

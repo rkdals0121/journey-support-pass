@@ -109,6 +109,8 @@ export interface FlightDto {
   flightNo: string;
   airline: string;
   destName: string;
+  /** 도착 공항 코드 (JFK). 영어 화면에서 도착지 이름 대신 쓴다. */
+  destCode: string;
   label: string; // "KE123 · 뉴욕 · 오늘 14:30 출발"
   day: string; // 오늘 | 내일
   time: string; // 14:30
@@ -124,6 +126,7 @@ export function toFlightDto(f: FlightChoice, now: Date): FlightDto {
     flightNo: f.flightNo,
     airline: f.airline,
     destName: f.destName,
+    destCode: f.destCode,
     label: cancelled
       ? `${f.flightNo} · ${f.destName} · ${day} ${time} · 결항`
       : `${f.flightNo} · ${f.destName} · ${day} ${time} 출발`,

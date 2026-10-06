@@ -55,3 +55,23 @@ describe("선택 검증", () => {
     expect(validateSelection(["cat_senior", "cat_senior"], [])).not.toBeNull();
   });
 });
+
+import { GROUP_EN, ITEM_EN, TEXT } from "@/lib/i18n";
+import { GROUP_LABEL, ITEMS as ALL_ITEMS } from "@/lib/catalog";
+
+describe("영어 문구", () => {
+  it("선택 항목과 묶음마다 영어 문구가 하나씩 있다", () => {
+    expect(Object.keys(ITEM_EN).sort()).toEqual(ALL_ITEMS.map((i) => i.code).sort());
+    expect(Object.keys(GROUP_EN).sort()).toEqual(Object.keys(GROUP_LABEL).sort());
+    for (const v of Object.values(ITEM_EN)) expect(v.trim().length).toBeGreaterThan(5);
+  });
+
+  it("화면 문구는 한국어와 영어의 항목이 같고 빈 값이 없다", () => {
+    expect(Object.keys(TEXT.en).sort()).toEqual(Object.keys(TEXT.ko).sort());
+    for (const [k, v] of Object.entries(TEXT.en)) {
+      const text = Array.isArray(v) ? v.join("") : v;
+      expect(text.trim().length, k).toBeGreaterThan(0);
+    }
+    expect(TEXT.en.steps).toHaveLength(TEXT.ko.steps.length);
+  });
+});
