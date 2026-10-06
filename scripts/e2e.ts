@@ -23,18 +23,24 @@ const CHROME =
   ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"].find(
     (p) => fs.existsSync(p),
   );
-const WAIT = 60_000;
+const WAIT = 90_000;
 
 const seed = readSeedZones();
 const DESK_CODE = seed.find((z) => z.isDesk)!.code;
 const COMMON_CODE = seed.find((z) => z.isCommon)!.code;
 const ZONE_CODE = seed.find((z) => z.id === "t2-wam")!.code;
 
-const results: { name: string; ok: boolean; note?: string }[] = [];
+const results: { section: string; name: string; ok: boolean; note?: string }[] = [];
+let current = "";
+
+function section(name: string) {
+  current = name;
+  console.log(`\n[${name}]`);
+}
 let shotNo = 0;
 
 function check(name: string, ok: boolean, note?: string) {
-  results.push({ name, ok, note });
+  results.push({ section: current, name, ok, note });
   console.log(`${ok ? "  통과" : "  실패"}  ${name}${note ? `  (${note})` : ""}`);
 }
 
@@ -78,7 +84,15 @@ async function clickText(page: Page, selector: string, s: string) {
 }
 
 async function fill(page: Page, selector: string, value: string) {
-  await page.waitForSelector(selector, { timeout: WAIT });
+  // 화면이 살아난 뒤(React 가 입력란을 넘겨받은 뒤)에 친다. 그 전에 친 글자는 사라질 수 있다.
+  await page.waitForFunction(
+    (sel) => {
+      const el = document.querySelector(sel);
+      return el !== null && Object.keys(el).some((k) => k.startsWith("__reactProps"));
+    },
+    { timeout: WAIT },
+    selector,
+  );
   await page.click(selector, { count: 3 });
   await page.keyboard.press("Backspace");
   if (value) await page.type(selector, value, { delay: 15 });
@@ -101,7 +115,7 @@ async function open(browser: Browser): Promise<Page> {
 }
 
 async function login(page: Page, code: string) {
-  await page.goto(`${BASE}/staff/login`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/login`, { waitUntil: "load", timeout: 120_000 });
   await fill(page, "#code", code);
   await page.keyboard.press("Enter");
 }
@@ -115,6 +129,31 @@ async function launch(extra: string[] = []) {
   });
 }
 
+/** 점검 결과를 docs/scenario-checklist.md 에 적는다. 무엇을 확인했는지 사람이 읽을 수 있게 남긴다. */
+function writeReport() {
+  const when = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul", dateStyle: "long", timeStyle: "short" });
+  const failed = results.filter((r) => !r.ok).length;
+  const lines = [
+    "# 화면 점검표",
+    "",
+    "`scripts/e2e.ts` 가 실제 브라우저로 화면을 처음부터 끝까지 눌러 보고 적은 결과다. 손으로 고치지 않는다.",
+    "",
+    `- 마지막 실행: ${when}`,
+    `- 결과: ${results.length}개 가운데 통과 ${results.length - failed}개, 실패 ${failed}개`,
+    "- 대상: 개발 컴퓨터의 서버와 모의 운항. 배포 주소에서 로그인한 뒤의 화면은 사람이 따로 확인한다.",
+    "- 카메라 QR 스캔은 패스 QR 그림을 가짜 카메라 영상으로 넣어 확인한다. 실물 패스와 실제 조명은 다루지 않는다.",
+    "",
+    "다시 돌리는 방법은 `scripts/e2e.ts` 맨 위에 적혀 있다.",
+  ];
+  for (const name of [...new Set(results.map((r) => r.section))]) {
+    lines.push("", `## ${name}`, "");
+    for (const r of results.filter((x) => x.section === name)) {
+      lines.push(`- [${r.ok ? "x" : " "}] ${r.name}${r.ok ? "" : " — **실패**"}${!r.ok && r.note ? ` (${r.note})` : ""}`);
+    }
+  }
+  fs.writeFileSync(path.join(process.cwd(), "docs", "scenario-checklist.md"), `${lines.join("\n")}\n`, "utf-8");
+}
+
 (async () => {
   if (!CHROME) throw new Error("Chrome 이나 Edge 를 찾지 못했습니다. CHROME_PATH 로 알려 주세요.");
   if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error("이 점검은 이 컴퓨터의 개발 서버에만 씁니다.");
@@ -125,8 +164,8 @@ async function launch(extra: string[] = []) {
   let page = await open(browser);
 
   // ───────── 1. 여객: 첫 화면과 등록 ─────────
-  console.log("\n[여객 등록]");
-  await page.goto(BASE, { waitUntil: "networkidle0" });
+  section("여객 등록");
+  await page.goto(BASE, { waitUntil: "load", timeout: 120_000 });
   check("첫 화면이 열린다", await has(page, "한 번만 알려 주세요"));
   await shot(page, "여객-첫화면", true);
   await clickText(page, "a", "지원 등록하기");
@@ -202,16 +241,16 @@ async function launch(extra: string[] = []) {
   check("접수 번호는 주소에 들어 있지 않다", !page.url().includes(receiptNo));
   check("완료 화면에 이름과 편명이 함께 나온다", (await has(page, "점검여객")) && (await has(page, "MK102")));
   await shot(page, "여객-접수번호", true);
-  await page.reload({ waitUntil: "networkidle0" });
+  await page.reload({ waitUntil: "load", timeout: 120_000 });
   await waitText(page, receiptNo);
   check("완료 화면을 새로 고쳐도 접수 번호가 남아 있다", true);
 
   // ───────── 2. 로그인하지 않은 사람 ─────────
-  console.log("\n[로그인 전]");
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  section("로그인 전");
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   check("직원 화면은 로그인 없이 열리지 않는다", page.url().includes("/staff/login"));
   await shot(page, "직원-로그인");
-  await page.goto(`${BASE}/p/${"x".repeat(24)}`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/p/${"x".repeat(24)}`, { waitUntil: "load", timeout: 120_000 });
   check("패스 QR 주소는 로그인 전에는 직원 전용 안내만 보여준다", await has(page, "공항 직원 전용 QR입니다"));
   await shot(page, "패스QR-로그인전");
   for (const p of ["/api/staff/list", "/api/staff/zone"]) {
@@ -232,12 +271,12 @@ async function launch(extra: string[] = []) {
   check("틀린 접속 코드는 받지 않는다", true);
 
   // ───────── 3. 현장 직원: 공통 코드 → 구역 고르기 → 목록 ─────────
-  console.log("\n[현장 직원]");
+  section("현장 직원");
   await login(page, COMMON_CODE);
   await waitText(page, "오늘 근무하는 구역을 골라 주세요");
   check("공통 직원 코드로 들어오면 근무 구역을 고르는 화면이 나온다", page.url().includes("/staff/zone"));
   await shot(page, "직원-구역고르기", true);
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   check("구역을 고르기 전에는 여객 목록이 열리지 않는다", page.url().includes("/staff/zone"));
   const before = await page.evaluate(() => fetch("/api/staff/list?scope=all").then((r) => r.status));
   check("구역을 고르기 전에는 목록 자료도 받지 못한다 (409)", before === 409, String(before));
@@ -280,14 +319,14 @@ async function launch(extra: string[] = []) {
   await waitText(page, "최서연");
   check("근무 중에 구역을 바꿀 수 있다", !(await has(page, "김영희")));
 
-  await page.goto(`${BASE}/staff/desk`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
   check("현장 직원은 안내데스크 화면을 쓸 수 없다", await has(page, "안내데스크에서만 쓸 수 있습니다"));
   const forbidden = await page.evaluate(() => fetch("/api/desk/list", { method: "POST" }).then((r) => r.status));
   check("현장 직원의 안내데스크 요청은 403", forbidden === 403, String(forbidden));
   check("현장 직원 메뉴에는 안내데스크가 없다", !(await page.$eval(".staff-nav", (e) => (e as HTMLElement).innerText)).includes("안내데스크"));
 
   // 패스 번호로 여객 카드 열기
-  await page.goto(`${BASE}/staff/scan`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await waitText(page, "카메라를 쓸 수 없습니다");
   check("카메라가 없으면 패스 번호를 입력하라고 안내한다", await has(page, "패스 번호 네 자리"));
   await shot(page, "직원-스캔-카메라없음");
@@ -297,7 +336,7 @@ async function launch(extra: string[] = []) {
   check("없는 패스 번호는 찾을 수 없다고 알려 준다", true);
 
   // 여객 카드
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, "a", "구역 바꾸기");
   await clickText(page, ".zone-opt", "끝단");
   await waitText(page, "박민수");
@@ -315,7 +354,7 @@ async function launch(extra: string[] = []) {
   await clickText(page, "button", "응대 시작");
   await waitText(page, "응대 완료");
   check("응대 시작을 누르면 응대 완료 버튼으로 바뀐다", true);
-  await page.reload({ waitUntil: "networkidle0" });
+  await page.reload({ waitUntil: "load", timeout: 120_000 });
   await waitText(page, "응대 완료");
   check("카드를 다시 열어도 응대 중 상태가 이어진다", !(await has(page, "응대 시작")));
   await clickText(page, "button", "응대 완료");
@@ -324,18 +363,18 @@ async function launch(extra: string[] = []) {
   await shot(page, "직원-응대완료");
 
   // 지연·탑승구 미정·탑승 중 카드
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".seg button", "전체");
   await clickText(page, ".case-row", "한미숙");
   await waitText(page, "소통 방식");
   await waitText(page, "응대 시작");
   check("지연 편은 바뀐 출발 시각과 지연 표시가 나온다", (await page.$$("s")).length === 1 && (await has(page, "지연")));
   await shot(page, "직원-여객카드-지연", true);
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".case-row", "이정자");
   await waitText(page, "글자나 표지를 보기 어렵습니다");
   check("탑승 중인 편은 상태가 함께 나온다", await has(page, "탑승중"));
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".case-row", "오대기");
   await waitText(page, "탑승구가 정해지면 표시됩니다");
   check("탑승구 미정 카드는 미정이라고 보여준다", await has(page, "미정"));
@@ -343,7 +382,7 @@ async function launch(extra: string[] = []) {
   check("없는 등록의 카드는 열리지 않는다 (404)", bad === 404, String(bad));
 
   // 구역 코드로 들어온 직원 (예전 방식도 그대로 쓸 수 있다)
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, "button[aria-label='로그아웃']", "");
   await page.waitForFunction(() => location.pathname === "/staff/login", { timeout: WAIT });
   check("로그아웃하면 로그인 화면으로 간다", true);
@@ -355,7 +394,7 @@ async function launch(extra: string[] = []) {
   check("구역 코드로 로그인하면 그 구역 목록으로 바로 간다", !(await has(page, "구역 바꾸기")));
 
   // ───────── 4. 안내데스크 ─────────
-  console.log("\n[안내데스크]");
+  section("안내데스크");
   await login(page, DESK_CODE);
   await waitText(page, "안내데스크");
   await waitText(page, "김영희");
@@ -389,7 +428,7 @@ async function launch(extra: string[] = []) {
   check("연결한 등록은 기다리는 목록에서 빠진다", true);
 
   // 미사용 패스 화면에서 번호 하나를 가져와 손으로 연결
-  await page.goto(`${BASE}/staff/desk/passes`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/desk/passes`, { waitUntil: "load", timeout: 120_000 });
   await waitText(page, "미사용 패스");
   const idleBefore = await page.evaluate(() => document.querySelectorAll(".sheet-pass").length);
   const manualPass = await page.$eval(".sheet-pass .sheet-no", (e) => (e as HTMLElement).innerText.trim());
@@ -406,7 +445,7 @@ async function launch(extra: string[] = []) {
   await page.waitForFunction((n) => document.querySelectorAll(".sheet-pass").length === n + 10, { timeout: WAIT }, idleBefore);
   check("패스 10장 더 만들기", true);
 
-  await page.goto(`${BASE}/staff/desk`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".reg-row", "서연결");
   await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
   await fill(page, "#pass-no", "0000");
@@ -491,7 +530,7 @@ async function launch(extra: string[] = []) {
   check("새 패스 번호로는 여객 카드가 열린다", newOk.kind === "active", newOk.kind);
 
   // 앞선 응대 이력
-  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await waitText(page, "박민수");
   check("목록에 앞 구역의 응대 완료가 보인다", /탑승동 끝단 응대 완료 \d\d:\d\d/.test(await text(page)));
   await shot(page, "데스크-전체여객목록");
@@ -502,23 +541,35 @@ async function launch(extra: string[] = []) {
   await shot(page, "직원-앞선응대");
 
   // 오늘 현황
-  await page.goto(`${BASE}/staff/desk/stats`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/desk/stats`, { waitUntil: "load", timeout: 120_000 });
   const stats = await text(page);
   check("오늘 현황: 등록·연결·응대 건수가 나온다", stats.includes("오늘 받은 등록") && stats.includes("응대 완료") && /응대 완료\s*1\s*회/.test(stats));
   check("오늘 현황에는 이름이나 편명이 없다", !stats.includes("박민수") && !stats.includes("MK102"));
   await shot(page, "데스크-오늘현황");
 
-  await page.goto(`${BASE}/nope`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/nope`, { waitUntil: "load", timeout: 120_000 });
   check("없는 주소는 안내 화면을 보여준다", await has(page, "찾는 화면이 없습니다"));
 
+  // 넓은 화면(안내데스크 컴퓨터)에서도 가운데 한 줄로 보인다.
+  await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
+  await waitText(page, "패스를 기다리는 등록");
+  const wide = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+  check("넓은 화면에서 가로로 넘치지 않는다", wide);
+  await shot(page, "데스크-넓은화면");
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
+  const narrow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+  check("휴대전화 너비에서 가로로 넘치지 않는다", narrow);
+
   // 패스 QR 주소 분기
-  await page.goto(`${BASE}/p/${"z".repeat(24)}`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/p/${"z".repeat(24)}`, { waitUntil: "load", timeout: 120_000 });
   check("없는 패스 QR 주소는 사용할 수 없는 패스라고 알려 준다", await has(page, "사용할 수 없는 패스입니다"));
   await shot(page, "패스QR-사용불가");
   await browser.close();
 
   // ───────── 5. 카메라로 QR 스캔 ─────────
-  console.log("\n[카메라 QR 스캔]");
+  section("카메라 QR 스캔");
   browser = await launch([
     "--use-fake-ui-for-media-stream",
     "--use-fake-device-for-media-stream",
@@ -527,17 +578,17 @@ async function launch(extra: string[] = []) {
   page = await open(browser);
   await login(page, DESK_CODE);
   await waitText(page, "김영희");
-  await page.goto(`${BASE}/staff/scan`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await waitText(page, "연결되지 않은 패스입니다");
   check("카메라로 미사용 패스를 찍으면 연결되지 않은 패스라고 알려 준다", true);
   await shot(page, "직원-스캔-카메라");
-  await page.goto(`${BASE}/staff/desk`, { waitUntil: "networkidle0" });
+  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".reg-row", "문접수");
   await waitText(page, "님께 이 번호의 패스를 드리세요");
   const scanned = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
   check("안내데스크: 카메라로 패스 QR 을 찍어 연결한다", scanned === scanPass, `패스 ${scanned}`);
   // 찍자마자 여객 카드로 넘어가므로 화면이 조용해지기를 기다리지 않는다.
-  await page.goto(`${BASE}/staff/scan`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
   await waitText(page, "문접수");
   check("직원: 카메라로 패스 QR 을 찍으면 여객 카드가 열린다", true);
@@ -545,6 +596,7 @@ async function launch(extra: string[] = []) {
   await browser.close();
   fs.rmSync(qrJpeg, { force: true });
 
+  writeReport();
   const failed = results.filter((r) => !r.ok);
   console.log(`\n점검 ${results.length}개 가운데 통과 ${results.length - failed.length}개, 실패 ${failed.length}개`);
   for (const f of failed) console.log(`  실패: ${f.name}${f.note ? ` (${f.note})` : ""}`);
