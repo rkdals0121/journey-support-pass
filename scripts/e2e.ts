@@ -24,6 +24,7 @@ const CHROME =
     (p) => fs.existsSync(p),
   );
 const WAIT = 90_000;
+const AXE = fs.readFileSync(path.join(process.cwd(), "node_modules", "axe-core", "axe.min.js"), "utf-8");
 
 const seed = readSeedZones();
 const DESK_CODE = seed.find((z) => z.isDesk)!.code;
@@ -49,6 +50,19 @@ async function shot(page: Page, name: string, fullPage = false) {
   const file = path.join(SHOTS, `${String(shotNo).padStart(2, "0")}-${name}.png`);
   await page.screenshot({ path: file as `${string}.png`, fullPage: false });
   void fullPage;
+  await audit(page, name);
+}
+
+/**
+ * 그림을 뜨는 화면마다 접근성 자동 점검(axe-core, WCAG 2.2 AA 까지)을 돌린다.
+ * 자동 점검은 대비·이름표·역할 같은 것만 잡는다. 화면 읽기 프로그램으로 실제로 써 보는 것을 대신하지 않는다.
+ */
+async function audit(page: Page, name: string) {
+  await page.evaluate(AXE);
+  const found = (await page.evaluate(
+    "axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } }).then(r => r.violations.map(v => v.id + ' ' + v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')))",
+  )) as string[];
+  check(`접근성 자동 점검: ${name}`, found.length === 0, found.join(" / ").slice(0, 300) || undefined);
 }
 
 const text = (page: Page) => page.evaluate(() => (document.body?.innerText ?? ""));
@@ -142,6 +156,7 @@ function writeReport() {
     `- 결과: ${results.length}개 가운데 통과 ${results.length - failed}개, 실패 ${failed}개`,
     "- 대상: 개발 컴퓨터의 서버와 모의 운항. 배포 주소에서 로그인한 뒤의 화면은 사람이 따로 확인한다.",
     "- 카메라 QR 스캔은 패스 QR 그림을 가짜 카메라 영상으로 넣어 확인한다. 실물 패스와 실제 조명은 다루지 않는다.",
+    "- \"접근성 자동 점검\"은 axe-core 로 WCAG 2.2 AA 까지의 규칙을 화면마다 돌린 것이다. 대비·이름표·역할 같은 것만 잡으며, 화면 읽기 프로그램으로 실제로 써 보는 것을 대신하지 않는다.",
     "",
     "다시 돌리는 방법은 `scripts/e2e.ts` 맨 위에 적혀 있다.",
   ];
