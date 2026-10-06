@@ -1,29 +1,52 @@
 "use client";
 
+import { ArrowLeftRight, ChevronRight, Clock, LogOut, Search, SearchX, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { CaseDto } from "@/lib/api/dto";
+import { groupOf, shortOf } from "@/lib/catalog";
+import { ErrorNote } from "../components/Alert";
+import { NeedIcon } from "../components/NeedIcon";
 import { PollBar, type PollInfo } from "../components/PollBar";
 
 interface ListData {
   zoneLabel: string;
   isDesk: boolean;
+  canSwitch: boolean;
   poll: PollInfo;
   assigned: CaseDto[];
   gateUnknown: CaseDto[];
+  otherCount: number;
+  others: CaseDto[];
 }
+
+type Scope = "zone" | "all";
+
+// "KE 123" 처럼 띄어 쓰거나 소문자로 써도 찾는다.
+const norm = (s: string) => s.replace(/\s+/g, "").toUpperCase();
+const matches = (c: CaseDto, q: string) => norm(c.name).includes(q) || norm(c.flightNo).includes(q);
 
 export function StaffList({ refreshSec }: { refreshSec: number }) {
   const router = useRouter();
   const [data, setData] = useState<ListData | null>(null);
   const [offline, setOffline] = useState(false);
+  const [scope, setScope] = useState<Scope>("zone");
+  const [query, setQuery] = useState("");
+
+  const q = norm(query);
+  // 찾을 때는 다른 구역의 여객까지 본다. 여객은 탑승구와 다른 곳에서 도움을 청할 수 있다.
+  const wantAll = scope === "all" || q.length > 0;
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/staff/list", { cache: "no-store" });
+      const res = await fetch(`/api/staff/list${wantAll ? "?scope=all" : ""}`, { cache: "no-store" });
       if (res.status === 401) {
         router.replace("/staff/login");
+        return;
+      }
+      if (res.status === 409) {
+        router.replace("/staff/zone");
         return;
       }
       if (!res.ok) throw new Error();
@@ -34,7 +57,7 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
       setData(null);
       setOffline(true);
     }
-  }, [router]);
+  }, [router, wantAll]);
 
   useEffect(() => {
     load();
@@ -50,9 +73,7 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
   if (offline) {
     return (
       <div>
-        <p className="error" role="alert">
-          연결할 수 없습니다. 구두로 확인해 주세요.
-        </p>
+        <ErrorNote>연결할 수 없습니다. 여객에게 구두로 확인해 주세요.</ErrorNote>
         <button className="btn" onClick={load}>
           다시 시도
         </button>
@@ -61,65 +82,162 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
   }
   if (!data) return <p className="muted">불러오는 중…</p>;
 
+  const mineCount = data.assigned.length + data.gateUnknown.length;
+  const total = mineCount + data.otherCount;
+  const assigned = q ? data.assigned.filter((c) => matches(c, q)) : data.assigned;
+  const gateUnknown = q ? data.gateUnknown.filter((c) => matches(c, q)) : data.gateUnknown;
+  const others = wantAll ? (q ? data.others.filter((c) => matches(c, q)) : data.others) : [];
+  // 다른 구역 여객을 아직 받아오는 중인지. 그동안은 "없습니다"라고 하지 않는다.
+  const loadingOthers = wantAll && data.otherCount > 0 && data.others.length === 0;
+  const shown = assigned.length + gateUnknown.length + others.length;
+
   return (
     <div>
       <header className="staff-head">
-        <div>
-          <h1>{data.zoneLabel}</h1>
-          <PollBar poll={data.poll} />
+        <div className="staff-head-row">
+          <h1>
+            <span className="kicker">{data.isDesk ? "안내데스크" : "내 근무 구역"}</span>
+            {data.zoneLabel}
+          </h1>
+          <button className="icon-btn" onClick={logout} aria-label="로그아웃">
+            <LogOut size={22} aria-hidden="true" />
+          </button>
         </div>
-        <button className="link-btn" onClick={logout}>
-          로그아웃
-        </button>
+        {data.canSwitch && (
+          <Link className="zone-switch" href="/staff/zone">
+            <ArrowLeftRight size={15} aria-hidden="true" />
+            구역 바꾸기
+          </Link>
+        )}
+        <PollBar poll={data.poll} />
       </header>
 
-      {data.assigned.length === 0 && data.gateUnknown.length === 0 && (
-        <p className="notice">지금 이 구역으로 오는 등록 여객이 없습니다.</p>
+      <div className="toolbar">
+        <div className="input-wrap">
+          <Search size={20} aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            placeholder="이름이나 편명으로 찾기"
+            aria-label="이름이나 편명으로 찾기"
+            autoComplete="off"
+            enterKeyHint="search"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {query && (
+            <button className="icon-btn input-clear" onClick={() => setQuery("")} aria-label="검색어 지우기">
+              <X size={20} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+        {!data.isDesk && !q && (
+          <div className="seg" role="group" aria-label="보는 범위">
+            <button aria-pressed={scope === "zone"} onClick={() => setScope("zone")}>
+              내 구역 <span className="count">{mineCount}</span>
+            </button>
+            <button aria-pressed={scope === "all"} onClick={() => setScope("all")}>
+              전체 <span className="count">{total}</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {q && (
+        <p className="section-title" role="status">
+          전체 구역에서 찾은 여객 {loadingOthers ? "…" : `${shown}명`}
+        </p>
+      )}
+
+      {shown === 0 && !loadingOthers && (
+        <div className="empty">
+          <span className="bubble">
+            {q ? <SearchX size={26} aria-hidden="true" /> : <Users size={26} aria-hidden="true" />}
+          </span>
+          <strong>{q ? "찾는 여객이 없습니다" : "지금은 등록 여객이 없습니다"}</strong>
+          <p>
+            {q
+              ? "이름이나 편명을 다시 확인해 주세요. 패스가 있으면 스캔으로 바로 열 수 있습니다."
+              : data.otherCount > 0 && scope === "zone"
+                ? `다른 구역에 ${data.otherCount}명이 있습니다. 전체를 눌러 볼 수 있습니다.`
+                : "패스를 받은 여객이 생기면 여기에 나타납니다."}
+          </p>
+        </div>
       )}
 
       <ul className="case-list">
-        {data.assigned.map((c) => (
+        {assigned.map((c) => (
           <CaseRow key={c.registrationId} c={c} />
         ))}
       </ul>
 
-      {data.gateUnknown.length > 0 && (
+      {gateUnknown.length > 0 && (
         <>
-          <h2>탑승구 미정</h2>
+          <h2 className="section-title">탑승구 미정 {gateUnknown.length}명</h2>
           <ul className="case-list">
-            {data.gateUnknown.map((c) => (
+            {gateUnknown.map((c) => (
               <CaseRow key={c.registrationId} c={c} />
             ))}
           </ul>
         </>
       )}
 
+      {others.length > 0 && (
+        <>
+          <h2 className="section-title">다른 구역 {others.length}명</h2>
+          <ul className="case-list">
+            {others.map((c) => (
+              <CaseRow key={c.registrationId} c={c} showZone />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
 
-function CaseRow({ c }: { c: CaseDto }) {
+const SHOWN_TAGS = 4;
+
+function CaseRow({ c, showZone = false }: { c: CaseDto; showZone?: boolean }) {
+  // 소통 방식을 맨 앞에 둔다. 직원이 말을 걸기 전에 알아야 하는 것이다.
+  const comm = c.codes.filter((code) => groupOf(code) === "comm");
+  const rest = c.codes.filter((code) => groupOf(code) !== "comm" && groupOf(code) !== "category");
+  const tags = [...comm, ...rest];
+  const extra = tags.length - SHOWN_TAGS;
+  const place = c.zoneLabel ?? c.terminalLabel;
+
   return (
     <li>
-      <Link href={`/staff/case/${c.registrationId}`} className={`case-row ${c.urgent ? "case-urgent" : ""}`}>
-        <span className="case-gate">
-          <span className="case-gate-label">탑승구</span>
+      <Link href={`/staff/case/${c.registrationId}`} className="case-row">
+        <span className={`plate ${c.gate === null ? "unknown" : ""} ${c.urgent ? "urgent" : ""}`}>
+          <small>탑승구</small>
           {c.gate ?? "미정"}
         </span>
         <span className="case-main">
-          <strong>{c.name}</strong> · {c.flightNo}
-          <br />
-          <span className={c.urgent ? "case-close-urgent" : "muted"}>
+          <span className="case-top">
+            <span className="case-name">{c.name}</span>
+            <span className="case-flight">
+              <span className="num">{c.flightNo}</span> {c.destName}
+            </span>
+          </span>
+          <span className={`case-time ${c.urgent ? "urgent" : ""}`}>
+            <Clock size={15} aria-hidden="true" />
             {c.closeLabel}
             {c.status && !c.cancelled && c.status !== "탑승마감" && ` · ${c.status}`}
           </span>
-          {c.comm.length > 0 && (
-            <>
-              <br />
-              <span className="small">{c.comm.join(" · ")}</span>
-            </>
+          {tags.length > 0 && (
+            <span className="chips">
+              {tags.slice(0, SHOWN_TAGS).map((code) => (
+                <span key={code} className={`chip ${groupOf(code) === "comm" ? "chip-comm" : ""}`}>
+                  <NeedIcon code={code} size={14} />
+                  {shortOf(code)}
+                </span>
+              ))}
+              {extra > 0 && <span className="chip">+{extra}</span>}
+            </span>
           )}
+          {showZone && place && <span className="case-zone">{place}</span>}
         </span>
+        <ChevronRight className="case-chev" size={20} aria-hidden="true" />
       </Link>
     </li>
   );

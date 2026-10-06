@@ -1,9 +1,11 @@
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { config } from "@/lib/config";
 import { getDb } from "@/lib/db";
-import { currentSession } from "@/lib/session-server";
+import { requireStaff } from "@/lib/staff-page";
+import { PrintButton } from "./PrintButton";
 import { StaffNav } from "../../../components/StaffNav";
 import { MorePasses } from "./MorePasses";
 
@@ -12,8 +14,7 @@ export const dynamic = "force-dynamic";
 // 미사용 패스 인쇄용. 한 장에는 QR 과 패스 번호 네 자리만 넣는다.
 // 이름·날짜·그 밖의 글자는 넣지 않는다. 안내데스크 권한으로만 열린다.
 export default async function PassSheetPage() {
-  const session = await currentSession();
-  if (!session) redirect("/staff/login");
+  const session = await requireStaff();
   if (!session.isDesk) redirect("/staff");
 
   const db = await getDb();
@@ -35,15 +36,21 @@ export default async function PassSheetPage() {
   return (
     <main className="sheet-page">
       <div className="no-print">
+        <div className="topbar">
+          <Link className="icon-btn" href="/staff/desk" aria-label="안내데스크로">
+            <ChevronLeft size={26} aria-hidden="true" />
+          </Link>
+          <span className="topbar-title">안내데스크</span>
+        </div>
         <h1>미사용 패스 {cells.length}장</h1>
         <p className="muted">
-          QR 주소는 <code>{config.baseUrl}</code> 기준입니다. 배포 주소가 정해진 뒤에 인쇄하세요. 브라우저의 인쇄
-          기능(Ctrl+P)으로 A4에 출력합니다.
+          한 장에는 QR과 패스 번호 네 자리만 들어갑니다. 이름이나 날짜는 넣지 않습니다. QR 주소는{" "}
+          <code>{config.baseUrl}</code> 기준입니다.
         </p>
-        <MorePasses />
-        <Link className="btn" href="/staff/desk">
-          돌아가기
-        </Link>
+        <div className="row">
+          <PrintButton />
+          <MorePasses />
+        </div>
       </div>
       <div className="sheet">
         {cells.map((c) => (

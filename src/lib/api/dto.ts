@@ -21,6 +21,8 @@ export interface CaseDto {
   categories: string[]; // 교통약자 구분
   needs: string[]; // 필요한 도움 (이동, 환경)
   accompany: string[]; // 동반
+  /** 고른 항목의 코드 전체. 목록에서 줄인 말과 그림으로 보여줄 때 쓴다. */
+  codes: string[];
   flightNo: string;
   operatingNo: string | null;
   destName: string;
@@ -62,6 +64,7 @@ export function toCaseDto(c: CaseView): CaseDto {
     categories: labelsIn(c.categories, "category"),
     needs: [...labelsIn(c.needs, "move"), ...labelsIn(c.needs, "env")],
     accompany: labelsIn(c.needs, "accompany"),
+    codes: [...c.categories, ...c.needs],
     flightNo: c.flightNo,
     operatingNo: c.operatingNo,
     destName: c.destName,

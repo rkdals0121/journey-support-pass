@@ -1,7 +1,9 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Banner } from "../../../components/Alert";
 
 const COUNT = 10;
 
@@ -33,13 +35,10 @@ export function MorePasses() {
   return (
     <>
       <button className="btn" onClick={add} disabled={busy}>
+        <Plus size={20} aria-hidden="true" />
         패스 {COUNT}장 더 만들기
       </button>
-      {message && (
-        <p className="notice" role="status">
-          {message}
-        </p>
-      )}
+      {message && <Banner role="status">{message}</Banner>}
     </>
   );
 }

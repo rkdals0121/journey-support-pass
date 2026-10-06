@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Banner } from "./Alert";
 
 interface Props {
   /** QR 에서 읽은 글자. 같은 값은 2초 안에 다시 올리지 않는다. */
   onScan: (text: string) => void;
   /** 주면 카메라 아래에 패스 번호 입력란을 둔다. */
   onNumber?: (passNo: string) => void;
+  /** 패스 번호 옆 버튼의 글자. */
+  numberLabel?: string;
   paused?: boolean;
 }
 
@@ -19,7 +22,7 @@ const REPEAT_GUARD_MS = 2000;
 const FRAME_MAX = 800;
 
 // 앱 설치 없이 브라우저 카메라로 읽는다. BarcodeDetector 가 없는 브라우저(iOS Safari 등)는 jsQR 로 읽는다.
-export function Scanner({ onScan, onNumber, paused = false }: Props) {
+export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onScanRef = useRef(onScan);
@@ -106,9 +109,7 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
   return (
     <div>
       {cameraError ? (
-        <p className="notice" role="status">
-          {cameraError}
-        </p>
+        <Banner role="status">{cameraError}</Banner>
       ) : (
         <div className="scanner">
           <video ref={videoRef} playsInline muted aria-label="QR 스캔 카메라" />
@@ -117,7 +118,7 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
       )}
       {!cameraError && (
         <p className="muted small scan-hint" aria-live="polite">
-          {paused ? "확인하는 중…" : "QR을 화면 가운데에 맞추면 자동으로 읽습니다. 20~30cm 거리가 알맞습니다."}
+          {paused ? "확인하는 중…" : "자동으로 읽습니다. 20~30cm 거리가 알맞습니다."}
         </p>
       )}
 
@@ -131,22 +132,26 @@ export function Scanner({ onScan, onNumber, paused = false }: Props) {
             }
           }}
         >
+          {!cameraError && <p className="or-line">카메라가 안 되면</p>}
           <label htmlFor="pass-no">패스 번호 네 자리</label>
           <div className="row">
             <input
               id="pass-no"
+              className="input-code"
               type="text"
               inputMode="numeric"
               pattern="\d{4}"
               maxLength={4}
               autoComplete="off"
+              placeholder="0000"
               value={passNo}
               onChange={(e) => setPassNo(e.target.value.replace(/\D/g, ""))}
             />
-            <button className="btn btn-inline" disabled={passNo.length !== 4}>
-              열기
+            <button className="btn btn-primary btn-inline" disabled={passNo.length !== 4 || paused}>
+              {numberLabel}
             </button>
           </div>
+          <p className="hint">패스 뒷면 QR 아래에 인쇄된 번호입니다.</p>
         </form>
       )}
     </div>

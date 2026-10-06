@@ -1,5 +1,6 @@
 "use client";
 
+import { ConciergeBell, ScanLine, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,15 +9,20 @@ import { usePathname } from "next/navigation";
 export function StaffNav({ isDesk }: { isDesk: boolean }) {
   const path = usePathname();
   const items = [
-    { href: "/staff", label: "여객 목록", on: path === "/staff" },
-    { href: "/staff/scan", label: "패스 스캔", on: path.startsWith("/staff/scan") },
-    ...(isDesk ? [{ href: "/staff/desk", label: "안내데스크", on: path.startsWith("/staff/desk") }] : []),
+    { href: "/staff", label: "여객 목록", Icon: Users, on: path === "/staff" || path.startsWith("/staff/case") },
+    { href: "/staff/scan", label: "패스 스캔", Icon: ScanLine, on: path.startsWith("/staff/scan") },
+    ...(isDesk
+      ? [{ href: "/staff/desk", label: "안내데스크", Icon: ConciergeBell, on: path.startsWith("/staff/desk") }]
+      : []),
   ];
   return (
     <nav className="staff-nav" aria-label="직원 메뉴">
-      {items.map((i) => (
-        <Link key={i.href} href={i.href} aria-current={i.on ? "page" : undefined}>
-          {i.label}
+      {items.map(({ href, label, Icon, on }) => (
+        <Link key={href} href={href} aria-current={on ? "page" : undefined}>
+          <span className="nav-ico">
+            <Icon size={22} aria-hidden="true" />
+          </span>
+          {label}
         </Link>
       ))}
     </nav>

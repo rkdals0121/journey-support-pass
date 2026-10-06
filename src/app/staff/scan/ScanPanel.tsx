@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ErrorNote } from "../../components/Alert";
 import { Scanner } from "../../components/Scanner";
 
 const MESSAGES: Record<string, string> = {
@@ -30,6 +31,10 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
         router.replace("/staff/login");
         return;
       }
+      if (res.status === 409) {
+        router.replace("/staff/zone");
+        return;
+      }
       const data = await res.json();
       if (!res.ok) {
         setMessage(data.error ?? "확인하지 못했습니다");
@@ -42,7 +47,7 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
         setMessage(MESSAGES[data.kind] ?? MESSAGES.unknown);
       }
     } catch {
-      setMessage("연결할 수 없습니다. 구두로 확인해 주세요.");
+      setMessage("연결할 수 없습니다. 여객에게 구두로 확인해 주세요.");
     } finally {
       setBusy(false);
     }
@@ -51,13 +56,14 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
   return (
     <div>
       <h1>패스 스캔</h1>
-      <p className="muted">패스 뒷면의 QR을 화면 안에 맞춰 주세요.</p>
-      <Scanner onScan={(text) => resolve({ scanned: text })} onNumber={(passNo) => resolve({ passNo })} paused={busy} />
-      {message && (
-        <p className="error" role="alert">
-          {message}
-        </p>
-      )}
+      <p className="muted">패스 뒷면의 QR을 네모 안에 맞춰 주세요.</p>
+      <Scanner
+        onScan={(text) => resolve({ scanned: text })}
+        onNumber={(passNo) => resolve({ passNo })}
+        numberLabel="여객 카드 열기"
+        paused={busy}
+      />
+      {message && <ErrorNote>{message}</ErrorNote>}
       {isDesk && message === MESSAGES.idle && (
         <Link className="btn" href="/staff/desk">
           패스 연결하러 가기

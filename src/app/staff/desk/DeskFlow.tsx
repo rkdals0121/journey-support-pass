@@ -1,8 +1,21 @@
 "use client";
 
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  ClipboardPen,
+  Inbox,
+  MessagesSquare,
+  Search,
+  Ticket,
+  WandSparkles,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Banner, ErrorNote } from "../../components/Alert";
 import { RegistrationSteps, type RegistrationPayload } from "../../components/RegistrationSteps";
 import { Scanner } from "../../components/Scanner";
 
@@ -22,33 +35,41 @@ interface ListItem extends Summary {
   submittedLabel: string;
 }
 
+interface DeskList {
+  idlePasses: number;
+  pending: ListItem[];
+  active: ListItem[];
+}
+
 type Tab = "link" | "new" | "reissue";
 type Target = { summary: Summary; mode: "link" | "reissue" };
+type Done = { mode: "link" | "reissue" | "cancel"; passNo?: string; name: string };
 
 const LIST_REFRESH_MS = 30_000;
+const LOW_PASSES = 5;
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "link", label: "패스 연결" },
-  { id: "new", label: "새로 등록" },
+  { id: "new", label: "대신 등록" },
   { id: "reissue", label: "재발급" },
 ];
+
+const norm = (s: string) => s.replace(/\s+/g, "").toUpperCase();
 
 export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: string | null }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("link");
   const [target, setTarget] = useState<Target | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<Done | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const [receiptNo, setReceiptNo] = useState("");
   const [route, setRoute] = useState<"paper" | "assisted" | null>(null);
-  const [name, setName] = useState("");
-  const [flightNo, setFlightNo] = useState("");
-  const [candidates, setCandidates] = useState<Summary[] | null>(null);
+  const [filter, setFilter] = useState("");
   // 미연결 패스를 기본 카메라로 찍어 들어온 경우, 그 패스를 바로 쓴다.
   const [pendingToken, setPendingToken] = useState(scannedToken);
-  const [list, setList] = useState<{ pending: ListItem[]; active: ListItem[] } | null>(null);
+  const [list, setList] = useState<DeskList | null>(null);
 
   // 접수 번호를 몰라도 등록을 찾을 수 있게 목록을 함께 보여준다.
   const loadList = useCallback(async () => {
@@ -66,12 +87,6 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     const timer = setInterval(loadList, LIST_REFRESH_MS);
     return () => clearInterval(timer);
   }, [loadList]);
-
-  async function cancelRegistration(r: ListItem) {
-    if (!window.confirm(`${r.name} · ${r.flightNo} 등록을 취소할까요? 되돌릴 수 없습니다.`)) return;
-    const data = await post("cancel", { registrationId: r.registrationId });
-    if (data) loadList();
-  }
 
   async function post(action: string, body: Record<string, unknown>) {
     setBusy(true);
@@ -107,23 +122,27 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     setError(null);
     setReceiptNo("");
     setRoute(null);
-    setName("");
-    setFlightNo("");
-    setCandidates(null);
+    setFilter("");
     loadList();
+    window.scrollTo(0, 0);
   }
 
-  async function attach(pass: { scanned: string } | { passNo: string }) {
+  async function attach(pass: { scanned: string } | { passNo: string } | { auto: true }) {
     if (!target || busy) return;
     const data = await post(target.mode, { registrationId: target.summary.registrationId, ...pass });
     setPendingToken(null);
     if (data) {
-      setDone(
-        target.mode === "link"
-          ? `연결했습니다. 패스 번호 ${data.passNo}`
-          : `재발급했습니다. 새 패스 번호 ${data.passNo}. 이전 패스는 쓸 수 없습니다.`,
-      );
+      setDone({ mode: target.mode, passNo: String(data.passNo), name: target.summary.name });
+      window.scrollTo(0, 0);
     }
+  }
+
+  async function cancelRegistration() {
+    if (!target) return;
+    const s = target.summary;
+    if (!window.confirm(`${s.name} · ${s.flightNo} 등록을 취소할까요? 되돌릴 수 없습니다.`)) return;
+    const data = await post("cancel", { registrationId: s.registrationId });
+    if (data) setDone({ mode: "cancel", name: s.name });
   }
 
   async function lookupReceipt(e: React.FormEvent) {
@@ -142,29 +161,40 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
       const data = await res.json();
       if (!res.ok) return data.error ?? "등록하지 못했습니다";
       setTarget({ summary: data, mode: "link" });
+      window.scrollTo(0, 0);
       return null;
     } catch {
       return "연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
     }
   }
 
-  async function findForReissue(e: React.FormEvent) {
-    e.preventDefault();
-    const data = await post("reissue", { name, flightNo });
-    if (data) setCandidates(data.candidates as Summary[]);
-  }
-
   if (done) {
     return (
       <div>
-        <p className="notice done" role="status">
-          {done}
+        <p className="success-head">
+          <CircleCheck size={26} aria-hidden="true" />
+          {done.mode === "link" ? "연결했습니다" : done.mode === "reissue" ? "재발급했습니다" : "등록을 취소했습니다"}
         </p>
-        <button className="btn btn-primary" onClick={() => reset()}>
+        {done.passNo ? (
+          <>
+            <h1>{done.name} 님께 이 번호의 패스를 드리세요</h1>
+            <div className="pass-big" role="status" aria-label={`패스 번호 ${done.passNo.split("").join(" ")}`}>
+              <small>패스 번호</small>
+              <b aria-hidden="true">{done.passNo}</b>
+              <span>패스 뒷면 QR 아래의 번호와 같은지 확인하세요</span>
+            </div>
+            {done.mode === "reissue" && <Banner>이전 패스는 이제 쓸 수 없습니다. 찾으면 폐기해 주세요.</Banner>}
+          </>
+        ) : (
+          <p className="muted" role="status">
+            {done.name} 님의 이름, 항공편, 필요한 도움을 지웠습니다. 연결된 패스가 있었다면 더는 쓸 수 없습니다.
+          </p>
+        )}
+        <button className="btn btn-primary" onClick={() => reset("link")}>
           다음 여객
         </button>
         <Link className="btn" href="/staff">
-          목록으로
+          여객 목록 보기
         </Link>
       </div>
     );
@@ -172,198 +202,264 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
 
   if (target) {
     const s = target.summary;
+    const noPasses = list !== null && list.idlePasses === 0;
     return (
       <div>
-        <h1>{target.mode === "link" ? "패스를 스캔해 연결하세요" : "새 패스를 스캔하세요"}</h1>
-        <div className="notice">
-          <p>
-            <strong>{s.name}</strong> · {s.flightNo} {s.destName} {s.timeLabel}
-          </p>
-          <p className="small">{[...s.categories, ...s.needs].join(" / ")}</p>
-          {target.mode === "link" && <p className="muted small">여객 화면과 같은지 확인하세요.</p>}
-        </div>
-        {pendingToken ? (
-          <button className="btn btn-primary" onClick={() => attach({ scanned: pendingToken })} disabled={busy}>
-            방금 찍은 패스로 연결
+        <div className="topbar">
+          <button className="icon-btn" onClick={() => reset()} aria-label="뒤로">
+            <ChevronLeft size={26} aria-hidden="true" />
           </button>
-        ) : (
-          <Scanner onScan={(scanned) => attach({ scanned })} onNumber={(passNo) => attach({ passNo })} paused={busy} />
-        )}
-        {error && (
-          <p className="error" role="alert">
-            {error}
+          <span className="topbar-title">{target.mode === "link" ? "패스 연결" : "패스 재발급"}</span>
+        </div>
+        <h1>{target.mode === "link" ? "이 여객에게 줄 패스를 스캔하세요" : "새로 줄 패스를 스캔하세요"}</h1>
+        <div className="panel">
+          <p style={{ marginBottom: 6 }}>
+            <strong style={{ fontSize: 20 }}>{s.name}</strong>
           </p>
-        )}
-        <p className="muted small">
-          패스 번호는 패스 뒷면 QR 아래에 인쇄된 네 자리입니다. 접수 번호와 다른 번호입니다.
-        </p>
+          <p className="muted" style={{ marginBottom: 10 }}>
+            <span className="num" style={{ fontSize: 20, color: "var(--text)" }}>
+              {s.flightNo}
+            </span>{" "}
+            {s.destName} {s.timeLabel && `· ${s.timeLabel} 출발`}
+          </p>
+          <div className="chips" style={{ whiteSpace: "normal" }}>
+            {s.categories.map((t) => (
+              <span key={t} className="chip chip-mint">
+                {t}
+              </span>
+            ))}
+          </div>
+          {s.needs.length > 0 && (
+            <ul className="lines small" style={{ marginTop: 10, fontWeight: 500 }}>
+              {s.needs.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {target.mode === "link" && <p className="hint">여객 화면의 이름·편명과 같은지 확인하세요.</p>}
+
+        {noPasses && <ErrorNote>미사용 패스가 없습니다. 아래에서 패스를 먼저 만들어 주세요.</ErrorNote>}
+        {error && <ErrorNote>{error}</ErrorNote>}
+
+        <div style={{ marginTop: 18 }}>
+          {pendingToken ? (
+            <button className="btn btn-primary" onClick={() => attach({ scanned: pendingToken })} disabled={busy}>
+              방금 찍은 패스로 연결
+            </button>
+          ) : (
+            <Scanner
+              onScan={(scanned) => attach({ scanned })}
+              onNumber={(passNo) => attach({ passNo })}
+              numberLabel="연결"
+              paused={busy}
+            />
+          )}
+        </div>
+
+        <p className="or-line">실물 패스를 번호 순으로 쌓아 두었다면</p>
+        <button className="btn" onClick={() => attach({ auto: true })} disabled={busy || noPasses}>
+          <WandSparkles size={20} aria-hidden="true" />
+          가장 앞 번호 패스로 자동 배정
+        </button>
+        <p className="hint">번호가 가장 작은 미사용 패스를 연결하고, 그 번호를 크게 보여줍니다.</p>
+
         {/* 새 창으로 연다. 이 화면을 벗어나면 조회해 둔 등록이 사라진다. */}
-        <a className="btn" href="/staff/desk/passes" target="_blank" rel="noopener">
+        <a className="btn btn-ghost" href="/staff/desk/passes" target="_blank" rel="noopener">
           미사용 패스 번호 보기 (새 창)
         </a>
-        <button className="btn" onClick={() => reset()}>
-          취소
+        <button className="btn btn-ghost link-danger" onClick={cancelRegistration} disabled={busy}>
+          이 등록 취소하기
         </button>
       </div>
     );
   }
 
+  if (tab === "new" && route) {
+    return (
+      <div style={{ paddingBottom: "var(--cta-h)" }}>
+        <RegistrationSteps mock={mock} byStaff aboveNav onExit={() => setRoute(null)} onSubmit={registerForPassenger} />
+      </div>
+    );
+  }
+
+  const q = norm(filter);
+  const hit = (r: ListItem) => !q || norm(r.name).includes(q) || norm(r.flightNo).includes(q);
+  const pending = list?.pending.filter(hit) ?? [];
+  const active = list?.active.filter(hit) ?? [];
+
+  const searchBox = (
+    <div className="input-wrap" style={{ marginTop: 6 }}>
+      <Search size={20} aria-hidden="true" />
+      <input
+        type="search"
+        value={filter}
+        placeholder="이름이나 편명으로 찾기"
+        aria-label="이름이나 편명으로 찾기"
+        autoComplete="off"
+        style={{ minHeight: 48, fontSize: 16.5, fontWeight: 500 }}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+      {filter && (
+        <button className="icon-btn input-clear" onClick={() => setFilter("")} aria-label="검색어 지우기">
+          <X size={20} aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div>
-      <div className="tabs" role="tablist">
+      <header className="staff-head">
+        <div className="staff-head-row">
+          <h1>
+            <span className="kicker">안내데스크</span>
+            패스 연결과 등록
+          </h1>
+        </div>
+      </header>
+
+      <div className="seg" role="tablist">
         {TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            className={`tab ${tab === t.id ? "tab-on" : ""}`}
-            onClick={() => reset(t.id)}
-          >
+          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => reset(t.id)}>
             {t.label}
+            {t.id === "link" && list && list.pending.length > 0 && <span className="count">{list.pending.length}</span>}
           </button>
         ))}
       </div>
 
-      {pendingToken && <p className="notice">방금 찍은 패스는 아직 연결되지 않았습니다. 연결할 등록을 찾아 주세요.</p>}
+      {list && (
+        <Link className={`desk-stat ${list.idlePasses <= LOW_PASSES ? "low" : ""}`} href="/staff/desk/passes">
+          <span>
+            <Ticket size={16} aria-hidden="true" style={{ verticalAlign: "-3px" }} /> 미사용 패스{" "}
+            <b>{list.idlePasses}</b>장{list.idlePasses <= LOW_PASSES && " · 더 만들어 주세요"}
+          </span>
+          <span>
+            보기·인쇄 <ChevronRight size={16} aria-hidden="true" style={{ verticalAlign: "-3px" }} />
+          </span>
+        </Link>
+      )}
+
+      {pendingToken && <Banner>방금 찍은 패스는 아직 연결되지 않았습니다. 연결할 등록을 골라 주세요.</Banner>}
+      {error && <ErrorNote>{error}</ErrorNote>}
 
       {tab === "link" && (
-        <form onSubmit={lookupReceipt}>
-          <h1>접수 번호를 입력하세요</h1>
-          <p className="muted">여객의 등록 완료 화면에 있는 네 자리 번호입니다.</p>
-          <label htmlFor="receipt">접수 번호</label>
-          <input
-            id="receipt"
-            type="text"
-            inputMode="numeric"
-            maxLength={4}
-            autoComplete="off"
-            value={receiptNo}
-            onChange={(e) => setReceiptNo(e.target.value.replace(/\D/g, ""))}
-          />
-          <button className="btn btn-primary" disabled={busy || receiptNo.length !== 4}>
-            찾기
-          </button>
-        </form>
-      )}
-
-      {tab === "link" && list && (
-        <section>
-          <h2>패스를 기다리는 등록 {list.pending.length}건</h2>
-          {list.pending.length === 0 && <p className="muted">패스 연결을 기다리는 등록이 없습니다.</p>}
-          {list.pending.map((r) => (
-            <button
-              key={r.registrationId}
-              className="choice choice-stack"
-              onClick={() => setTarget({ summary: r, mode: "link" })}
-            >
-              <span>
-                <strong>{r.name}</strong> · {r.flightNo} {r.destName} {r.timeLabel}
-              </span>
-              <span className="small muted">
-                접수 번호 {r.receiptNo} · {r.submittedLabel} 등록
-              </span>
-              <span className="small muted">{[...r.categories, ...r.needs].join(" / ")}</span>
-            </button>
-          ))}
-        </section>
-      )}
-
-      {tab === "link" && list && list.pending.length > 0 && (
-        <details className="cancel-box">
-          <summary>잘못 들어온 등록 취소하기</summary>
-          {list.pending.map((r) => (
-            <div className="row-actions" key={r.registrationId}>
-              <button className="link-btn link-danger" onClick={() => cancelRegistration(r)} disabled={busy}>
-                {r.name} · {r.flightNo} (접수 번호 {r.receiptNo}) 취소
+        <>
+          <form onSubmit={lookupReceipt}>
+            <label htmlFor="receipt">여객 화면의 접수 번호 네 자리</label>
+            <div className="row">
+              <input
+                id="receipt"
+                className="input-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                autoComplete="off"
+                placeholder="0000"
+                value={receiptNo}
+                onChange={(e) => setReceiptNo(e.target.value.replace(/\D/g, ""))}
+              />
+              <button className="btn btn-primary btn-inline" disabled={busy || receiptNo.length !== 4}>
+                찾기
               </button>
             </div>
+          </form>
+
+          <h2 className="section-title">패스를 기다리는 등록 {list ? `${list.pending.length}건` : ""}</h2>
+          {list && list.pending.length > 4 && searchBox}
+          {list && pending.length === 0 && (
+            <div className="empty">
+              <span className="bubble">
+                <Inbox size={26} aria-hidden="true" />
+              </span>
+              <strong>{q ? "찾는 등록이 없습니다" : "기다리는 등록이 없습니다"}</strong>
+              <p>{q ? "이름이나 편명을 다시 확인해 주세요." : "여객이 등록을 마치면 여기에 바로 나타납니다."}</p>
+            </div>
+          )}
+          {pending.map((r) => (
+            <RegRow key={r.registrationId} r={r} kind="receipt" onPick={() => setTarget({ summary: r, mode: "link" })} />
           ))}
-        </details>
+        </>
       )}
 
-      {tab === "new" && !route && (
+      {tab === "new" && (
         <div>
-          <h1>어떻게 등록하나요</h1>
-          <button className="btn" onClick={() => setRoute("paper")}>
-            종이 체크리스트를 옮겨 적기
+          <h2 className="section-title">휴대전화 등록이 어려운 여객</h2>
+          <button className="choice" onClick={() => setRoute("assisted")}>
+            <span className="choice-icon">
+              <MessagesSquare size={20} aria-hidden="true" />
+            </span>
+            <span className="choice-text">
+              <strong>여객에게 물어보며 입력</strong>
+              <br />
+              <span className="small muted">질문을 읽어 드리고 답을 대신 고릅니다</span>
+            </span>
+            <ChevronRight className="case-chev" size={20} aria-hidden="true" />
           </button>
-          <button className="btn" onClick={() => setRoute("assisted")}>
-            여객에게 물어보며 대신 입력
+          <button className="choice" onClick={() => setRoute("paper")}>
+            <span className="choice-icon">
+              <ClipboardPen size={20} aria-hidden="true" />
+            </span>
+            <span className="choice-text">
+              <strong>종이 체크리스트 옮겨 적기</strong>
+              <br />
+              <span className="small muted">입력을 마치면 종이는 바로 파기합니다</span>
+            </span>
+            <ChevronRight className="case-chev" size={20} aria-hidden="true" />
           </button>
-          <p className="muted small">종이 체크리스트는 입력을 마치면 바로 파기합니다.</p>
         </div>
       )}
-      {tab === "new" && route && <RegistrationSteps mock={mock} byStaff onSubmit={registerForPassenger} />}
 
       {tab === "reissue" && (
-        <div>
-          <form onSubmit={findForReissue}>
-            <h1>패스를 잃어버린 여객 찾기</h1>
-            <label htmlFor="r-name">이름</label>
-            <input id="r-name" type="text" value={name} autoComplete="off" onChange={(e) => setName(e.target.value)} />
-            <label htmlFor="r-flight">편명</label>
-            <input
-              id="r-flight"
-              type="text"
-              value={flightNo}
-              autoComplete="off"
-              autoCapitalize="characters"
-              onChange={(e) => setFlightNo(e.target.value)}
-            />
-            <button className="btn btn-primary" disabled={busy || !name.trim() || !flightNo.trim()}>
-              찾기
-            </button>
-          </form>
-          {candidates && candidates.length === 0 && <p className="notice">패스가 연결된 등록을 찾지 못했습니다.</p>}
-          {candidates && candidates.length > 1 && (
-            <p className="notice">같은 이름의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</p>
-          )}
-          {list && !candidates && (
-            <section>
-              <h2>패스가 연결된 등록 {list.active.length}건</h2>
-              {list.active.length === 0 && <p className="muted">패스가 연결된 등록이 없습니다.</p>}
-              {list.active.map((r) => (
-                <button
-                  key={r.registrationId}
-                  className="choice choice-stack"
-                  onClick={() => setTarget({ summary: r, mode: "reissue" })}
-                >
-                  <span>
-                    <strong>{r.name}</strong> · {r.flightNo} {r.destName} {r.timeLabel}
-                  </span>
-                  <span className="small muted">지금 패스 번호 {r.passNo ?? "없음"}</span>
-                  <span className="small muted">{[...r.categories, ...r.needs].join(" / ")}</span>
-                </button>
-              ))}
-            </section>
-          )}
-          {candidates?.map((s) => (
-            <button
-              key={s.registrationId}
-              className="choice choice-stack"
-              onClick={() => setTarget({ summary: s, mode: "reissue" })}
-            >
-              <span>
-                {s.name} · {s.flightNo} {s.destName} {s.timeLabel}
+        <>
+          <h2 className="section-title">패스를 잃어버린 여객을 골라 주세요</h2>
+          {searchBox}
+          {list && active.length === 0 && (
+            <div className="empty">
+              <span className="bubble">
+                <Inbox size={26} aria-hidden="true" />
               </span>
-              {/* 같은 편에 이름이 같은 여객이 있을 때 구분할 수 있게 등록 내용을 함께 보여준다. */}
-              <span className="small muted">{[...s.categories, ...s.needs].join(" / ")}</span>
-            </button>
+              <strong>{q ? "찾는 등록이 없습니다" : "패스가 연결된 등록이 없습니다"}</strong>
+              <p>{q ? "이름이나 편명을 다시 확인해 주세요." : "패스를 연결한 여객이 여기에 나타납니다."}</p>
+            </div>
+          )}
+          {q && active.length > 1 && (
+            <Banner>같은 조건의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</Banner>
+          )}
+          {active.map((r) => (
+            <RegRow key={r.registrationId} r={r} kind="pass" onPick={() => setTarget({ summary: r, mode: "reissue" })} />
           ))}
-        </div>
+        </>
       )}
-
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      <Link className="btn" href="/staff/desk/passes">
-        미사용 패스 보기·인쇄
-      </Link>
-      <Link className="btn" href="/staff">
-        목록으로
-      </Link>
     </div>
+  );
+}
+
+function RegRow({ r, kind, onPick }: { r: ListItem; kind: "receipt" | "pass"; onPick: () => void }) {
+  const tags = [...r.categories, ...r.needs];
+  return (
+    <button className="reg-row" onClick={onPick}>
+      <span className={`reg-no ${kind === "pass" ? "pass" : ""}`}>
+        <small>{kind === "pass" ? "패스" : "접수"}</small>
+        {(kind === "pass" ? r.passNo : r.receiptNo) ?? "-"}
+      </span>
+      <span className="case-main">
+        <span className="case-top">
+          <span className="case-name">{r.name}</span>
+          <span className="case-flight">
+            <span className="num">{r.flightNo}</span> {r.destName}
+          </span>
+        </span>
+        <span className="case-time">
+          {r.timeLabel ? `${r.timeLabel} 출발` : "운항 정보 없음"} · {r.submittedLabel} 등록
+        </span>
+        {/* 같은 편에 이름이 같은 여객이 있을 때 구분할 수 있게 등록 내용을 함께 보여준다. */}
+        <span className="case-zone" style={{ whiteSpace: "normal" }}>
+          {tags.slice(0, 2).join(" / ")}
+          {tags.length > 2 && ` 외 ${tags.length - 2}`}
+        </span>
+      </span>
+      <ChevronRight className="case-chev" size={20} aria-hidden="true" />
+    </button>
   );
 }

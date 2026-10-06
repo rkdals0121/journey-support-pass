@@ -1,13 +1,11 @@
-import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/session-server";
+import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { ScanPanel } from "./ScanPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function ScanPage() {
-  const session = await currentSession();
-  if (!session) redirect("/staff/login");
+  const session = await requireStaff();
   return (
     <>
       <main className="page has-nav">

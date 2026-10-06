@@ -1,9 +1,11 @@
 "use client";
 
+import { ChevronLeft, CircleCheck, Clock, HandHelping, MapPin, MessageSquareText, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CaseDto } from "@/lib/api/dto";
+import { ErrorNote } from "../../../components/Alert";
 import { PollBar, type PollInfo } from "../../../components/PollBar";
 
 interface CaseData {
@@ -49,6 +51,10 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
           router.replace("/staff/login");
           return;
         }
+        if (res.status === 409) {
+          router.replace("/staff/zone");
+          return;
+        }
         const body = await res.json();
         if (!res.ok) {
           setError(body.error ?? "사용할 수 없는 패스입니다");
@@ -57,7 +63,7 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
         setData(body);
         setPhase(body.encounter.started ? "started" : "ready");
       } catch {
-        if (!cancelled) setError("연결할 수 없습니다. 구두로 확인해 주세요.");
+        if (!cancelled) setError("연결할 수 없습니다. 여객에게 구두로 확인해 주세요.");
       }
     })();
     return () => {
@@ -82,127 +88,179 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
       }
       setPhase(action === "start" ? "started" : "done");
     } catch {
-      setError("연결할 수 없습니다. 구두로 확인해 주세요.");
+      setError("연결할 수 없습니다. 여객에게 구두로 확인해 주세요.");
     } finally {
       setBusy(false);
     }
   }
 
+  const top = (
+    <div className="topbar">
+      <Link className="icon-btn" href="/staff" aria-label="여객 목록으로">
+        <ChevronLeft size={26} aria-hidden="true" />
+      </Link>
+      <span className="topbar-title">여객 카드</span>
+    </div>
+  );
+
   if (error && !data) {
     return (
       <div>
-        <p className="error" role="alert">
-          {error}
-        </p>
+        {top}
+        <ErrorNote>{error}</ErrorNote>
         <Link className="btn" href="/staff">
-          목록으로
+          여객 목록으로
         </Link>
       </div>
     );
   }
-  if (!data) return <p className="muted">불러오는 중…</p>;
+  if (!data) {
+    return (
+      <div>
+        {top}
+        <p className="muted">불러오는 중…</p>
+      </div>
+    );
+  }
 
   const c = data.case;
   const f = c.facilities;
   const hasFacilities = f && (f.elevators.length > 0 || f.restrooms.length > 0 || f.waitingPoints.length > 0);
+  const showStatus = c.status && !c.cancelled && c.status !== "탑승마감";
 
   return (
-    <article className="card">
-      <section className="card-block card-comm">
-        <h2>소통 방식</h2>
-        {c.comm.length > 0 ? <Lines items={c.comm} /> : <p>별도 요청 없음</p>}
-      </section>
+    <div>
+      {top}
+      <article className="bp">
+        <section className="bp-comm">
+          <h2>
+            <MessageSquareText size={16} aria-hidden="true" />
+            소통 방식
+          </h2>
+          {c.comm.length > 0 ? (
+            <ul>
+              {c.comm.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="none">별도 요청 없음</p>
+          )}
+        </section>
 
-      <section className="card-block">
-        <h2>교통약자 구분</h2>
-        <Lines items={c.categories} />
-      </section>
+        <section className="bp-who">
+          <h2 className="sr-only">이름과 교통약자 구분</h2>
+          <p className="bp-name">{c.name}</p>
+          <div className="chips">
+            {c.categories.map((t) => (
+              <span key={t} className="chip chip-mint">
+                {t}
+              </span>
+            ))}
+          </div>
+        </section>
 
-      <section className="card-block">
-        <h2>이름</h2>
-        <p className="card-name">{c.name}</p>
-      </section>
+        <section className="bp-block">
+          <h2>
+            <HandHelping size={16} aria-hidden="true" />
+            필요한 도움
+          </h2>
+          {c.needs.length > 0 ? <Lines items={c.needs} /> : <p className="muted">별도 요청 없음</p>}
+        </section>
 
-      <section className="card-block">
-        <h2>필요한 도움</h2>
-        {c.needs.length > 0 ? <Lines items={c.needs} /> : <p>별도 요청 없음</p>}
-      </section>
+        <section className="bp-block">
+          <h2>
+            <Users size={16} aria-hidden="true" />
+            동반
+          </h2>
+          {c.accompany.length > 0 ? <Lines items={c.accompany} /> : <p className="muted">동반자 없음</p>}
+        </section>
 
-      <section className="card-block">
-        <h2>동반</h2>
-        {c.accompany.length > 0 ? <Lines items={c.accompany} /> : <p>동반자 없음</p>}
-      </section>
+        <div className="bp-tear" aria-hidden="true" />
 
-      <section className={`card-block card-flight ${c.urgent ? "card-urgent" : ""}`}>
-        <h2>항공편</h2>
-        <p>
-          <strong>{c.flightNo}</strong> · {c.destName}
-          {c.operatingNo && <span className="muted"> (운항 편명 {c.operatingNo})</span>}
-        </p>
-        <p>
-          출발{" "}
-          {c.estTime ? (
+        <section aria-label="항공편">
+          <div className="bp-flight">
+            <p className={`plate ${c.gate === null ? "unknown" : ""} ${c.urgent ? "urgent" : ""}`} style={{ margin: 0 }}>
+              <small>탑승구</small>
+              {c.gate ?? "미정"}
+            </p>
+            <div className="bp-flight-main">
+              <span className="bp-flight-no">{c.flightNo}</span>
+              <span className="bp-dest">{c.destName}</span>
+              <span className="bp-dep">
+                출발{" "}
+                {c.estTime ? (
+                  <>
+                    <s>{c.schedTime}</s> <strong>{c.estTime}</strong> 지연
+                  </>
+                ) : (
+                  <strong>{c.schedTime ?? "정보 없음"}</strong>
+                )}
+              </span>
+              {c.operatingNo && <span className="small muted">운항 편명 {c.operatingNo}</span>}
+            </div>
+          </div>
+          <div className="bp-status">
+            <span className={`countdown ${c.urgent ? "urgent" : ""}`}>
+              <Clock size={17} aria-hidden="true" />
+              {c.closeLabel}
+            </span>
+            {showStatus && <span className="chip chip-sun">{c.status}</span>}
+            {c.prevGate !== null && <span className="chip chip-red">탑승구 변경 · 이전 {c.prevGate}</span>}
+          </div>
+          <div className="bp-foot">
+            <PollBar poll={data.poll} light />
+          </div>
+        </section>
+
+        <section className="bp-block">
+          <h2>
+            <MapPin size={16} aria-hidden="true" />
+            가까운 교통약자 시설
+          </h2>
+          {hasFacilities ? (
             <>
-              <s className="muted">{c.schedTime}</s> <strong>{c.estTime}</strong> (지연)
+              <Facility title="엘리베이터" items={f.elevators} />
+              <Facility title="장애인 화장실" items={f.restrooms} />
+              <Facility title="대기 지점" items={f.waitingPoints} />
             </>
           ) : (
-            <strong>{c.schedTime ?? "정보 없음"}</strong>
+            <p className="muted small">
+              {c.zoneLabel ? "이 구역의 시설 정보가 아직 없습니다." : "탑승구가 정해지면 표시됩니다."}
+            </p>
           )}
-        </p>
-        <p className="card-gate">
-          <span className="card-gate-label">탑승구</span>
-          {c.gate ?? "미정"}
-        </p>
-        {c.prevGate !== null && <p className="card-gate-changed">변경됨 · 이전 {c.prevGate}</p>}
-        <p className={c.urgent ? "case-close-urgent" : ""}>{c.closeLabel}</p>
-        {c.status && !c.cancelled && c.status !== "탑승마감" && (
-          <p>
-            현재 상태 <strong>{c.status}</strong>
-          </p>
-        )}
-        <PollBar poll={data.poll} />
-      </section>
+        </section>
+      </article>
 
-      <section className="card-block">
-        <h2>가까운 교통약자 시설</h2>
-        {hasFacilities ? (
-          <>
-            <Facility title="엘리베이터" items={f.elevators} />
-            <Facility title="장애인 화장실" items={f.restrooms} />
-            <Facility title="대기 지점" items={f.waitingPoints} />
-          </>
-        ) : (
-          <p className="muted">{c.zoneLabel ? "이 구역의 시설 정보가 아직 없습니다." : "탑승구가 정해지면 표시됩니다."}</p>
-        )}
-      </section>
+      {error && <ErrorNote>{error}</ErrorNote>}
 
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-
-      <div className="bottom-bar">
-        {phase === "ready" && (
-          <button className="btn btn-primary" onClick={() => act("start")} disabled={busy}>
-            응대 시작
-          </button>
-        )}
-        {phase === "started" && (
-          <button className="btn btn-danger" onClick={() => act("end")} disabled={busy}>
-            응대 완료
-          </button>
-        )}
-        {phase === "done" && (
-          <p className="notice" role="status">
-            응대를 기록했습니다.
-          </p>
-        )}
-        <Link className="btn" href="/staff">
-          목록으로
-        </Link>
+      <div className="cta-bar above-nav">
+        <div className="cta-inner">
+          {phase === "ready" && (
+            <button className="btn btn-primary" onClick={() => act("start")} disabled={busy}>
+              응대 시작
+            </button>
+          )}
+          {phase === "started" && (
+            <button className="btn btn-sun" onClick={() => act("end")} disabled={busy}>
+              <CircleCheck size={20} aria-hidden="true" />
+              응대 완료
+            </button>
+          )}
+          {phase === "done" && (
+            <>
+              <p className="done-flash" role="status">
+                <CircleCheck size={20} aria-hidden="true" />
+                응대를 기록했습니다
+              </p>
+              <Link className="btn btn-back" href="/staff">
+                목록
+              </Link>
+            </>
+          )}
+        </div>
       </div>
-    </article>
+    </div>
   );
 }
 
