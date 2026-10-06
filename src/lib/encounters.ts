@@ -224,6 +224,11 @@ export async function listForZone(
   };
 }
 
+/** 지금 공항에 있는 등록 여객 전체. 다른 구역의 여객을 이름이나 편명으로 찾을 때 쓴다. */
+export async function listAll(db: Db, now: Date): Promise<CaseView[]> {
+  return (await loadActiveCases(db, now)).filter((c) => !isJourneyOver(c, now)).sort(byUrgency);
+}
+
 export interface EncounterState {
   id: string;
   started: boolean;

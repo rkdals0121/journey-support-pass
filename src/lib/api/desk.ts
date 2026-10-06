@@ -2,7 +2,7 @@ import { logAccess, type Session } from "../auth";
 import { labelsIn, NEED_GROUPS } from "../catalog";
 import type { Db } from "../db";
 import { getFlight } from "../flights/search";
-import { extractToken, generatePasses, idleTokenByPassNo, linkPass, reissue } from "../passes";
+import { extractToken, generatePasses, idleTokenByPassNo, linkPass, nextIdleToken, reissue } from "../passes";
 import { eraseRegistration } from "../purge";
 import {
   findActiveByNameAndFlight,
@@ -22,10 +22,13 @@ const LINK_ERRORS: Record<string, string> = {
   pass_revoked: "사용할 수 없는 패스입니다",
   registration_not_pending: "이미 패스가 연결된 등록입니다",
   registration_not_active: "패스가 연결된 등록이 아닙니다",
+  no_idle_pass: "미사용 패스가 없습니다. 패스를 더 만들어 주세요",
 };
 
 /** 스캔한 QR, 또는 카메라를 못 쓸 때 손으로 넣은 패스 번호에서 토큰을 얻는다. */
-async function tokenFrom(db: Db, body: { scanned?: unknown; passNo?: unknown }) {
+async function tokenFrom(db: Db, body: { scanned?: unknown; passNo?: unknown; auto?: unknown }) {
+  // 자동 배정: 번호가 가장 작은 미사용 패스를 쓴다. 직원은 화면에 뜬 번호의 패스를 건넨다.
+  if (body.auto === true) return { token: await nextIdleToken(db), error: LINK_ERRORS.no_idle_pass };
   if (typeof body.passNo === "string") {
     const token = await idleTokenByPassNo(db, body.passNo.trim());
     return { token, error: LINK_ERRORS.no_such_pass_no };
@@ -78,7 +81,7 @@ export async function receiptHandler(
 export async function linkHandler(
   db: Db,
   session: Session | null,
-  body: { registrationId?: unknown; scanned?: unknown; passNo?: unknown },
+  body: { registrationId?: unknown; scanned?: unknown; passNo?: unknown; auto?: unknown },
   device: string,
   now: Date,
 ): Promise<ApiResult> {
@@ -119,7 +122,14 @@ export async function deskRegisterHandler(
 export async function reissueHandler(
   db: Db,
   session: Session | null,
-  body: { name?: unknown; flightNo?: unknown; registrationId?: unknown; scanned?: unknown; passNo?: unknown },
+  body: {
+    name?: unknown;
+    flightNo?: unknown;
+    registrationId?: unknown;
+    scanned?: unknown;
+    passNo?: unknown;
+    auto?: unknown;
+  },
   device: string,
   now: Date,
 ): Promise<ApiResult> {
@@ -202,7 +212,11 @@ export async function deskListHandler(
     passNo: r.pass_no,
     submittedLabel: kstTime(r.submitted_at),
   });
+  const [{ idle }] = await db.query<{ idle: number }>(
+    "select count(*)::int as idle from passes where state = 'idle'",
+  );
   return ok({
+    idlePasses: idle,
     pending: rows.filter((r) => r.status === "pending").map(item),
     active: rows.filter((r) => r.status === "active").map(item),
   });

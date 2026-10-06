@@ -9,6 +9,8 @@ create table if not exists zones (
   is_desk boolean not null default false,
   active boolean not null default true
 );
+-- 공통 직원 코드로 들어온 사람이 근무 구역을 고르기 전에 머무는 자리. 탑승구도 여객도 없다.
+alter table zones add column if not exists is_common boolean not null default false;
 
 create table if not exists flights (
   flight_date date not null,

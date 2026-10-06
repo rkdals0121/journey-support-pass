@@ -68,6 +68,28 @@ export async function findFlights(db: Db, input: string, now: Date): Promise<Fli
   return rows.map(toChoice);
 }
 
+const SUGGEST_LIMIT = 8;
+
+/**
+ * 편명을 치는 동안 보여줄 후보. 두 글자 이상이면 그 글자로 시작하는 편을 찾는다.
+ * 정확히 같은 편명을 맨 위에, 나머지는 출발 시각 순으로 놓는다.
+ */
+export async function suggestFlights(db: Db, input: string, now: Date): Promise<FlightChoice[]> {
+  const prefix = normalizeFlightNo(input);
+  if (!/^[A-Z0-9]{2,8}$/.test(prefix)) return [];
+  const today = kstDate(now);
+  const rows = await db.query<Row>(
+    `select ${COLUMNS} from flights
+     where left(flight_no, $5) = $1 and flight_date in ($2, $3)
+       and coalesce(est_at, sched_at) > $4
+       and position('출발' in status) = 0
+     order by (flight_no = $1) desc, sched_at, flight_no
+     limit ${SUGGEST_LIMIT}`,
+    [prefix, today, addDays(today, 1), now, prefix.length],
+  );
+  return rows.map(toChoice);
+}
+
 export async function getFlight(db: Db, flightDate: string, flightNo: string): Promise<FlightChoice | null> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(flightDate)) return null;
   const [row] = await db.query<Row>(

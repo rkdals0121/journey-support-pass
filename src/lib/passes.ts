@@ -131,6 +131,14 @@ export async function idleTokenByPassNo(db: Db, passNo: string): Promise<string 
   return row?.token ?? null;
 }
 
+/** 번호가 가장 작은 미사용 패스. 실물 패스 없이 시연하거나, 번호 순으로 쌓아 둔 패스를 위에서부터 줄 때 쓴다. */
+export async function nextIdleToken(db: Db): Promise<string | null> {
+  const [row] = await db.query<{ token: string }>(
+    "select token from passes where state = 'idle' order by pass_no limit 1",
+  );
+  return row?.token ?? null;
+}
+
 export type Resolved =
   | { kind: "unknown" }
   | { kind: "idle"; pass: Pass }

@@ -3,7 +3,7 @@ import type { CaseView } from "../encounters";
 import type { FlightChoice } from "../flights/search";
 import { kstDate } from "../flights/normalize";
 import { kstTime } from "../timing";
-import type { Facilities } from "../zones";
+import { TERMINAL_LABEL, type Facilities } from "../zones";
 
 export interface ApiResult {
   status: number;
@@ -37,6 +37,8 @@ export interface CaseDto {
   minutesToClose: number | null;
   urgent: boolean;
   zoneLabel: string | null;
+  /** 터미널 이름. 다른 구역의 여객을 볼 때 어디 여객인지 알려 준다. */
+  terminalLabel: string;
   facilities: Facilities | null;
 }
 
@@ -74,6 +76,7 @@ export function toCaseDto(c: CaseView): CaseDto {
     minutesToClose: c.minutesToClose,
     urgent: c.urgent,
     zoneLabel: c.zoneLabel,
+    terminalLabel: TERMINAL_LABEL[c.terminal] ?? "",
     facilities: c.facilities,
   };
 }
@@ -85,25 +88,25 @@ export interface FlightDto {
   airline: string;
   destName: string;
   label: string; // "KE123 · 뉴욕 · 오늘 14:30 출발"
+  day: string; // 오늘 | 내일
+  time: string; // 14:30
+  cancelled: boolean;
 }
 
 export function toFlightDto(f: FlightChoice, now: Date): FlightDto {
   const day = f.flightDate === kstDate(now) ? "오늘" : "내일";
   const time = kstTime(f.estAt ?? f.schedAt);
-  if (f.status.includes("결항")) {
-    return {
-      flightDate: f.flightDate,
-      flightNo: f.flightNo,
-      airline: f.airline,
-      destName: f.destName,
-      label: `${f.flightNo} · ${f.destName} · ${day} ${time} · 결항`,
-    };
-  }
+  const cancelled = f.status.includes("결항");
   return {
     flightDate: f.flightDate,
     flightNo: f.flightNo,
     airline: f.airline,
     destName: f.destName,
-    label: `${f.flightNo} · ${f.destName} · ${day} ${time} 출발`,
+    label: cancelled
+      ? `${f.flightNo} · ${f.destName} · ${day} ${time} · 결항`
+      : `${f.flightNo} · ${f.destName} · ${day} ${time} 출발`,
+    day,
+    time,
+    cancelled,
   };
 }

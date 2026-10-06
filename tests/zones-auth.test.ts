@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { deviceKey, hashCode, isLocked, login, readSession, signSession, verifyCode } from "@/lib/auth";
+import { deviceKey, hashCode, isLocked, login, readSession, signSession, switchZone, verifyCode } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { applyCodeOverrides, expandGates, getZone, readSeedZones, seedZones, zoneForGate } from "@/lib/zones";
 import { createTestDb, kst } from "./helpers/db";
@@ -83,7 +83,7 @@ describe("접속 코드와 세션", () => {
 
   it("세션을 서명하고 읽는다", () => {
     const now = kst("2026-10-05 09:00");
-    const s = { zoneId: "cc-end", isDesk: false, exp: now.getTime() + 1000 };
+    const s = { zoneId: "cc-end", isDesk: false, canSwitch: false, needsZone: false, exp: now.getTime() + 1000 };
     const token = signSession(s);
     expect(readSession(token, now)).toEqual(s);
     expect(readSession(token, new Date(now.getTime() + 1000))).toBeNull();
@@ -93,7 +93,7 @@ describe("접속 코드와 세션", () => {
 
   it("내용을 바꾼 세션은 버린다", () => {
     const now = kst("2026-10-05 09:00");
-    const token = signSession({ zoneId: "cc-end", isDesk: false, exp: now.getTime() + 1000 });
+    const token = signSession({ zoneId: "cc-end", isDesk: false, canSwitch: false, needsZone: false, exp: now.getTime() + 1000 });
     const forged = Buffer.from(JSON.stringify({ zoneId: "desk-t1", isDesk: true, exp: now.getTime() + 1000 })).toString(
       "base64url",
     );
@@ -107,8 +107,24 @@ describe("로그인", () => {
     const res = await login(db, "201132", "dev-a", now);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.session).toEqual({ zoneId: "cc-end", isDesk: false, exp: now.getTime() + 12 * 3_600_000 });
+    expect(res.session).toEqual({
+      zoneId: "cc-end",
+      isDesk: false,
+      canSwitch: false,
+      needsZone: false,
+      exp: now.getTime() + 12 * 3_600_000,
+    });
     expect(readSession(res.token, now)?.zoneId).toBe("cc-end");
+  });
+
+  it("공통 직원 코드는 구역을 고를 수 있는 세션을 준다. 고르기 전에는 구역이 없다", async () => {
+    const res = await login(db, "200200", "dev-c", kst("2026-10-05 09:00"));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.session).toMatchObject({ zoneId: "staff-common", isDesk: false, canSwitch: true, needsZone: true });
+    const picked = await switchZone(db, res.session, "t2-mid");
+    expect(picked.ok && picked.session).toMatchObject({ zoneId: "t2-mid", canSwitch: true, needsZone: false });
+    expect(picked.ok && picked.session.exp).toBe(res.session.exp);
   });
 
   it("안내데스크 코드는 안내데스크 권한을 준다", async () => {

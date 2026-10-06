@@ -6,6 +6,10 @@ import type { Db } from "./db";
 export interface Session {
   zoneId: string;
   isDesk: boolean;
+  /** 공통 직원 코드로 들어왔다. 근무 구역을 스스로 고르고 바꿀 수 있다. */
+  canSwitch: boolean;
+  /** 아직 근무 구역을 고르지 않았다. 고르기 전에는 여객 정보를 열 수 없다. */
+  needsZone: boolean;
   exp: number; // epoch ms
 }
 
@@ -59,7 +63,13 @@ export function readSession(token: string | undefined, now: Date): Session | nul
     const s = JSON.parse(Buffer.from(payload, "base64url").toString("utf-8")) as Session;
     if (typeof s.zoneId !== "string" || typeof s.exp !== "number") return null;
     if (s.exp <= now.getTime()) return null;
-    return { zoneId: s.zoneId, isDesk: s.isDesk === true, exp: s.exp };
+    return {
+      zoneId: s.zoneId,
+      isDesk: s.isDesk === true,
+      canSwitch: s.canSwitch === true,
+      needsZone: s.needsZone === true,
+      exp: s.exp,
+    };
   } catch {
     return null;
   }
@@ -115,9 +125,13 @@ export type LoginResult =
 export async function login(db: Db, code: string, device: string, now: Date): Promise<LoginResult> {
   if (await isLocked(db, device, "login_fail", now)) return { ok: false, reason: "locked" };
 
-  const zones = await db.query<{ id: string; label: string; code_hash: string; is_desk: boolean }>(
-    "select id, label, code_hash, is_desk from zones where active",
-  );
+  const zones = await db.query<{
+    id: string;
+    label: string;
+    code_hash: string;
+    is_desk: boolean;
+    is_common: boolean;
+  }>("select id, label, code_hash, is_desk, is_common from zones where active");
   // 일치 여부와 무관하게 모든 구역을 대조해 걸린 시간으로 구역 수를 짐작하지 못하게 한다.
   let matched: (typeof zones)[number] | null = null;
   for (const z of zones) {
@@ -130,7 +144,28 @@ export async function login(db: Db, code: string, device: string, now: Date): Pr
   const session: Session = {
     zoneId: matched.id,
     isDesk: matched.is_desk,
+    canSwitch: matched.is_common,
+    needsZone: matched.is_common,
     exp: now.getTime() + config.sessionHours * 3_600_000,
   };
   return { ok: true, token: signSession(session), session, zoneLabel: matched.label };
+}
+
+/**
+ * 공통 직원 코드로 들어온 사람이 근무 구역을 고르거나 바꾼다.
+ * 세션의 만료 시각은 그대로 둔다. 구역을 바꾼다고 로그인 시간이 늘어나지 않는다.
+ */
+export async function switchZone(
+  db: Db,
+  session: Session,
+  zoneId: string,
+): Promise<{ ok: true; token: string; session: Session; zoneLabel: string } | { ok: false }> {
+  if (!session.canSwitch) return { ok: false };
+  const [zone] = await db.query<{ id: string; label: string }>(
+    "select id, label from zones where id = $1 and active and not is_desk and not is_common",
+    [zoneId],
+  );
+  if (!zone) return { ok: false };
+  const next: Session = { ...session, zoneId: zone.id, needsZone: false };
+  return { ok: true, token: signSession(next), session: next, zoneLabel: zone.label };
 }

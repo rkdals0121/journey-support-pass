@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { deviceKey, type Session } from "@/lib/auth";
+import { deviceKey, readSession, type Session } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import {
   cancelHandler,
@@ -17,6 +17,8 @@ import {
   encounterHandler,
   listHandler,
   resolveHandler,
+  switchZoneHandler,
+  zonesHandler,
 } from "@/lib/api/staff";
 import { generatePasses, resolveToken } from "@/lib/passes";
 import { seedZones } from "@/lib/zones";
@@ -24,8 +26,10 @@ import { createTestDb, kst } from "./helpers/db";
 import { addFlights, flightRow, regInput, register, registerWithPass } from "./helpers/fixtures";
 
 const now = kst("2026-10-05 12:00");
-const staff: Session = { zoneId: "cc-end", isDesk: false, exp: now.getTime() + 3_600_000 };
-const desk: Session = { zoneId: "desk-t1", isDesk: true, exp: now.getTime() + 3_600_000 };
+const base = { canSwitch: false, needsZone: false, exp: now.getTime() + 3_600_000 };
+const staff: Session = { zoneId: "cc-end", isDesk: false, ...base };
+const common: Session = { zoneId: "staff-common", isDesk: false, ...base, canSwitch: true, needsZone: true };
+const desk: Session = { zoneId: "desk-t1", isDesk: true, ...base };
 
 let db: Db;
 beforeEach(async () => {
@@ -94,7 +98,7 @@ describe("공개 경로", () => {
 describe("직원 경로", () => {
   it("로그인 없이는 아무것도 열리지 않는다", async () => {
     const { registration } = await registerWithPass(db, now);
-    expect((await listHandler(db, null, now)).status).toBe(401);
+    expect((await listHandler(db, null, "zone", "d", now)).status).toBe(401);
     expect((await resolveHandler(db, null, { passNo: "0000" }, "d", now)).status).toBe(401);
     expect((await caseHandler(db, null, registration.id, now)).status).toBe(401);
     expect((await encounterHandler(db, null, registration.id, { action: "start" }, now)).status).toBe(401);
@@ -102,7 +106,7 @@ describe("직원 경로", () => {
 
   it("목록에는 운항 정보 기준 시각이 함께 온다", async () => {
     await registerWithPass(db, now);
-    const res = await listHandler(db, staff, now);
+    const res = await listHandler(db, staff, "zone", "d", now);
     expect(res.body.zoneLabel).toContain("끝단");
     expect(res.body.poll).toEqual({ label: "운항 정보 없음", stale: true, aged: false });
     expect(res.body.assigned).toHaveLength(1);
@@ -195,6 +199,102 @@ describe("직원 경로", () => {
     const { registration } = await registerWithPass(db, now);
     await db.query("update registrations set status = 'expired' where id = $1", [registration.id]);
     expect((await caseHandler(db, staff, registration.id, now)).status).toBe(404);
+  });
+});
+
+describe("공통 직원 코드와 근무 구역", () => {
+  it("구역을 고르기 전에는 여객 정보가 열리지 않는다", async () => {
+    const { registration, pass } = await registerWithPass(db, now);
+    expect((await listHandler(db, common, "all", "d", now)).status).toBe(409);
+    expect((await caseHandler(db, common, registration.id, now)).status).toBe(409);
+    expect((await resolveHandler(db, common, { scanned: pass.token }, "d", now)).status).toBe(409);
+    expect(await decideTokenPage(db, pass.token, common, "d", now)).toEqual({ kind: "pick_zone" });
+    expect(await logCount("scan_view")).toBe(0);
+  });
+
+  it("고를 수 있는 구역은 터미널별로 묶여 오고 안내데스크와 공통 자리는 빠진다", async () => {
+    const res = await zonesHandler(db, common);
+    const groups = res.body.groups as { terminal: string; zones: { id: string; label: string }[] }[];
+    expect(groups.map((g) => g.terminal)).toEqual(["제1여객터미널", "탑승동", "제2여객터미널"]);
+    const ids = groups.flatMap((g) => g.zones.map((z) => z.id));
+    expect(ids).toContain("cc-end");
+    expect(ids).not.toContain("desk-t1");
+    expect(ids).not.toContain("staff-common");
+    expect(res.body.current).toBeNull();
+  });
+
+  it("구역을 고르면 그 구역의 세션이 된다. 만료 시각은 늘어나지 않는다", async () => {
+    const res = await switchZoneHandler(db, common, { zoneId: "cc-end" });
+    expect(res.status).toBe(200);
+    expect(readSession(res.token, now)).toEqual({ ...common, zoneId: "cc-end", needsZone: false });
+  });
+
+  it("안내데스크나 없는 구역은 고를 수 없고, 구역 코드로 들어온 직원은 바꿀 수 없다", async () => {
+    expect((await switchZoneHandler(db, common, { zoneId: "desk-t1" })).status).toBe(400);
+    expect((await switchZoneHandler(db, common, { zoneId: "staff-common" })).status).toBe(400);
+    expect((await switchZoneHandler(db, common, { zoneId: "nope" })).status).toBe(400);
+    expect((await switchZoneHandler(db, staff, { zoneId: "cc-mid" })).status).toBe(403);
+    expect((await zonesHandler(db, staff)).status).toBe(403);
+    expect((await zonesHandler(db, null)).status).toBe(401);
+  });
+});
+
+describe("전체 여객 목록", () => {
+  it("내 구역만 볼 때는 다른 구역 여객의 이름을 보내지 않고 건수만 보낸다", async () => {
+    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115 })], now);
+    await registerWithPass(db, now);
+    await registerWithPass(db, now, { name: "다른구역", flightNo: "OZ500" });
+    const res = await listHandler(db, staff, "zone", "d", now);
+    expect(res.body.assigned).toHaveLength(1);
+    expect(res.body.otherCount).toBe(1);
+    expect(res.body.others).toEqual([]);
+    expect(await logCount("list_view")).toBe(0);
+  });
+
+  it("전체를 보면 다른 구역 여객이 오고 조회 기록이 남는다. 같은 기기는 10분에 한 번만 남긴다", async () => {
+    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115 })], now);
+    await registerWithPass(db, now);
+    await registerWithPass(db, now, { name: "다른구역", flightNo: "OZ500" });
+    const res = await listHandler(db, staff, "all", "d", now);
+    const others = res.body.others as { name: string; zoneLabel: string; terminalLabel: string }[];
+    expect(others.map((c) => c.name)).toEqual(["다른구역"]);
+    expect(others[0].zoneLabel).toContain("중앙부");
+    expect(others[0].terminalLabel).toBe("탑승동");
+    await listHandler(db, staff, "all", "d", new Date(now.getTime() + 60_000));
+    expect(await logCount("list_view")).toBe(1);
+    await listHandler(db, staff, "all", "d", new Date(now.getTime() + 11 * 60_000));
+    expect(await logCount("list_view")).toBe(2);
+  });
+});
+
+describe("편명 자동 검색", () => {
+  it("두 글자부터 그 글자로 시작하는 편을 찾고, 같은 편명을 맨 위에 둔다", async () => {
+    await addFlights(
+      db,
+      [flightRow("KE12", "2026-10-05 18:00"), flightRow("KE1234", "2026-10-05 13:00"), flightRow("OZ123", "2026-10-05 13:00")],
+      now,
+    );
+    const nos = async (q: string) =>
+      ((await searchFlightsHandler(db, q, now)).body.flights as { flightNo: string }[]).map((f) => f.flightNo);
+    expect(await nos("k")).toEqual([]);
+    expect(await nos("ke12")).toEqual(["KE12", "KE1234", "KE123", "KE123"]);
+    expect(await nos("KE 123")).toEqual(["KE123", "KE123", "KE1234"]);
+    expect(await nos("OZ")).toEqual(["OZ123"]);
+    expect(await nos("ZZ")).toEqual([]);
+  });
+
+  it("후보는 여덟 편까지만, 떠난 편은 빼고 보낸다", async () => {
+    await addFlights(
+      db,
+      [
+        ...Array.from({ length: 12 }, (_, i) => flightRow("TW" + (100 + i), "2026-10-05 20:00")),
+        flightRow("TW999", "2026-10-05 11:00"),
+      ],
+      now,
+    );
+    const flights = (await searchFlightsHandler(db, "TW", now)).body.flights as { flightNo: string }[];
+    expect(flights).toHaveLength(8);
+    expect(flights.map((f) => f.flightNo)).not.toContain("TW999");
   });
 });
 
@@ -318,6 +418,24 @@ describe("안내데스크 경로", () => {
 
     const good = await linkHandler(db, desk, { registrationId: reg.id, passNo: idle.passNo }, "d", now);
     expect(good.body).toEqual({ ok: true, passNo: idle.passNo });
+  });
+
+  it("자동 배정: 번호가 가장 작은 미사용 패스를 연결하고 그 번호를 알려 준다", async () => {
+    await db.query("delete from passes");
+    await db.query("insert into passes (token, pass_no) values ($1, '0500'), ($2, '0042')", ["a".repeat(24), "b".repeat(24)]);
+    const reg = await register(db, now);
+    expect((await linkHandler(db, staff, { registrationId: reg.id, auto: true }, "d", now)).status).toBe(403);
+    const res = await linkHandler(db, desk, { registrationId: reg.id, auto: true }, "d", now);
+    expect(res.body).toEqual({ ok: true, passNo: "0042" });
+    // 재발급도 자동 배정으로 할 수 있다. 옛 패스는 끝난다.
+    const again = await reissueHandler(db, desk, { registrationId: reg.id, auto: true }, "d", now);
+    expect(again.body).toEqual({ ok: true, passNo: "0500" });
+    expect((await resolveToken(db, "b".repeat(24))).kind).toBe("unusable");
+    // 남은 패스가 없으면 알려 준다.
+    const other = await register(db, now, { name: "두번째" });
+    const none = await linkHandler(db, desk, { registrationId: other.id, auto: true }, "d", now);
+    expect(none.status).toBe(400);
+    expect(none.body.error).toContain("미사용 패스가 없습니다");
   });
 
   it("등록 목록: 패스를 기다리는 등록과 연결된 등록을 나눠 보여준다", async () => {

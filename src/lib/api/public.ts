@@ -1,7 +1,7 @@
 import { ipPart, logAccess } from "../auth";
 import { config } from "../config";
 import type { Db } from "../db";
-import { findFlights } from "../flights/search";
+import { suggestFlights } from "../flights/search";
 import { createRegistration, type Route } from "../registrations";
 import { fail, ok, toFlightDto, type ApiResult } from "./dto";
 
@@ -20,7 +20,7 @@ export async function allowRegistration(db: Db, clientKey: string, now: Date): P
 }
 
 export async function searchFlightsHandler(db: Db, q: string, now: Date): Promise<ApiResult> {
-  const flights = await findFlights(db, q ?? "", now);
+  const flights = await suggestFlights(db, q ?? "", now);
   return ok({ flights: flights.map((f) => toFlightDto(f, now)) });
 }
 

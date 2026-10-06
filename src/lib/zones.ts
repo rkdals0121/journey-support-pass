@@ -16,6 +16,7 @@ export interface Zone {
   gates: number[];
   facilities: Facilities;
   isDesk: boolean;
+  isCommon: boolean;
 }
 
 interface ZoneRow {
@@ -26,9 +27,10 @@ interface ZoneRow {
   gates: number[];
   facilities: Facilities;
   is_desk: boolean;
+  is_common: boolean;
 }
 
-const COLUMNS = "id, terminal, label, band, gates, facilities, is_desk";
+const COLUMNS = "id, terminal, label, band, gates, facilities, is_desk, is_common";
 
 function toZone(r: ZoneRow): Zone {
   return {
@@ -43,6 +45,7 @@ function toZone(r: ZoneRow): Zone {
       waitingPoints: r.facilities?.waitingPoints ?? [],
     },
     isDesk: r.is_desk,
+    isCommon: r.is_common,
   };
 }
 
@@ -60,6 +63,28 @@ export async function zoneForGate(db: Db, terminal: string, gate: number): Promi
   return row ? toZone(row) : null;
 }
 
+const TERMINAL_ORDER = ["T1", "CONCOURSE", "T2"];
+
+export const TERMINAL_LABEL: Record<string, string> = {
+  T1: "제1여객터미널",
+  CONCOURSE: "탑승동",
+  T2: "제2여객터미널",
+};
+
+/** 현장 직원이 고를 수 있는 근무 구역. 터미널 순, 그 안에서는 탑승구 번호 순. */
+export async function listWorkZones(db: Db): Promise<Zone[]> {
+  const rows = await db.query<ZoneRow>(
+    `select ${COLUMNS} from zones where active and not is_desk and not is_common`,
+  );
+  const first = (z: Zone) => (z.gates.length > 0 ? Math.min(...z.gates) : 0);
+  return rows
+    .map(toZone)
+    .sort(
+      (a, b) =>
+        TERMINAL_ORDER.indexOf(a.terminal) - TERMINAL_ORDER.indexOf(b.terminal) || first(a) - first(b),
+    );
+}
+
 export interface SeedZone {
   id: string;
   terminal: string;
@@ -68,6 +93,8 @@ export interface SeedZone {
   gateRanges: [number, number][];
   code: string;
   isDesk: boolean;
+  /** 공통 직원 코드의 자리. 구역이 아니다. */
+  isCommon?: boolean;
   active: boolean;
   facilities: Facilities;
 }
@@ -107,12 +134,12 @@ export async function seedZones(
   const zones = applyCodeOverrides(readSeedZones(), codes);
   for (const z of zones) {
     await db.query(
-      `insert into zones (id, terminal, label, band, gates, facilities, code_hash, is_desk, active)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `insert into zones (id, terminal, label, band, gates, facilities, code_hash, is_desk, active, is_common)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        on conflict (id) do update set
          terminal = excluded.terminal, label = excluded.label, band = excluded.band,
          gates = excluded.gates, facilities = excluded.facilities, code_hash = excluded.code_hash,
-         is_desk = excluded.is_desk, active = excluded.active`,
+         is_desk = excluded.is_desk, active = excluded.active, is_common = excluded.is_common`,
       [
         z.id,
         z.terminal,
@@ -123,6 +150,7 @@ export async function seedZones(
         hash(z.code),
         z.isDesk,
         z.active,
+        z.isCommon === true,
       ],
     );
   }
