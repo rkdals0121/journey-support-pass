@@ -3,17 +3,19 @@ import { labelsIn, NEED_GROUPS } from "../catalog";
 import type { Db } from "../db";
 import { getFlight } from "../flights/search";
 import { extractToken, generatePasses, idleTokenByPassNo, linkPass, nextIdleToken, reissue } from "../passes";
+import { todaySummary } from "../metrics";
 import { eraseRegistration } from "../purge";
 import {
   findActiveByNameAndFlight,
   findPendingByReceipt,
   getRegistration,
   isUuid,
+  updateRegistration,
   type Registration,
 } from "../registrations";
 import { kstTime } from "../timing";
 import { fail, ok, type ApiResult } from "./dto";
-import { submitRegistration, type RegisterBody } from "./public";
+import { strings, submitRegistration, type RegisterBody } from "./public";
 
 const LINK_ERRORS: Record<string, string> = {
   not_a_pass: "패스 QR이 아닙니다",
@@ -53,6 +55,10 @@ async function summary(db: Db, r: Registration) {
     timeLabel: flight ? kstTime(flight.estAt ?? flight.schedAt) : "",
     categories: labelsIn(r.categories, "category"),
     needs: NEED_GROUPS.flatMap((g) => labelsIn(r.needs, g)),
+    // 고치기 화면을 채울 때 쓴다.
+    flightDate: r.flightDate ?? "",
+    categoryCodes: r.categories,
+    needCodes: r.needs,
   };
 }
 
@@ -166,6 +172,7 @@ interface DeskRow {
   receipt_no: string | null;
   name: string | null;
   flight_no: string | null;
+  flight_date: string | null;
   categories: string[];
   needs: string[];
   status: "pending" | "active";
@@ -191,7 +198,7 @@ export async function deskListHandler(
   await logAccess(db, { at: now, zoneId: session!.zoneId, deviceKey: device, action: "list_view" });
 
   const rows = await db.query<DeskRow>(
-    `select r.id, r.receipt_no, r.name, r.flight_no, r.categories, r.needs, r.status, r.submitted_at,
+    `select r.id, r.receipt_no, r.name, r.flight_no, r.flight_date::text as flight_date, r.categories, r.needs, r.status, r.submitted_at,
             p.pass_no, f.dest_name, coalesce(f.est_at, f.sched_at) as depart_at
      from registrations r
      left join passes p on p.registration_id = r.id and p.state = 'active'
@@ -208,6 +215,9 @@ export async function deskListHandler(
     timeLabel: r.depart_at ? kstTime(r.depart_at) : "",
     categories: labelsIn(r.categories, "category"),
     needs: NEED_GROUPS.flatMap((g) => labelsIn(r.needs, g)),
+    flightDate: r.flight_date ?? "",
+    categoryCodes: r.categories,
+    needCodes: r.needs,
     receiptNo: r.receipt_no,
     passNo: r.pass_no,
     submittedLabel: kstTime(r.submitted_at),
@@ -243,6 +253,45 @@ export async function cancelHandler(
   await eraseRegistration(db, reg.id, reg.needs, reg.categories, null, now, "revoked");
   await logAccess(db, { at: now, zoneId: session!.zoneId, deviceKey: device, action: "cancel" });
   return ok({ ok: true });
+}
+
+/**
+ * 등록 내용 고치기. 이름을 잘못 적었거나 편이 바뀌었을 때 취소하고 다시 등록하지 않아도 된다.
+ * 패스가 이미 연결되어 있으면 패스는 그대로 두고 내용만 바꾼다.
+ */
+export async function updateHandler(
+  db: Db,
+  session: Session | null,
+  body: RegisterBody & { registrationId?: unknown },
+  device: string,
+  now: Date,
+): Promise<ApiResult> {
+  const denied = guard(session);
+  if (denied) return denied;
+  if (!isUuid(body.registrationId)) return fail(400, "등록을 먼저 선택해 주세요");
+  const res = await updateRegistration(db, body.registrationId, {
+    name: typeof body.name === "string" ? body.name : "",
+    flightDate: typeof body.flightDate === "string" ? body.flightDate : "",
+    flightNo: typeof body.flightNo === "string" ? body.flightNo : "",
+    categories: strings(body.categories),
+    needs: strings(body.needs),
+  });
+  if (!res.ok) return fail(400, res.error);
+  await logAccess(db, {
+    at: now,
+    zoneId: session!.zoneId,
+    deviceKey: device,
+    action: "edit",
+    registrationId: body.registrationId,
+  });
+  return ok(await summary(db, res.registration));
+}
+
+/** 오늘 현황. 건수와 가운데값뿐이라 조회 기록은 남기지 않는다. */
+export async function summaryHandler(db: Db, session: Session | null, now: Date): Promise<ApiResult> {
+  const denied = guard(session);
+  if (denied) return denied;
+  return ok({ ...(await todaySummary(db, now)) });
 }
 
 const MAX_NEW_PASSES = 50;

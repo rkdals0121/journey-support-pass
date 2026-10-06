@@ -35,7 +35,7 @@ export interface RegisterBody {
   editCount?: unknown;
 }
 
-const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+export const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
 
 /** 여객 본인 등록과 안내데스크 등록이 함께 쓴다. route 는 호출한 쪽이 정하고 본문의 값은 믿지 않는다. */
 export async function submitRegistration(db: Db, body: RegisterBody, route: Route, now: Date) {

@@ -1,11 +1,20 @@
 import { isLocked, logAccess, login, switchZone, type Session } from "../auth";
 import type { Db } from "../db";
-import { endEncounter, getCase, listAll, listForZone, recordScan, startEncounter } from "../encounters";
+import {
+  endEncounter,
+  getCase,
+  latestServices,
+  listAll,
+  listForZone,
+  recordScan,
+  serviceTrail,
+  startEncounter,
+} from "../encounters";
 import { lastSuccessfulPoll } from "../flights/ingest";
 import { extractToken, resolvePassNo, resolveToken } from "../passes";
 import { pollState } from "../timing";
 import { getZone, listWorkZones, TERMINAL_LABEL } from "../zones";
-import { fail, ok, toCaseDto, type ApiResult } from "./dto";
+import { fail, ok, toCaseDto, toServiceDto, type ApiResult } from "./dto";
 
 export async function loginHandler(
   db: Db,
@@ -85,12 +94,14 @@ export async function listHandler(
 ): Promise<ApiResult> {
   if (!session) return fail(401, "로그인이 필요합니다");
   if (session.needsZone) return fail(409, NEEDS_ZONE);
-  const [zone, list, everyone, pollInfo] = await Promise.all([
+  const [zone, list, everyone, services, pollInfo] = await Promise.all([
     getZone(db, session.zoneId),
     listForZone(db, session.zoneId, now),
     listAll(db, now),
+    latestServices(db),
     poll(db, now),
   ]);
+  const dto = (c: (typeof everyone)[number]) => toCaseDto(c, services.get(c.registrationId) ?? null);
   const mine = new Set([...list.assigned, ...list.gateUnknown].map((c) => c.registrationId));
   const others = everyone.filter((c) => !mine.has(c.registrationId));
   if (scope === "all" && others.length > 0) await logListView(db, session, device, now);
@@ -99,11 +110,11 @@ export async function listHandler(
     isDesk: session.isDesk,
     canSwitch: session.canSwitch,
     poll: pollInfo,
-    assigned: list.assigned.map(toCaseDto),
-    gateUnknown: list.gateUnknown.map(toCaseDto),
+    assigned: list.assigned.map(dto),
+    gateUnknown: list.gateUnknown.map(dto),
     // 이름은 요청했을 때만 보낸다. 건수는 늘 보내 다른 구역에 여객이 있는지 알 수 있게 한다.
     otherCount: others.length,
-    others: scope === "all" ? others.map(toCaseDto) : [],
+    others: scope === "all" ? others.map(dto) : [],
   });
 }
 
@@ -156,7 +167,14 @@ export async function caseHandler(db: Db, session: Session | null, id: string, n
   const c = await getCase(db, id, now);
   if (!c) return fail(404, "사용할 수 없는 패스입니다");
   const encounter = await recordScan(db, c.registrationId, session.zoneId, now);
-  return ok({ case: toCaseDto(c), encounter, poll: await poll(db, now) });
+  // 앞서 다른 직원이 응대한 기록. 지금 내가 연 기록(encounter)이 응대 중이면 그것도 들어 있다.
+  const trail = await serviceTrail(db, c.registrationId);
+  return ok({
+    case: toCaseDto(c, trail.at(-1) ?? null),
+    encounter,
+    trail: trail.map(toServiceDto),
+    poll: await poll(db, now),
+  });
 }
 
 export async function encounterHandler(

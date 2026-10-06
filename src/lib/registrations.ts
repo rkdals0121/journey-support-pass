@@ -124,6 +124,37 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
   return { ok: false, error: "접수 번호를 만들지 못했습니다. 잠시 후 다시 시도해 주세요" };
 }
 
+export interface RegistrationEdit {
+  name: string;
+  flightDate: string;
+  flightNo: string;
+  categories: string[];
+  needs: string[];
+}
+
+/**
+ * 안내데스크에서 등록 내용을 고친다. 패스를 기다리는 등록과 패스를 쓰고 있는 등록만 고칠 수 있다.
+ * 동의 시각, 접수 번호, 연결된 패스는 그대로 둔다. 고친 횟수(edit_count)에 한 번을 더한다.
+ */
+export async function updateRegistration(db: Db, id: string, input: RegistrationEdit): Promise<CreateResult> {
+  if (!isUuid(id)) return { ok: false, error: "고칠 수 있는 등록이 아닙니다" };
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  if (name.length < 1 || name.length > MAX_NAME) return { ok: false, error: "이름을 확인해 주세요" };
+  const selectionError = validateSelection(input.categories, input.needs);
+  if (selectionError) return { ok: false, error: selectionError };
+  const flight = await getFlight(db, input.flightDate, input.flightNo);
+  if (!flight) return { ok: false, error: "편명을 다시 확인해 주세요" };
+
+  const rows = await db.query<Row>(
+    `update registrations
+     set name = $2, flight_date = $3, flight_no = $4, categories = $5, needs = $6, edit_count = edit_count + 1
+     where id = $1 and status in ('pending', 'active')
+     returning ${COLUMNS}`,
+    [id, name, flight.flightDate, flight.flightNo, input.categories, input.needs],
+  );
+  return rows[0] ? { ok: true, registration: toRegistration(rows[0]) } : { ok: false, error: "고칠 수 있는 등록이 아닙니다" };
+}
+
 export async function getRegistration(db: Db, id: string): Promise<Registration | null> {
   if (!isUuid(id)) return null;
   const [row] = await db.query<Row>(`select ${COLUMNS} from registrations where id = $1`, [id]);

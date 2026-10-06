@@ -1,16 +1,17 @@
 "use client";
 
-import { ChevronLeft, CircleCheck, Clock, HandHelping, MapPin, MessageSquareText, Users } from "lucide-react";
+import { ChevronLeft, CircleCheck, Clock, HandHelping, History, MapPin, MessageSquareText, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CaseDto } from "@/lib/api/dto";
+import type { CaseDto, ServiceDto } from "@/lib/api/dto";
 import { ErrorNote } from "../../../components/Alert";
 import { PollBar, type PollInfo } from "../../../components/PollBar";
 
 interface CaseData {
   case: CaseDto;
   encounter: { id: string; started: boolean };
+  trail: ServiceDto[];
   poll: PollInfo;
 }
 
@@ -175,6 +176,24 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
           </h2>
           {c.accompany.length > 0 ? <Lines items={c.accompany} /> : <p className="muted">동반자 없음</p>}
         </section>
+
+        {data.trail.length > 0 && (
+          <section className="bp-block">
+            <h2>
+              <History size={16} aria-hidden="true" />
+              앞선 응대
+            </h2>
+            <ul className="trail">
+              {data.trail.map((t, i) => (
+                <li key={i}>
+                  <strong>{t.zone}</strong>
+                  <span>{t.endTime ? `${t.startTime} ~ ${t.endTime} 완료` : `${t.startTime}부터 응대 중`}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="muted small">앞에서 이미 안내한 내용은 여객에게 다시 묻지 않아도 됩니다.</p>
+          </section>
+        )}
 
         <div className="bp-tear" aria-hidden="true" />
 

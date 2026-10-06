@@ -34,6 +34,8 @@ interface Props {
   byStaff?: boolean;
   /** 직원 화면처럼 아래에 고정 메뉴가 있으면 버튼을 그 위에 붙인다. */
   aboveNav?: boolean;
+  /** 이미 받은 등록을 고칠 때. 동의 단계를 건너뛰고 값을 채워서 시작한다. */
+  initial?: { name: string; categories: string[]; needs: string[]; flight: FlightOption };
   /** 첫 단계에서 뒤로 가기를 눌렀을 때. */
   onExit: () => void;
   /** 오류 문구를 돌려주면 그 자리에 표시한다. 성공하면 null. */
@@ -47,20 +49,22 @@ const sameFlight = (a: FlightOption | null, b: FlightOption) =>
 
 // 여객 등록 화면과 안내데스크 대신 입력 화면이 함께 쓴다.
 // 종이 체크리스트와 문구·순서가 같아야 하므로 질문은 여기 한 곳에만 둔다.
-export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onExit, onSubmit }: Props) {
+export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, initial, onExit, onSubmit }: Props) {
+  const editing = initial !== undefined;
+  const firstStep = editing ? 1 : 0;
   const startedAt = useRef(new Date().toISOString());
   const revisiting = useRef(false);
   const [editCount, setEditCount] = useState(0);
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(firstStep);
   const [declined, setDeclined] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [needs, setNeeds] = useState<string[]>([]);
-  const [name, setName] = useState("");
-  const [query, setQuery] = useState("");
+  const [categories, setCategories] = useState<string[]>(initial?.categories ?? []);
+  const [needs, setNeeds] = useState<string[]>(initial?.needs ?? []);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [query, setQuery] = useState(initial?.flight.flightNo ?? "");
   const [options, setOptions] = useState<FlightOption[] | null>(null);
   const [searching, setSearching] = useState(false);
-  const [flight, setFlight] = useState<FlightOption | null>(null);
+  const [flight, setFlight] = useState<FlightOption | null>(initial?.flight ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -129,7 +133,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
     setError(null);
     setStep(target);
   };
-  const back = () => (step === 0 ? onExit() : goTo(step - 1, true));
+  const back = () => (step === firstStep ? onExit() : goTo(step - 1, true));
   const next = () => goTo(step + 1, false);
 
   async function submit() {
@@ -174,16 +178,20 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
   return (
     <div ref={rootRef}>
       <div className="topbar">
-        <button className="icon-btn" onClick={back} aria-label={step === 0 ? "나가기" : "이전 단계"}>
+        <button className="icon-btn" onClick={back} aria-label={step === firstStep ? "나가기" : "이전 단계"}>
           <ChevronLeft size={26} aria-hidden="true" />
         </button>
         <div className="progress" aria-hidden="true">
-          {STEPS.map((s, i) => (
-            <i key={s} className={i <= step ? "on" : ""} />
+          {STEPS.slice(firstStep).map((s, i) => (
+            <i key={s} className={i + firstStep <= step ? "on" : ""} />
           ))}
         </div>
-        <span className="step-count" aria-live="polite" aria-label={`${STEPS.length}단계 중 ${step + 1}단계, ${STEPS[step]}`}>
-          {step + 1}/{STEPS.length}
+        <span
+          className="step-count"
+          aria-live="polite"
+          aria-label={`${STEPS.length - firstStep}단계 중 ${step + 1 - firstStep}단계, ${STEPS[step]}`}
+        >
+          {step + 1 - firstStep}/{STEPS.length - firstStep}
         </span>
       </div>
 
@@ -363,7 +371,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
                 <span className="flight-opt-main">
                   <strong>{o.destName}</strong>
                   <span>
-                    {o.day} {o.time} {o.cancelled ? "· 결항" : "출발"}
+                    {[o.day, o.time].filter(Boolean).join(" ")} {o.cancelled ? "· 결항" : "출발"}
                   </span>
                 </span>
                 <span className="choice-mark" aria-hidden="true">
@@ -379,7 +387,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
       {step === 4 && flight && (
         <section>
           <p className="step-kicker">{STEPS[4]}</p>
-          <h1>{byStaff ? "여객과 함께 확인해 주세요" : "이대로 등록할까요?"}</h1>
+          <h1>{editing ? "이렇게 고칠까요?" : byStaff ? "여객과 함께 확인해 주세요" : "이대로 등록할까요?"}</h1>
           <div className="panel">
             <dl className="review">
               <dt>
@@ -390,7 +398,8 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
               </dt>
               <dd>{name.trim()}</dd>
               <dd>
-                <Plane size={16} aria-hidden="true" /> {flight.flightNo} · {flight.destName} · {flight.day} {flight.time}
+                <Plane size={16} aria-hidden="true" /> {flight.flightNo} · {flight.destName} ·{" "}
+                {[flight.day, flight.time].filter(Boolean).join(" ")}
               </dd>
               <dt>
                 교통약자 구분
@@ -417,7 +426,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
                 ))}
             </dl>
           </div>
-          <p className="muted small">등록한 뒤에 고치려면 안내데스크에 말씀해 주세요.</p>
+          {!editing && <p className="muted small">등록한 뒤에 고치려면 안내데스크에 말씀해 주세요.</p>}
         </section>
       )}
 
@@ -427,7 +436,7 @@ export function RegistrationSteps({ mock, byStaff = false, aboveNav = false, onE
         <div className="cta-inner">
           {step === 4 ? (
             <button className="btn btn-primary" onClick={submit} disabled={busy}>
-              {busy ? "등록하는 중…" : "등록하기"}
+              {busy ? "저장하는 중…" : editing ? "고친 내용 저장" : "등록하기"}
             </button>
           ) : (
             <button className="btn btn-primary" onClick={next} disabled={!canNext}>

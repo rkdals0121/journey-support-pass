@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, ChevronRight, Clock, LogOut, Search, SearchX, Users, X } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, Clock, HandHelping, LogOut, Search, SearchX, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -224,6 +224,19 @@ function CaseRow({ c, showZone = false }: { c: CaseDto; showZone?: boolean }) {
             {c.closeLabel}
             {c.status && !c.cancelled && c.status !== "탑승마감" && ` · ${c.status}`}
           </span>
+          {(c.service || c.prevGate !== null) && (
+            <span className="chips">
+              {c.prevGate !== null && <span className="chip chip-red">탑승구 변경 · 이전 {c.prevGate}</span>}
+              {c.service && (
+                <span className={`chip ${c.service.endTime ? "chip-mint" : "chip-sun"}`}>
+                  <HandHelping size={14} aria-hidden="true" />
+                  {c.service.endTime
+                    ? `${c.service.zone} 응대 완료 ${c.service.endTime}`
+                    : `${c.service.zone} 응대 중`}
+                </span>
+              )}
+            </span>
+          )}
           {tags.length > 0 && (
             <span className="chips">
               {tags.slice(0, SHOWN_TAGS).map((code) => (

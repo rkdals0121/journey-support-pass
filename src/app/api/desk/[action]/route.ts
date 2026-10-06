@@ -6,6 +6,8 @@ import {
   morePassesHandler,
   receiptHandler,
   reissueHandler,
+  summaryHandler,
+  updateHandler,
 } from "@/lib/api/desk";
 import { fail } from "@/lib/api/dto";
 import { getDb } from "@/lib/db";
@@ -13,7 +15,7 @@ import { currentSession, json, readBody, requestDeviceKey } from "@/lib/session-
 
 export const dynamic = "force-dynamic";
 
-// /api/desk/list | receipt | link | register | reissue | cancel | passes
+// /api/desk/list | receipt | link | register | reissue | cancel | update | summary | passes
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const now = new Date();
   const { action } = await params;
@@ -37,6 +39,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
       return json(await reissueHandler(db, session, body, device, now));
     case "cancel":
       return json(await cancelHandler(db, session, body, device, now));
+    case "update":
+      return json(await updateHandler(db, session, body, device, now));
+    case "summary":
+      return json(await summaryHandler(db, session, now));
     case "passes":
       return json(await morePassesHandler(db, session, body));
     default:

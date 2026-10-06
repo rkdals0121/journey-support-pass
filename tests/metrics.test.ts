@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { endEncounter, recordScan, startEncounter } from "@/lib/encounters";
 import { recordPoll } from "@/lib/flights/ingest";
-import { collectMetrics } from "@/lib/metrics";
+import { summaryHandler } from "@/lib/api/desk";
+import { collectMetrics, todaySummary } from "@/lib/metrics";
 import { purge } from "@/lib/purge";
 import { seedZones } from "@/lib/zones";
 import { createTestDb, kst } from "./helpers/db";
@@ -56,5 +57,65 @@ describe("측정값 내려받기", () => {
     expect(dump).not.toContain("KE123");
     expect(dump).not.toContain(waiting.receiptNo!);
     expect(dump).not.toContain("mov_no_stairs");
+  });
+});
+
+describe("오늘 현황", () => {
+  it("오늘 받은 등록과 응대를 세고 가운데값을 낸다. 어제 것은 세지 않는다", async () => {
+    const db = await createTestDb();
+    await seedZones(db, () => "x:y");
+    const t0 = kst("2026-10-05 12:00");
+    await addFlights(db, [flightRow("KE123", "2026-10-05 18:30", { gate: 101 })], t0);
+
+    // 어제 등록은 오늘 건수에 들어가지 않는다.
+    await register(db, kst("2026-10-04 23:50"), { startedAt: kst("2026-10-04 23:49") });
+    await register(db, t0, { route: "paper" }); // 작성 120초, 패스 대기 중
+    const a = await registerWithPass(db, t0, { route: "assisted", startedAt: kst("2026-10-05 11:59") }); // 작성 60초
+    await db.query("update registrations set linked_at = $2 where id = $1", [a.registration.id, kst("2026-10-05 12:04")]);
+
+    // 두 구역이 이어서 응대한다.
+    const at = (m: number, sec = 0) => new Date(kst("2026-10-05 13:00").getTime() + m * 60_000 + sec * 1000);
+    const e1 = await recordScan(db, a.registration.id, "cc-end", at(0));
+    await startEncounter(db, e1.id, "cc-end", at(0, 30));
+    await endEncounter(db, e1.id, "cc-end", at(5, 30));
+    const e2 = await recordScan(db, a.registration.id, "cc-mid", at(10));
+    await startEncounter(db, e2.id, "cc-mid", at(10, 10));
+
+    const s = await todaySummary(db, kst("2026-10-05 14:00"));
+    expect(s).toEqual({
+      date: "2026-10-05",
+      registered: 2,
+      byRoute: { web: 0, assisted: 1, paper: 1 },
+      linked: 1,
+      waiting: 2, // 어제 등록도 아직 패스를 기다린다
+      active: 1,
+      medianWriteSec: 90,
+      medianLinkWaitSec: 240,
+      scans: 2,
+      completed: 1,
+      medianScanToStartSec: 20,
+      medianServiceSec: 300,
+      handoffs: 1,
+    });
+  });
+
+  it("아무것도 없으면 0 과 빈 값", async () => {
+    const db = await createTestDb();
+    const s = await todaySummary(db, kst("2026-10-05 14:00"));
+    expect(s).toMatchObject({ registered: 0, scans: 0, handoffs: 0, medianWriteSec: null, medianServiceSec: null });
+  });
+
+  it("안내데스크만 볼 수 있고 이름이나 편명은 담기지 않는다", async () => {
+    const db = await createTestDb();
+    await seedZones(db, () => "x:y");
+    const now = kst("2026-10-05 12:00");
+    await addFlights(db, [flightRow("KE123", "2026-10-05 18:30")], now);
+    await registerWithPass(db, now, { name: "비밀이름" });
+    const base = { canSwitch: false, needsZone: false, exp: now.getTime() + 3_600_000 };
+    expect((await summaryHandler(db, null, now)).status).toBe(401);
+    expect((await summaryHandler(db, { zoneId: "cc-end", isDesk: false, ...base }, now)).status).toBe(403);
+    const res = await summaryHandler(db, { zoneId: "desk-t1", isDesk: true, ...base }, now);
+    expect(res.status).toBe(200);
+    expect(JSON.stringify(res.body)).not.toMatch(/비밀이름|KE123/);
   });
 });

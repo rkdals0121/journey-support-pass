@@ -1,12 +1,14 @@
 "use client";
 
 import {
+  ChartNoAxesColumn,
   ChevronLeft,
   ChevronRight,
   CircleCheck,
   ClipboardPen,
   Inbox,
   MessagesSquare,
+  PenLine,
   Search,
   Ticket,
   WandSparkles,
@@ -27,6 +29,9 @@ interface Summary {
   timeLabel: string;
   categories: string[];
   needs: string[];
+  flightDate: string;
+  categoryCodes: string[];
+  needCodes: string[];
 }
 
 interface ListItem extends Summary {
@@ -67,6 +72,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   const [receiptNo, setReceiptNo] = useState("");
   const [route, setRoute] = useState<"paper" | "assisted" | null>(null);
   const [filter, setFilter] = useState("");
+  const [editing, setEditing] = useState(false);
   // 미연결 패스를 기본 카메라로 찍어 들어온 경우, 그 패스를 바로 쓴다.
   const [pendingToken, setPendingToken] = useState(scannedToken);
   const [list, setList] = useState<DeskList | null>(null);
@@ -123,8 +129,15 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     setReceiptNo("");
     setRoute(null);
     setFilter("");
+    setEditing(false);
     loadList();
     window.scrollTo(0, 0);
+  }
+
+  // 방금 처리한 등록을 목록에서 바로 뺀다. 다시 읽어 올 때까지 옛 줄이 남아 있지 않게 한다.
+  function forget(registrationId: string, mode: "link" | "cancel") {
+    const keep = (r: ListItem) => r.registrationId !== registrationId;
+    setList((l) => l && { ...l, pending: l.pending.filter(keep), active: mode === "cancel" ? l.active.filter(keep) : l.active });
   }
 
   async function attach(pass: { scanned: string } | { passNo: string } | { auto: true }) {
@@ -132,6 +145,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     const data = await post(target.mode, { registrationId: target.summary.registrationId, ...pass });
     setPendingToken(null);
     if (data) {
+      if (target.mode === "link") forget(target.summary.registrationId, "link");
       setDone({ mode: target.mode, passNo: String(data.passNo), name: target.summary.name });
       window.scrollTo(0, 0);
     }
@@ -142,7 +156,10 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     const s = target.summary;
     if (!window.confirm(`${s.name} · ${s.flightNo} 등록을 취소할까요? 되돌릴 수 없습니다.`)) return;
     const data = await post("cancel", { registrationId: s.registrationId });
-    if (data) setDone({ mode: "cancel", name: s.name });
+    if (data) {
+      forget(s.registrationId, "cancel");
+      setDone({ mode: "cancel", name: s.name });
+    }
   }
 
   async function lookupReceipt(e: React.FormEvent) {
@@ -166,6 +183,55 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     } catch {
       return "연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
     }
+  }
+
+  async function saveEdit(payload: RegistrationPayload): Promise<string | null> {
+    if (!target) return "등록을 먼저 선택해 주세요";
+    try {
+      const res = await fetch("/api/desk/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, registrationId: target.summary.registrationId }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.error ?? "고치지 못했습니다";
+      setTarget({ summary: data, mode: target.mode });
+      setEditing(false);
+      loadList();
+      window.scrollTo(0, 0);
+      return null;
+    } catch {
+      return "연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    }
+  }
+
+  if (target && editing) {
+    const s = target.summary;
+    return (
+      <div style={{ paddingBottom: "var(--cta-h)" }}>
+        <RegistrationSteps
+          mock={mock}
+          byStaff
+          aboveNav
+          initial={{
+            name: s.name,
+            categories: s.categoryCodes,
+            needs: s.needCodes,
+            flight: {
+              flightDate: s.flightDate,
+              flightNo: s.flightNo,
+              destName: s.destName,
+              label: "",
+              day: "",
+              time: s.timeLabel,
+              cancelled: false,
+            },
+          }}
+          onExit={() => setEditing(false)}
+          onSubmit={saveEdit}
+        />
+      </div>
+    );
   }
 
   if (done) {
@@ -268,9 +334,15 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
         <a className="btn btn-ghost" href="/staff/desk/passes" target="_blank" rel="noopener">
           미사용 패스 번호 보기 (새 창)
         </a>
-        <button className="btn btn-ghost link-danger" onClick={cancelRegistration} disabled={busy}>
-          이 등록 취소하기
-        </button>
+        <div className="row">
+          <button className="btn" onClick={() => setEditing(true)} disabled={busy}>
+            <PenLine size={18} aria-hidden="true" />
+            등록 내용 고치기
+          </button>
+          <button className="btn link-danger" onClick={cancelRegistration} disabled={busy}>
+            이 등록 취소하기
+          </button>
+        </div>
       </div>
     );
   }
@@ -316,6 +388,9 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             <span className="kicker">안내데스크</span>
             패스 연결과 등록
           </h1>
+          <Link className="icon-btn" href="/staff/desk/stats" aria-label="오늘 현황">
+            <ChartNoAxesColumn size={22} aria-hidden="true" />
+          </Link>
         </div>
       </header>
 

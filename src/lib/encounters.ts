@@ -254,6 +254,44 @@ export async function recordScan(db: Db, registrationId: string, zoneId: string,
   return { id: row.id, started: false };
 }
 
+/** 응대 한 건. 직원은 개인이 아니라 구역으로만 남는다. */
+export interface ServiceRecord {
+  zoneId: string;
+  zoneLabel: string;
+  startedAt: Date;
+  endedAt: Date | null;
+}
+
+/**
+ * 이 여객을 앞서 응대한 기록. 시작한 것만 센다(카드를 열어 보기만 한 것은 뺀다).
+ * 다음 구역 직원이 여객에게 같은 것을 다시 묻지 않도록 카드에 보여준다.
+ */
+export async function serviceTrail(db: Db, registrationId: string): Promise<ServiceRecord[]> {
+  if (!isUuid(registrationId)) return [];
+  return db.query<ServiceRecord>(
+    `select e.zone_id as "zoneId", z.label as "zoneLabel", e.started_at as "startedAt", e.ended_at as "endedAt"
+     from encounters e join zones z on z.id = e.zone_id
+     where e.registration_id = $1 and e.started_at is not null
+     order by e.started_at`,
+    [registrationId],
+  );
+}
+
+/** 패스를 쓰고 있는 여객마다 가장 최근의 응대. 목록에서 "응대 중"과 "응대 완료"를 보여줄 때 쓴다. */
+export async function latestServices(db: Db): Promise<Map<string, ServiceRecord>> {
+  const rows = await db.query<ServiceRecord & { registrationId: string }>(
+    `select distinct on (e.registration_id)
+            e.registration_id as "registrationId", e.zone_id as "zoneId", z.label as "zoneLabel",
+            e.started_at as "startedAt", e.ended_at as "endedAt"
+     from encounters e
+     join zones z on z.id = e.zone_id
+     join registrations r on r.id = e.registration_id and r.status = 'active'
+     where e.started_at is not null
+     order by e.registration_id, e.started_at desc`,
+  );
+  return new Map(rows.map((r) => [r.registrationId, r]));
+}
+
 export async function startEncounter(db: Db, encounterId: string, zoneId: string, now: Date): Promise<boolean> {
   if (!isUuid(encounterId)) return false;
   const rows = await db.query(

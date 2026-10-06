@@ -1,5 +1,5 @@
 import { labelsIn } from "../catalog";
-import type { CaseView } from "../encounters";
+import type { CaseView, ServiceRecord } from "../encounters";
 import type { FlightChoice } from "../flights/search";
 import { kstDate } from "../flights/normalize";
 import { kstTime } from "../timing";
@@ -12,6 +12,22 @@ export interface ApiResult {
 
 export const ok = (body: Record<string, unknown> = {}): ApiResult => ({ status: 200, body });
 export const fail = (status: number, error: string): ApiResult => ({ status, body: { error } });
+
+/** 응대 한 건을 화면에 보여줄 모양. 직원 개인은 없고 구역만 있다. */
+export interface ServiceDto {
+  zone: string; // 탑승구 범위를 뺀 구역 이름
+  startTime: string;
+  endTime: string | null; // 아직 응대 중이면 null
+}
+
+/** "탑승동 끝단 (101~106, 127~132)" 에서 구역 이름만. */
+export function zoneName(label: string): string {
+  return label.replace(/\s*\(.*\)\s*$/, "");
+}
+
+export function toServiceDto(s: ServiceRecord): ServiceDto {
+  return { zone: zoneName(s.zoneLabel), startTime: kstTime(s.startedAt), endTime: s.endedAt ? kstTime(s.endedAt) : null };
+}
 
 /** 화면이 그대로 그릴 수 있게 문구까지 만들어 보낸다. 화면은 계산하지 않는다. */
 export interface CaseDto {
@@ -42,6 +58,8 @@ export interface CaseDto {
   /** 터미널 이름. 다른 구역의 여객을 볼 때 어디 여객인지 알려 준다. */
   terminalLabel: string;
   facilities: Facilities | null;
+  /** 가장 최근의 응대. 없으면 null. 목록에서 응대 중·응대 완료를 보여준다. */
+  service: ServiceDto | null;
 }
 
 /**
@@ -56,7 +74,7 @@ export function closeLabelOf(c: CaseView): string {
   return `탑승 마감까지 ${c.minutesToClose}분 (추정)`;
 }
 
-export function toCaseDto(c: CaseView): CaseDto {
+export function toCaseDto(c: CaseView, service: ServiceRecord | null = null): CaseDto {
   return {
     registrationId: c.registrationId,
     name: c.name,
@@ -81,6 +99,7 @@ export function toCaseDto(c: CaseView): CaseDto {
     zoneLabel: c.zoneLabel,
     terminalLabel: TERMINAL_LABEL[c.terminal] ?? "",
     facilities: c.facilities,
+    service: service ? toServiceDto(service) : null,
   };
 }
 

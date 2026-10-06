@@ -438,13 +438,32 @@ async function launch(extra: string[] = []) {
   await clickText(page, "button", "등록하기");
   await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
   check("대신 등록을 마치면 접수 번호 없이 바로 패스 연결로 넘어간다", await has(page, "종이여객"));
+
+  // 등록 내용 고치기
+  await clickText(page, "button", "등록 내용 고치기");
+  await waitText(page, "해당하는 것을 모두 골라 주세요");
+  check("고치기: 동의를 다시 받지 않고 고른 것이 채워진 채로 시작한다", (await page.evaluate(() => document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length)) === 1);
+  await clickText(page, "button", "고령자입니다");
+  await clickText(page, "button", "다음");
+  await clickText(page, "button", "천천히 설명해 주세요");
+  await clickText(page, "button", "다음");
+  await waitText(page, "이름과 항공편을 알려 주세요");
+  check("고치기: 이름과 항공편이 채워져 있다", (await page.$eval("#reg-name", (e) => (e as HTMLInputElement).value)) === "종이여객");
+  await fill(page, "#reg-name", "고친여객");
+  await clickText(page, "button", "다음");
+  await waitText(page, "이렇게 고칠까요?");
+  await shot(page, "데스크-등록고치기");
+  await clickText(page, "button", "고친 내용 저장");
+  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
+  const edited = await text(page);
+  check("고치기: 저장하면 고친 내용이 바로 보인다", edited.includes("고친여객") && edited.includes("고령자입니다") && edited.includes("천천히 설명해 주세요"));
   await clickText(page, "button", "이 등록 취소하기");
   await waitText(page, "등록을 취소했습니다");
   check("등록 취소: 여객 정보를 지운다", await has(page, "지웠습니다"));
   await shot(page, "데스크-등록취소");
   await clickText(page, "button", "다음 여객");
   await waitText(page, "패스를 기다리는 등록");
-  check("취소한 등록은 목록에 없다", !(await has(page, "종이여객")));
+  check("취소한 등록은 목록에 없다", !(await has(page, "고친여객")) && !(await has(page, "종이여객")));
 
   // 재발급
   await clickText(page, ".seg button", "재발급");
@@ -470,6 +489,27 @@ async function launch(extra: string[] = []) {
     newPass,
   );
   check("새 패스 번호로는 여객 카드가 열린다", newOk.kind === "active", newOk.kind);
+
+  // 앞선 응대 이력
+  await page.goto(`${BASE}/staff`, { waitUntil: "networkidle0" });
+  await waitText(page, "박민수");
+  check("목록에 앞 구역의 응대 완료가 보인다", /탑승동 끝단 응대 완료 \d\d:\d\d/.test(await text(page)));
+  await shot(page, "데스크-전체여객목록");
+  await clickText(page, ".case-row", "박민수");
+  await waitText(page, "앞선 응대");
+  check("여객 카드에 앞선 응대 이력이 구역과 시각으로 나온다", /탑승동 끝단[\s\S]*\d\d:\d\d ~ \d\d:\d\d 완료/.test(await text(page)));
+  await page.evaluate(() => document.querySelector(".trail")?.scrollIntoView({ block: "center" }));
+  await shot(page, "직원-앞선응대");
+
+  // 오늘 현황
+  await page.goto(`${BASE}/staff/desk/stats`, { waitUntil: "networkidle0" });
+  const stats = await text(page);
+  check("오늘 현황: 등록·연결·응대 건수가 나온다", stats.includes("오늘 받은 등록") && stats.includes("응대 완료") && /응대 완료\s*1\s*회/.test(stats));
+  check("오늘 현황에는 이름이나 편명이 없다", !stats.includes("박민수") && !stats.includes("MK102"));
+  await shot(page, "데스크-오늘현황");
+
+  await page.goto(`${BASE}/nope`, { waitUntil: "networkidle0" });
+  check("없는 주소는 안내 화면을 보여준다", await has(page, "찾는 화면이 없습니다"));
 
   // 패스 QR 주소 분기
   await page.goto(`${BASE}/p/${"z".repeat(24)}`, { waitUntil: "networkidle0" });

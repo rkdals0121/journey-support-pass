@@ -9,6 +9,7 @@ import {
   morePassesHandler,
   receiptHandler,
   reissueHandler,
+  updateHandler,
 } from "@/lib/api/desk";
 import { allowRegistration, registerHandler, searchFlightsHandler } from "@/lib/api/public";
 import {
@@ -298,6 +299,49 @@ describe("편명 자동 검색", () => {
   });
 });
 
+describe("응대 이력", () => {
+  const mid: Session = { zoneId: "cc-mid", isDesk: false, ...base };
+
+  it("카드를 열어 보기만 한 것은 응대로 세지 않는다", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const res = await caseHandler(db, staff, registration.id, now);
+    expect(res.body.trail).toEqual([]);
+    expect((res.body.case as { service: unknown }).service).toBeNull();
+    const list = await listHandler(db, staff, "zone", "d", now);
+    expect((list.body.assigned as { service: unknown }[])[0].service).toBeNull();
+  });
+
+  it("앞 구역의 응대가 다음 구역 직원의 카드와 목록에 보인다. 직원은 구역으로만 남는다", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const at = (m: number) => new Date(now.getTime() + m * 60_000);
+    const first = await caseHandler(db, mid, registration.id, at(0));
+    const id = (first.body.encounter as { id: string }).id;
+    await encounterHandler(db, mid, id, { action: "start" }, at(1));
+
+    // 응대 중: 다른 구역 직원의 목록에 보인다.
+    let list = await listHandler(db, staff, "zone", "d", at(2));
+    expect((list.body.assigned as { service: unknown }[])[0].service).toEqual({
+      zone: "탑승동 중간",
+      startTime: "12:01",
+      endTime: null,
+    });
+
+    await encounterHandler(db, mid, id, { action: "end" }, at(6));
+    const next = await caseHandler(db, staff, registration.id, at(10));
+    expect(next.body.trail).toEqual([{ zone: "탑승동 중간", startTime: "12:01", endTime: "12:06" }]);
+
+    // 다음 구역이 시작하면 이력이 두 줄이 되고, 목록은 가장 최근 것을 보여준다.
+    await encounterHandler(db, staff, (next.body.encounter as { id: string }).id, { action: "start" }, at(11));
+    const again = await caseHandler(db, staff, registration.id, at(12));
+    expect((again.body.trail as { zone: string }[]).map((t) => t.zone)).toEqual(["탑승동 중간", "탑승동 끝단"]);
+    list = await listHandler(db, staff, "zone", "d", at(12));
+    expect((list.body.assigned as { service: { zone: string; endTime: string | null } }[])[0].service).toMatchObject({
+      zone: "탑승동 끝단",
+      endTime: null,
+    });
+  });
+});
+
 describe("패스 QR 주소 분기", () => {
   it("로그인하지 않으면 DB 를 조회하지 않고 직원 전용 안내만", async () => {
     let queries = 0;
@@ -465,6 +509,41 @@ describe("안내데스크 경로", () => {
     expect((await deskListHandler(db, staff, "d", now)).status).toBe(403);
     expect((await deskListHandler(db, null, "d", now)).status).toBe(401);
     expect(await logCount("list_view")).toBe(1);
+  });
+
+  it("등록 내용 고치기: 이름·편·선택을 바꾸고 패스는 그대로 둔다", async () => {
+    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115, destName: "파리" })], now);
+    const { registration, pass } = await registerWithPass(db, now);
+    const body = {
+      registrationId: registration.id,
+      name: " 홍길순 ",
+      flightDate: "2026-10-05",
+      flightNo: "OZ500",
+      categories: ["cat_pregnant"],
+      needs: ["mov_no_standing"],
+    };
+    expect((await updateHandler(db, staff, body, "d", now)).status).toBe(403);
+    expect((await updateHandler(db, desk, { ...body, flightNo: "ZZ1" }, "d", now)).body.error).toBe("편명을 다시 확인해 주세요");
+    expect((await updateHandler(db, desk, { ...body, categories: [] }, "d", now)).status).toBe(400);
+
+    const res = await updateHandler(db, desk, body, "d", now);
+    expect(res.body).toMatchObject({ name: "홍길순", flightNo: "OZ500", destName: "파리", categoryCodes: ["cat_pregnant"] });
+    expect(await logCount("edit")).toBe(1);
+    // 같은 패스로 열면 고친 내용이 보이고, 탑승구가 바뀐 편을 따라 다른 구역으로 넘어간다.
+    const found = await resolveToken(db, pass.token);
+    expect(found.kind).toBe("active");
+    expect((await listHandler(db, staff, "zone", "d", now)).body.assigned).toHaveLength(0);
+    const card = await caseHandler(db, staff, registration.id, now);
+    expect(card.body.case).toMatchObject({ name: "홍길순", gate: 115, categories: ["임신 중입니다"] });
+    const [row] = await db.query<{ edit_count: number }>("select edit_count from registrations where id = $1", [registration.id]);
+    expect(row.edit_count).toBe(1);
+  });
+
+  it("끝난 등록은 고칠 수 없다", async () => {
+    const reg = await register(db, now);
+    await cancelHandler(db, desk, { registrationId: reg.id }, "d", now);
+    const res = await updateHandler(db, desk, { ...webBody(), registrationId: reg.id }, "d", now);
+    expect(res.status).toBe(400);
   });
 
   it("등록 취소: 사람을 알 수 있는 값을 지우고 패스를 끝낸다", async () => {

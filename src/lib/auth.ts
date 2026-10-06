@@ -82,6 +82,7 @@ export type LogAction =
   | "list_view"
   | "register"
   | "cancel"
+  | "edit"
   | "link"
   | "reissue"
   | "login_fail"
