@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Banner, ErrorNote } from "../../components/Alert";
+import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { RegistrationSteps, type RegistrationPayload } from "../../components/RegistrationSteps";
 import { Scanner } from "../../components/Scanner";
 
@@ -73,6 +74,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   const [route, setRoute] = useState<"paper" | "assisted" | null>(null);
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   // 미연결 패스를 기본 카메라로 찍어 들어온 경우, 그 패스를 바로 쓴다.
   const [pendingToken, setPendingToken] = useState(scannedToken);
   const [list, setList] = useState<DeskList | null>(null);
@@ -130,6 +132,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     setRoute(null);
     setFilter("");
     setEditing(false);
+    setConfirming(false);
     loadList();
     window.scrollTo(0, 0);
   }
@@ -154,7 +157,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   async function cancelRegistration() {
     if (!target) return;
     const s = target.summary;
-    if (!window.confirm(`${s.name} · ${s.flightNo} 등록을 취소할까요? 되돌릴 수 없습니다.`)) return;
+    setConfirming(false);
     const data = await post("cancel", { registrationId: s.registrationId });
     if (data) {
       forget(s.registrationId, "cancel");
@@ -339,10 +342,20 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             <PenLine size={18} aria-hidden="true" />
             등록 내용 고치기
           </button>
-          <button className="btn link-danger" onClick={cancelRegistration} disabled={busy}>
+          <button className="btn link-danger" onClick={() => setConfirming(true)} disabled={busy}>
             이 등록 취소하기
           </button>
         </div>
+        {confirming && (
+          <ConfirmSheet
+            title="이 등록을 취소할까요?"
+            body={`${s.name} · ${s.flightNo} 등록의 이름, 항공편, 필요한 도움을 지웁니다. 연결된 패스는 더 쓸 수 없게 됩니다. 되돌릴 수 없습니다.`}
+            confirmLabel="등록 취소"
+            busy={busy}
+            onConfirm={cancelRegistration}
+            onCancel={() => setConfirming(false)}
+          />
+        )}
       </div>
     );
   }

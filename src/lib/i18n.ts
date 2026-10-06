@@ -113,6 +113,7 @@ const ko = {
   lostTitle: "등록 내용을 찾을 수 없습니다",
   lostBody: "이 화면을 닫았다가 다시 여셨다면 안내데스크에서 이름과 편명으로 찾아 드립니다.",
   again: "다시 등록하기",
+  another: "한 명 더 등록하기",
 
   heroTitle1: "한 번만 알려 주세요.",
   heroTitle2: "다시 묻지 않습니다.",
@@ -201,6 +202,7 @@ const en: typeof ko = {
   lostTitle: "We cannot find your registration",
   lostBody: "If you closed this screen, an information desk can find you by name and flight number.",
   again: "Register again",
+  another: "Register another person",
 
   heroTitle1: "Tell us once.",
   heroTitle2: "We won't ask again.",

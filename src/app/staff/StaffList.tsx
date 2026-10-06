@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, ChevronRight, Clock, HandHelping, LogOut, Search, SearchX, Users, X } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, Clock, HandHelping, LogOut, RefreshCw, Search, SearchX, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -109,6 +109,9 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
             <span className="kicker">{data.isDesk ? "안내데스크" : "내 근무 구역"}</span>
             {data.zoneLabel}
           </h1>
+          <button className="icon-btn" onClick={load} aria-label="목록 새로 고침">
+            <RefreshCw size={20} aria-hidden="true" />
+          </button>
           <button className="icon-btn" onClick={logout} aria-label="로그아웃">
             <LogOut size={22} aria-hidden="true" />
           </button>
@@ -205,7 +208,7 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
   );
 }
 
-const SHOWN_TAGS = 4;
+const SHOWN_TAGS = 3;
 
 function CaseRow({ c, showZone = false }: { c: CaseDto; showZone?: boolean }) {
   // 소통 방식을 맨 앞에 둔다. 직원이 말을 걸기 전에 알아야 하는 것이다.

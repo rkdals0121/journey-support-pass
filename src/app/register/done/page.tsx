@@ -108,6 +108,10 @@ export default function RegisterDonePage() {
           </div>
         </div>
       </div>
+
+      <Link className="btn btn-ghost" href={info.lang === "en" ? "/register?lang=en" : "/register"}>
+        {t.another}
+      </Link>
     </main>
   );
 }

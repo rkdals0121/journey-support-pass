@@ -566,6 +566,15 @@ function writeReport() {
   const edited = await text(page);
   check("고치기: 저장하면 고친 내용이 바로 보인다", edited.includes("고친여객") && edited.includes("고령자입니다") && edited.includes("천천히 설명해 주세요"));
   await clickText(page, "button", "이 등록 취소하기");
+  await waitText(page, "이 등록을 취소할까요?");
+  check("등록 취소는 한 번 더 묻는다. 처음 초점은 그만두기에 있다", await page.evaluate(() => document.activeElement?.textContent?.trim() === "그만두기"));
+  await shot(page, "데스크-등록취소-확인");
+  await page.keyboard.press("Escape");
+  await waitGone(page, "이 등록을 취소할까요?");
+  check("Esc 를 누르면 취소하지 않고 닫힌다", await has(page, "고친여객"));
+  await clickText(page, "button", "이 등록 취소하기");
+  await waitText(page, "이 등록을 취소할까요?");
+  await clickText(page, ".sheet-box button", "등록 취소");
   await waitText(page, "등록을 취소했습니다");
   check("등록 취소: 여객 정보를 지운다", await has(page, "지웠습니다"));
   await shot(page, "데스크-등록취소");
