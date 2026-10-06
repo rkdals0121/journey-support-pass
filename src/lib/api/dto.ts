@@ -90,6 +90,15 @@ export interface FlightDto {
 export function toFlightDto(f: FlightChoice, now: Date): FlightDto {
   const day = f.flightDate === kstDate(now) ? "오늘" : "내일";
   const time = kstTime(f.estAt ?? f.schedAt);
+  if (f.status.includes("결항")) {
+    return {
+      flightDate: f.flightDate,
+      flightNo: f.flightNo,
+      airline: f.airline,
+      destName: f.destName,
+      label: `${f.flightNo} · ${f.destName} · ${day} ${time} · 결항`,
+    };
+  }
   return {
     flightDate: f.flightDate,
     flightNo: f.flightNo,

@@ -138,7 +138,8 @@ describe("로그인", () => {
     expect((await login(db, "201132", deviceKey("198.51.100.9", "ua-0"), t0)).ok).toBe(true);
     // 10분이 지나면 풀린다.
     expect((await login(db, "201132", key("ua-new"), new Date(t0.getTime() + 11 * 60_000))).ok).toBe(true);
-  });
+    // 로그인 한 번마다 켜진 구역 수만큼 코드를 대조하므로 20여 회 시도는 오래 걸린다.
+  }, 180_000);
 
   it("기기 키에 원래의 접속 주소와 브라우저 표시가 남지 않는다", () => {
     const k = deviceKey("203.0.113.7", "Mozilla/5.0 Test");

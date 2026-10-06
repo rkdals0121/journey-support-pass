@@ -1,31 +1,10 @@
 import { supportGroups } from "./catalog";
 import { config } from "./config";
 import type { Db } from "./db";
-import { loadActiveCases, type CaseView } from "./encounters";
-import { addDays, kstDate } from "./flights/normalize";
-import { departureAt, isDeparted } from "./timing";
+import { isJourneyOver, loadActiveCases } from "./encounters";
 
-const MIN = 60_000;
-const HOUR = 60 * MIN;
-// 운항 정보가 테이블에서 사라진 등록을 잡는 마지막 안전장치.
-const ORPHAN_HOURS = 48;
+const HOUR = 3_600_000;
 const FLIGHT_RETENTION_DAYS = 3;
-
-/** 결항 편은 예정 출발일 다음 날 04:00(한국 시각)에 지운다. 여객이 공항에 머물 수 있어서다. */
-function cancelledPurgeAt(schedAt: Date): Date {
-  return new Date(`${addDays(kstDate(schedAt), 1)}T04:00:00+09:00`);
-}
-
-function shouldPurge(c: CaseView, now: Date): boolean {
-  const t = now.getTime();
-  if (!c.schedAt) return t >= c.submittedAt.getTime() + ORPHAN_HOURS * HOUR;
-
-  if (t >= c.schedAt.getTime() + config.purgeSafetyHours * HOUR) return true;
-  const times = { schedAt: c.schedAt, estAt: c.estAt, status: c.status };
-  if (c.cancelled) return t >= cancelledPurgeAt(c.schedAt).getTime();
-  if (isDeparted(times)) return true;
-  return t >= departureAt(times).getTime() + config.purgeAfterDepartureMin * MIN;
-}
 
 /**
  * 한 등록에서 사람을 알 수 있는 값을 지운다.
@@ -62,7 +41,7 @@ export async function purge(
 ): Promise<{ purged: number; unlinkedPurged: number; logsDeleted: number }> {
   let purged = 0;
   for (const c of await loadActiveCases(db, now)) {
-    if (!shouldPurge(c, now)) continue;
+    if (!isJourneyOver(c, now)) continue;
     await purgeOne(db, c.registrationId, c.needs, c.categories, c.gateBand, now);
     purged += 1;
   }

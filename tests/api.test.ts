@@ -46,6 +46,12 @@ describe("공개 경로", () => {
     for (const f of flights) expect(Object.keys(f)).not.toContain("gate");
   });
 
+  it("결항 편은 결항이라고 보여준다", async () => {
+    await addFlights(db, [flightRow("CX9", "2026-10-05 16:00", { status: "결항" })], now);
+    const res = await searchFlightsHandler(db, "CX9", now);
+    expect((res.body.flights as { label: string }[])[0].label).toBe("CX9 · 뉴욕 · 오늘 16:00 · 결항");
+  });
+
   it("등록하면 접수 번호만 돌려준다", async () => {
     const res = await registerHandler(db, webBody(), "ip-1", now);
     expect(res.status).toBe(200);

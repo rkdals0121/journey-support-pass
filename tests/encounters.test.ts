@@ -54,6 +54,18 @@ describe("구역별 목록", () => {
     expect(assigned).toHaveLength(7);
   });
 
+  it("출발하고 30분이 지난 여객은 삭제 작업이 돌기 전에도 목록에서 빠진다", async () => {
+    // END1 은 12:30 출발. 12:59 까지는 보이고 13:00 부터 안 보인다.
+    const at = async (t: string) => (await listForZone(db, "cc-end", kst(t))).assigned.map((c) => c.flightNo);
+    expect(await at("2026-10-05 12:59")).toContain("END1");
+    expect(await at("2026-10-05 13:00")).not.toContain("END1");
+    // 결항 편은 다음 날 04시까지 남는다.
+    expect(await at("2026-10-05 23:00")).toContain("ENDX");
+    expect(await at("2026-10-06 04:00")).not.toContain("ENDX");
+    // 등록 자체는 지워지지 않았다. 지우는 것은 삭제 작업이 한다.
+    expect(await getCase(db, ids.END1, kst("2026-10-05 13:00"))).not.toBeNull();
+  });
+
   it("없는 구역은 빈 목록", async () => {
     expect(await listForZone(db, "nope", now)).toEqual({ assigned: [], gateUnknown: [] });
   });

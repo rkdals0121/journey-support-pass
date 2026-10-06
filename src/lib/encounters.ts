@@ -1,6 +1,8 @@
+import { config } from "./config";
 import type { Db } from "./db";
+import { addDays, kstDate } from "./flights/normalize";
 import { isUuid } from "./registrations";
-import { isBoardingClosed, isCancelled, isDelayed, isUrgent, minutesToClose } from "./timing";
+import { departureAt, isBoardingClosed, isCancelled, isDelayed, isDeparted, isUrgent, minutesToClose } from "./timing";
 import type { Facilities } from "./zones";
 
 export interface CaseView {
@@ -167,6 +169,31 @@ export async function getCase(db: Db, registrationId: string, now: Date): Promis
   return rows[0] ? toCase(rows[0], zones, now) : null;
 }
 
+const MIN = 60_000;
+const HOUR = 60 * MIN;
+// 운항 정보가 테이블에서 사라진 등록을 잡는 마지막 안전장치.
+const ORPHAN_HOURS = 48;
+
+/** 결항 편은 예정 출발일 다음 날 04:00(한국 시각)까지 남긴다. 여객이 공항에 머물 수 있어서다. */
+function cancelledUntil(schedAt: Date): Date {
+  return new Date(`${addDays(kstDate(schedAt), 1)}T04:00:00+09:00`);
+}
+
+/**
+ * 이 여객의 여정이 끝났는가. 삭제 작업이 지울 대상을 고르는 기준이며,
+ * 직원 목록도 같은 기준으로 끝난 여객을 감춘다. 삭제 작업이 늦게 돌아도 떠난 여객이 목록에 남지 않는다.
+ */
+export function isJourneyOver(c: CaseView, now: Date): boolean {
+  const t = now.getTime();
+  if (!c.schedAt) return t >= c.submittedAt.getTime() + ORPHAN_HOURS * HOUR;
+
+  if (t >= c.schedAt.getTime() + config.purgeSafetyHours * HOUR) return true;
+  const times = { schedAt: c.schedAt, estAt: c.estAt, status: c.status };
+  if (c.cancelled) return t >= cancelledUntil(c.schedAt).getTime();
+  if (isDeparted(times)) return true;
+  return t >= departureAt(times).getTime() + config.purgeAfterDepartureMin * MIN;
+}
+
 // 마감이 가까운 순. 결항과 운항 정보 없음은 맨 뒤.
 function byUrgency(a: CaseView, b: CaseView): number {
   const av = a.minutesToClose ?? Number.POSITIVE_INFINITY;
@@ -189,7 +216,7 @@ export async function listForZone(
   );
   if (!zone) return { assigned: [], gateUnknown: [] };
 
-  const all = await loadActiveCases(db, now);
+  const all = (await loadActiveCases(db, now)).filter((c) => !isJourneyOver(c, now));
   if (zone.is_desk) return { assigned: all.sort(byUrgency), gateUnknown: [] };
   return {
     assigned: all.filter((c) => c.zoneId === zoneId).sort(byUrgency),

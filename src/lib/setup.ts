@@ -48,6 +48,11 @@ export function mockFlights(now: Date): FlightRow[] {
     f("MK900", 200, "CONCOURSE", null, "다낭"), // 탑승구 미정
     f("MK300", 100, "CONCOURSE", 104, "하노이"), // 공동운항의 실제 운항 편
     f("MC830", 100, "CONCOURSE", null, "하노이", { masterNo: "MK300", airline: "모의공동운항" }),
+    // 공공데이터가 실제로 주는 상태 문구를 화면에서 확인하기 위한 편
+    f("MK401", 25, "CONCOURSE", 105, "오사카", { status: "탑승중" }),
+    f("MK402", 12, "CONCOURSE", 128, "후쿠오카", { status: "탑승마감" }),
+    f("MK403", 240, "CONCOURSE", 103, "싱가포르", { status: "결항" }),
+    f("MK501", 110, "T1", 20, "도쿄"), // 제1여객터미널 중앙
   ];
 }
 
