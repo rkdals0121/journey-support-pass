@@ -88,7 +88,9 @@ p {
 }
 
 code {
-  font-size: 0.9em;
+  font-family: inherit;
+  font-size: 0.95em;
+  font-weight: 600;
 }
 
 svg.lucide {

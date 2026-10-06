@@ -36,7 +36,7 @@ export function MorePasses() {
     <>
       <button className="btn" onClick={add} disabled={busy}>
         <Plus size={20} aria-hidden="true" />
-        패스 {COUNT}장 더 만들기
+        {COUNT}장 더 만들기
       </button>
       {message && <Banner role="status">{message}</Banner>}
     </>
