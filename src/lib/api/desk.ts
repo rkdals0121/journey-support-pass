@@ -27,6 +27,9 @@ const LINK_ERRORS: Record<string, string> = {
   no_idle_pass: "미사용 패스가 없습니다. 패스를 더 만들어 주세요",
 };
 
+// 자동 배정에서 두 안내데스크가 같은 패스를 집었을 때 다음 패스로 다시 해 보는 횟수.
+const AUTO_RETRIES = 3;
+
 /** 스캔한 QR, 또는 카메라를 못 쓸 때 손으로 넣은 패스 번호에서 토큰을 얻는다. */
 async function tokenFrom(db: Db, body: { scanned?: unknown; passNo?: unknown; auto?: unknown }) {
   // 자동 배정: 번호가 가장 작은 미사용 패스를 쓴다. 직원은 화면에 뜬 번호의 패스를 건넨다.
@@ -94,10 +97,15 @@ export async function linkHandler(
   const denied = guard(session);
   if (denied) return denied;
   if (!isUuid(body.registrationId)) return fail(400, "등록을 먼저 선택해 주세요");
-  const { token, error } = await tokenFrom(db, body);
+  let { token, error } = await tokenFrom(db, body);
   if (!token) return fail(400, error);
 
-  const res = await linkPass(db, token, body.registrationId, now);
+  let res = await linkPass(db, token, body.registrationId, now);
+  for (let i = 0; i < AUTO_RETRIES && body.auto === true && !res.ok && res.error === "pass_in_use"; i++) {
+    ({ token, error } = await tokenFrom(db, body));
+    if (!token) return fail(400, error);
+    res = await linkPass(db, token, body.registrationId, now);
+  }
   if (!res.ok) return fail(400, LINK_ERRORS[res.error]);
   await logAccess(db, {
     at: now,
@@ -153,9 +161,14 @@ export async function reissueHandler(
   if (!isUuid(body.registrationId) || !(await getRegistration(db, body.registrationId))) {
     return fail(400, "등록을 먼저 선택해 주세요");
   }
-  const { token, error } = await tokenFrom(db, body);
+  let { token, error } = await tokenFrom(db, body);
   if (!token) return fail(400, error);
-  const res = await reissue(db, body.registrationId, token, now);
+  let res = await reissue(db, body.registrationId, token, now);
+  for (let i = 0; i < AUTO_RETRIES && body.auto === true && !res.ok && res.error === "pass_in_use"; i++) {
+    ({ token, error } = await tokenFrom(db, body));
+    if (!token) return fail(400, error);
+    res = await reissue(db, body.registrationId, token, now);
+  }
   if (!res.ok) return fail(400, LINK_ERRORS[res.error]);
   await logAccess(db, {
     at: now,

@@ -120,6 +120,7 @@ export function RegistrationSteps({
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/flights/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) throw new Error();
         const data = await res.json();
         if (cancelled) return;
         setOptions(data.flights ?? []);

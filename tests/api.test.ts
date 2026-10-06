@@ -342,6 +342,44 @@ describe("응대 이력", () => {
   });
 });
 
+describe("인계와 조회 기록", () => {
+  const mid: Session = { zoneId: "cc-mid", isDesk: false, ...base };
+
+  it("다음 구역이 응대를 시작하면 앞 구역이 끝내지 않은 응대는 그 시각에 끝난다", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const at = (m: number) => new Date(now.getTime() + m * 60_000);
+    const a = await caseHandler(db, mid, registration.id, at(0));
+    await encounterHandler(db, mid, (a.body.encounter as { id: string }).id, { action: "start" }, at(1));
+    // 완료를 누르지 않고 떠났다. 다음 구역이 시작한다.
+    const b = await caseHandler(db, staff, registration.id, at(9));
+    await encounterHandler(db, staff, (b.body.encounter as { id: string }).id, { action: "start" }, at(10));
+    const trail = (await caseHandler(db, staff, registration.id, at(11))).body.trail;
+    expect(trail).toEqual([
+      { zone: "탑승동 중간", startTime: "12:01", endTime: "12:10" },
+      { zone: "탑승동 끝단", startTime: "12:10", endTime: null },
+    ]);
+  });
+
+  it("구역을 고르기 전에는 응대 기록도 바꿀 수 없다", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const a = await caseHandler(db, staff, registration.id, now);
+    const res = await encounterHandler(db, common, (a.body.encounter as { id: string }).id, { action: "start" }, now);
+    expect(res.status).toBe(409);
+  });
+
+  it("전체 목록 조회 기록은 구역이 다르면 따로 남고, 안내데스크가 목록을 볼 때도 남는다", async () => {
+    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115 })], now);
+    await registerWithPass(db, now);
+    await registerWithPass(db, now, { name: "다른구역", flightNo: "OZ500" });
+    await listHandler(db, staff, "all", "d", now);
+    await listHandler(db, mid, "all", "d", now);
+    expect(await logCount("list_view")).toBe(2);
+    await listHandler(db, desk, "zone", "d", now);
+    await listHandler(db, desk, "zone", "d", new Date(now.getTime() + 60_000));
+    expect(await logCount("list_view")).toBe(3);
+  });
+});
+
 describe("패스 QR 주소 분기", () => {
   it("로그인하지 않으면 DB 를 조회하지 않고 직원 전용 안내만", async () => {
     let queries = 0;

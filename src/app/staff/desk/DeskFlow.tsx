@@ -146,8 +146,10 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   async function attach(pass: { scanned: string } | { passNo: string } | { auto: true }) {
     if (!target || busy) return;
     const data = await post(target.mode, { registrationId: target.summary.registrationId, ...pass });
-    setPendingToken(null);
     if (data) {
+      // 연결에 실패하면 찍어 둔 패스를 그대로 둔다. 다시 찍지 않아도 된다.
+      setPendingToken(null);
+      window.history.replaceState(null, "", "/staff/desk");
       if (target.mode === "link") forget(target.summary.registrationId, "link");
       setDone({ mode: target.mode, passNo: String(data.passNo), name: target.summary.name });
       window.scrollTo(0, 0);
@@ -163,6 +165,13 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
       forget(s.registrationId, "cancel");
       setDone({ mode: "cancel", name: s.name });
     }
+  }
+
+  // 앞에서 뜬 오류 문구가 다음 화면에 남지 않게 지우고 넘어간다.
+  function pick(summary: Summary, mode: Target["mode"]) {
+    setError(null);
+    setTarget({ summary, mode });
+    window.scrollTo(0, 0);
   }
 
   async function lookupReceipt(e: React.FormEvent) {
@@ -465,7 +474,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             </div>
           )}
           {pending.map((r) => (
-            <RegRow key={r.registrationId} r={r} kind="receipt" onPick={() => setTarget({ summary: r, mode: "link" })} />
+            <RegRow key={r.registrationId} r={r} kind="receipt" onPick={() => pick(r, "link")} />
           ))}
         </>
       )}
@@ -515,7 +524,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             <Banner>같은 조건의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</Banner>
           )}
           {active.map((r) => (
-            <RegRow key={r.registrationId} r={r} kind="pass" onPick={() => setTarget({ summary: r, mode: "reissue" })} />
+            <RegRow key={r.registrationId} r={r} kind="pass" onPick={() => pick(r, "reissue")} />
           ))}
         </>
       )}

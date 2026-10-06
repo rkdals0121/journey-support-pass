@@ -296,10 +296,21 @@ export async function startEncounter(db: Db, encounterId: string, zoneId: string
   if (!isUuid(encounterId)) return false;
   const rows = await db.query(
     `update encounters set started_at = $3
-     where id = $1 and zone_id = $2 and started_at is null and ended_at is null returning id`,
+     where id = $1 and zone_id = $2 and started_at is null and ended_at is null returning registration_id`,
     [encounterId, zoneId, now],
   );
-  return rows.length === 1;
+  if (rows.length !== 1) return false;
+  // 인계: 다음 직원이 응대를 시작하면, 앞에서 끝내지 않고 둔 응대는 이 시각에 끝난 것으로 한다.
+  // 직원이 완료를 누르지 않고 자리를 옮기거나 구역을 바꿔도 "응대 중"이 계속 남지 않는다.
+  const registrationId = (rows[0] as { registration_id: string | null }).registration_id;
+  if (registrationId) {
+    await db.query(
+      `update encounters set ended_at = $3
+       where registration_id = $1 and id <> $2 and started_at is not null and ended_at is null`,
+      [registrationId, encounterId, now],
+    );
+  }
+  return true;
 }
 
 export async function endEncounter(db: Db, encounterId: string, zoneId: string, now: Date): Promise<boolean> {

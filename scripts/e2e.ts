@@ -346,6 +346,7 @@ function writeReport() {
   await login(page, COMMON_CODE);
   await waitText(page, "오늘 근무하는 구역을 골라 주세요");
   check("공통 직원 코드로 들어오면 근무 구역을 고르는 화면이 나온다", page.url().includes("/staff/zone"));
+  await page.waitForSelector(".zone-opt", { timeout: WAIT });
   await shot(page, "직원-구역고르기");
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   check("구역을 고르기 전에는 여객 목록이 열리지 않는다", page.url().includes("/staff/zone"));
@@ -724,6 +725,7 @@ function writeReport() {
   await waitText(page, "패스를 기다리는 등록");
   const wide = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
   check("넓은 화면에서 가로로 넘치지 않는다", wide);
+  await page.waitForSelector(".reg-row", { timeout: WAIT });
   await shot(page, "데스크-넓은화면");
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });

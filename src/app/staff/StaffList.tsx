@@ -3,7 +3,7 @@
 import { ArrowLeftRight, ChevronRight, Clock, HandHelping, LogOut, RefreshCw, Search, SearchX, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CaseDto } from "@/lib/api/dto";
 import { groupOf, shortOf } from "@/lib/catalog";
 import { ErrorNote } from "../components/Alert";
@@ -38,9 +38,13 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
   // 찾을 때는 다른 구역의 여객까지 본다. 여객은 탑승구와 다른 곳에서 도움을 청할 수 있다.
   const wantAll = scope === "all" || q.length > 0;
 
+  // 범위를 바꾸는 사이에 먼저 보낸 요청이 늦게 도착하면 버린다.
+  const latest = useRef(0);
   const load = useCallback(async () => {
+    const mine = ++latest.current;
     try {
       const res = await fetch(`/api/staff/list${wantAll ? "?scope=all" : ""}`, { cache: "no-store" });
+      if (mine !== latest.current) return;
       if (res.status === 401) {
         router.replace("/staff/login");
         return;
@@ -50,9 +54,12 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
         return;
       }
       if (!res.ok) throw new Error();
-      setData(await res.json());
+      const body = await res.json();
+      if (mine !== latest.current) return;
+      setData(body);
       setOffline(false);
     } catch {
+      if (mine !== latest.current) return;
       // 통신이 끊기면 오래된 정보로 안내하지 않도록 목록을 지운다.
       setData(null);
       setOffline(true);

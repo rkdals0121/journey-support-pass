@@ -78,7 +78,14 @@ function Picker({ first }: { first: boolean }) {
       <h1>{first ? "오늘 근무하는 구역을 골라 주세요" : "어느 구역으로 옮기나요?"}</h1>
       <p className="muted">탑승구가 이 구역에 속한 여객이 목록에 먼저 보입니다. 근무 중에 언제든 바꿀 수 있습니다.</p>
       {error && <ErrorNote>{error}</ErrorNote>}
-      {!groups && !error && <p className="muted">불러오는 중…</p>}
+      {!groups && !error && (
+        <div aria-busy="true">
+          <p className="sr-only">불러오는 중…</p>
+          <div className="skel skel-row" style={{ height: 64, marginTop: 28 }} />
+          <div className="skel skel-row" style={{ height: 64 }} />
+          <div className="skel skel-row" style={{ height: 64 }} />
+        </div>
+      )}
       {groups?.map((g) => (
         <section key={g.terminal}>
           <h2 className="group-title">

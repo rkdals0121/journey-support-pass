@@ -75,8 +75,8 @@ const LIST_LOG_GAP_MIN = 10;
 async function logListView(db: Db, session: Session, device: string, now: Date) {
   const since = new Date(now.getTime() - LIST_LOG_GAP_MIN * 60_000);
   const [recent] = await db.query(
-    "select 1 from access_logs where device_key = $1 and action = 'list_view' and at > $2 limit 1",
-    [device, since],
+    "select 1 from access_logs where device_key = $1 and zone_id = $3 and action = 'list_view' and at > $2 limit 1",
+    [device, since, session.zoneId],
   );
   if (!recent) await logAccess(db, { at: now, zoneId: session.zoneId, deviceKey: device, action: "list_view" });
 }
@@ -104,7 +104,10 @@ export async function listHandler(
   const dto = (c: (typeof everyone)[number]) => toCaseDto(c, services.get(c.registrationId) ?? null);
   const mine = new Set([...list.assigned, ...list.gateUnknown].map((c) => c.registrationId));
   const others = everyone.filter((c) => !mine.has(c.registrationId));
-  if (scope === "all" && others.length > 0) await logListView(db, session, device, now);
+  // 다른 구역 여객의 이름이 실려 나갈 때 남긴다. 안내데스크는 늘 전체를 본다.
+  if ((scope === "all" && others.length > 0) || (session.isDesk && list.assigned.length > 0)) {
+    await logListView(db, session, device, now);
+  }
   return ok({
     zoneLabel: zone?.label ?? "",
     isDesk: session.isDesk,
@@ -185,6 +188,7 @@ export async function encounterHandler(
   now: Date,
 ): Promise<ApiResult> {
   if (!session) return fail(401, "로그인이 필요합니다");
+  if (session.needsZone) return fail(409, NEEDS_ZONE);
   if (body.action === "start") return ok({ ok: await startEncounter(db, id, session.zoneId, now) });
   if (body.action === "end") return ok({ ok: await endEncounter(db, id, session.zoneId, now) });
   return fail(400, "알 수 없는 동작입니다");

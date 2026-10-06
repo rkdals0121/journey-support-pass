@@ -81,6 +81,8 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
         .BarcodeDetector;
       const detector = Native ? new Native({ formats: ["qr_code"] }) : null;
       const jsQR = detector ? null : (await import("jsqr")).default;
+      // 준비되는 사이에 화면을 떠났으면 읽기를 시작하지 않는다. 시작하면 멈출 길이 없다.
+      if (stopped) return;
 
       timer = setInterval(async () => {
         if (pausedRef.current || video.readyState < 2) return;

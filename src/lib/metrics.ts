@@ -83,7 +83,8 @@ export interface TodaySummary {
   completed: number; // 응대 완료
   medianScanToStartSec: number | null; // 카드를 열고 응대를 시작하기까지
   medianServiceSec: number | null; // 응대 시간
-  handoffs: number; // 두 구역 이상이 이어서 응대한 여객
+  /** 두 구역 이상이 이어서 응대한 여객. 카드를 열어 보기만 한 것은 세지 않는다. 출발해 지워진 여객은 빠진다. */
+  handoffs: number;
 }
 
 function median(values: (number | null)[]): number | null {
@@ -104,9 +105,10 @@ export async function todaySummary(db: Db, now: Date): Promise<TodaySummary> {
   );
   const [{ handoffs }] = await db.query<{ handoffs: number }>(
     `select count(*)::int as handoffs from (
-       select registration_id from encounters
-       where scanned_at >= $1 and registration_id is not null
-       group by registration_id having count(distinct zone_id) >= 2
+       select e.registration_id from encounters e
+       join zones z on z.id = e.zone_id and not z.is_desk
+       where e.scanned_at >= $1 and e.registration_id is not null and e.started_at is not null
+       group by e.registration_id having count(distinct e.zone_id) >= 2
      ) t`,
     [since],
   );
