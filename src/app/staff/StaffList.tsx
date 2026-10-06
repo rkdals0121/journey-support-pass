@@ -92,6 +92,9 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
     );
   }
 
+  // "탑승동 끝단 (101~106, 127~132)" 을 이름과 탑승구 범위로 나눠 두 줄로 보여준다.
+  const m = /^(.*?)\s*\((.*)\)\s*$/.exec(data.zoneLabel);
+  const zone = m ? { name: m[1], gates: m[2] } : { name: data.zoneLabel, gates: "" };
   const mineCount = data.assigned.length + data.gateUnknown.length;
   const total = mineCount + data.otherCount;
   const assigned = q ? data.assigned.filter((c) => matches(c, q)) : data.assigned;
@@ -107,7 +110,8 @@ export function StaffList({ refreshSec }: { refreshSec: number }) {
         <div className="staff-head-row">
           <h1>
             <span className="kicker">{data.isDesk ? "안내데스크" : "내 근무 구역"}</span>
-            {data.zoneLabel}
+            {zone.name}
+            {zone.gates && <span className="head-sub">탑승구 {zone.gates}</span>}
           </h1>
           <button className="icon-btn" onClick={load} aria-label="목록 새로 고침">
             <RefreshCw size={20} aria-hidden="true" />

@@ -1307,6 +1307,15 @@ input[type="search"]:focus {
   line-height: 1.3;
 }
 
+.staff-head .head-sub {
+  display: block;
+  margin-top: 2px;
+  color: #b3c7bc;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 .staff-head .kicker {
   display: block;
   color: var(--sun);
