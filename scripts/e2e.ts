@@ -538,6 +538,18 @@ function writeReport() {
   const qrJpeg = path.join(os.tmpdir(), `jsp-qr-${Date.now()}.mjpeg`);
   await qrEl.evaluate((e) => e.scrollIntoView({ block: "center" }));
   fs.writeFileSync(qrJpeg, await qrEl.screenshot({ type: "jpeg", quality: 92 }));
+  // 같은 패스를 멀리서 비춘 장면도 만든다. 1920x1080 화면 한가운데에 QR 이 170화소(25cm 거리에서 2.5cm QR 이 보이는 크기)로 놓인다.
+  const farJpeg = path.join(os.tmpdir(), `jsp-qr-far-${Date.now()}.mjpeg`);
+  const qrSvg = await page.evaluate(() => new XMLSerializer().serializeToString(document.querySelectorAll(".sheet-pass svg")[1]));
+  const farPage = await browser.newPage();
+  await farPage.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+  await farPage.setContent(
+    `<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#8d9a93">
+       <div style="padding:14px 14px 40px;border-radius:10px;background:#fff"><div style="width:170px;height:170px">${qrSvg.replace("<svg", '<svg width="170" height="170"')}</div></div>
+     </body>`,
+  );
+  fs.writeFileSync(farJpeg, await farPage.screenshot({ type: "jpeg", quality: 88 }));
+  await farPage.close();
   // 인쇄 모양: A4 한 장에 실제 패스 크기(QR 25mm)로 나오는지 PDF 로 떠서 본다.
   const pdf = path.join(SHOTS, "패스-인쇄.pdf");
   await page.pdf({ path: pdf, format: "A4", margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" } });
@@ -765,6 +777,24 @@ function writeReport() {
   await shot(page, "직원-스캔후-여객카드");
   await browser.close();
   fs.rmSync(qrJpeg, { force: true });
+
+  // 멀리서 비춘 작은 QR. 화면을 통째로 줄여 읽으면 한 칸이 2화소도 안 되어 읽히지 않는다. 가운데를 잘라 읽어야 한다.
+  browser = await launch([
+    "--use-fake-ui-for-media-stream",
+    "--use-fake-device-for-media-stream",
+    `--use-file-for-fake-video-capture=${farJpeg}`,
+  ]);
+  page = await open(browser);
+  await login(page, COMMON_CODE);
+  await waitText(page, "오늘 근무하는 구역을 골라 주세요");
+  await clickText(page, ".zone-opt", "끝단");
+  await waitText(page, "내 근무 구역");
+  await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
+  await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
+  await waitText(page, "문접수");
+  check("20~30cm 거리에서 작게 보이는 패스 QR 도 읽는다 (1920x1080 화면에 170화소)", true);
+  await browser.close();
+  fs.rmSync(farJpeg, { force: true });
 
   writeReport();
   const failed = results.filter((r) => !r.ok);

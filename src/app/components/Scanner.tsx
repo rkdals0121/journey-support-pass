@@ -19,7 +19,9 @@ interface Detector {
 
 const SCAN_INTERVAL_MS = 250;
 const REPEAT_GUARD_MS = 2000;
-const FRAME_MAX = 800;
+const FRAME_MAX = 960;
+// 가운데를 잘라 읽을 때 짧은 변에서 쓰는 비율. 화면의 겨누는 네모보다 조금 넓다.
+const CENTER_PART = 0.72;
 
 // 앱 설치 없이 브라우저 카메라로 읽는다. BarcodeDetector 가 없는 브라우저(iOS Safari 등)는 jsQR 로 읽는다.
 export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = false }: Props) {
@@ -38,6 +40,7 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
     let stream: MediaStream | null = null;
     let timer: ReturnType<typeof setInterval> | null = null;
     let last = { text: "", at: 0 };
+    let center = false;
 
     const emit = (text: string) => {
       const now = Date.now();
@@ -54,7 +57,12 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
         return;
       }
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        // 해상도를 높게 청한다. 기본값(보통 640x480)으로는 2.5cm 짜리 패스 QR 의 한 칸이 2~3화소밖에 안 되어 잘 읽히지 않는다.
+        // 기기가 못 맞추면 가능한 가장 가까운 값으로 열린다.
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false,
+        });
       } catch {
         setCameraError(
           "카메라를 쓸 수 없습니다. 카메라가 없는 컴퓨터이거나 브라우저에서 카메라 권한을 허용하지 않았습니다. 패스 번호를 입력해 주세요.",
@@ -82,14 +90,27 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
             if (found[0]?.rawValue) emit(found[0].rawValue);
             return;
           }
-          // 카메라 원본(수백만 화소)을 그대로 읽으면 휴대전화에서 한 장에 1초 가까이 걸려 놓친다.
-          // 긴 변을 FRAME_MAX 로 줄여 읽는다. 패스 QR 은 이 크기에서도 충분히 읽힌다.
-          const scale = Math.min(1, FRAME_MAX / Math.max(video.videoWidth, video.videoHeight));
+          // 두 가지로 번갈아 읽는다.
+          //  - 가운데만 잘라 원래 해상도로: 패스를 20~30cm 에서 비출 때. QR 이 화면에서 작아도 칸이 뭉개지지 않는다.
+          //  - 전체를 줄여서: 패스를 가까이 대어 QR 이 화면을 가득 채울 때.
+          // 원본 전체(수백만 화소)를 그대로 읽으면 휴대전화에서 한 장에 1초 가까이 걸려 놓치므로 어느 쪽이든 FRAME_MAX 안으로 맞춘다.
+          const vw = video.videoWidth;
+          const vh = video.videoHeight;
           const canvas = canvasRef.current!;
-          canvas.width = Math.round(video.videoWidth * scale);
-          canvas.height = Math.round(video.videoHeight * scale);
           const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          center = !center;
+          if (center) {
+            const side = Math.round(Math.min(vw, vh) * CENTER_PART);
+            const out = Math.min(side, FRAME_MAX);
+            canvas.width = out;
+            canvas.height = out;
+            ctx.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, out, out);
+          } else {
+            const scale = Math.min(1, FRAME_MAX / Math.max(vw, vh));
+            canvas.width = Math.round(vw * scale);
+            canvas.height = Math.round(vh * scale);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
           const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const code = jsQR!(image.data, image.width, image.height, { inversionAttempts: "dontInvert" });
           if (code?.data) emit(code.data);
