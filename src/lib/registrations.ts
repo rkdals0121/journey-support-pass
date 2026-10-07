@@ -136,7 +136,12 @@ export interface RegistrationEdit {
  * 안내데스크에서 등록 내용을 고친다. 패스를 기다리는 등록과 패스를 쓰고 있는 등록만 고칠 수 있다.
  * 동의 시각, 접수 번호, 연결된 패스는 그대로 둔다. 고친 횟수(edit_count)에 한 번을 더한다.
  */
-export async function updateRegistration(db: Db, id: string, input: RegistrationEdit): Promise<CreateResult> {
+export async function updateRegistration(
+  db: Db,
+  id: string,
+  input: RegistrationEdit,
+  now: Date,
+): Promise<CreateResult> {
   if (!isUuid(id)) return { ok: false, error: "고칠 수 있는 등록이 아닙니다" };
   const name = typeof input.name === "string" ? input.name.trim() : "";
   if (name.length < 1 || name.length > MAX_NAME) return { ok: false, error: "이름을 확인해 주세요" };
@@ -144,6 +149,16 @@ export async function updateRegistration(db: Db, id: string, input: Registration
   if (selectionError) return { ok: false, error: selectionError };
   const flight = await getFlight(db, input.flightDate, input.flightNo);
   if (!flight) return { ok: false, error: "편명을 다시 확인해 주세요" };
+
+  // 이미 떠난 편으로는 바꾸지 않는다. 바꾸면 여객이 목록에서 사라지고 곧 지워진다.
+  // 편을 그대로 두고 이름이나 도움만 고치는 것은 막지 않는다.
+  const [current] = await db.query<{ flight_date: string | null; flight_no: string | null }>(
+    "select flight_date::text as flight_date, flight_no from registrations where id = $1",
+    [id],
+  );
+  const changed = current?.flight_date !== flight.flightDate || current?.flight_no !== flight.flightNo;
+  const departed = (flight.estAt ?? flight.schedAt) <= now || flight.status.includes("출발");
+  if (changed && departed) return { ok: false, error: "이미 출발한 편입니다. 편명을 다시 확인해 주세요" };
 
   const rows = await db.query<Row>(
     `update registrations

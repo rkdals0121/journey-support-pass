@@ -91,6 +91,9 @@ create table if not exists encounters (
   support_groups text[] not null default '{}',
   gate_band text
 );
+-- 한 구역이 한 여객에 대해 끝내지 않은 기록은 하나뿐이다. 두 기기가 같은 순간에 카드를 열어도 한 줄만 생긴다.
+create unique index if not exists encounters_open_per_zone
+  on encounters (registration_id, zone_id) where ended_at is null;
 
 create table if not exists access_logs (
   id bigserial primary key,

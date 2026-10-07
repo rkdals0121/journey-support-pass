@@ -248,10 +248,18 @@ export async function recordScan(db: Db, registrationId: string, zoneId: string,
   if (open) return { id: open.id, started: open.started_at !== null };
 
   const [row] = await db.query<{ id: string }>(
-    "insert into encounters (registration_id, zone_id, scanned_at) values ($1, $2, $3) returning id",
+    `insert into encounters (registration_id, zone_id, scanned_at) values ($1, $2, $3)
+     on conflict (registration_id, zone_id) where ended_at is null do nothing returning id`,
     [registrationId, zoneId, now],
   );
-  return { id: row.id, started: false };
+  if (row) return { id: row.id, started: false };
+  // 같은 구역의 다른 기기가 방금 먼저 만들었다. 그 기록을 함께 쓴다.
+  const [other] = await db.query<{ id: string; started_at: Date | null }>(
+    `select id, started_at from encounters
+     where registration_id = $1 and zone_id = $2 and ended_at is null limit 1`,
+    [registrationId, zoneId],
+  );
+  return { id: other.id, started: other.started_at !== null };
 }
 
 /** 응대 한 건. 직원은 개인이 아니라 구역으로만 남는다. */

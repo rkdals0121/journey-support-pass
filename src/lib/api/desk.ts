@@ -288,7 +288,7 @@ export async function updateHandler(
     flightNo: typeof body.flightNo === "string" ? body.flightNo : "",
     categories: strings(body.categories),
     needs: strings(body.needs),
-  });
+  }, now);
   if (!res.ok) return fail(400, res.error);
   await logAccess(db, {
     at: now,

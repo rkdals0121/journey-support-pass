@@ -577,6 +577,28 @@ describe("안내데스크 경로", () => {
     expect(row.edit_count).toBe(1);
   });
 
+  it("이미 떠난 편으로는 고칠 수 없다. 편을 그대로 두고 이름만 고치는 것은 된다", async () => {
+    await addFlights(db, [flightRow("OZ100", "2026-10-05 11:00", { gate: 115 })], now);
+    const reg = await register(db, now);
+    const toGone = await updateHandler(db, desk, { ...webBody({ flightNo: "OZ100" }), registrationId: reg.id }, "d", now);
+    expect(toGone.status).toBe(400);
+    expect(toGone.body.error).toContain("이미 출발한 편");
+    // 등록한 편이 떠난 뒤에도 이름은 고칠 수 있다.
+    const later = kst("2026-10-05 15:00");
+    const same = await updateHandler(db, desk, { ...webBody({ name: "새이름" }), registrationId: reg.id }, "d", later);
+    expect(same.body).toMatchObject({ name: "새이름", flightNo: "KE123" });
+  });
+
+  it("같은 구역의 두 기기가 같은 순간에 카드를 열어도 응대 기록은 하나", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const [a, b] = await Promise.all([
+      caseHandler(db, staff, registration.id, now),
+      caseHandler(db, staff, registration.id, now),
+    ]);
+    expect((a.body.encounter as { id: string }).id).toBe((b.body.encounter as { id: string }).id);
+    expect(await db.query("select 1 from encounters")).toHaveLength(1);
+  });
+
   it("끝난 등록은 고칠 수 없다", async () => {
     const reg = await register(db, now);
     await cancelHandler(db, desk, { registrationId: reg.id }, "d", now);
