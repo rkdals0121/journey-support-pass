@@ -766,11 +766,14 @@ function writeReport() {
   await waitText(page, "연결되지 않은 패스입니다");
   check("카메라로 미사용 패스를 찍으면 연결되지 않은 패스라고 알려 준다", true);
   await shot(page, "직원-스캔-카메라");
-  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
+  // 안내데스크는 거기서 바로 연결하러 간다. 패스를 다시 찍지 않아도 된다.
+  await clickText(page, "a", "이 패스로 연결하러 가기");
+  await waitText(page, "방금 찍은 패스는 아직 연결되지 않았습니다");
   await clickText(page, ".reg-row", "문접수");
+  await clickText(page, "button", "방금 찍은 패스로 연결");
   await waitText(page, "님께 이 번호의 패스를 드리세요");
   const scanned = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
-  check("안내데스크: 카메라로 패스 QR 을 찍어 연결한다", scanned === scanPass, `패스 ${scanned}`);
+  check("안내데스크: 스캔 화면에서 찍은 미사용 패스를 다시 찍지 않고 연결한다", scanned === scanPass, `패스 ${scanned}`);
   // 찍자마자 여객 카드로 넘어가므로 화면이 조용해지기를 기다리지 않는다.
   await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });

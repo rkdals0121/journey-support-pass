@@ -134,7 +134,8 @@ export interface RegistrationEdit {
 
 /**
  * 안내데스크에서 등록 내용을 고친다. 패스를 기다리는 등록과 패스를 쓰고 있는 등록만 고칠 수 있다.
- * 동의 시각, 접수 번호, 연결된 패스는 그대로 둔다. 고친 횟수(edit_count)에 한 번을 더한다.
+ * 동의 시각, 접수 번호, 연결된 패스는 그대로 둔다. edit_count 는 건드리지 않는다.
+ * 그 값은 여객이 등록 화면에서 되돌아가 고친 횟수(작성 난이도 지표)이고, 직원이 고친 사실은 조회 기록(edit)에 남는다.
  */
 export async function updateRegistration(
   db: Db,
@@ -162,7 +163,7 @@ export async function updateRegistration(
 
   const rows = await db.query<Row>(
     `update registrations
-     set name = $2, flight_date = $3, flight_no = $4, categories = $5, needs = $6, edit_count = edit_count + 1
+     set name = $2, flight_date = $3, flight_no = $4, categories = $5, needs = $6
      where id = $1 and status in ('pending', 'active')
      returning ${COLUMNS}`,
     [id, name, flight.flightDate, flight.flightNo, input.categories, input.needs],

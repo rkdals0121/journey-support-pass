@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ErrorNote } from "../../components/Alert";
 import { Scanner } from "../../components/Scanner";
 
@@ -16,9 +16,17 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // 안내데스크가 미사용 패스를 찍었을 때, 다시 찍지 않고 그 패스로 연결하러 갈 수 있게 들고 있는다.
+  const [idleToken, setIdleToken] = useState<string | null>(null);
+  const lastScanned = useRef("");
 
   async function resolve(body: { scanned: string } | { passNo: string }) {
     if (busy) return;
+    // 같은 QR 이 계속 비치는 동안에는 다시 묻지 않는다. 안내 문구와 버튼이 깜박이지 않는다.
+    if ("scanned" in body) {
+      if (body.scanned === lastScanned.current) return;
+      lastScanned.current = body.scanned;
+    }
     setBusy(true);
     setMessage(null);
     try {
@@ -45,8 +53,12 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
         setMessage("패스 번호를 찾을 수 없습니다");
       } else {
         setMessage(MESSAGES[data.kind] ?? MESSAGES.unknown);
+        if (data.kind === "idle" && "scanned" in body) {
+          setIdleToken(/([A-Za-z0-9_-]{24})\/?$/.exec(body.scanned.trim())?.[1] ?? null);
+        }
       }
     } catch {
+      lastScanned.current = "";
       setMessage("연결할 수 없습니다. 여객에게 구두로 확인해 주세요.");
     } finally {
       setBusy(false);
@@ -65,8 +77,8 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
       />
       {message && <ErrorNote>{message}</ErrorNote>}
       {isDesk && message === MESSAGES.idle && (
-        <Link className="btn" href="/staff/desk">
-          패스 연결하러 가기
+        <Link className="btn btn-primary" href={idleToken ? `/staff/desk?token=${idleToken}` : "/staff/desk"}>
+          이 패스로 연결하러 가기
         </Link>
       )}
     </div>

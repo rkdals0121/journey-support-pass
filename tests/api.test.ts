@@ -574,7 +574,8 @@ describe("안내데스크 경로", () => {
     const card = await caseHandler(db, staff, registration.id, now);
     expect(card.body.case).toMatchObject({ name: "홍길순", gate: 115, categories: ["임신 중입니다"] });
     const [row] = await db.query<{ edit_count: number }>("select edit_count from registrations where id = $1", [registration.id]);
-    expect(row.edit_count).toBe(1);
+    // 직원이 고친 것은 여객의 "되돌아가 고친 횟수"에 더하지 않는다.
+    expect(row.edit_count).toBe(0);
   });
 
   it("이미 떠난 편으로는 고칠 수 없다. 편을 그대로 두고 이름만 고치는 것은 된다", async () => {

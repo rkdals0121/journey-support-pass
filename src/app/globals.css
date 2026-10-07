@@ -1606,8 +1606,8 @@ input[type="search"]:focus {
   display: flex;
   justify-content: center;
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
+  /* 불투명하게 둔다. 비치게 하면 뒤에 색 있는 버튼이 올 때 메뉴 글자가 잘 안 보인다. */
+  background: var(--surface);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -1620,7 +1620,7 @@ input[type="search"]:focus {
   justify-content: center;
   gap: 2px;
   min-height: var(--nav-h);
-  color: var(--faint);
+  color: var(--muted);
   font-size: 12.5px;
   font-weight: 700;
   text-decoration: none;
