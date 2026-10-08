@@ -26,10 +26,11 @@ const MOCK_DEST_CODE: Record<string, string> = {
 };
 
 /** 지금 시각 기준으로 곧 출발하는 모의 운항. 실제 편명과 겹치지 않게 MK·MC 로 시작한다. */
-export function mockFlights(now: Date): FlightRow[] {
+export function mockFlights(now: Date, stretch = 1): FlightRow[] {
   // 초 단위를 버려 화면의 남은 시간이 깔끔하게 보이게 한다.
   const base = Math.floor(now.getTime() / MIN) * MIN;
-  const at = (minutes: number) => new Date(base + minutes * MIN);
+  // stretch 를 키우면 출발까지 남은 시간이 그만큼 늘어난다. 시연용 여객이 금방 사라지지 않게 할 때 쓴다.
+  const at = (minutes: number) => new Date(base + minutes * MIN * stretch);
   const f = (
     flightNo: string,
     afterMin: number,
