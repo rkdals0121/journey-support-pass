@@ -842,6 +842,45 @@ input[type="search"]:focus {
   text-decoration: none;
 }
 
+.assist {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--mint);
+  color: var(--ink-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.assist svg {
+  margin-top: 2px;
+  color: var(--green);
+}
+
+.choice-note {
+  display: block;
+  margin-top: 1px;
+  color: var(--sun-deep);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bp-request {
+  background: var(--sun-soft);
+}
+
+.bp-request h2,
+.bp-request .muted {
+  color: var(--sun-deep);
+}
+
+.bp-request .lines li::before {
+  background: var(--sun-deep);
+}
+
 /* ── 등록 ── */
 .progress {
   display: flex;
@@ -2267,4 +2306,10 @@ input[type="search"]:focus {
 /* 검색 칸에는 지우기 버튼을 따로 두었다. 브라우저가 그리는 것은 감춘다. */
 input[type="search"]::-webkit-search-cancel-button {
   display: none;
+}
+
+/* 단계가 바뀔 때 제목으로 초점을 옮기는 것은 화면 읽기 프로그램을 위한 것이다. 제목에 테두리는 그리지 않는다. */
+h1:focus-visible {
+  outline: none;
+  box-shadow: none;
 }

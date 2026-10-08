@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, CircleCheck, Clock, HandHelping, History, MapPin, MessageSquareText, Users } from "lucide-react";
+import { ChevronLeft, CircleCheck, Clock, HandHelping, History, MapPin, MessageSquareText, PackageCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -172,6 +172,17 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
           {c.needs.length > 0 ? <Lines items={c.needs} /> : <p className="muted">별도 요청 없음</p>}
         </section>
 
+        {c.requests.length > 0 && (
+          <section className="bp-block bp-request">
+            <h2>
+              <PackageCheck size={16} aria-hidden="true" />
+              장비·인력 요청
+            </h2>
+            <Lines items={c.requests} />
+            <p className="muted small">예약된 것이 아닙니다. 지금 제공할 수 있는지 확인하고 여객에게 알려 주세요.</p>
+          </section>
+        )}
+
         <section className="bp-block">
           <h2>
             <Users size={16} aria-hidden="true" />
@@ -194,7 +205,7 @@ export function CaseCard({ id, timeoutSec }: { id: string; timeoutSec: number })
                 </li>
               ))}
             </ul>
-            <p className="muted small">앞에서 이미 안내한 내용은 여객에게 다시 묻지 않아도 됩니다.</p>
+            <p className="muted small">앞에서 이미 안내한 내용을 처음부터 다시 묻지 않아도 됩니다. 상황이 달라졌으면 다시 확인해 주세요.</p>
           </section>
         )}
 

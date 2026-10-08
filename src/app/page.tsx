@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, ClipboardList, Languages, PhoneOff, ScanLine, ShieldCheck, Ticket, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronRight, ClipboardList, ConciergeBell, Languages, PhoneOff, ScanLine, ShieldCheck, Ticket, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { langOf, TEXT } from "@/lib/i18n";
 import { Brand, PassArt } from "./components/Sunflower";
@@ -56,6 +56,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           </div>
         </li>
       </ol>
+
+      <p className="assist">
+        <ConciergeBell size={18} aria-hidden="true" />
+        <span>{t.assist}</span>
+      </p>
 
       <div className="trust">
         <span className="chip">

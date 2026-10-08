@@ -4,7 +4,7 @@ import { ArrowRight, BarChart3, Check, ChevronLeft, Eye, FileText, Plane, Search
 import { useEffect, useRef, useState } from "react";
 import { GROUP_LABEL, itemsOf, NEED_GROUPS, type Group, type Item } from "@/lib/catalog";
 import { GROUP_EN, ITEM_EN, TEXT, type Lang } from "@/lib/i18n";
-import { ErrorNote } from "./Alert";
+import { Banner, ErrorNote } from "./Alert";
 import { GROUP_ICON, NeedIcon } from "./NeedIcon";
 
 export interface RegistrationPayload {
@@ -297,6 +297,7 @@ export function RegistrationSteps({
           <p className="step-kicker">{steps[2]}</p>
           <h1>{t.needsTitle}</h1>
           <p className="muted">{t.needsHint}</p>
+          <Banner>{t.needsNotice}</Banner>
           {NEED_GROUPS.map((g) => {
             const GroupIcon = GROUP_ICON[g];
             return (
@@ -310,6 +311,7 @@ export function RegistrationSteps({
                     key={i.code}
                     code={i.code}
                     label={itemLabel(i)}
+                    note={i.request ? t.onSite : undefined}
                     checked={needs.includes(i.code)}
                     onToggle={() => toggle(setNeeds, i.code)}
                   />
@@ -472,11 +474,14 @@ export function RegistrationSteps({
 function Choice({
   code,
   label,
+  note,
   checked,
   onToggle,
 }: {
   code: string;
   label: string;
+  /** 문구 아래에 작게 붙는 말. 예약이 아니라 현장 상황에 따라 제공되는 요청임을 알린다. */
+  note?: string;
   checked: boolean;
   onToggle: () => void;
 }) {
@@ -485,7 +490,10 @@ function Choice({
       <span className="choice-icon">
         <NeedIcon code={code} />
       </span>
-      <span className="choice-text">{label}</span>
+      <span className="choice-text">
+        {label}
+        {note && <small className="choice-note">{note}</small>}
+      </span>
       <span className="choice-mark" aria-hidden="true">
         <Check size={16} strokeWidth={3} />
       </span>

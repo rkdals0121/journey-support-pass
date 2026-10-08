@@ -1,4 +1,4 @@
-import { labelsIn } from "../catalog";
+import { isRequest, labelsIn } from "../catalog";
 import type { CaseView, ServiceRecord } from "../encounters";
 import type { FlightChoice } from "../flights/search";
 import { kstDate } from "../flights/normalize";
@@ -35,7 +35,9 @@ export interface CaseDto {
   name: string;
   comm: string[]; // 소통 방식 (감각·소통)
   categories: string[]; // 교통약자 구분
-  needs: string[]; // 필요한 도움 (이동, 환경)
+  needs: string[]; // 필요한 도움 (이동, 환경). 응대할 때 알아 둘 것
+  /** 장비나 인력이 있어야 하는 요청 (휠체어 대여, 동행). 제공할 수 있는지 직원이 확인한다. */
+  requests: string[];
   accompany: string[]; // 동반
   /** 고른 항목의 코드 전체. 목록에서 줄인 말과 그림으로 보여줄 때 쓴다. */
   codes: string[];
@@ -75,12 +77,15 @@ export function closeLabelOf(c: CaseView): string {
 }
 
 export function toCaseDto(c: CaseView, service: ServiceRecord | null = null): CaseDto {
+  const asked = c.needs.filter(isRequest);
+  const plain = c.needs.filter((code) => !isRequest(code));
   return {
     registrationId: c.registrationId,
     name: c.name,
     comm: labelsIn(c.needs, "comm"),
     categories: labelsIn(c.categories, "category"),
-    needs: [...labelsIn(c.needs, "move"), ...labelsIn(c.needs, "env")],
+    needs: [...labelsIn(plain, "move"), ...labelsIn(plain, "env")],
+    requests: labelsIn(asked, "move"),
     accompany: labelsIn(c.needs, "accompany"),
     codes: [...c.categories, ...c.needs],
     flightNo: c.flightNo,

@@ -181,6 +181,8 @@ function writeReport() {
   section("여객 등록");
   await page.goto(BASE, { waitUntil: "load", timeout: 120_000 });
   check("첫 화면이 열린다", await has(page, "한 번만 알려 주세요"));
+  check("첫 화면에 안내데스크 대신 등록 안내가 있다", await has(page, "안내데스크에서 대신 등록해 드립니다"));
+  check("첫 화면은 지킬 수 없는 약속을 하지 않는다", !(await has(page, "다시 묻지 않습니다")) && !(await has(page, "먼저 다가와")));
   await shot(page, "여객-첫화면");
   await clickText(page, "a", "지원 등록하기");
   await waitText(page, "등록 전에 확인해 주세요");
@@ -202,6 +204,11 @@ function writeReport() {
 
   await waitText(page, "필요한 도움을 골라 주세요");
   check("등록 3단계: 고르지 않아도 넘어갈 수 있다", await has(page, "해당 없음, 다음"));
+  check("등록 3단계: 예약이 아니라 전달이라고 알린다", await has(page, "예약하는 것은 아닙니다"));
+  const onSite = await page.evaluate(() =>
+    [...document.querySelectorAll('[role="checkbox"]')].filter((b) => (b as HTMLElement).innerText.includes("현장 상황에 따라 제공")).map((b) => (b as HTMLElement).innerText.split("\n")[0]),
+  );
+  check("장비·인력이 필요한 두 항목에만 '현장 상황에 따라 제공'이 붙는다", onSite.join("|") === "휠체어가 필요합니다|함께 걸어주실 분이 필요합니다", onSite.join("|"));
   // 빠르게 연달아 눌러도 하나도 빠지지 않아야 한다.
   // (화면 안에서 도는 코드에는 이름 붙은 함수를 두지 않는다. tsx 가 붙이는 도우미가 화면에는 없다.)
   await page.evaluate(() => {
@@ -461,6 +468,12 @@ function writeReport() {
   await clickText(page, ".case-row", "오대기");
   await waitText(page, "탑승구가 정해지면 표시됩니다");
   check("탑승구 미정 카드는 미정이라고 보여준다", await has(page, "미정"));
+  const reqCard = await text(page);
+  check(
+    "장비·인력 요청은 카드에서 따로 묶이고, 예약이 아니니 확인하라고 알린다",
+    /장비·인력 요청\s*휠체어가 필요합니다/.test(reqCard) && reqCard.includes("예약된 것이 아닙니다"),
+  );
+  await shot(page, "직원-여객카드-장비요청");
   // 여객 카드를 열어 둔 채 두면 2분 뒤 목록으로 돌아간다.
   const openedAt = Date.now();
   await page.waitForFunction(() => location.pathname === "/staff", { timeout: 170_000 });

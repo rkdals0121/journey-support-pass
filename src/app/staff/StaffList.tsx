@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CaseDto } from "@/lib/api/dto";
-import { groupOf, shortOf } from "@/lib/catalog";
+import { groupOf, isRequest, shortOf } from "@/lib/catalog";
 import { ErrorNote } from "../components/Alert";
 import { NeedIcon } from "../components/NeedIcon";
 import { PollBar, type PollInfo } from "../components/PollBar";
@@ -264,7 +264,7 @@ function CaseRow({ c, showZone = false }: { c: CaseDto; showZone?: boolean }) {
           {tags.length > 0 && (
             <span className="chips">
               {tags.slice(0, SHOWN_TAGS).map((code) => (
-                <span key={code} className={`chip ${groupOf(code) === "comm" ? "chip-comm" : ""}`}>
+                <span key={code} className={`chip ${groupOf(code) === "comm" ? "chip-comm" : isRequest(code) ? "chip-sun" : ""}`}>
                   <NeedIcon code={code} size={14} />
                   {shortOf(code)}
                 </span>
