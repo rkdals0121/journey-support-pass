@@ -1,23 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { ErrorNote } from "../../components/Alert";
 import { Scanner } from "../../components/Scanner";
 
 const MESSAGES: Record<string, string> = {
-  idle: "연결되지 않은 패스입니다",
+  idle: "여객 등록과 연결되지 않은 패스입니다. 여객의 등록 완료 화면에 있는 QR을 찍어 주세요.",
   unusable: "사용할 수 없는 패스입니다",
   unknown: "패스 QR이 아닙니다",
 };
 
-export function ScanPanel({ isDesk }: { isDesk: boolean }) {
+export function ScanPanel() {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // 안내데스크가 미사용 패스를 찍었을 때, 다시 찍지 않고 그 패스로 연결하러 갈 수 있게 들고 있는다.
-  const [idleToken, setIdleToken] = useState<string | null>(null);
   const lastScanned = useRef("");
 
   async function resolve(body: { scanned: string } | { passNo: string }) {
@@ -52,7 +49,7 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
       } else if ("passNo" in body) {
         // 여객의 등록 완료 화면에 있는 접수 번호를 여기에 넣는 일이 잦다. 두 번호가 다르다는 것을 바로 알려 준다.
         setMessage(
-          "패스 번호를 찾을 수 없습니다. 여객의 등록 완료 화면에 있는 번호는 접수 번호라서 여기서는 열리지 않습니다. 안내데스크에서 패스를 연결한 뒤, 패스에 적힌 번호를 넣어 주세요.",
+          "패스 번호를 찾을 수 없습니다. 여객의 QR 아래에 있는 네 자리를 넣어 주세요.",
         );
       } else {
         // 패스 모양의 주소인데 이 서버에 없는 것과, 아예 패스가 아닌 QR 을 구분해 알려 준다.
@@ -64,9 +61,6 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
               ? `패스 QR이 아닙니다. (읽은 내용: ${body.scanned.trim().slice(0, 40)})`
               : (MESSAGES[data.kind] ?? MESSAGES.unknown),
         );
-        if (data.kind === "idle" && "scanned" in body) {
-          setIdleToken(/([A-Za-z0-9_-]{24})\/?$/.exec(body.scanned.trim())?.[1] ?? null);
-        }
       }
     } catch {
       lastScanned.current = "";
@@ -79,7 +73,7 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
   return (
     <div>
       <h1>패스 스캔</h1>
-      <p className="muted">패스 뒷면의 QR을 네모 안에 맞춰 주세요.</p>
+      <p className="muted">여객 휴대전화의 QR이나 종이 패스의 QR을 네모 안에 맞춰 주세요.</p>
       <Scanner
         onScan={(text) => resolve({ scanned: text })}
         onNumber={(passNo) => resolve({ passNo })}
@@ -87,11 +81,6 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
         paused={busy}
       />
       {message && <ErrorNote>{message}</ErrorNote>}
-      {isDesk && message === MESSAGES.idle && (
-        <Link className="btn btn-primary" href={idleToken ? `/staff/desk?token=${idleToken}` : "/staff/desk"}>
-          이 패스로 연결하러 가기
-        </Link>
-      )}
     </div>
   );
 }

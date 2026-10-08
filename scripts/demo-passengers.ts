@@ -4,8 +4,8 @@
  *
  *   npx tsx scripts/demo-passengers.ts
  *
- * 안내데스크 권한으로 로그인해 대신 등록하고, 가장 앞 번호 패스를 자동 배정한다.
- * 마지막 두 명은 패스를 연결하지 않고 남겨 "패스를 기다리는 등록"에 보이게 한다.
+ * 안내데스크 권한으로 로그인해 대신 등록한다. 등록하면 패스가 바로 만들어진다.
+ * 마지막 두 명은 여객이 휴대전화로 직접 등록한 것처럼 넣는다.
  */
 import { readSeedZones } from "../src/lib/zones";
 
@@ -73,7 +73,7 @@ const PASSENGERS: { name: string; flightNo: string; categories: string[]; needs:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      console.log(`${p.name}: 등록만 (접수 번호 ${((await res.json()) as { receiptNo?: string }).receiptNo})`);
+      console.log(`${p.name}: 여객이 직접 등록 (패스 ${((await res.json()) as { passNo?: string }).passNo})`);
       continue;
     }
     const reg = await post("/api/desk/register", { ...body, route: "assisted" });
@@ -81,8 +81,7 @@ const PASSENGERS: { name: string; flightNo: string; categories: string[]; needs:
       console.log(`${p.name}: 등록 실패 ${JSON.stringify(reg.body)}`);
       continue;
     }
-    const link = await post("/api/desk/link", { registrationId: reg.body.registrationId, auto: true });
-    console.log(`${p.name}: ${p.flightNo} 패스 ${link.body.passNo ?? JSON.stringify(link.body)}`);
+    console.log(`${p.name}: ${p.flightNo} 패스 ${reg.body.passNo}`);
   }
 })().catch((e) => {
   console.error(e);

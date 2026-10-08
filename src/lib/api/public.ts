@@ -2,6 +2,7 @@ import { ipPart, logAccess } from "../auth";
 import { config } from "../config";
 import type { Db } from "../db";
 import { suggestFlights } from "../flights/search";
+import { issuePass } from "../passes";
 import { createRegistration, type Route } from "../registrations";
 import { fail, ok, toFlightDto, type ApiResult } from "./dto";
 
@@ -61,5 +62,9 @@ export async function registerHandler(db: Db, body: RegisterBody, clientKey: str
   const res = await submitRegistration(db, body, "web", now);
   if (!res.ok) return fail(400, res.error);
   await logAccess(db, { at: now, deviceKey: clientKey, action: "register", registrationId: res.registration.id });
-  return ok({ receiptNo: res.registration.receiptNo });
+  // 등록을 마치면 바로 패스를 만든다. 여객 화면에 QR 로 보여주고, 직원은 그 QR 을 찍는다.
+  // 패스의 주소(토큰)는 등록한 본인에게만 한 번 돌려준다.
+  const pass = await issuePass(db, res.registration.id, now);
+  if (!pass.ok) return fail(500, "패스를 만들지 못했습니다. 잠시 후 다시 시도해 주세요");
+  return ok({ passNo: pass.passNo, token: pass.token });
 }

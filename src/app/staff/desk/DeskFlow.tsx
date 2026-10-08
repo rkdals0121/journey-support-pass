@@ -9,14 +9,14 @@ import {
   Inbox,
   MessagesSquare,
   PenLine,
+  Printer,
+  RefreshCw,
   Search,
-  Ticket,
-  WandSparkles,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { RegistrationSteps, type RegistrationPayload } from "../../components/RegistrationSteps";
@@ -24,6 +24,8 @@ import { Scanner } from "../../components/Scanner";
 
 interface Summary {
   registrationId: string;
+  /** 지금 연결된 패스의 번호. 예전 방식으로 등록만 하고 패스를 받지 않은 건은 null. */
+  passNo: string | null;
   name: string;
   flightNo: string;
   destName: string;
@@ -37,70 +39,68 @@ interface Summary {
 
 interface ListItem extends Summary {
   receiptNo: string | null;
-  passNo: string | null;
   submittedLabel: string;
 }
 
 interface DeskList {
-  idlePasses: number;
   pending: ListItem[];
   active: ListItem[];
 }
 
-type Tab = "link" | "new" | "reissue";
-type Target = { summary: Summary; mode: "link" | "reissue" };
-type Done = { mode: "link" | "reissue" | "cancel"; passNo?: string; name: string };
+type Tab = "find" | "new";
+type Confirm = "cancel" | "reissue" | null;
 
 const LIST_REFRESH_MS = 30_000;
-const LOW_PASSES = 5;
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "link", label: "패스 연결" },
+  { id: "find", label: "패스 찾기·인쇄" },
   { id: "new", label: "대신 등록" },
-  { id: "reissue", label: "재발급" },
 ];
 
 const norm = (s: string) => s.replace(/\s+/g, "").toUpperCase();
 
-export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: string | null }) {
+// 안내데스크(또는 키오스크)의 일.
+//  - 여객 휴대전화의 QR 을 찍어 등록 내용을 확인하고, 같은 QR 을 종이 패스로 인쇄해 건넨다.
+//  - 휴대전화로 등록하기 어려운 여객은 대신 등록하고 바로 인쇄한다.
+//  - 패스를 잃어버렸으면 새 패스를 만들고(옛 패스는 못 쓰게 된다), 잘못된 등록은 고치거나 취소한다.
+export function DeskFlow({ mock }: { mock: boolean }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("link");
-  const [target, setTarget] = useState<Target | null>(null);
-  const [done, setDone] = useState<Done | null>(null);
+  const [tab, setTab] = useState<Tab>("find");
+  const [target, setTarget] = useState<Summary | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [cancelled, setCancelled] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const [receiptNo, setReceiptNo] = useState("");
   const [route, setRoute] = useState<"paper" | "assisted" | null>(null);
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  // 미연결 패스를 기본 카메라로 찍어 들어온 경우, 그 패스를 바로 쓴다.
-  const [pendingToken, setPendingToken] = useState(scannedToken);
+  const [confirming, setConfirming] = useState<Confirm>(null);
   const [list, setList] = useState<DeskList | null>(null);
+  // 같은 QR 이 계속 비치는 동안에는 다시 묻지 않는다.
+  const lastScanned = useRef("");
 
-  // 접수 번호를 몰라도 등록을 찾을 수 있게 목록을 함께 보여준다.
+  // 여객이 QR 을 보여주지 못해도 이름이나 편명으로 찾을 수 있게 목록을 함께 보여준다.
   const loadList = useCallback(async () => {
     try {
       const res = await fetch("/api/desk/list", { method: "POST" });
       if (res.ok) setList(await res.json());
     } catch {
-      // 목록을 못 받아도 접수 번호 입력은 그대로 쓸 수 있다.
+      // 목록을 못 받아도 QR 스캔은 그대로 쓸 수 있다.
     }
   }, []);
 
-  // 여객이 방금 등록한 건이 새로고침 없이 목록에 뜨도록 주기적으로 다시 읽는다.
   useEffect(() => {
     loadList();
     const timer = setInterval(loadList, LIST_REFRESH_MS);
     return () => clearInterval(timer);
   }, [loadList]);
 
-  async function post(action: string, body: Record<string, unknown>) {
+  async function post(path: string, body: Record<string, unknown>) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/desk/${action}`, {
+      const res = await fetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -123,61 +123,83 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     }
   }
 
-  function reset(next: Tab = tab) {
+  function reset(next: Tab = "find") {
     setTab(next);
     setTarget(null);
-    setDone(null);
+    setNotice(null);
+    setCancelled(null);
     setError(null);
-    setReceiptNo("");
     setRoute(null);
     setFilter("");
     setEditing(false);
-    setConfirming(false);
+    setConfirming(null);
+    lastScanned.current = "";
     loadList();
     window.scrollTo(0, 0);
   }
 
-  // 방금 처리한 등록을 목록에서 바로 뺀다. 다시 읽어 올 때까지 옛 줄이 남아 있지 않게 한다.
-  function forget(registrationId: string, mode: "link" | "cancel") {
-    const keep = (r: ListItem) => r.registrationId !== registrationId;
-    setList((l) => l && { ...l, pending: l.pending.filter(keep), active: mode === "cancel" ? l.active.filter(keep) : l.active });
+  // 등록 하나를 열어 내용을 띄운다.
+  async function open(registrationId: string) {
+    const data = await post("/api/desk/get", { registrationId });
+    if (!data) return;
+    let summary = data as unknown as Summary;
+    // 예전 방식으로 등록만 하고 패스를 받지 않은 건은 여기서 패스를 만든다.
+    if (summary.passNo === null) {
+      const made = await post("/api/desk/link", { registrationId, auto: true });
+      if (!made) return;
+      summary = { ...summary, passNo: String(made.passNo) };
+    }
+    setNotice(null);
+    setTarget(summary);
+    window.scrollTo(0, 0);
   }
 
-  async function attach(pass: { scanned: string } | { passNo: string } | { auto: true }) {
-    if (!target || busy) return;
-    const data = await post(target.mode, { registrationId: target.summary.registrationId, ...pass });
+  // 여객 휴대전화의 QR 을 찍었거나 패스 번호를 넣었다.
+  async function find(body: { scanned: string } | { passNo: string }) {
+    if (busy) return;
+    if ("scanned" in body) {
+      if (body.scanned === lastScanned.current) return;
+      lastScanned.current = body.scanned;
+    }
+    const data = await post("/api/staff/resolve", body);
+    if (!data) {
+      lastScanned.current = "";
+      return;
+    }
+    if (data.kind === "active") {
+      await open(String(data.registrationId));
+      return;
+    }
+    setError(
+      "passNo" in body
+        ? "패스 번호를 찾을 수 없습니다. 여객 화면의 QR 아래에 있는 네 자리를 넣어 주세요."
+        : data.kind === "unusable"
+          ? "사용할 수 없는 패스입니다. 출발했거나 재발급으로 바뀐 패스입니다. 이름으로 찾아 주세요."
+          : "여객 패스의 QR이 아닙니다. 여객의 등록 완료 화면에 있는 QR을 찍어 주세요.",
+    );
+  }
+
+  async function reissuePass() {
+    if (!target) return;
+    setConfirming(null);
+    const data = await post("/api/desk/reissue", { registrationId: target.registrationId, auto: true });
     if (data) {
-      // 연결에 실패하면 찍어 둔 패스를 그대로 둔다. 다시 찍지 않아도 된다.
-      setPendingToken(null);
-      window.history.replaceState(null, "", "/staff/desk");
-      if (target.mode === "link") forget(target.summary.registrationId, "link");
-      setDone({ mode: target.mode, passNo: String(data.passNo), name: target.summary.name });
+      setTarget({ ...target, passNo: String(data.passNo) });
+      setNotice("새 패스를 만들었습니다. 이전 패스는 이제 쓸 수 없습니다. 아래에서 새 패스를 인쇄해 주세요.");
       window.scrollTo(0, 0);
     }
   }
 
   async function cancelRegistration() {
     if (!target) return;
-    const s = target.summary;
-    setConfirming(false);
-    const data = await post("cancel", { registrationId: s.registrationId });
+    setConfirming(null);
+    const data = await post("/api/desk/cancel", { registrationId: target.registrationId });
     if (data) {
-      forget(s.registrationId, "cancel");
-      setDone({ mode: "cancel", name: s.name });
+      const keep = (r: ListItem) => r.registrationId !== target.registrationId;
+      setList((l) => l && { pending: l.pending.filter(keep), active: l.active.filter(keep) });
+      setCancelled(target.name);
+      setTarget(null);
     }
-  }
-
-  // 앞에서 뜬 오류 문구가 다음 화면에 남지 않게 지우고 넘어간다.
-  function pick(summary: Summary, mode: Target["mode"]) {
-    setError(null);
-    setTarget({ summary, mode });
-    window.scrollTo(0, 0);
-  }
-
-  async function lookupReceipt(e: React.FormEvent) {
-    e.preventDefault();
-    const data = await post("receipt", { receiptNo });
-    if (data) setTarget({ summary: data as unknown as Summary, mode: "link" });
   }
 
   async function registerForPassenger(payload: RegistrationPayload): Promise<string | null> {
@@ -189,7 +211,9 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
       });
       const data = await res.json();
       if (!res.ok) return data.error ?? "등록하지 못했습니다";
-      setTarget({ summary: data, mode: "link" });
+      setTarget(data);
+      setNotice("등록했습니다. 패스를 인쇄해 여객께 드리세요.");
+      setRoute(null);
       window.scrollTo(0, 0);
       return null;
     } catch {
@@ -203,11 +227,12 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
       const res = await fetch("/api/desk/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, registrationId: target.summary.registrationId }),
+        body: JSON.stringify({ ...payload, registrationId: target.registrationId }),
       });
       const data = await res.json();
       if (!res.ok) return data.error ?? "고치지 못했습니다";
-      setTarget({ summary: data, mode: target.mode });
+      setTarget(data);
+      setNotice("고친 내용을 저장했습니다. 패스는 그대로 쓸 수 있습니다.");
       setEditing(false);
       loadList();
       window.scrollTo(0, 0);
@@ -218,7 +243,6 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   }
 
   if (target && editing) {
-    const s = target.summary;
     return (
       <div style={{ paddingBottom: "var(--cta-h)" }}>
         <RegistrationSteps
@@ -226,16 +250,16 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
           byStaff
           aboveNav
           initial={{
-            name: s.name,
-            categories: s.categoryCodes,
-            needs: s.needCodes,
+            name: target.name,
+            categories: target.categoryCodes,
+            needs: target.needCodes,
             flight: {
-              flightDate: s.flightDate,
-              flightNo: s.flightNo,
-              destName: s.destName,
+              flightDate: target.flightDate,
+              flightNo: target.flightNo,
+              destName: target.destName,
               label: "",
               day: "",
-              time: s.timeLabel,
+              time: target.timeLabel,
               cancelled: false,
             },
           }}
@@ -246,54 +270,53 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
     );
   }
 
-  if (done) {
+  if (cancelled) {
     return (
       <div>
         <p className="success-head">
           <CircleCheck size={26} aria-hidden="true" />
-          {done.mode === "link" ? "연결했습니다" : done.mode === "reissue" ? "재발급했습니다" : "등록을 취소했습니다"}
+          등록을 취소했습니다
         </p>
-        {done.passNo ? (
-          <>
-            <h1>{done.name} 님께 이 번호의 패스를 드리세요</h1>
-            <div className="pass-big" role="status" aria-label={`패스 번호 ${done.passNo.split("").join(" ")}`}>
-              <small>패스 번호</small>
-              <b aria-hidden="true">{done.passNo}</b>
-              <span>패스 뒷면 QR 아래의 번호와 같은지 확인하세요</span>
-            </div>
-            {done.mode === "reissue" && <Banner>이전 패스는 이제 쓸 수 없습니다. 찾으면 폐기해 주세요.</Banner>}
-          </>
-        ) : (
-          <p className="muted" role="status">
-            {done.name} 님의 이름, 항공편, 필요한 도움을 지웠습니다. 연결된 패스가 있었다면 더는 쓸 수 없습니다.
-          </p>
-        )}
-        <button className="btn btn-primary" onClick={() => reset("link")}>
+        <p className="muted" role="status">
+          {cancelled} 님의 이름, 항공편, 필요한 도움을 지웠습니다. 패스는 더 쓸 수 없습니다.
+        </p>
+        <button className="btn btn-primary" onClick={() => reset()}>
           다음 여객
         </button>
-        <Link className="btn" href="/staff">
-          여객 목록 보기
-        </Link>
       </div>
     );
   }
 
   if (target) {
-    const s = target.summary;
-    const noPasses = list !== null && list.idlePasses === 0;
+    const s = target;
     return (
       <div>
         <div className="topbar">
           <button className="icon-btn" onClick={() => reset()} aria-label="뒤로">
             <ChevronLeft size={26} aria-hidden="true" />
           </button>
-          <span className="topbar-title">{target.mode === "link" ? "패스 연결" : "패스 재발급"}</span>
+          <span className="topbar-title">여객 패스</span>
         </div>
-        <h1>{target.mode === "link" ? "이 여객에게 줄 패스를 스캔하세요" : "새로 줄 패스를 스캔하세요"}</h1>
-        <div className="panel">
-          <p style={{ marginBottom: 6 }}>
-            <strong style={{ fontSize: 20 }}>{s.name}</strong>
-          </p>
+        {notice && <Banner role="status">{notice}</Banner>}
+        {error && <ErrorNote>{error}</ErrorNote>}
+
+        <h1>{s.name} 님의 패스</h1>
+        <div className="pass-big" aria-label={`패스 번호 ${(s.passNo ?? "").split("").join(" ")}`}>
+          <small>패스 번호</small>
+          <b aria-hidden="true">{s.passNo}</b>
+          <span>여객 화면의 QR 아래 번호와 같은지 확인하세요</span>
+        </div>
+
+        {/* 새 창으로 연다. 인쇄한 뒤 이 화면으로 돌아와 다음 일을 이어서 한다. */}
+        <a className="btn btn-primary" href={`/staff/desk/print/${s.registrationId}`} target="_blank" rel="noopener">
+          <Printer size={20} aria-hidden="true" />
+          패스 인쇄 (같은 QR)
+        </a>
+        <p className="hint">
+          여객 휴대전화에 뜬 것과 같은 QR이 종이에 찍힙니다. 휴대전화만 쓰겠다는 여객은 인쇄하지 않아도 됩니다.
+        </p>
+
+        <div className="panel" style={{ marginTop: 16 }}>
           <p className="muted" style={{ marginBottom: 10 }}>
             <span className="num" style={{ fontSize: 20, color: "var(--text)" }}>
               {s.flightNo}
@@ -315,54 +338,42 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             </ul>
           )}
         </div>
-        {target.mode === "link" && <p className="hint">여객 화면의 이름·편명과 같은지 확인하세요.</p>}
 
-        {noPasses && <ErrorNote>미사용 패스가 없습니다. 아래에서 패스를 먼저 만들어 주세요.</ErrorNote>}
-        {error && <ErrorNote>{error}</ErrorNote>}
-
-        <div style={{ marginTop: 18 }}>
-          {pendingToken ? (
-            <button className="btn btn-primary" onClick={() => attach({ scanned: pendingToken })} disabled={busy}>
-              방금 찍은 패스로 연결
-            </button>
-          ) : (
-            <Scanner
-              onScan={(scanned) => attach({ scanned })}
-              onNumber={(passNo) => attach({ passNo })}
-              numberLabel="연결"
-              paused={busy}
-            />
-          )}
-        </div>
-
-        <p className="or-line">실물 패스를 번호 순으로 쌓아 두었다면</p>
-        <button className="btn" onClick={() => attach({ auto: true })} disabled={busy || noPasses}>
-          <WandSparkles size={20} aria-hidden="true" />
-          가장 앞 번호 패스로 자동 배정
-        </button>
-        <p className="hint">번호가 가장 작은 미사용 패스를 연결하고, 그 번호를 크게 보여줍니다.</p>
-
-        {/* 새 창으로 연다. 이 화면을 벗어나면 조회해 둔 등록이 사라진다. */}
-        <a className="btn btn-ghost" href="/staff/desk/passes" target="_blank" rel="noopener">
-          미사용 패스 번호 보기 (새 창)
-        </a>
         <div className="row">
           <button className="btn" onClick={() => setEditing(true)} disabled={busy}>
             <PenLine size={18} aria-hidden="true" />
-            등록 내용 고치기
+            내용 고치기
           </button>
-          <button className="btn link-danger" onClick={() => setConfirming(true)} disabled={busy}>
-            이 등록 취소하기
+          <button className="btn" onClick={() => setConfirming("reissue")} disabled={busy}>
+            <RefreshCw size={18} aria-hidden="true" />
+            분실 재발급
           </button>
         </div>
-        {confirming && (
+        <button className="btn btn-ghost link-danger" onClick={() => setConfirming("cancel")} disabled={busy}>
+          이 등록 취소하기
+        </button>
+        <button className="btn" onClick={() => reset()}>
+          다음 여객
+        </button>
+
+        {confirming === "cancel" && (
           <ConfirmSheet
             title="이 등록을 취소할까요?"
-            body={`${s.name} · ${s.flightNo} 등록의 이름, 항공편, 필요한 도움을 지웁니다. 연결된 패스는 더 쓸 수 없게 됩니다. 되돌릴 수 없습니다.`}
+            body={`${s.name} · ${s.flightNo} 등록의 이름, 항공편, 필요한 도움을 지웁니다. 패스는 더 쓸 수 없게 됩니다. 되돌릴 수 없습니다.`}
             confirmLabel="등록 취소"
             busy={busy}
             onConfirm={cancelRegistration}
-            onCancel={() => setConfirming(false)}
+            onCancel={() => setConfirming(null)}
+          />
+        )}
+        {confirming === "reissue" && (
+          <ConfirmSheet
+            title="패스를 새로 만들까요?"
+            body={`${s.name} 님의 지금 패스(${s.passNo})는 바로 못 쓰게 됩니다. 여객 휴대전화에 저장해 둔 QR도 함께 못 쓰게 되므로, 새 패스를 인쇄해 드려야 합니다.`}
+            confirmLabel="새 패스 만들기"
+            busy={busy}
+            onConfirm={reissuePass}
+            onCancel={() => setConfirming(null)}
           />
         )}
       </div>
@@ -378,29 +389,8 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
   }
 
   const q = norm(filter);
-  const hit = (r: ListItem) => !q || norm(r.name).includes(q) || norm(r.flightNo).includes(q);
-  const pending = list?.pending.filter(hit) ?? [];
-  const active = list?.active.filter(hit) ?? [];
-
-  const searchBox = (
-    <div className="input-wrap" style={{ marginTop: 6 }}>
-      <Search size={20} aria-hidden="true" />
-      <input
-        type="search"
-        value={filter}
-        placeholder="이름이나 편명으로 찾기"
-        aria-label="이름이나 편명으로 찾기"
-        autoComplete="off"
-        style={{ minHeight: 48, fontSize: 16.5, fontWeight: 500 }}
-        onChange={(e) => setFilter(e.target.value)}
-      />
-      {filter && (
-        <button className="icon-btn input-clear" onClick={() => setFilter("")} aria-label="검색어 지우기">
-          <X size={20} aria-hidden="true" />
-        </button>
-      )}
-    </div>
-  );
+  const everyone = [...(list?.active ?? []), ...(list?.pending ?? [])];
+  const shown = everyone.filter((r) => !q || norm(r.name).includes(q) || norm(r.flightNo).includes(q));
 
   return (
     <div>
@@ -408,7 +398,7 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
         <div className="staff-head-row">
           <h1>
             <span className="kicker">안내데스크</span>
-            패스 연결과 등록
+            패스 찾기와 등록
           </h1>
           <Link className="icon-btn" href="/staff/desk/stats" aria-label="오늘 현황">
             <ChartNoAxesColumn size={22} aria-hidden="true" />
@@ -420,67 +410,80 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
         {TABS.map((t) => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => reset(t.id)}>
             {t.label}
-            {t.id === "link" && list && list.pending.length > 0 && <span className="count">{list.pending.length}</span>}
           </button>
         ))}
       </div>
 
-      {list && (
-        <Link className={`desk-stat ${list.idlePasses <= LOW_PASSES ? "low" : ""}`} href="/staff/desk/passes">
-          <span>
-            <Ticket size={16} aria-hidden="true" style={{ verticalAlign: "-3px" }} /> 미사용 패스{" "}
-            <b>{list.idlePasses}</b>장{list.idlePasses <= LOW_PASSES && " · 더 만들어 주세요"}
-          </span>
-          <span>
-            보기·인쇄 <ChevronRight size={16} aria-hidden="true" style={{ verticalAlign: "-3px" }} />
-          </span>
-        </Link>
-      )}
-
-      {pendingToken && <Banner>방금 찍은 패스는 아직 연결되지 않았습니다. 연결할 등록을 골라 주세요.</Banner>}
-      {error && <ErrorNote>{error}</ErrorNote>}
-
-      {tab === "link" && (
+      {tab === "find" && (
         <>
-          <form onSubmit={lookupReceipt}>
-            <label htmlFor="receipt">여객 화면의 접수 번호 네 자리</label>
-            <div className="row">
-              <input
-                id="receipt"
-                className="input-code"
-                type="text"
-                inputMode="numeric"
-                maxLength={4}
-                autoComplete="off"
-                placeholder="0000"
-                value={receiptNo}
-                onChange={(e) => setReceiptNo(e.target.value.replace(/\D/g, ""))}
-              />
-              <button className="btn btn-primary btn-inline" disabled={busy || receiptNo.length !== 4}>
-                찾기
-              </button>
-            </div>
-          </form>
+          <h2 className="section-title">여객 휴대전화의 QR을 찍어 주세요</h2>
+          <Scanner
+            onScan={(scanned) => find({ scanned })}
+            onNumber={(passNo) => find({ passNo })}
+            numberLabel="찾기"
+            paused={busy}
+          />
+          {error && <ErrorNote>{error}</ErrorNote>}
 
-          <h2 className="section-title">패스를 기다리는 등록 {list ? `${list.pending.length}건` : ""}</h2>
-          {list && list.pending.length > 4 && searchBox}
-          {list && pending.length === 0 && (
+          <h2 className="section-title">QR이 없으면 이름이나 편명으로 찾기 {list ? `· 등록 ${everyone.length}건` : ""}</h2>
+          <div className="input-wrap">
+            <Search size={20} aria-hidden="true" />
+            <input
+              type="search"
+              value={filter}
+              placeholder="이름이나 편명으로 찾기"
+              aria-label="이름이나 편명으로 찾기"
+              autoComplete="off"
+              style={{ minHeight: 48, fontSize: 16.5, fontWeight: 500 }}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+            {filter && (
+              <button className="icon-btn input-clear" onClick={() => setFilter("")} aria-label="검색어 지우기">
+                <X size={20} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          {list && shown.length === 0 && (
             <div className="empty">
               <span className="bubble">
                 <Inbox size={26} aria-hidden="true" />
               </span>
-              <strong>{q ? "찾는 등록이 없습니다" : "기다리는 등록이 없습니다"}</strong>
+              <strong>{q ? "찾는 등록이 없습니다" : "아직 등록한 여객이 없습니다"}</strong>
               <p>{q ? "이름이나 편명을 다시 확인해 주세요." : "여객이 등록을 마치면 여기에 바로 나타납니다."}</p>
             </div>
           )}
-          {pending.map((r) => (
-            <RegRow key={r.registrationId} r={r} kind="receipt" onPick={() => pick(r, "link")} />
+          {q && shown.length > 1 && <Banner>같은 조건의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</Banner>}
+          {shown.map((r) => (
+            <button key={r.registrationId} className="reg-row" onClick={() => open(r.registrationId)} disabled={busy}>
+              <span className="reg-no pass">
+                <small>패스</small>
+                {r.passNo ?? "없음"}
+              </span>
+              <span className="case-main">
+                <span className="case-top">
+                  <span className="case-name">{r.name}</span>
+                  <span className="case-flight">
+                    <span className="num">{r.flightNo}</span> {r.destName}
+                  </span>
+                </span>
+                <span className="case-time">
+                  {r.timeLabel ? `${r.timeLabel} 출발` : "운항 정보 없음"} · {r.submittedLabel} 등록
+                </span>
+                {/* 같은 편에 이름이 같은 여객이 있을 때 구분할 수 있게 등록 내용을 함께 보여준다. */}
+                <span className="case-zone" style={{ whiteSpace: "normal" }}>
+                  {[...r.categories, ...r.needs].slice(0, 2).join(" / ")}
+                  {r.categories.length + r.needs.length > 2 && ` 외 ${r.categories.length + r.needs.length - 2}`}
+                </span>
+              </span>
+              <ChevronRight className="case-chev" size={20} aria-hidden="true" />
+            </button>
           ))}
         </>
       )}
 
       {tab === "new" && (
         <div>
+          {error && <ErrorNote>{error}</ErrorNote>}
           <h2 className="section-title">휴대전화 등록이 어려운 여객</h2>
           <button className="choice" onClick={() => setRoute("assisted")}>
             <span className="choice-icon">
@@ -504,59 +507,9 @@ export function DeskFlow({ mock, scannedToken }: { mock: boolean; scannedToken: 
             </span>
             <ChevronRight className="case-chev" size={20} aria-hidden="true" />
           </button>
+          <p className="hint">등록을 마치면 바로 패스가 만들어지고, 이어서 인쇄할 수 있습니다.</p>
         </div>
       )}
-
-      {tab === "reissue" && (
-        <>
-          <h2 className="section-title">패스를 잃어버린 여객을 골라 주세요</h2>
-          {searchBox}
-          {list && active.length === 0 && (
-            <div className="empty">
-              <span className="bubble">
-                <Inbox size={26} aria-hidden="true" />
-              </span>
-              <strong>{q ? "찾는 등록이 없습니다" : "패스가 연결된 등록이 없습니다"}</strong>
-              <p>{q ? "이름이나 편명을 다시 확인해 주세요." : "패스를 연결한 여객이 여기에 나타납니다."}</p>
-            </div>
-          )}
-          {q && active.length > 1 && (
-            <Banner>같은 조건의 여객이 여럿입니다. 등록 내용을 여객에게 확인하고 고르세요.</Banner>
-          )}
-          {active.map((r) => (
-            <RegRow key={r.registrationId} r={r} kind="pass" onPick={() => pick(r, "reissue")} />
-          ))}
-        </>
-      )}
     </div>
-  );
-}
-
-function RegRow({ r, kind, onPick }: { r: ListItem; kind: "receipt" | "pass"; onPick: () => void }) {
-  const tags = [...r.categories, ...r.needs];
-  return (
-    <button className="reg-row" onClick={onPick}>
-      <span className={`reg-no ${kind === "pass" ? "pass" : ""}`}>
-        <small>{kind === "pass" ? "패스" : "접수"}</small>
-        {(kind === "pass" ? r.passNo : r.receiptNo) ?? "-"}
-      </span>
-      <span className="case-main">
-        <span className="case-top">
-          <span className="case-name">{r.name}</span>
-          <span className="case-flight">
-            <span className="num">{r.flightNo}</span> {r.destName}
-          </span>
-        </span>
-        <span className="case-time">
-          {r.timeLabel ? `${r.timeLabel} 출발` : "운항 정보 없음"} · {r.submittedLabel} 등록
-        </span>
-        {/* 같은 편에 이름이 같은 여객이 있을 때 구분할 수 있게 등록 내용을 함께 보여준다. */}
-        <span className="case-zone" style={{ whiteSpace: "normal" }}>
-          {tags.slice(0, 2).join(" / ")}
-          {tags.length > 2 && ` 외 ${tags.length - 2}`}
-        </span>
-      </span>
-      <ChevronRight className="case-chev" size={20} aria-hidden="true" />
-    </button>
   );
 }

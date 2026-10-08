@@ -1475,6 +1475,7 @@ input[type="search"]:focus {
 }
 
 .seg .count {
+  color: var(--ink);
   min-width: 22px;
   padding: 0 6px;
   border-radius: 8px;
@@ -2215,6 +2216,40 @@ input[type="search"]:focus {
   font-weight: 500;
 }
 
+/* 한 여객의 패스 (화면에서는 크게, 인쇄할 때는 실제 크기로) */
+.print-pass {
+  margin: 16px auto;
+  padding: 14px;
+  max-width: 300px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: var(--shadow-2);
+  text-align: center;
+}
+
+.print-pass svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 여객 화면의 내 패스 QR */
+.my-qr {
+  width: 100%;
+  max-width: 250px;
+  margin: 2px auto 0;
+}
+
+.my-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ticket-no.small {
+  font-size: 58px;
+}
+
 /* ── 패스 인쇄 ── */
 .sheet-page {
   max-width: 900px;
@@ -2279,6 +2314,21 @@ input[type="search"]:focus {
   .sheet-pass svg {
     width: 25mm;
     height: 25mm;
+  }
+
+  .print-pass {
+    width: 34mm;
+    margin: 0;
+    padding: 2mm;
+    border: 1px dashed #999;
+    border-radius: 3mm;
+    box-shadow: none;
+  }
+
+  .print-pass svg {
+    width: 25mm;
+    height: 25mm;
+    margin: 0 auto;
   }
 
   .sheet-no {

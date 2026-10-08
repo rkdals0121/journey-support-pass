@@ -97,6 +97,35 @@ export async function linkPass(
   return { ok: true, passNo: pass.pass_no };
 }
 
+/**
+ * 등록을 마치면 바로 그 등록의 패스를 만든다. 여객 화면에 QR 로 보여주고, 안내데스크나 키오스크에서는 같은 QR 을 인쇄한다.
+ * 미리 인쇄해 둔 패스를 안내데스크에서 연결하던 절차를 대신한다.
+ */
+export async function issuePass(
+  db: Db,
+  registrationId: string,
+  now: Date,
+): Promise<{ ok: true; passNo: string; token: string } | { ok: false }> {
+  const [pass] = await generatePasses(db, 1);
+  const res = await linkPass(db, pass.token, registrationId, now);
+  if (!res.ok) {
+    // 연결하지 못한 패스는 남겨 두지 않는다.
+    await db.query("delete from passes where token = $1 and state = 'idle'", [pass.token]);
+    return { ok: false };
+  }
+  return { ok: true, passNo: res.passNo, token: pass.token };
+}
+
+/** 이 등록에 지금 연결되어 있는 패스. 없으면 null. */
+export async function activePassOf(db: Db, registrationId: string): Promise<{ passNo: string; token: string } | null> {
+  if (!isUuid(registrationId)) return null;
+  const [row] = await db.query<{ pass_no: string; token: string }>(
+    "select pass_no, token from passes where registration_id = $1 and state = 'active' limit 1",
+    [registrationId],
+  );
+  return row ? { passNo: row.pass_no, token: row.token } : null;
+}
+
 /** 분실 재발급. 새 패스를 먼저 연결한 뒤 옛 패스를 폐기한다. */
 export async function reissue(
   db: Db,

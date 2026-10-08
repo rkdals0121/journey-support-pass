@@ -205,7 +205,7 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
               {numberLabel}
             </button>
           </div>
-          <p className="hint">패스 뒷면 QR 아래에 인쇄된 번호입니다.</p>
+          <p className="hint">QR 아래에 있는 번호입니다.</p>
         </form>
       )}
     </div>

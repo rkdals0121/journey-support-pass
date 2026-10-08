@@ -11,7 +11,9 @@ import { RECEIPT_KEY, type ReceiptInfo } from "../RegisterFlow";
 function readReceipt(): ReceiptInfo | null {
   try {
     const info = JSON.parse(sessionStorage.getItem(RECEIPT_KEY) ?? "null");
-    return info && typeof info.receiptNo === "string" ? { ...info, lang: langOf(info.lang) } : null;
+    return info && typeof info.passNo === "string" && typeof info.token === "string"
+      ? { ...info, lang: langOf(info.lang) }
+      : null;
   } catch {
     return null;
   }
@@ -20,8 +22,23 @@ function readReceipt(): ReceiptInfo | null {
 export default function RegisterDonePage() {
   const [info, setInfo] = useState<ReceiptInfo | null | undefined>(undefined);
 
+  const [qr, setQr] = useState("");
+
   useEffect(() => {
-    setInfo(readReceipt());
+    const found = readReceipt();
+    setInfo(found);
+    if (!found) return;
+    // 직원이 찍는 QR. 패스 주소만 담는다. 이름이나 항공편은 들어가지 않는다.
+    import("qrcode")
+      .then((m) =>
+        m.default.toString(`${window.location.origin}/p/${found.token}`, {
+          type: "svg",
+          errorCorrectionLevel: "M",
+          margin: 4,
+        }),
+      )
+      .then(setQr)
+      .catch(() => setQr(""));
   }, []);
 
   if (info === undefined) return <main className="page" />;
@@ -53,10 +70,11 @@ export default function RegisterDonePage() {
       <h1>{t.doneTitle}</h1>
 
       <div className="ticket">
-        <div className="ticket-top" aria-label={`${t.receipt} ${info.receiptNo.split("").join(" ")}`}>
+        <div className="ticket-top" aria-label={`${t.receipt} ${info.passNo.split("").join(" ")}`}>
+          <div className="my-qr" role="img" aria-label="QR" dangerouslySetInnerHTML={{ __html: qr }} />
           <span className="ticket-label">{t.receipt}</span>
-          <span className="ticket-no" aria-hidden="true">
-            {info.receiptNo}
+          <span className="ticket-no small" aria-hidden="true">
+            {info.passNo}
           </span>
         </div>
         <div className="ticket-tear" />

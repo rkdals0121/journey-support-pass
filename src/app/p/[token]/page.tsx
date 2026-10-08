@@ -22,7 +22,6 @@ export default async function PassPage({ params }: { params: Promise<{ token: st
 
   if (page.kind === "pick_zone") redirect(`/staff/zone?next=${here}`);
   if (page.kind === "case") redirect(`/staff/case/${page.registrationId}`);
-  if (page.kind === "desk_link") redirect(`/staff/desk?token=${page.token}`);
 
   if (page.kind === "staff_only") {
     return (
@@ -45,7 +44,8 @@ export default async function PassPage({ params }: { params: Promise<{ token: st
     );
   }
 
-  const idle = page.kind === "idle";
+  // 여객에게 연결되지 않은 패스. 지금은 등록할 때 패스가 바로 만들어지므로 예전에 미리 만들어 둔 패스에서만 나온다.
+  const idle = page.kind === "idle" || page.kind === "desk_link";
   return (
     <main className="page">
       <Brand />
@@ -56,7 +56,7 @@ export default async function PassPage({ params }: { params: Promise<{ token: st
         <strong>{idle ? "연결되지 않은 패스입니다" : "사용할 수 없는 패스입니다"}</strong>
         <p>
           {idle
-            ? "안내데스크에서 여객 등록과 연결한 뒤에 쓸 수 있습니다."
+            ? "여객 등록과 연결되지 않은 패스입니다. 여객의 등록 완료 화면에 있는 QR을 찍어 주세요."
             : "만료되었거나 분실 처리된 패스입니다. 여객에게 구두로 확인해 주세요."}
         </p>
       </div>

@@ -9,7 +9,7 @@ export default async function ScanPage() {
   return (
     <>
       <main className="page has-nav">
-        <ScanPanel isDesk={session.isDesk} />
+        <ScanPanel />
       </main>
       <StaffNav isDesk={session.isDesk} />
     </>

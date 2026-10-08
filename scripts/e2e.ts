@@ -64,6 +64,28 @@ async function audit(page: Page, name: string) {
   check(`접근성 자동 점검: ${name}`, found.length === 0, found.join(" / ").slice(0, 300) || undefined);
 }
 
+/** 화면에 그려진 QR(svg)을 읽어 그 안의 글자를 돌려준다. 못 읽으면 빈 글자. */
+async function readQr(page: Page, selector: string): Promise<string> {
+  await page.waitForSelector(selector, { timeout: WAIT });
+  await page.addScriptTag({ path: path.join(process.cwd(), "node_modules", "jsqr", "dist", "jsQR.js") });
+  return page.evaluate(async (sel) => {
+    const svg = document.querySelector(sel)!;
+    const img = new Image();
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = 600;
+    canvas.height = 600;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, 600, 600);
+    ctx.drawImage(img, 0, 0, 600, 600);
+    const data = ctx.getImageData(0, 0, 600, 600);
+    const read = (window as unknown as { jsQR: (d: Uint8ClampedArray, w: number, h: number) => { data: string } | null }).jsQR;
+    return read(data.data, 600, 600)?.data ?? "";
+  }, selector);
+}
+
 const text = (page: Page) => page.evaluate(() => (document.body?.innerText ?? ""));
 const has = async (page: Page, s: string) => (await text(page)).includes(s);
 
@@ -260,15 +282,33 @@ function writeReport() {
   await waitText(page, "이대로 등록할까요?");
   await clickText(page, "button", "등록하기");
 
-  await waitText(page, "안내데스크에서 이 화면을 보여 주세요");
-  const receiptNo = await page.$eval(".ticket-no", (e) => (e as HTMLElement).innerText.trim());
-  check("등록을 마치면 접수 번호 네 자리가 나온다", /^\d{4}$/.test(receiptNo), receiptNo);
-  check("접수 번호는 주소에 들어 있지 않다", !page.url().includes(receiptNo));
+  await waitText(page, "직원에게 이 QR을 보여 주세요");
+  const passNo = await page.$eval(".ticket-no", (e) => (e as HTMLElement).innerText.trim());
+  check("등록을 마치면 화면에 패스 번호 네 자리가 나온다", /^\d{4}$/.test(passNo), passNo);
+  const qrUrl = await readQr(page, ".my-qr svg");
+  check("등록을 마치면 화면에 QR 이 바로 나온다. QR 에는 /p/토큰 주소만 들어 있다 (이름·번호 없음)", /^http:\/\/localhost:3000\/p\/[A-Za-z0-9_-]{24}$/.test(qrUrl), qrUrl.replace(/\/p\/.*/, "/p/…"));
+  check("패스 번호와 QR 값은 주소에 들어 있지 않다", !page.url().includes(passNo) && !page.url().includes("/p/"));
   check("완료 화면에 이름과 편명이 함께 나온다", (await has(page, "점검여객")) && (await has(page, "MK102")));
-  await shot(page, "여객-접수번호");
+  check("화면을 저장해 두라고 알려 준다", await has(page, "화면을 저장"));
+  await shot(page, "여객-내패스QR");
+  // 가짜 카메라에 넣을 장면 두 개를 만든다. 가까이에서 비춘 것과, 20~30cm 떨어져 작게 보이는 것.
+  const qrEl = (await page.$(".my-qr"))!;
+  const qrJpeg = path.join(os.tmpdir(), `jsp-qr-${Date.now()}.mjpeg`);
+  fs.writeFileSync(qrJpeg, await qrEl.screenshot({ type: "jpeg", quality: 92 }));
+  const farJpeg = path.join(os.tmpdir(), `jsp-qr-far-${Date.now()}.mjpeg`);
+  const qrSvg = await page.evaluate(() => new XMLSerializer().serializeToString(document.querySelector(".my-qr svg")!));
+  const farPage = await browser.newPage();
+  await farPage.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+  await farPage.setContent(
+    `<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#8d9a93">
+       <div style="padding:14px 14px 40px;border-radius:10px;background:#fff"><div style="width:170px;height:170px">${qrSvg.replace("<svg", '<svg width="170" height="170"')}</div></div>
+     </body>`,
+  );
+  fs.writeFileSync(farJpeg, await farPage.screenshot({ type: "jpeg", quality: 88 }));
+  await farPage.close();
   await page.reload({ waitUntil: "load", timeout: 120_000 });
-  await waitText(page, receiptNo);
-  check("완료 화면을 새로 고쳐도 접수 번호가 남아 있다", true);
+  await waitText(page, passNo);
+  check("완료 화면을 새로 고쳐도 패스가 남아 있다", (await readQr(page, ".my-qr svg")) === qrUrl);
 
   // 영어로 등록
   await page.goto(BASE, { waitUntil: "load", timeout: 120_000 });
@@ -295,18 +335,19 @@ function writeReport() {
   check("영어 화면은 도착지를 공항 코드로 보여준다", (await has(page, "JFK")) && !(await has(page, "뉴욕")));
   check("영어 확인 화면에 고른 항목이 영어로 나온다", (await has(page, "I am pregnant")) && (await has(page, "Please explain slowly")));
   await clickText(page, "button", "Register");
-  await waitText(page, "Show this screen at an information desk");
-  const enReceipt = await page.$eval(".ticket-no", (e) => (e as HTMLElement).innerText.trim());
-  check("영어로 등록해도 접수 번호가 나온다", /^\d{4}$/.test(enReceipt), enReceipt);
-  await shot(page, "여객-영어-접수번호");
+  await waitText(page, "Show this QR code to airport staff");
+  const enPass = await page.$eval(".ticket-no", (e) => (e as HTMLElement).innerText.trim());
+  check("영어로 등록해도 패스 QR 과 번호가 나온다", /^\d{4}$/.test(enPass) && (await page.$(".my-qr svg")) !== null, enPass);
+  await shot(page, "여객-영어-내패스QR");
 
   // ───────── 2. 로그인하지 않은 사람 ─────────
   section("로그인 전");
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   check("직원 화면은 로그인 없이 열리지 않는다", page.url().includes("/staff/login"));
   await shot(page, "직원-로그인");
-  await page.goto(`${BASE}/p/${"x".repeat(24)}`, { waitUntil: "load", timeout: 120_000 });
-  check("패스 QR 주소는 로그인 전에는 직원 전용 안내만 보여준다", await has(page, "공항 직원 전용 QR입니다"));
+  // 여객의 QR 을 직원이 아닌 사람이 기본 카메라로 찍은 경우.
+  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
+  check("여객의 QR 을 직원이 아닌 사람이 찍으면 직원 전용 안내만 보인다 (여객 정보 없음)", (await has(page, "공항 직원 전용 QR입니다")) && !(await has(page, "점검여객")));
   await shot(page, "패스QR-로그인전");
   for (const p of ["/api/staff/list", "/api/staff/zone"]) {
     const status = await page.evaluate((u) => fetch(u).then((r) => r.status), p);
@@ -394,12 +435,12 @@ function writeReport() {
   check("전체를 누르면 다른 구역 여객도 구역 이름과 함께 보인다", await has(page, "제2여객터미널 서편 AM"));
   await shot(page, "직원-전체목록");
 
-  await fill(page, 'input[type="search"]', "mk22");
+  await fill(page, 'input[type="search"]', "mk25");
   await waitText(page, "전체 구역에서 찾은 여객 1명");
-  check("편명으로 찾는다 (소문자, 일부만 쳐도)", (await has(page, "정하준")) && !(await has(page, "김영희")));
-  await fill(page, 'input[type="search"]', "한미");
-  await waitText(page, "한미숙");
-  check("이름으로 찾는다", !(await has(page, "정하준")));
+  check("편명으로 찾는다 (소문자, 일부만 쳐도)", (await has(page, "한미숙")) && !(await has(page, "김영희")));
+  await fill(page, 'input[type="search"]', "정하");
+  await waitText(page, "정하준");
+  check("이름으로 찾는다", !(await has(page, "한미숙")));
   await shot(page, "직원-검색");
   await fill(page, 'input[type="search"]', "없는사람");
   await waitText(page, "찾는 여객이 없습니다");
@@ -429,6 +470,16 @@ function writeReport() {
   await clickText(page, "button", "여객 카드 열기");
   await waitText(page, "패스 번호를 찾을 수 없습니다");
   check("없는 패스 번호는 찾을 수 없다고 알려 준다", true);
+  await fill(page, "#pass-no", passNo);
+  await clickText(page, "button", "여객 카드 열기");
+  await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
+  await waitText(page, "점검여객");
+  check("안내데스크를 거치지 않아도, 여객 화면의 패스 번호로 여객 카드가 열린다", true);
+  // 직원이 휴대전화 기본 카메라로 여객의 QR 을 찍은 경우: QR 의 주소가 열리고 곧바로 여객 카드로 간다.
+  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
+  await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
+  await waitText(page, "점검여객");
+  check("직원이 기본 카메라로 여객의 QR 을 찍으면 여객 카드가 열린다", true);
 
   // 여객 카드
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
@@ -507,136 +558,57 @@ function writeReport() {
   check("안내데스크는 모든 구역의 여객을 본다", (await has(page, "정하준")) && (await has(page, "강도쿄")));
   check("안내데스크 메뉴에는 안내데스크가 있다", (await page.$eval(".staff-nav", (e) => (e as HTMLElement).innerText)).includes("안내데스크"));
   await clickText(page, ".staff-nav a", "안내데스크");
-  await waitText(page, "패스를 기다리는 등록");
+  await waitText(page, "여객 휴대전화의 QR을 찍어 주세요");
   await waitText(page, "점검여객");
-  const deskText = await text(page);
-  check("여객이 방금 등록한 건이 접수 번호와 함께 목록에 보인다", deskText.includes(receiptNo) && deskText.includes("서연결"));
-  check("미사용 패스 장수가 보인다", /미사용 패스\s*\d+\s*장/.test(deskText));
-  await shot(page, "데스크-패스연결");
+  check("여객이 방금 등록한 건이 패스 번호와 함께 목록에 보인다", (await text(page)).includes(passNo));
+  await shot(page, "데스크-패스찾기");
+
+  // 패스 번호로 찾기 (카메라를 못 쓸 때)
+  await fill(page, "#pass-no", "0000");
+  await clickText(page, "button", "찾기");
+  await waitText(page, "패스 번호를 찾을 수 없습니다");
+  check("없는 패스 번호는 찾을 수 없다고 알려 준다 (안내데스크)", true);
+  await fill(page, "#pass-no", passNo);
+  await clickText(page, "button", "찾기");
+  await waitText(page, "점검여객 님의 패스");
+  const found = await text(page);
+  check("패스 번호로 찾으면 그 여객의 등록 내용과 패스 번호가 뜬다", found.includes("휠체어를 이용합니다") && (await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim())) === passNo);
+  await shot(page, "데스크-여객패스");
+
+  // 패스 인쇄: 여객 휴대전화의 QR 과 같은 QR 이 종이에 찍힌다.
+  const printHref = await page.$eval("a.btn-primary", (e) => (e as HTMLAnchorElement).href);
+  await page.goto(printHref, { waitUntil: "load", timeout: 120_000 });
+  await waitText(page, "점검여객 님의 패스");
+  check("인쇄되는 QR 은 여객 휴대전화의 QR 과 같다", (await readQr(page, ".print-pass svg")) === qrUrl);
+  check("인쇄 화면에 패스 번호가 같이 나온다", (await page.$eval(".print-pass .sheet-no", (e) => (e as HTMLElement).innerText.trim())) === passNo);
+  await shot(page, "데스크-패스인쇄");
+  const pdf = path.join(SHOTS, "패스-인쇄.pdf");
+  await page.pdf({ path: pdf, format: "A4", margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" } });
+  await page.emulateMediaType("print");
+  const printed = await page.evaluate(() => {
+    const svg = document.querySelector(".print-pass svg")!.getBoundingClientRect();
+    const hidden = [".mock-banner", ".no-print"].every((sel) => getComputedStyle(document.querySelector(sel)!).display === "none");
+    return { mm: (svg.width / 96) * 25.4, hidden, name: document.querySelector(".print-pass")!.textContent ?? "" };
+  });
+  await page.emulateMediaType("screen");
+  check("인쇄할 때 QR 은 25mm 크기로 나온다", Math.abs(printed.mm - 25) < 0.6, `${printed.mm.toFixed(1)}mm`);
+  check("종이에는 QR 과 패스 번호만 찍힌다 (이름·안내문·버튼 없음)", printed.hidden && !printed.name.includes("점검여객") && fs.statSync(pdf).size > 3000);
+  const denied = await page.evaluate(() => fetch("/api/desk/get", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).then((r) => r.status));
+  check("등록을 고르지 않은 요청은 받지 않는다", denied === 404, String(denied));
 
   // 영어로 등록한 여객도 직원에게는 한국어로 보인다.
+  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, ".reg-row", "ENGLISH GUEST");
-  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
+  await waitText(page, "ENGLISH GUEST 님의 패스");
   const enGuest = await text(page);
   check(
     "영어로 등록한 여객의 내용이 직원에게는 한국어로 보인다",
     enGuest.includes("임신 중입니다") && enGuest.includes("오래 서 있기 어렵습니다") && enGuest.includes("천천히 설명해 주세요"),
   );
   await clickText(page, "button[aria-label='뒤로']", "");
-  await waitText(page, "패스를 기다리는 등록");
+  await waitText(page, "여객 휴대전화의 QR을 찍어 주세요");
 
-  await fill(page, "#receipt", "0000");
-  await clickText(page, "button", "찾기");
-  await waitText(page, "접수 번호를 찾을 수 없습니다");
-  check("없는 접수 번호는 찾을 수 없다고 알려 준다", true);
-  await fill(page, "#receipt", receiptNo);
-  await clickText(page, "button", "찾기");
-  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
-  check("접수 번호로 찾으면 등록 내용을 대조할 수 있다", (await has(page, "점검여객")) && (await has(page, "휠체어를 이용합니다")));
-  await shot(page, "데스크-패스연결-여객확인");
-  await clickText(page, "button", "자동 배정");
-  await waitText(page, "님께 이 번호의 패스를 드리세요");
-  const autoPass = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
-  check("자동 배정: 패스 번호를 크게 보여준다", /^\d{4}$/.test(autoPass), autoPass);
-  await shot(page, "데스크-연결완료");
-  await clickText(page, "button", "다음 여객");
-  await waitText(page, "패스를 기다리는 등록");
-  await waitGone(page, "점검여객");
-  check("연결한 등록은 기다리는 목록에서 빠진다", true);
-
-  // 미사용 패스 화면에서 번호 하나를 가져와 손으로 연결
-  await page.goto(`${BASE}/staff/desk/passes`, { waitUntil: "load", timeout: 120_000 });
-  await waitText(page, "미사용 패스");
-  const idleBefore = await page.evaluate(() => document.querySelectorAll(".sheet-pass").length);
-  const manualPass = await page.$eval(".sheet-pass .sheet-no", (e) => (e as HTMLElement).innerText.trim());
-  const scanPass = await page.evaluate(() => (document.querySelectorAll(".sheet-pass .sheet-no")[1] as HTMLElement).innerText.trim());
-  check("미사용 패스 화면: 패스마다 QR 과 번호만 있다", (await page.$$(".sheet-pass svg")).length === idleBefore && idleBefore > 0, `${idleBefore}장`);
-  await shot(page, "데스크-미사용패스");
-  // 가짜 카메라에 넣을 QR 그림을 떠 둔다 (두 번째 패스).
-  const qrEl = (await page.$$(".sheet-pass"))[1];
-  const qrJpeg = path.join(os.tmpdir(), `jsp-qr-${Date.now()}.mjpeg`);
-  await qrEl.evaluate((e) => e.scrollIntoView({ block: "center" }));
-  fs.writeFileSync(qrJpeg, await qrEl.screenshot({ type: "jpeg", quality: 92 }));
-  // 같은 패스를 멀리서 비춘 장면도 만든다. 1920x1080 화면 한가운데에 QR 이 170화소(25cm 거리에서 2.5cm QR 이 보이는 크기)로 놓인다.
-  const farJpeg = path.join(os.tmpdir(), `jsp-qr-far-${Date.now()}.mjpeg`);
-  const qrSvg = await page.evaluate(() => new XMLSerializer().serializeToString(document.querySelectorAll(".sheet-pass svg")[1]));
-  const farPage = await browser.newPage();
-  await farPage.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
-  await farPage.setContent(
-    `<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#8d9a93">
-       <div style="padding:14px 14px 40px;border-radius:10px;background:#fff"><div style="width:170px;height:170px">${qrSvg.replace("<svg", '<svg width="170" height="170"')}</div></div>
-     </body>`,
-  );
-  fs.writeFileSync(farJpeg, await farPage.screenshot({ type: "jpeg", quality: 88 }));
-  await farPage.close();
-  // 인쇄 모양: A4 한 장에 실제 패스 크기(QR 25mm)로 나오는지 PDF 로 떠서 본다.
-  const pdf = path.join(SHOTS, "패스-인쇄.pdf");
-  await page.pdf({ path: pdf, format: "A4", margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" } });
-  await page.emulateMediaType("print");
-  const printed = await page.evaluate(() => {
-    const svg = document.querySelector(".sheet-pass svg")!.getBoundingClientRect();
-    const hidden = [".staff-nav", ".mock-banner", ".no-print"].every(
-      (sel) => getComputedStyle(document.querySelector(sel)!).display === "none",
-    );
-    return { mm: (svg.width / 96) * 25.4, hidden };
-  });
-  await page.emulateMediaType("screen");
-  check("인쇄할 때 QR 은 25mm 크기로 나온다", Math.abs(printed.mm - 25) < 0.6, `${printed.mm.toFixed(1)}mm`);
-  check("인쇄할 때 메뉴·버튼·시범 띠는 찍히지 않는다", printed.hidden && fs.statSync(pdf).size > 5000);
-  // 휴대전화 기본 카메라로 찍으면 QR 에 담긴 주소(/p/토큰)가 열린다. 세 번째 패스의 QR 을 읽어 그 주소를 얻는다.
-  const linkPassNo = await page.evaluate(() => (document.querySelectorAll(".sheet-pass .sheet-no")[2] as HTMLElement).innerText.trim());
-  await page.addScriptTag({ path: path.join(process.cwd(), "node_modules", "jsqr", "dist", "jsQR.js") });
-  const qrUrl = await page.evaluate(async () => {
-    const svg = document.querySelectorAll(".sheet-pass svg")[2];
-    const img = new Image();
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
-    await img.decode();
-    const canvas = document.createElement("canvas");
-    canvas.width = 600;
-    canvas.height = 600;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, 600, 600);
-    ctx.drawImage(img, 0, 0, 600, 600);
-    const data = ctx.getImageData(0, 0, 600, 600);
-    const read = (window as unknown as { jsQR: (d: Uint8ClampedArray, w: number, h: number) => { data: string } | null }).jsQR;
-    return read(data.data, 600, 600)?.data ?? "";
-  });
-  check("패스 QR 에는 /p/토큰 주소만 들어 있다 (이름·번호 없음)", /^http:\/\/localhost:3000\/p\/[A-Za-z0-9_-]{24}$/.test(qrUrl), qrUrl.replace(/\/p\/.*/, "/p/…"));
-
-  await clickText(page, "button", "더 만들기");
-  await waitText(page, "새로 만들었습니다");
-  await page.waitForFunction((n) => document.querySelectorAll(".sheet-pass").length === n + 10, { timeout: WAIT }, idleBefore);
-  check("패스 10장 더 만들기", true);
-
-  // 안내데스크가 미사용 패스를 기본 카메라로 찍은 경우: 연결 화면으로 가고, 등록을 고르면 그 패스로 바로 연결된다.
-  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
-  await waitText(page, "방금 찍은 패스는 아직 연결되지 않았습니다");
-  check("기본 카메라로 미사용 패스를 찍으면 안내데스크 연결 화면으로 간다", page.url().includes("/staff/desk?token="));
-  await clickText(page, ".reg-row", "ENGLISH GUEST");
-  await clickText(page, "button", "방금 찍은 패스로 연결");
-  await waitText(page, "님께 이 번호의 패스를 드리세요");
-  check("방금 찍은 패스로 연결된다", (await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim())) === linkPassNo, linkPassNo);
-  // 이제 같은 QR 을 기본 카메라로 찍으면 여객 카드가 열린다.
-  await page.goto(qrUrl, { waitUntil: "load", timeout: 120_000 });
-  await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
-  await waitText(page, "ENGLISH GUEST");
-  check("기본 카메라로 연결된 패스를 찍으면 여객 카드가 열린다", await has(page, "임신 중입니다"));
-
-  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
-  await clickText(page, ".reg-row", "서연결");
-  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
-  await fill(page, "#pass-no", "0000");
-  await clickText(page, "button", "연결");
-  await page.waitForFunction(() => document.querySelector(".error") !== null, { timeout: WAIT });
-  check("미사용이 아닌 패스 번호로는 연결되지 않는다", await has(page, "쓸 수 있는 패스 번호가 아닙니다"));
-  await fill(page, "#pass-no", manualPass);
-  await clickText(page, "button", "연결");
-  await waitText(page, "님께 이 번호의 패스를 드리세요");
-  check("패스 번호를 손으로 넣어 연결한다", (await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim())) === manualPass);
-  await clickText(page, "button", "다음 여객");
-
-  // 대신 등록 → 취소
+  // 대신 등록 → 바로 패스가 만들어진다
   await clickText(page, ".seg button", "대신 등록");
   await waitText(page, "여객에게 물어보며 입력");
   await shot(page, "데스크-대신등록");
@@ -654,11 +626,12 @@ function writeReport() {
   await clickText(page, "button", "다음");
   await waitText(page, "여객과 함께 확인해 주세요");
   await clickText(page, "button", "등록하기");
-  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
-  check("대신 등록을 마치면 접수 번호 없이 바로 패스 연결로 넘어간다", await has(page, "종이여객"));
+  await waitText(page, "종이여객 님의 패스");
+  const paperPass = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
+  check("대신 등록을 마치면 바로 패스가 만들어지고 인쇄할 수 있다", /^\d{4}$/.test(paperPass) && (await has(page, "패스 인쇄")), paperPass);
 
   // 등록 내용 고치기
-  await clickText(page, "button", "등록 내용 고치기");
+  await clickText(page, "button", "내용 고치기");
   await waitText(page, "필요한 도움을 골라 주세요");
   check("고치기: 동의를 다시 받지 않고 필요한 도움부터 시작한다", !(await has(page, "여객께 동의를 받아 주세요")));
   await clickText(page, "button", "천천히 설명해 주세요");
@@ -674,9 +647,11 @@ function writeReport() {
   await waitText(page, "이렇게 고칠까요?");
   await shot(page, "데스크-등록고치기");
   await clickText(page, "button", "고친 내용 저장");
-  await waitText(page, "이 여객에게 줄 패스를 스캔하세요");
+  await waitText(page, "고친여객 님의 패스");
   const edited = await text(page);
-  check("고치기: 저장하면 고친 내용이 바로 보인다", edited.includes("고친여객") && edited.includes("고령자입니다") && edited.includes("천천히 설명해 주세요"));
+  check("고치기: 저장하면 고친 내용이 바로 보이고 패스 번호는 그대로다", edited.includes("고령자입니다") && edited.includes("천천히 설명해 주세요") && edited.includes(paperPass));
+
+  // 등록 취소
   await clickText(page, "button", "이 등록 취소하기");
   await waitText(page, "이 등록을 취소할까요?");
   check("등록 취소는 한 번 더 묻는다. 처음 초점은 그만두기에 있다", await page.evaluate(() => document.activeElement?.textContent?.trim() === "그만두기"));
@@ -691,21 +666,27 @@ function writeReport() {
   check("등록 취소: 여객 정보를 지운다", await has(page, "지웠습니다"));
   await shot(page, "데스크-등록취소");
   await clickText(page, "button", "다음 여객");
-  await waitText(page, "패스를 기다리는 등록");
-  check("취소한 등록은 목록에 없다", !(await has(page, "고친여객")) && !(await has(page, "종이여객")));
-
-  // 재발급
-  await clickText(page, ".seg button", "재발급");
-  await waitText(page, "패스를 잃어버린 여객을 골라 주세요");
+  await waitText(page, "여객 휴대전화의 QR을 찍어 주세요");
   await waitText(page, "김영희");
+  check("취소한 등록은 목록에 없다", !(await has(page, "고친여객")) && !(await has(page, "종이여객")));
+  const cancelledPass = await page.evaluate(
+    (n) => fetch("/api/staff/resolve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passNo: n }) }).then((r) => r.json()),
+    paperPass,
+  );
+  check("취소한 등록의 패스는 열리지 않는다", cancelledPass.kind === "unknown", JSON.stringify(cancelledPass));
+
+  // 분실 재발급: 이름으로 찾아 새 패스를 만든다
   await fill(page, 'input[type="search"]', "김영");
   await page.waitForFunction(() => document.querySelectorAll(".reg-row").length === 1, { timeout: WAIT });
   const oldPass = await page.$eval(".reg-row .reg-no", (e) => (e as HTMLElement).innerText.replace(/\D/g, ""));
-  await shot(page, "데스크-재발급");
+  await shot(page, "데스크-이름으로찾기");
   await clickText(page, ".reg-row", "김영희");
-  await waitText(page, "새로 줄 패스를 스캔하세요");
-  await clickText(page, "button", "자동 배정");
-  await waitText(page, "재발급했습니다");
+  await waitText(page, "김영희 님의 패스");
+  await clickText(page, "button", "분실 재발급");
+  await waitText(page, "패스를 새로 만들까요?");
+  await shot(page, "데스크-재발급-확인");
+  await clickText(page, ".sheet-box button", "새 패스 만들기");
+  await waitText(page, "새 패스를 만들었습니다");
   const newPass = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
   check("재발급: 새 패스 번호를 준다", /^\d{4}$/.test(newPass) && newPass !== oldPass, `${oldPass} → ${newPass}`);
   const oldGone = await page.evaluate(
@@ -743,7 +724,7 @@ function writeReport() {
   // 넓은 화면(안내데스크 컴퓨터)에서도 가운데 한 줄로 보인다.
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
   await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
-  await waitText(page, "패스를 기다리는 등록");
+  await waitText(page, "여객 휴대전화의 QR을 찍어 주세요");
   const wide = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
   check("넓은 화면에서 가로로 넘치지 않는다", wide);
   await page.waitForSelector(".reg-row", { timeout: WAIT });
@@ -758,7 +739,7 @@ function writeReport() {
   check("없는 패스 QR 주소는 사용할 수 없는 패스라고 알려 준다", await has(page, "사용할 수 없는 패스입니다"));
   await shot(page, "패스QR-사용불가");
 
-  // 로그인하지 않은 직원이 기본 카메라로 패스를 찍은 경우: 로그인 → 구역 고르기 → 그 여객 카드로 이어진다.
+  // 로그인하지 않은 직원이 기본 카메라로 여객의 QR 을 찍은 경우: 로그인 → 구역 고르기 → 그 여객 카드로 이어진다.
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 120_000 });
   await clickText(page, "button[aria-label='로그아웃']", "");
   await page.waitForFunction(() => location.pathname === "/staff/login", { timeout: WAIT });
@@ -769,8 +750,8 @@ function writeReport() {
   await waitText(page, "오늘 근무하는 구역을 골라 주세요");
   await clickText(page, ".zone-opt", "서편 AM");
   await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
-  await waitText(page, "ENGLISH GUEST");
-  check("패스를 먼저 찍고 로그인·구역 선택을 해도 그 여객 카드로 이어진다", true);
+  await waitText(page, "점검여객");
+  check("QR 을 먼저 찍고 로그인·구역 선택을 해도 그 여객 카드로 이어진다", true);
   await browser.close();
 
   // ───────── 5. 카메라로 QR 스캔 ─────────
@@ -785,23 +766,16 @@ function writeReport() {
   await page.evaluateOnNewDocument("window.BarcodeDetector = function () { this.detect = function () { return Promise.resolve([]); }; };");
   await login(page, DESK_CODE);
   await waitText(page, "김영희");
-  await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
-  await waitText(page, "연결되지 않은 패스입니다");
-  check("기기의 QR 판독 기능이 아무것도 못 읽어도 직접 읽어서 미사용 패스임을 알려 준다", true);
-  await shot(page, "직원-스캔-카메라");
-  // 안내데스크는 거기서 바로 연결하러 간다. 패스를 다시 찍지 않아도 된다.
-  await clickText(page, "a", "이 패스로 연결하러 가기");
-  await waitText(page, "방금 찍은 패스는 아직 연결되지 않았습니다");
-  await clickText(page, ".reg-row", "문접수");
-  await clickText(page, "button", "방금 찍은 패스로 연결");
-  await waitText(page, "님께 이 번호의 패스를 드리세요");
-  const scanned = await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim());
-  check("안내데스크: 스캔 화면에서 찍은 미사용 패스를 다시 찍지 않고 연결한다", scanned === scanPass, `패스 ${scanned}`);
-  // 찍자마자 여객 카드로 넘어가므로 화면이 조용해지기를 기다리지 않는다.
+  // 안내데스크: 여객이 내민 휴대전화의 QR 을 찍으면 그 여객의 패스 화면이 열린다.
+  await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 120_000 });
+  await waitText(page, "점검여객 님의 패스");
+  check("안내데스크: 여객 휴대전화의 QR 을 카메라로 찍으면 그 여객의 패스가 바로 열린다 (기기의 QR 판독 기능이 먹통이어도)", (await page.$eval(".pass-big b", (e) => (e as HTMLElement).innerText.trim())) === passNo);
+  await shot(page, "데스크-QR찍은뒤");
+  // 현장 직원 화면의 스캔: 같은 QR 을 찍으면 여객 카드가 열린다.
   await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
-  await waitText(page, "문접수");
-  check("직원: 카메라로 패스 QR 을 찍으면 여객 카드가 열린다", true);
+  await waitText(page, "점검여객");
+  check("직원: 카메라로 여객의 QR 을 찍으면 여객 카드가 열린다", true);
   await shot(page, "직원-스캔후-여객카드");
   await browser.close();
   fs.rmSync(qrJpeg, { force: true });
@@ -820,9 +794,10 @@ function writeReport() {
   await clickText(page, ".zone-opt", "끝단");
   await waitText(page, "내 근무 구역");
   await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
+  await shot(page, "직원-스캔-카메라");
   await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
-  await waitText(page, "문접수");
-  check("기기의 QR 판독 기능이 오류를 내도, 20~30cm 거리의 작은 패스 QR 을 읽는다 (1920x1080 화면에 170화소)", true);
+  await waitText(page, "점검여객");
+  check("기기의 QR 판독 기능이 오류를 내도, 20~30cm 거리의 작은 QR 을 읽는다 (1920x1080 화면에 170화소)", true);
   await browser.close();
   fs.rmSync(farJpeg, { force: true });
 

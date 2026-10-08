@@ -5,6 +5,7 @@ import {
   cancelHandler,
   deskListHandler,
   deskRegisterHandler,
+  getHandler,
   linkHandler,
   morePassesHandler,
   receiptHandler,
@@ -65,11 +66,19 @@ describe("공개 경로", () => {
     expect((res.body.flights as { label: string }[])[0].label).toBe("CX9 · 뉴욕 · 오늘 16:00 · 결항");
   });
 
-  it("등록하면 접수 번호만 돌려준다", async () => {
+  it("등록하면 바로 패스가 만들어지고, 그 패스 번호와 QR 값만 돌려준다", async () => {
     const res = await registerHandler(db, webBody(), "ip-1", now);
     expect(res.status).toBe(200);
-    expect(Object.keys(res.body)).toEqual(["receiptNo"]);
-    expect(res.body.receiptNo).toMatch(/^\d{4}$/);
+    expect(Object.keys(res.body).sort()).toEqual(["passNo", "token"]);
+    expect(res.body.passNo).toMatch(/^\d{4}$/);
+    expect(res.body.token).toMatch(/^[A-Za-z0-9_-]{24}$/);
+    // 안내데스크를 거치지 않아도 직원이 그 QR 을 찍으면 여객 카드가 열린다.
+    const found = await resolveHandler(db, staff, { scanned: `https://x.app/p/${res.body.token}` }, "d", now);
+    expect(found.body.kind).toBe("active");
+    const card = await caseHandler(db, staff, found.body.registrationId as string, now);
+    expect(card.body.case).toMatchObject({ name: "홍길동", flightNo: "KE123" });
+    // 패스 번호로도 열린다.
+    expect((await resolveHandler(db, staff, { passNo: res.body.passNo }, "d", now)).body.kind).toBe("active");
   });
 
   it("본문에 다른 등록 경로를 넣어 보내도 web 으로 저장한다", async () => {
@@ -460,15 +469,36 @@ describe("안내데스크 경로", () => {
     expect(res.body.error).toBe("패스 QR이 아닙니다");
   });
 
-  it("종이 체크리스트 등록은 경로를 남기고 바로 연결된다", async () => {
+  it("종이 체크리스트 등록은 경로를 남기고 바로 패스가 만들어진다", async () => {
     const res = await deskRegisterHandler(db, desk, webBody({ route: "paper" }), now);
     expect(res.status).toBe(200);
-    const [row] = await db.query<{ route: string }>("select route from registrations");
-    expect(row.route).toBe("paper");
+    const [row] = await db.query<{ route: string; status: string }>("select route, status from registrations");
+    expect(row).toEqual({ route: "paper", status: "active" });
+    expect(res.body.passNo).toMatch(/^\d{4}$/);
+    // 패스의 주소(토큰)는 안내데스크 화면으로 보내지 않는다. 인쇄 화면이 서버에서 직접 읽는다.
+    expect(Object.keys(res.body)).not.toContain("token");
+    expect((await resolveHandler(db, staff, { passNo: res.body.passNo }, "d", now)).body.kind).toBe("active");
+  });
 
-    const [pass] = await generatePasses(db, 1);
-    const linked = await linkHandler(db, desk, { registrationId: res.body.registrationId, scanned: pass.token }, "d", now);
-    expect(linked.status).toBe(200);
+  it("안내데스크는 여객의 QR 로 찾은 등록의 내용과 패스 번호를 본다", async () => {
+    const reg = await registerHandler(db, webBody(), "ip-9", now);
+    const found = await resolveHandler(db, desk, { scanned: reg.body.token }, "d", now);
+    expect((await getHandler(db, staff, { registrationId: found.body.registrationId }, "d", now)).status).toBe(403);
+    const res = await getHandler(db, desk, { registrationId: found.body.registrationId }, "d", now);
+    expect(res.body).toMatchObject({ name: "홍길동", flightNo: "KE123", passNo: reg.body.passNo });
+    expect(Object.keys(res.body)).not.toContain("token");
+    expect(await logCount("receipt_view")).toBe(1);
+    expect((await getHandler(db, desk, { registrationId: "nope" }, "d", now)).status).toBe(404);
+  });
+
+  it("재발급하면 여객 휴대전화의 QR 도 못 쓰게 되고 새 패스 번호가 나온다", async () => {
+    const reg = await registerHandler(db, webBody(), "ip-9", now);
+    const found = await resolveHandler(db, desk, { scanned: reg.body.token }, "d", now);
+    const again = await reissueHandler(db, desk, { registrationId: found.body.registrationId, auto: true }, "d", now);
+    expect(again.status).toBe(200);
+    expect(again.body.passNo).not.toBe(reg.body.passNo);
+    expect((await resolveHandler(db, staff, { scanned: reg.body.token }, "d", now)).body.kind).toBe("unusable");
+    expect((await resolveHandler(db, staff, { passNo: again.body.passNo }, "d", now)).body.kind).toBe("active");
   });
 
   it("안내데스크 등록은 방법을 골라야 한다", async () => {
@@ -513,11 +543,11 @@ describe("안내데스크 경로", () => {
     const again = await reissueHandler(db, desk, { registrationId: reg.id, auto: true }, "d", now);
     expect(again.body).toEqual({ ok: true, passNo: "0500" });
     expect((await resolveToken(db, "b".repeat(24))).kind).toBe("unusable");
-    // 남은 패스가 없으면 알려 준다.
+    // 미리 만들어 둔 패스가 없으면 새로 만들어 연결한다. 패스가 모자라 막히는 일이 없다.
     const other = await register(db, now, { name: "두번째" });
-    const none = await linkHandler(db, desk, { registrationId: other.id, auto: true }, "d", now);
-    expect(none.status).toBe(400);
-    expect(none.body.error).toContain("미사용 패스가 없습니다");
+    const made = await linkHandler(db, desk, { registrationId: other.id, auto: true }, "d", now);
+    expect(made.status).toBe(200);
+    expect(made.body.passNo).toMatch(/^\d{4}$/);
   });
 
   it("등록 목록: 패스를 기다리는 등록과 연결된 등록을 나눠 보여준다", async () => {

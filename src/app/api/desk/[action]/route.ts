@@ -2,6 +2,7 @@ import {
   cancelHandler,
   deskListHandler,
   deskRegisterHandler,
+  getHandler,
   linkHandler,
   morePassesHandler,
   receiptHandler,
@@ -15,7 +16,7 @@ import { currentSession, json, readBody, requestDeviceKey } from "@/lib/session-
 
 export const dynamic = "force-dynamic";
 
-// /api/desk/list | receipt | link | register | reissue | cancel | update | summary | passes
+// /api/desk/list | get | receipt | link | register | reissue | cancel | update | summary | passes
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const now = new Date();
   const { action } = await params;
@@ -29,6 +30,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   switch (action) {
     case "list":
       return json(await deskListHandler(db, session, device, now));
+    case "get":
+      return json(await getHandler(db, session, body, device, now));
     case "receipt":
       return json(await receiptHandler(db, session, body, device, now));
     case "link":

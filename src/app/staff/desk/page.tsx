@@ -7,7 +7,7 @@ import { DeskFlow } from "./DeskFlow";
 
 export const dynamic = "force-dynamic";
 
-export default async function DeskPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+export default async function DeskPage() {
   const session = await requireStaff();
   if (!session.isDesk) {
     return (
@@ -28,11 +28,10 @@ export default async function DeskPage({ searchParams }: { searchParams: Promise
       </>
     );
   }
-  const { token } = await searchParams;
   return (
     <>
       <main className="page has-nav">
-        <DeskFlow mock={config.dataMode === "mock"} scannedToken={token ?? null} />
+        <DeskFlow mock={config.dataMode === "mock"} />
       </main>
       <StaffNav isDesk />
     </>

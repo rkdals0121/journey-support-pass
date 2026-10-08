@@ -2,7 +2,16 @@ import { logAccess, type Session } from "../auth";
 import { labelsIn, NEED_GROUPS } from "../catalog";
 import type { Db } from "../db";
 import { getFlight } from "../flights/search";
-import { extractToken, generatePasses, idleTokenByPassNo, linkPass, nextIdleToken, reissue } from "../passes";
+import {
+  activePassOf,
+  extractToken,
+  generatePasses,
+  idleTokenByPassNo,
+  issuePass,
+  linkPass,
+  nextIdleToken,
+  reissue,
+} from "../passes";
 import { todaySummary } from "../metrics";
 import { eraseRegistration } from "../purge";
 import {
@@ -33,7 +42,11 @@ const AUTO_RETRIES = 3;
 /** 스캔한 QR, 또는 카메라를 못 쓸 때 손으로 넣은 패스 번호에서 토큰을 얻는다. */
 async function tokenFrom(db: Db, body: { scanned?: unknown; passNo?: unknown; auto?: unknown }) {
   // 자동 배정: 번호가 가장 작은 미사용 패스를 쓴다. 직원은 화면에 뜬 번호의 패스를 건넨다.
-  if (body.auto === true) return { token: await nextIdleToken(db), error: LINK_ERRORS.no_idle_pass };
+  // 미리 만들어 둔 패스가 없으면 새로 만든다. 패스가 모자라서 발급이 막히는 일이 없다.
+  if (body.auto === true) {
+    const token = (await nextIdleToken(db)) ?? (await generatePasses(db, 1))[0].token;
+    return { token, error: LINK_ERRORS.no_idle_pass };
+  }
   if (typeof body.passNo === "string") {
     const token = await idleTokenByPassNo(db, body.passNo.trim());
     return { token, error: LINK_ERRORS.no_such_pass_no };
@@ -52,6 +65,8 @@ async function summary(db: Db, r: Registration) {
   const flight = r.flightDate && r.flightNo ? await getFlight(db, r.flightDate, r.flightNo) : null;
   return {
     registrationId: r.id,
+    // 지금 연결된 패스의 번호. 패스의 주소(토큰)는 화면으로 보내지 않는다. 인쇄 화면이 서버에서 직접 읽는다.
+    passNo: (await activePassOf(db, r.id))?.passNo ?? null,
     name: r.name ?? "",
     flightNo: r.flightNo ?? "",
     destName: flight?.destName ?? "",
@@ -129,7 +144,34 @@ export async function deskRegisterHandler(
   if (body.route !== "paper" && body.route !== "assisted") return fail(400, "등록 방법을 골라 주세요");
   const res = await submitRegistration(db, body, body.route, now);
   if (!res.ok) return fail(400, res.error);
+  // 대신 등록도 마치는 즉시 패스를 만든다. 직원은 이어서 그 패스를 인쇄해 건넨다.
+  const pass = await issuePass(db, res.registration.id, now);
+  if (!pass.ok) return fail(500, "패스를 만들지 못했습니다. 잠시 후 다시 시도해 주세요");
   return ok(await summary(db, res.registration));
+}
+
+/**
+ * 여객의 QR 을 찍거나 목록에서 고른 등록의 내용을 안내데스크에 띄운다. 패스 인쇄, 고치기, 재발급, 취소의 출발점이다.
+ */
+export async function getHandler(
+  db: Db,
+  session: Session | null,
+  body: { registrationId?: unknown },
+  device: string,
+  now: Date,
+): Promise<ApiResult> {
+  const denied = guard(session);
+  if (denied) return denied;
+  const reg = isUuid(body.registrationId) ? await getRegistration(db, body.registrationId) : null;
+  if (!reg || (reg.status !== "pending" && reg.status !== "active")) return fail(404, "등록을 찾을 수 없습니다");
+  await logAccess(db, {
+    at: now,
+    zoneId: session!.zoneId,
+    deviceKey: device,
+    action: "receipt_view",
+    registrationId: reg.id,
+  });
+  return ok(await summary(db, reg));
 }
 
 /** registrationId 가 없으면 후보를 찾고, 있으면 그 등록에 새 패스를 연결한다. */
