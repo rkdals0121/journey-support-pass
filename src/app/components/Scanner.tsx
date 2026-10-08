@@ -31,6 +31,10 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
   const pausedRef = useRef(paused);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [passNo, setPassNo] = useState("");
+  // 카메라 영상이 실제로 나오기 시작했는지, 마지막으로 QR 을 읽은 때가 언제인지. 화면에 그대로 보여준다.
+  // 안 될 때 카메라가 안 켜진 것인지, 켜졌는데 못 읽는 것인지, 읽었는데 패스가 아닌 것인지 구분할 수 있다.
+  const [live, setLive] = useState(false);
+  const [readAt, setReadAt] = useState(0);
 
   onScanRef.current = onScan;
   pausedRef.current = paused;
@@ -48,6 +52,7 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
       last = { text, at: now };
       // 읽었다는 것을 손으로 알 수 있게 한다. 지원하지 않는 기기에서는 아무 일도 없다.
       navigator.vibrate?.(80);
+      setReadAt(now);
       onScanRef.current(text);
     };
 
@@ -76,21 +81,39 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
       const video = videoRef.current!;
       video.srcObject = stream;
       await video.play().catch(() => {});
+      setLive(true);
 
+      // 기기에 QR 판독 기능(BarcodeDetector)이 있으면 먼저 쓰고, 못 읽으면 같은 장면을 jsQR 로 다시 읽는다.
+      // 기기 기능은 있다고 나오지만 실제로는 동작하지 않는 휴대전화가 있다(오류를 내거나 늘 빈 값을 돌려준다).
+      // 그런 기기에서도 읽히도록 jsQR 을 항상 준비해 두고, 기기 기능이 오류를 내면 그 뒤로는 쓰지 않는다.
       const Native = (window as unknown as { BarcodeDetector?: new (o: { formats: string[] }) => Detector })
         .BarcodeDetector;
-      const detector = Native ? new Native({ formats: ["qr_code"] }) : null;
-      const jsQR = detector ? null : (await import("jsqr")).default;
+      let detector: Detector | null = null;
+      try {
+        detector = Native ? new Native({ formats: ["qr_code"] }) : null;
+      } catch {
+        detector = null;
+      }
+      const jsQR = (await import("jsqr")).default;
       // 준비되는 사이에 화면을 떠났으면 읽기를 시작하지 않는다. 시작하면 멈출 길이 없다.
       if (stopped) return;
 
+      let working = false;
       timer = setInterval(async () => {
-        if (pausedRef.current || video.readyState < 2) return;
+        // 앞 장면을 아직 읽는 중이면 건너뛴다. 느린 기기에서 일이 쌓이지 않게 한다.
+        if (working || pausedRef.current || video.readyState < 2 || video.videoWidth === 0) return;
+        working = true;
         try {
           if (detector) {
-            const found = await detector.detect(video);
-            if (found[0]?.rawValue) emit(found[0].rawValue);
-            return;
+            try {
+              const found = await detector.detect(video);
+              if (found[0]?.rawValue) {
+                emit(found[0].rawValue);
+                return;
+              }
+            } catch {
+              detector = null;
+            }
           }
           // 두 가지로 번갈아 읽는다.
           //  - 가운데만 잘라 원래 해상도로: 패스를 20~30cm 에서 비출 때. QR 이 화면에서 작아도 칸이 뭉개지지 않는다.
@@ -114,10 +137,12 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           }
           const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR!(image.data, image.width, image.height, { inversionAttempts: "dontInvert" });
+          const code = jsQR(image.data, image.width, image.height, { inversionAttempts: "dontInvert" });
           if (code?.data) emit(code.data);
         } catch {
           // 한 프레임을 못 읽은 것은 무시한다.
+        } finally {
+          working = false;
         }
       }, SCAN_INTERVAL_MS);
     })();
@@ -141,7 +166,13 @@ export function Scanner({ onScan, onNumber, numberLabel = "열기", paused = fal
       )}
       {!cameraError && (
         <p className="muted small scan-hint" aria-live="polite">
-          {paused ? "확인하는 중…" : "자동으로 읽습니다. 20~30cm 거리가 알맞습니다."}
+          {paused
+            ? "QR을 읽었습니다. 확인하는 중…"
+            : !live
+              ? "카메라를 켜는 중…"
+              : readAt > 0
+                ? "QR을 읽었습니다. 다른 패스를 비추면 다시 읽습니다."
+                : "카메라가 켜졌습니다. QR을 네모 안에 비추면 자동으로 읽습니다. 10~30cm 거리가 알맞습니다."}
         </p>
       )}
 

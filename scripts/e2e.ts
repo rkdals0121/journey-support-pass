@@ -781,11 +781,13 @@ function writeReport() {
     `--use-file-for-fake-video-capture=${qrJpeg}`,
   ]);
   page = await open(browser);
+  // 휴대전화 가운데에는 QR 판독 기능이 있다고 나오지만 아무것도 읽지 못하는 것이 있다. 그런 기기를 흉내 낸다.
+  await page.evaluateOnNewDocument("window.BarcodeDetector = function () { this.detect = function () { return Promise.resolve([]); }; };");
   await login(page, DESK_CODE);
   await waitText(page, "김영희");
   await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await waitText(page, "연결되지 않은 패스입니다");
-  check("카메라로 미사용 패스를 찍으면 연결되지 않은 패스라고 알려 준다", true);
+  check("기기의 QR 판독 기능이 아무것도 못 읽어도 직접 읽어서 미사용 패스임을 알려 준다", true);
   await shot(page, "직원-스캔-카메라");
   // 안내데스크는 거기서 바로 연결하러 간다. 패스를 다시 찍지 않아도 된다.
   await clickText(page, "a", "이 패스로 연결하러 가기");
@@ -811,6 +813,8 @@ function writeReport() {
     `--use-file-for-fake-video-capture=${farJpeg}`,
   ]);
   page = await open(browser);
+  // 이번에는 기기의 QR 판독 기능이 오류를 내는 경우를 흉내 낸다.
+  await page.evaluateOnNewDocument("window.BarcodeDetector = function () { this.detect = function () { return Promise.reject(new Error('unavailable')); }; };");
   await login(page, COMMON_CODE);
   await waitText(page, "오늘 근무하는 구역을 골라 주세요");
   await clickText(page, ".zone-opt", "끝단");
@@ -818,7 +822,7 @@ function writeReport() {
   await page.goto(`${BASE}/staff/scan`, { waitUntil: "load", timeout: 120_000 });
   await page.waitForFunction(() => location.pathname.startsWith("/staff/case/"), { timeout: WAIT });
   await waitText(page, "문접수");
-  check("20~30cm 거리에서 작게 보이는 패스 QR 도 읽는다 (1920x1080 화면에 170화소)", true);
+  check("기기의 QR 판독 기능이 오류를 내도, 20~30cm 거리의 작은 패스 QR 을 읽는다 (1920x1080 화면에 170화소)", true);
   await browser.close();
   fs.rmSync(farJpeg, { force: true });
 

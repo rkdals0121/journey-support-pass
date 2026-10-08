@@ -52,7 +52,15 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
       } else if ("passNo" in body) {
         setMessage("패스 번호를 찾을 수 없습니다");
       } else {
-        setMessage(MESSAGES[data.kind] ?? MESSAGES.unknown);
+        // 패스 모양의 주소인데 이 서버에 없는 것과, 아예 패스가 아닌 QR 을 구분해 알려 준다.
+        const looksLikePass = /\/p\/[A-Za-z0-9_-]{24}\/?$/.test(body.scanned.trim());
+        setMessage(
+          data.kind === "unknown" && looksLikePass
+            ? "QR은 읽었지만 이 사이트에 등록된 패스가 아닙니다. 예시용 QR이거나 다른 서버에서 만든 패스입니다."
+            : data.kind === "unknown"
+              ? `패스 QR이 아닙니다. (읽은 내용: ${body.scanned.trim().slice(0, 40)})`
+              : (MESSAGES[data.kind] ?? MESSAGES.unknown),
+        );
         if (data.kind === "idle" && "scanned" in body) {
           setIdleToken(/([A-Za-z0-9_-]{24})\/?$/.exec(body.scanned.trim())?.[1] ?? null);
         }
