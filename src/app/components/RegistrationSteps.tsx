@@ -46,6 +46,12 @@ interface Props {
   onSubmit: (payload: RegistrationPayload, flight: FlightOption) => Promise<string | null>;
 }
 
+// 묻는 순서. 필요한 도움을 먼저 묻고 교통약자 구분은 그 뒤에 묻는다.
+// 직원이 안내할 때 쓰는 것은 필요한 도움이고, 구분은 주로 통계에 쓰이기 때문이다.
+// 종이 체크리스트와 프로포절 1단계 2)의 표도 같은 순서여야 한다.
+const ORDER = ["consent", "needs", "category", "name", "review"] as const;
+const stepOf = (kind: (typeof ORDER)[number]) => ORDER.indexOf(kind);
+
 const SEARCH_DELAY_MS = 250;
 const sameFlight = (a: FlightOption | null, b: FlightOption) =>
   a !== null && a.flightDate === b.flightDate && a.flightNo === b.flightNo;
@@ -180,6 +186,8 @@ export function RegistrationSteps({
     if (message) setError(message);
   }
 
+  const kind = ORDER[step];
+
   if (declined) {
     return (
       <div className="empty" role="status">
@@ -196,7 +204,7 @@ export function RegistrationSteps({
   }
 
   const canNext =
-    step === 1 ? categories.length > 0 : step === 3 ? name.trim().length > 0 && flight !== null : true;
+    kind === "category" ? categories.length > 0 : kind === "name" ? name.trim().length > 0 && flight !== null : true;
   const stepNo = step + 1 - firstStep;
   const stepTotal = steps.length - firstStep;
 
@@ -273,11 +281,12 @@ export function RegistrationSteps({
         </section>
       )}
 
-      {step === 1 && (
+      {kind === "category" && (
         <section>
-          <p className="step-kicker">{steps[1]}</p>
+          <p className="step-kicker">{steps[step]}</p>
           <h1>{t.categoryTitle}</h1>
           <p className="muted">{t.multi}</p>
+          <Banner>{t.categoryPurpose}</Banner>
           <div role="group" aria-label={groupLabel("category")}>
             {itemsOf("category").map((i) => (
               <Choice
@@ -292,9 +301,9 @@ export function RegistrationSteps({
         </section>
       )}
 
-      {step === 2 && (
+      {kind === "needs" && (
         <section>
-          <p className="step-kicker">{steps[2]}</p>
+          <p className="step-kicker">{steps[step]}</p>
           <h1>{t.needsTitle}</h1>
           <p className="muted">{t.needsHint}</p>
           <Banner>{t.needsNotice}</Banner>
@@ -423,25 +432,25 @@ export function RegistrationSteps({
                 <Plane size={16} aria-hidden="true" /> {flight.flightNo} · {destOf(flight)} · {whenOf(flight)}
               </dd>
               <dt>
-                {t.reviewCategory}
-                <button className="review-edit" onClick={() => goTo(1, true)}>
-                  {t.edit}
-                </button>
-              </dt>
-              {itemsOf("category")
-                .filter((i) => categories.includes(i.code))
-                .map((i) => (
-                  <dd key={i.code}>{itemLabel(i)}</dd>
-                ))}
-              <dt>
                 {t.reviewNeeds}
-                <button className="review-edit" onClick={() => goTo(2, true)}>
+                <button className="review-edit" onClick={() => goTo(stepOf("needs"), true)}>
                   {t.edit}
                 </button>
               </dt>
               {needs.length === 0 && <dd className="muted">{t.notPicked}</dd>}
               {NEED_GROUPS.flatMap((g) => itemsOf(g))
                 .filter((i) => needs.includes(i.code))
+                .map((i) => (
+                  <dd key={i.code}>{itemLabel(i)}</dd>
+                ))}
+              <dt>
+                {t.reviewCategory}
+                <button className="review-edit" onClick={() => goTo(stepOf("category"), true)}>
+                  {t.edit}
+                </button>
+              </dt>
+              {itemsOf("category")
+                .filter((i) => categories.includes(i.code))
                 .map((i) => (
                   <dd key={i.code}>{itemLabel(i)}</dd>
                 ))}
@@ -461,7 +470,7 @@ export function RegistrationSteps({
             </button>
           ) : (
             <button className="btn btn-primary" onClick={next} disabled={!canNext}>
-              {step === 0 ? t.agree : step === 2 && needs.length === 0 ? t.noneNext : t.next}
+              {kind === "consent" ? t.agree : kind === "needs" && needs.length === 0 ? t.noneNext : t.next}
               <ArrowRight size={20} aria-hidden="true" />
             </button>
           )}

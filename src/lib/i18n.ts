@@ -44,7 +44,7 @@ export const GROUP_EN: Record<Group, string> = {
 };
 
 const ko = {
-  steps: ["동의", "교통약자 구분", "필요한 도움", "이름과 항공편", "확인"],
+  steps: ["동의", "필요한 도움", "교통약자 구분", "이름과 항공편", "확인"],
   exit: "나가기",
   prevStep: "이전 단계",
   next: "다음",
@@ -67,6 +67,7 @@ const ko = {
   declinedBack: "다시 살펴보기",
   categoryTitle: "해당하는 것을 모두 골라 주세요",
   multi: "여러 개를 고를 수 있습니다.",
+  categoryPurpose: "직원 안내는 앞에서 고른 필요한 도움을 기준으로 합니다. 이 구분은 서비스 개선을 위한 통계에 쓰입니다.",
   needsTitle: "필요한 도움을 골라 주세요",
   needsHint: "해당하는 것이 없으면 고르지 않고 넘어가셔도 됩니다.",
   needsNotice: "고른 내용은 직원에게 전달됩니다. 휠체어나 동행 직원을 예약하는 것은 아닙니다.",
@@ -136,7 +137,7 @@ const ko = {
 };
 
 const en: typeof ko = {
-  steps: ["Consent", "About you", "Help you need", "Name and flight", "Review"],
+  steps: ["Consent", "Help you need", "About you", "Name and flight", "Review"],
   exit: "Exit",
   prevStep: "Previous step",
   next: "Next",
@@ -159,6 +160,7 @@ const en: typeof ko = {
   declinedBack: "Go back",
   categoryTitle: "Select all that apply",
   multi: "You can choose more than one.",
+  categoryPurpose: "Staff assist you based on the help you chose on the previous screen. This answer is used for statistics to improve the service.",
   needsTitle: "What help do you need?",
   needsHint: "If nothing applies, you can continue without choosing.",
   needsNotice: "What you choose is passed on to staff. It does not reserve a wheelchair or an escort.",

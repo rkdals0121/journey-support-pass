@@ -195,16 +195,10 @@ function writeReport() {
   await clickText(page, "button", "다시 살펴보기");
   await clickText(page, "button", "동의하고 시작하기");
 
-  await waitText(page, "해당하는 것을 모두 골라 주세요");
-  check("등록 2단계: 고르기 전에는 다음으로 갈 수 없다", (await isDisabled(page, "다음")) === true);
-  await clickText(page, "button", "고령자입니다");
-  await clickText(page, "button", "장애가 있습니다");
-  await shot(page, "여객-구분");
-  await clickText(page, "button", "다음");
-
   await waitText(page, "필요한 도움을 골라 주세요");
-  check("등록 3단계: 고르지 않아도 넘어갈 수 있다", await has(page, "해당 없음, 다음"));
-  check("등록 3단계: 예약이 아니라 전달이라고 알린다", await has(page, "예약하는 것은 아닙니다"));
+  check("등록 2단계는 필요한 도움이다 (교통약자 구분보다 먼저 묻는다)", !(await has(page, "해당하는 것을 모두 골라 주세요")));
+  check("등록 2단계: 고르지 않아도 넘어갈 수 있다", await has(page, "해당 없음, 다음"));
+  check("등록 2단계: 예약이 아니라 전달이라고 알린다", await has(page, "예약하는 것은 아닙니다"));
   const onSite = await page.evaluate(() =>
     [...document.querySelectorAll('[role="checkbox"]')].filter((b) => (b as HTMLElement).innerText.includes("현장 상황에 따라 제공")).map((b) => (b as HTMLElement).innerText.split("\n")[0]),
   );
@@ -219,6 +213,14 @@ function writeReport() {
   const picked = await page.evaluate(() => document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length);
   check("빠르게 연달아 네 개를 눌러도 네 개가 모두 선택된다", picked === 4, `${picked}개`);
   await shot(page, "여객-필요한도움");
+  await clickText(page, "button", "다음");
+
+  await waitText(page, "해당하는 것을 모두 골라 주세요");
+  check("등록 3단계: 교통약자 구분을 왜 묻는지 알려 준다", await has(page, "통계에 쓰입니다"));
+  check("등록 3단계: 고르기 전에는 다음으로 갈 수 없다", (await isDisabled(page, "다음")) === true);
+  await clickText(page, "button", "고령자입니다");
+  await clickText(page, "button", "장애가 있습니다");
+  await shot(page, "여객-구분");
   await clickText(page, "button", "다음");
 
   await waitText(page, "이름과 항공편을 알려 주세요");
@@ -244,11 +246,13 @@ function writeReport() {
     ["점검여객", "MK102", "고령자입니다", "휠체어를 이용합니다", "동반자가 있습니다"].every((s) => review.includes(s)),
   );
   await shot(page, "여객-확인");
-  await page.evaluate(() => ([...document.querySelectorAll(".review-edit")][2] as HTMLElement).click());
+  await page.evaluate(() => ([...document.querySelectorAll(".review-edit")][1] as HTMLElement).click());
   await waitText(page, "필요한 도움을 골라 주세요");
   check("확인 화면에서 고치기를 누르면 그 단계로 돌아간다", true);
   const kept = await page.evaluate(() => document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length);
   check("돌아가도 고른 것이 그대로 남아 있다", kept === 4, `${kept}개`);
+  await clickText(page, "button", "다음");
+  await waitText(page, "해당하는 것을 모두 골라 주세요");
   await clickText(page, "button", "다음");
   await waitText(page, "이름과 항공편을 알려 주세요");
   check("돌아가도 이름과 항공편이 남아 있다", (await page.$eval("#reg-name", (e) => (e as HTMLInputElement).value)) === "점검여객");
@@ -275,12 +279,13 @@ function writeReport() {
   await clickText(page, "a", "Register for assistance");
   await waitText(page, "Before you register");
   await clickText(page, "button", "Agree and start");
-  await clickText(page, "button", "I am pregnant");
-  await clickText(page, "button", "Next");
   await waitText(page, "What help do you need?");
   await clickText(page, "button", "I cannot stand for long");
   await clickText(page, "button", "Please explain slowly");
   await shot(page, "여객-영어-필요한도움");
+  await clickText(page, "button", "Next");
+  await waitText(page, "Select all that apply");
+  await clickText(page, "button", "I am pregnant");
   await clickText(page, "button", "Next");
   await fill(page, "#reg-name", "ENGLISH GUEST");
   await fill(page, "#reg-flight", "MK221");
@@ -639,9 +644,10 @@ function writeReport() {
   await waitText(page, "여객께 동의를 받아 주세요");
   check("대신 등록도 동의부터 받는다", true);
   await clickText(page, "button", "동의하고 시작하기");
+  await clickText(page, "button", "해당 없음, 다음");
+  await waitText(page, "해당하는 것을 모두 골라 주세요");
   await clickText(page, "button", "임신 중입니다");
   await clickText(page, "button", "다음");
-  await clickText(page, "button", "해당 없음, 다음");
   await fill(page, "#reg-name", "종이여객");
   await fill(page, "#reg-flight", "MK221");
   await clickText(page, ".flight-opt", "MK221");
@@ -653,11 +659,13 @@ function writeReport() {
 
   // 등록 내용 고치기
   await clickText(page, "button", "등록 내용 고치기");
-  await waitText(page, "해당하는 것을 모두 골라 주세요");
-  check("고치기: 동의를 다시 받지 않고 고른 것이 채워진 채로 시작한다", (await page.evaluate(() => document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length)) === 1);
-  await clickText(page, "button", "고령자입니다");
-  await clickText(page, "button", "다음");
+  await waitText(page, "필요한 도움을 골라 주세요");
+  check("고치기: 동의를 다시 받지 않고 필요한 도움부터 시작한다", !(await has(page, "여객께 동의를 받아 주세요")));
   await clickText(page, "button", "천천히 설명해 주세요");
+  await clickText(page, "button", "다음");
+  await waitText(page, "해당하는 것을 모두 골라 주세요");
+  check("고치기: 고른 구분이 채워져 있다", (await page.evaluate(() => document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length)) === 1);
+  await clickText(page, "button", "고령자입니다");
   await clickText(page, "button", "다음");
   await waitText(page, "이름과 항공편을 알려 주세요");
   check("고치기: 이름과 항공편이 채워져 있다", (await page.$eval("#reg-name", (e) => (e as HTMLInputElement).value)) === "종이여객");
