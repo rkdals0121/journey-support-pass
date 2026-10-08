@@ -50,7 +50,10 @@ export function ScanPanel({ isDesk }: { isDesk: boolean }) {
         router.push(`/staff/case/${data.registrationId}`);
         return;
       } else if ("passNo" in body) {
-        setMessage("패스 번호를 찾을 수 없습니다");
+        // 여객의 등록 완료 화면에 있는 접수 번호를 여기에 넣는 일이 잦다. 두 번호가 다르다는 것을 바로 알려 준다.
+        setMessage(
+          "패스 번호를 찾을 수 없습니다. 여객의 등록 완료 화면에 있는 번호는 접수 번호라서 여기서는 열리지 않습니다. 안내데스크에서 패스를 연결한 뒤, 패스에 적힌 번호를 넣어 주세요.",
+        );
       } else {
         // 패스 모양의 주소인데 이 서버에 없는 것과, 아예 패스가 아닌 QR 을 구분해 알려 준다.
         const looksLikePass = /\/p\/[A-Za-z0-9_-]{24}\/?$/.test(body.scanned.trim());

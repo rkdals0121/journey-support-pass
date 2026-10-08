@@ -4,6 +4,7 @@ import { CircleCheck, ConciergeBell, ScanLine, Timer } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { langOf, TEXT } from "@/lib/i18n";
+import { Banner } from "../../components/Alert";
 import { Brand } from "../../components/Sunflower";
 import { RECEIPT_KEY, type ReceiptInfo } from "../RegisterFlow";
 
@@ -78,6 +79,8 @@ export default function RegisterDonePage() {
           </div>
         </div>
       </div>
+
+      <Banner>{t.doneNote}</Banner>
 
       <div className="panel">
         <div className="info-row">
