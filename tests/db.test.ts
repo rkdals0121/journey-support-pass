@@ -65,7 +65,7 @@ describe("스키마", () => {
     await expect(db.query(insert, ["D".repeat(16), "100004", id, "expired"])).resolves.toBeDefined();
   });
 
-  it("패스 번호는 살아 있는 패스 안에서만 겹치지 않는다. QR 값은 언제나 겹치지 않는다", async () => {
+  it("고유 일련 번호는 살아 있는 패스 안에서만 겹치지 않는다. QR 값은 언제나 겹치지 않는다", async () => {
     const insert = "insert into passes (token, pass_no, state) values ($1, $2, $3)";
     await db.query(insert, ["E".repeat(16), "200001", "active"]);
     await expect(db.query(insert, ["F".repeat(16), "200001", "active"])).rejects.toThrow();

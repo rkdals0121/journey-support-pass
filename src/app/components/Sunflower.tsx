@@ -39,7 +39,7 @@ const QR_ART = [
   "1110010110101",
 ];
 
-/** 첫 화면에 놓는 패스 그림. QR 과 패스 번호가 있다. */
+/** 첫 화면에 놓는 패스 그림. QR 과 고유 일련 번호가 있다. */
 export function PassArt() {
   return (
     <div className="pass-art" aria-hidden="true">

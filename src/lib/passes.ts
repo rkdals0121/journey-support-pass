@@ -108,7 +108,7 @@ export async function resolveToken(db: Db, token: string): Promise<Resolved> {
 }
 
 /**
- * 손으로 넣은 패스 번호. 사용 중인 패스만 찾는다.
+ * 손으로 넣은 고유 일련 번호. 사용 중인 패스만 찾는다.
  * 번호는 조합이 적으므로, 끝난 패스가 있었는지는 알려 주지 않는다.
  */
 export async function resolvePassNo(db: Db, passNo: string): Promise<Resolved> {

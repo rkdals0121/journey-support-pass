@@ -49,6 +49,9 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   const t = textOf(lang, prefs.easy);
   const { speak } = useSpeech(lang);
 
+  // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
+  useEffect(() => resetViewSettings(), []);
+
   const reset = useCallback(() => {
     setView("start");
     setLang("ko");

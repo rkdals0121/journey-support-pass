@@ -284,7 +284,7 @@ describe("로그인", () => {
     // 로그인 한 번마다 켜진 구역 수만큼 코드를 대조해서 오래 걸린다.
   }, 400_000);
 
-  it("로그인은 5회, 키오스크의 패스 번호는 10회 틀려야 잠긴다. 둘은 따로 센다", async () => {
+  it("로그인은 5회, 키오스크의 고유 일련 번호는 10회 틀려야 잠긴다. 둘은 따로 센다", async () => {
     expect(config.lockMaxFails).toBe(5);
     expect(config.numberLockMaxFails).toBe(10);
     const t0 = kst("2026-10-05 15:00");

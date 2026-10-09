@@ -28,7 +28,7 @@ export const config = {
   lockMaxFails: 5, // 같은 기기에서
   lockIpMaxFails: 20, // 같은 접속 주소에서 (기기 표시를 바꿔 가며 시도하는 것을 막는다)
   lockMinutes: 10,
-  // 키오스크에서 패스 번호를 틀린 횟수. 공용 기기라 여러 여객의 실수가 쌓이므로 로그인보다 넉넉하게 둔다.
+  // 키오스크에서 고유 일련 번호를 틀린 횟수. 공용 기기라 여러 여객의 실수가 쌓이므로 로그인보다 넉넉하게 둔다.
   // 여섯 자리 번호를 10분에 열 번 넣어서는 남의 패스를 맞히기 어렵다.
   numberLockMaxFails: 10,
   registerMaxPerIp: 20, // 같은 접속 주소에서 registerWindowMin 분 동안 받을 등록 수

@@ -113,8 +113,8 @@ const waitText = (page: Page, s: string) => page.waitForFunction((t) => (documen
   const [name, ...rest] = cookie.split("=");
   await kiosk.setCookie({ name, value: rest.join("="), url: BASE, httpOnly: true });
   await kiosk.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: WAIT });
-  await clickText(kiosk, "button", "패스 번호 누르기");
-  await waitText(kiosk, "패스 번호 여섯 자리를 눌러 주세요");
+  await clickText(kiosk, "button", "고유 일련 번호 누르기");
+  await waitText(kiosk, "고유 일련 번호 여섯 자리를 눌러 주세요");
   await kiosk.evaluate((no: string) => {
     const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
     for (const d of no) keys.find((k) => k.innerText.trim() === d)?.click();

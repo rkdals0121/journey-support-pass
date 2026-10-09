@@ -169,7 +169,7 @@ describe("편명 검색", () => {
 });
 
 describe("등록", () => {
-  it("등록하면 바로 패스가 만들어지고, 패스 번호와 QR 값만 돌려준다", async () => {
+  it("등록하면 바로 패스가 만들어지고, 고유 일련 번호와 QR 값만 돌려준다", async () => {
     const res = await registerHandler(db, body(), null, web, now);
     expect(res.status).toBe(200);
     expect(Object.keys(res.body).sort()).toEqual(["passNo", "token"]);
@@ -517,7 +517,7 @@ describe("여객이 등록 지우기", () => {
     expect((await regRows())[0].status).toBe("active");
   });
 
-  it("패스 번호로는 지울 수 없다", async () => {
+  it("고유 일련 번호로는 지울 수 없다", async () => {
     const { pass } = await registerWithPass(db, now);
     expect((await eraseHandler(db, { token: pass.passNo }, web, now)).status).toBe(404);
     expect((await regRows())[0].status).toBe("active");

@@ -612,8 +612,8 @@ async function resetFlights() {
   check("처음 화면에도 「직원 부르기」가 있다. 「이전·처음으로·설정」 줄 바로 아래에 있고 그 버튼들을 가리지 않는다", callAt !== null && (await callBelowBar(page)), String(callAt));
   check("처음 화면에는 여객 정보가 하나도 없다", !(await has(page, "MK1")));
   await shot(page, "안내키오스크-처음-카메라없음");
-  await clickText(page, "button", "패스 번호 누르기");
-  await waitText(page, "패스 번호 여섯 자리를 눌러 주세요");
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   check("번호 화면에서도 「직원 부르기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
   for (const d of "000000") await clickText(page, ".pad-num .pad-key", d);
   await waitText(page, "등록된 패스가 아닙니다");
@@ -718,8 +718,8 @@ async function resetFlights() {
   // 오래 그대로 두면 계속 쓸지 묻는다. 점검에서는 기다리는 시간을 20초로 줄여서 본다(주소의 ?idle=20, 개발 서버에서만 된다).
   // 이 장면만 따로 연다. 짧게 둔 채 다른 장면을 보면 느린 컴퓨터에서는 그림을 뜨는 사이에 묻는 창이 떠서 눌림을 가로챈다.
   await page.goto(`${BASE}/kiosk/guide?idle=20`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, "button", "패스 번호 누르기");
-  await waitText(page, "패스 번호 여섯 자리를 눌러 주세요");
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   // 여섯 자리를 한꺼번에 누른다. 하나씩 누르다 시간이 지나면 번호 화면에서 묻는 창이 먼저 뜬다.
   await page.evaluate((no) => {
     const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
@@ -745,7 +745,7 @@ async function resetFlights() {
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
 
   // 번호를 여러 번 틀리면 잠근다
-  await clickText(page, "button", "패스 번호 누르기");
+  await clickText(page, "button", "고유 일련 번호 누르기");
   for (let i = 0; i < 9; i++) {
     for (const d of "999999") await clickText(page, ".pad-num .pad-key", d);
     await page.waitForFunction(() => document.querySelectorAll(".code-boxes .filled").length === 0 && !!document.querySelector(".error"), { timeout: WAIT });
@@ -848,7 +848,7 @@ async function resetFlights() {
   for (const [flightNo, expected, name] of cases) {
     const made = await register(flightNo, ["fac_rest"]);
     await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-    await clickText(page, "button", "패스 번호 누르기");
+    await clickText(page, "button", "고유 일련 번호 누르기");
     for (const d of made.passNo) await clickText(page, ".pad-num .pad-key", d);
     await waitText(page, "나에게 맞춘 안내");
     check(name, (await has(page, expected)) && (await count(page, ".gate-go")) === 0 && (await count(page, ".tile")) === 6);
@@ -857,7 +857,7 @@ async function resetFlights() {
   }
   const late = await register("MK402", ["mov_need_rest"]);
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, "button", "패스 번호 누르기");
+  await clickText(page, "button", "고유 일련 번호 누르기");
   for (const d of late.passNo) await clickText(page, ".pad-num .pad-key", d);
   await waitText(page, "나에게 맞춘 안내");
   check("탑승이 마감된 편은 빨갛게 알리고 직원을 부르라고 안내한다", (await has(page, "탑승이 마감되었습니다")) && (await has(page, "「직원 부르기」를 눌러 주세요")) && (await count(page, ".gate-go.pace-late")) === 1);
@@ -972,7 +972,7 @@ async function resetFlights() {
   await useCookie(page, regKiosk);
   await page.goto(`${BASE}/kiosk/register?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await clickText(page, "button", "이미 등록했어요");
-  await waitText(page, "PASS NUMBER");
+  await waitText(page, "SERIAL NUMBER");
   const reNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
   check("휴대전화로 등록한 여객이 QR 을 보여 주면 같은 번호의 스티커를 뽑을 수 있다 (화면은 그 여객의 언어로)", reNo === enPass.passNo && (await has(page, "Print sticker")));
   await shot(page, "등록키오스크-스티커만뽑기-영어");

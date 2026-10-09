@@ -345,7 +345,7 @@ describe("패스 열기: 번호를 넣어서", () => {
     expect(await logCount("number_fail")).toBe(2);
   });
 
-  it("출발한 편의 패스 번호도 지워지기 전부터 없는 번호와 똑같이 404 다. 틀린 횟수로는 세지 않는다", async () => {
+  it("출발한 편의 고유 일련 번호도 지워지기 전부터 없는 번호와 똑같이 404 다. 틀린 횟수로는 세지 않는다", async () => {
     await addFlights(db, [flightRow("KE001", "2026-10-05 12:20")], now);
     const { pass } = await registerWithPass(db, now, { flightNo: "KE001" });
     // 출발 29분 뒤까지는 번호로 열린다.

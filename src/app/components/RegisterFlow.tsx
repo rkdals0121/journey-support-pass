@@ -280,6 +280,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       onHome={onExit}
       progress={{ n: step + 1, total: ORDER.length, name: t.steps[kind] }}
       cta={cta}
+      ctaAfterContent={kind === "consent"}
     >
       <h1>{titleOf[kind]}</h1>
       {hintOf[kind] && <p className="lead">{hintOf[kind]}</p>}

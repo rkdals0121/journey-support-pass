@@ -64,6 +64,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const tokenRef = useRef<string | null>(null);
   tokenRef.current = token;
   const justEnded = useRef<{ token: string; at: number } | null>(null);
+  // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
+  useEffect(() => resetViewSettings(), []);
+
   const reset = useCallback(() => {
     if (tokenRef.current) justEnded.current = { token: tokenRef.current, at: Date.now() };
     setView({ kind: "scan" });

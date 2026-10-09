@@ -94,7 +94,7 @@ export function DeskFind() {
             <X size={22} aria-hidden="true" />
           </button>
         </div>
-        <PassQr token={found.token} passNo={g.passNo} label="패스 번호" />
+        <PassQr token={found.token} passNo={g.passNo} label="고유 일련 번호" />
         <p className="call-flight">
           <PlaneTakeoff size={18} aria-hidden="true" />
           <b className="num">{g.flight.flightNo}</b> {g.flight.destName} · 탑승구 <b className="num">{g.flight.gate ?? "미정"}</b>
@@ -154,7 +154,7 @@ export function DeskFind() {
           if (passNo.length === PASS_NO_LENGTH) void open({ passNo });
         }}
       >
-        <label htmlFor="desk-pass-no">패스 번호 여섯 자리</label>
+        <label htmlFor="desk-pass-no">고유 일련 번호 여섯 자리</label>
         <div className="row">
           <input
             id="desk-pass-no"

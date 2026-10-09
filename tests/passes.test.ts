@@ -85,7 +85,7 @@ describe("QR 주소", () => {
   });
 });
 
-describe("패스 번호 모양", () => {
+describe("고유 일련 번호 모양", () => {
   it("숫자만 남겨 여섯 자리면 받는다", () => {
     expect(PASS_NO_LENGTH).toBe(6);
     expect(cleanPassNo("123456")).toBe("123456");

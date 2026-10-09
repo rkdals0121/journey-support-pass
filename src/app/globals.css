@@ -557,6 +557,42 @@ html[data-kiosk] .bar-btn {
   background: var(--green);
   color: #fff;
 }
+/* 좁은 휴대전화에서 글자를 키워도 위쪽 줄은 한 줄에 들어오게 한다. 이 줄이 두세 줄이 되면 정작 질문이 화면 밖으로 밀린다.
+   제목도 화면 너비에 맞춰 너무 커지지 않게 한다. (여기의 화소 값은 글자 크기 설정과 상관없이 화면 너비만 본다.) */
+@media (max-width: 480px) {
+  html:not([data-kiosk]) .flow-bar {
+    flex-wrap: nowrap;
+    min-height: min(var(--bar-h), 16vw);
+    padding-inline: min(0.75rem, 2.5vw);
+  }
+  html:not([data-kiosk]) .flow-bar-side {
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+  html:not([data-kiosk]) .bar-btn {
+    min-height: min(2.75rem, 13vw);
+    padding: 0.25rem min(0.625rem, 2.2vw) 0.25rem min(0.375rem, 1.2vw);
+    font-size: min(0.9375rem, 4.3vw);
+  }
+  html:not([data-kiosk]) .flow-bar svg.lucide {
+    width: min(1.375rem, 5.6vw);
+    height: min(1.375rem, 5.6vw);
+  }
+  html:not([data-kiosk]) .bar-icon {
+    width: min(2.75rem, 12vw);
+    padding: 0;
+  }
+  html:not([data-kiosk]) .flow-body h1 {
+    font-size: min(1.625rem, 7.6vw);
+  }
+  html:not([data-kiosk]) .flow-body .lead {
+    margin-bottom: min(1.25rem, 4vw);
+    font-size: min(1.0625rem, 5.6vw);
+  }
+  html:not([data-kiosk]) .mock-banner {
+    font-size: min(0.75rem, 3.6vw);
+  }
+}
 .flow-progress {
   display: flex;
   align-items: center;
@@ -596,6 +632,11 @@ html[data-kiosk] .bar-btn {
   z-index: 15;
   padding: 0.75rem 1.25rem calc(0.875rem + env(safe-area-inset-bottom));
   background: linear-gradient(to bottom, rgba(243, 245, 243, 0) 0, var(--bg) 0.875rem);
+}
+/* 동의 화면(휴대전화): 버튼이 글을 가리지 않도록 내용 끝에 둔다. 끝까지 내려가야 버튼이 나온다. */
+html:not([data-kiosk]) .flow-cta.cta-after {
+  position: static;
+  background: none;
 }
 .flow-cta .btn:first-child {
   margin-top: 0;
@@ -730,6 +771,9 @@ html[data-picture] .choice-icon svg {
 .lang-pick-label {
   flex: 1;
   min-width: 0;
+  /* 자리가 모자라면 글자가 세로로 쪼개지지 않고 잘려 나간다. 버튼에 언어 이름이 있어 뜻은 통한다. */
+  overflow: hidden;
+  white-space: nowrap;
   color: var(--muted);
   font-size: 0.9375rem;
   font-weight: 600;

@@ -23,6 +23,8 @@ interface Props {
   progress?: { n: number; total: number; name: string };
   /** 화면 아래에 붙는 가장 중요한 버튼. */
   cta?: React.ReactNode;
+  /** 휴대전화에서 버튼을 화면 아래에 붙이지 않고 내용 끝에 둔다. 끝까지 읽어야 버튼이 나오는 동의 화면에 쓴다. */
+  ctaAfterContent?: boolean;
   children: React.ReactNode;
 }
 
@@ -33,7 +35,7 @@ interface Props {
  *  - 여객이 고른 안내 방식(큰 글씨, 그림, 소리)은 고른 그 화면부터 바로 적용된다.
  *  - 「설정」에서 글자와 그림의 크기, 소리, 그림 크게 보기를 그 자리에서 바꿀 수 있다.
  */
-export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, onHome, progress, cta, children }: Props) {
+export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, onHome, progress, cta, ctaAfterContent, children }: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -169,7 +171,7 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, on
       </div>
 
       {cta && (
-        <div className="flow-cta">
+        <div className={`flow-cta ${ctaAfterContent ? "cta-after" : ""}`}>
           <div className="flow-cta-inner">{cta}</div>
         </div>
       )}

@@ -403,7 +403,7 @@ export function extractToken(scanned: string): string | null;
 // "https://host/p/XXXX" 또는 "XXXX" → "XXXX". 형식이 다르면 null
 ```
 
-- [ ] **Step 1: 실패하는 테스트.** (a) `generatePasses(20)` → 토큰 20개와 패스 번호 20개가 모두 서로 다르고 토큰 길이 24. (b) `linkPass` 성공 뒤 `resolveToken` → `active`와 등록 id. (c) 연결 전 `resolveToken` → `idle`. (d) 없는 토큰 → `unknown`. (e) 사용 중인 패스를 다른 등록에 연결 → `pass_in_use`. (f) 이미 `active`인 등록에 다른 패스 연결 → `registration_not_pending`. (g) `reissue` 뒤 옛 토큰 → `unusable`, 새 토큰 → `active`. (h) `resolvePassNo`가 `idle` 패스 번호에는 `unknown`. (i) `extractToken("https://x.app/p/abcDEF_123-xyz456789012")`가 토큰을 돌려주고 `"https://naver.com"`은 `null`.
+- [ ] **Step 1: 실패하는 테스트.** (a) `generatePasses(20)` → 토큰 20개와 고유 일련 번호 20개가 모두 서로 다르고 토큰 길이 24. (b) `linkPass` 성공 뒤 `resolveToken` → `active`와 등록 id. (c) 연결 전 `resolveToken` → `idle`. (d) 없는 토큰 → `unknown`. (e) 사용 중인 패스를 다른 등록에 연결 → `pass_in_use`. (f) 이미 `active`인 등록에 다른 패스 연결 → `registration_not_pending`. (g) `reissue` 뒤 옛 토큰 → `unusable`, 새 토큰 → `active`. (h) `resolvePassNo`가 `idle` 고유 일련 번호에는 `unknown`. (i) `extractToken("https://x.app/p/abcDEF_123-xyz456789012")`가 토큰을 돌려주고 `"https://naver.com"`은 `null`.
 - [ ] **Step 2:** 실패 확인 → 구현 → 통과 → 커밋 `feat: 패스 연결과 QR 분기, 재발급`.
 
 ---
@@ -518,13 +518,13 @@ export function purge(db: Db, now: Date): Promise<{ purged: number; unlinkedPurg
 **화면:**
 - `/staff/login`: 접속 코드 입력란 하나와 버튼.
 - `/staff`: 맨 위 구역 이름과 `poll.label`. `poll.stale`이면 붉은 띠 "운항 정보가 늦어지고 있습니다. 전광판을 확인하세요". 목록의 각 줄은 탑승구(크게), 이름, 편명, "마감까지 23분 (추정)", 소통 방식 항목 요약. `urgent`면 줄 배경을 붉게. 아래 "탑승구 미정" 묶음. 화면 아래 고정 버튼 "QR 스캔". 30초마다 다시 불러오고, 실패하면 목록을 지우고 "연결할 수 없습니다. 구두로 확인해 주세요"를 띄운다.
-- `/staff/scan`: `getUserMedia({ video: { facingMode: "environment" } })`로 카메라를 열고, `BarcodeDetector`가 있으면 그것으로, 없으면 `jsqr`로 250ms마다 프레임을 읽는다. 읽으면 `/api/staff/resolve`를 부른다. 결과별 문구: `idle` "연결되지 않은 패스입니다", `unusable` "사용할 수 없는 패스입니다", `unknown` "패스 QR이 아닙니다". 카메라 권한이 거부되면 패스 번호 입력란만 보여준다. 패스 번호 입력란은 항상 카메라 아래에 둔다(숫자 4자리, `inputMode="numeric"`).
+- `/staff/scan`: `getUserMedia({ video: { facingMode: "environment" } })`로 카메라를 열고, `BarcodeDetector`가 있으면 그것으로, 없으면 `jsqr`로 250ms마다 프레임을 읽는다. 읽으면 `/api/staff/resolve`를 부른다. 결과별 문구: `idle` "연결되지 않은 패스입니다", `unusable` "사용할 수 없는 패스입니다", `unknown` "패스 QR이 아닙니다". 카메라 권한이 거부되면 고유 일련 번호 입력란만 보여준다. 고유 일련 번호 입력란은 항상 카메라 아래에 둔다(숫자 4자리, `inputMode="numeric"`).
 - `/staff/case/[id]`: spec 4.4의 순서 그대로. ① 소통 방식(감각·소통 묶음 문구, 없으면 "별도 요청 없음") ② 교통약자 구분 ③ 이름 ④ 필요한 도움(이동·환경 묶음) ⑤ 동반자·유모차 ⑥ 편명과 출발 시각(지연이면 예정 시각에 줄을 긋고 변경 시각, 공동운항이면 "운항 편명 TK091") ⑦ 탑승구(변경됐으면 "변경됨 · 이전 112", 미정이면 "탑승구 미정") ⑧ "탑승 마감까지 23분 (추정)" 또는 "결항" ⑨ 가까운 시설 ⑩ "응대 시작" 버튼, 누른 뒤에는 "응대 완료" 버튼만 보인다. 120초 동안 조작이 없으면 `/staff`로 돌아간다.
 - `/p/[token]` (서버 컴포넌트): 세션이 없으면 토큰이 있든 없든 "직원 전용 화면입니다"만 렌더링하고 DB를 조회하지 않는다. 세션이 있으면 `resolveToken` 결과에 따라 `active` → `/staff/case/{id}`로 이동(조회 기록), `idle` → 안내데스크 세션이면 `/staff/desk?token=`으로 이동, 아니면 "연결되지 않은 패스입니다", `unusable`·`unknown` → "사용할 수 없는 패스입니다".
 
-- [ ] **Step 1: 실패하는 테스트** (`handle(db, request, now, session)` 형태로 직접 호출). (a) 세션 없이 `list` → 401. (b) `resolve`에 `active` 패스 토큰 → `kind: "active"`, `access_logs`에 `scan_view` 1건. (c) 틀린 패스 번호 5회 뒤 올바른 번호 → 429. (d) `case` 조회 두 번 → 응대 기록 1건. (e) `encounters` `end`를 `start` 전에 → `ok: false`. (f) `/p/[token]`의 분기 함수 `decideTokenPage(db, token, session)`가 세션 없음 → `"staff_only"`(DB 조회 0회), 그리고 spec 4.5의 네 경우를 각각 돌려준다.
+- [ ] **Step 1: 실패하는 테스트** (`handle(db, request, now, session)` 형태로 직접 호출). (a) 세션 없이 `list` → 401. (b) `resolve`에 `active` 패스 토큰 → `kind: "active"`, `access_logs`에 `scan_view` 1건. (c) 틀린 고유 일련 번호 5회 뒤 올바른 번호 → 429. (d) `case` 조회 두 번 → 응대 기록 1건. (e) `encounters` `end`를 `start` 전에 → `ok: false`. (f) `/p/[token]`의 분기 함수 `decideTokenPage(db, token, session)`가 세션 없음 → `"staff_only"`(DB 조회 0회), 그리고 spec 4.5의 네 경우를 각각 돌려준다.
 - [ ] **Step 2:** 실패 확인 → 경로 처리기와 `decideTokenPage` 구현 → 통과.
-- [ ] **Step 3:** 화면 구현 후 `npm run dev`로 확인. 컴퓨터에서는 카메라 대신 패스 번호 입력으로 흐름을 끝까지 눌러 본다.
+- [ ] **Step 3:** 화면 구현 후 `npm run dev`로 확인. 컴퓨터에서는 카메라 대신 고유 일련 번호 입력으로 흐름을 끝까지 눌러 본다.
 - [ ] **Step 4:** 커밋 `feat: 직원 화면과 QR 분기`.
 
 ---
@@ -540,7 +540,7 @@ export function purge(db: Db, now: Date): Promise<{ purged: number; unlinkedPurg
 - `POST /api/desk/reissue` `{ receiptNo? , name?, flightNo?, registrationId?, scanned? }`: `scanned`가 없으면 후보 목록 `{ candidates: [{ registrationId, name, flightNo }] }`, 있으면 재발급 실행. `reissue` 기록.
 
 **화면 (spec 4.3):** 탭 세 개 — 패스 연결 / 새로 등록 / 재발급.
-- 패스 연결: 접수 번호 입력 → 등록 내용 표시("여객 화면과 같은지 확인하세요") → 스캔 → "연결했습니다. 패스 번호 0427".
+- 패스 연결: 접수 번호 입력 → 등록 내용 표시("여객 화면과 같은지 확인하세요") → 스캔 → "연결했습니다. 고유 일련 번호 0427".
 - 새로 등록: 먼저 경로 선택(종이 체크리스트 / 직원이 대신 입력), 이어서 여객 등록과 같은 질문 단계, 끝나면 바로 스캔.
 - 재발급: 이름과 편명으로 찾기 → 후보 선택 → 새 패스 스캔.
 - 스캔은 Task 12의 `Scanner`를 다시 쓴다.
@@ -555,7 +555,7 @@ export function purge(db: Db, now: Date): Promise<{ purged: number; unlinkedPurg
 **Files:** Create `scripts/seed.ts`, `scripts/print-passes.ts`, `README.md`, `.env.example`, `docs/scenario-checklist.md`
 
 - [ ] **Step 1: `scripts/seed.ts`.** `migrate` → `seedZones` → 패스가 없으면 `generatePasses(30)` → `--mock-flights`를 주면 지금 시각 기준으로 40분, 70분, 2시간, 3시간 뒤 출발하는 모의 운항 8편(탑승동 끝단 2, 중앙부 2, 제2터미널 2, 탑승구 미정 1, 공동운항 한 쌍)을 넣고 `flight_polls`에 성공 1건을 기록한다. 실행할 때마다 모의 운항 시각을 지금 기준으로 다시 맞춘다.
-- [ ] **Step 2: `scripts/print-passes.ts`.** `idle` 패스 전부를 `out/passes.html`로 만든다. 한 장에 QR(`${BASE_URL}/p/${token}`, 오류 정정 수준 M, 25mm)과 패스 번호 네 자리만 넣는다. 이름·날짜·그 밖의 글자는 넣지 않는다. A4 한 쪽에 4×6장.
+- [ ] **Step 2: `scripts/print-passes.ts`.** `idle` 패스 전부를 `out/passes.html`로 만든다. 한 장에 QR(`${BASE_URL}/p/${token}`, 오류 정정 수준 M, 25mm)과 고유 일련 번호 네 자리만 넣는다. 이름·날짜·그 밖의 글자는 넣지 않는다. A4 한 쪽에 4×6장.
 - [ ] **Step 3: `README.md`.** 운항 조회 웹 README와 같은 말투로 적는다. 로컬 실행(`npm i` → `npm run seed -- --mock-flights` → `npm run dev`), 시범용 접속 코드가 있는 위치, 환경 변수 표(`DATABASE_URL`, `SESSION_SECRET`, `CRON_SECRET`, `ICN_API_KEY`, `DATA_MODE`, `BASE_URL`), 배포(Vercel 새 프로젝트 + Supabase 서울 리전, `db/schema.sql` 실행, pg_cron과 pg_net으로 `/api/cron/poll-flights`를 5분마다, `/api/cron/purge`를 10분마다 `Authorization: Bearer` 머리말과 함께 호출하는 SQL), 실측 스크립트 사용법, "알아 둘 것"(탑승동 구역이 임시값인지, 탑승 마감이 추정값이라는 것, `DATA_MODE=live`는 기관 검토 뒤에만).
 - [ ] **Step 4: `docs/scenario-checklist.md`.** spec 9장의 시나리오 7개를 단계별로 풀어 쓴다.
 - [ ] **Step 5: 전체 점검.** `npm test` 전부 통과, `npm run build` 통과. `npm run seed -- --mock-flights` 후 `npm run dev`를 띄워 시나리오 1(등록 → 접수 번호 → 패스 연결 → 스캔 → 응대 시작·완료), 3(로그인 없는 브라우저로 `/p/{token}`), 4(재발급), 7(다른 구역으로 로그인해 같은 패스)을 브라우저로 직접 확인한다. 시나리오 6은 모의 운항 시각을 과거로 바꾼 뒤 `/api/cron/purge`를 호출해 확인한다.
@@ -578,7 +578,7 @@ export function purge(db: Db, now: Date): Promise<{ purged: number; unlinkedPurg
 - 경로 처리기의 본체를 `src/lib/api/{public,staff,desk}.ts` 에 두고 `src/app/api/**/route.ts` 는 그것을 부르기만 한다. 검사는 `tests/api.test.ts` 한 파일에 모았다.
 - `/api/desk/*` 네 경로는 `src/app/api/desk/[action]/route.ts` 하나로 받는다.
 - `scripts/print-passes.ts` 대신 안내데스크 화면 `/staff/desk/passes` 를 만들었다. 로컬 내장 DB 는 한 프로세스만 열 수 있어, 서버가 떠 있는 동안 스크립트로는 패스를 볼 수 없기 때문이다.
-- 안내데스크의 연결·재발급이 QR 스캔 외에 패스 번호 입력도 받는다(`idleTokenByPassNo`). 미사용 패스만 받는다.
+- 안내데스크의 연결·재발급이 QR 스캔 외에 고유 일련 번호 입력도 받는다(`idleTokenByPassNo`). 미사용 패스만 받는다.
 - 수집 한 회를 `src/lib/flights/poll.ts` 의 `runPoll` 로 뺐다. 0건 응답은 실패로 기록한다.
 - `ingestFlights` 는 응답에서 탑승구가 비어 와도 알고 있던 탑승구를 지우지 않는다.
 - `CaseView.openEncounterId` 대신 `recordScan` 이 `{ id, started }` 를 돌려준다.

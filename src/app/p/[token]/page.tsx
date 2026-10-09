@@ -66,6 +66,8 @@ export default async function PassPage({
     prefs.large ? 'document.documentElement.style.setProperty("--scale","1.25")' : "",
     prefs.picture ? 'document.documentElement.setAttribute("data-picture","")' : "",
     `document.documentElement.lang=${JSON.stringify(found.journey.lang)}`,
+    // 등록하면서 「설정」에서 바꾼 글자 크기가 있으면 그 크기로 시작한다.
+    'try{var v=JSON.parse(sessionStorage.getItem("jsp:view")||"{}");if(typeof v.scale==="number")document.documentElement.style.setProperty("--scale",String(v.scale))}catch(e){}',
   ]
     .filter(Boolean)
     .join(";");

@@ -58,7 +58,7 @@ export async function resolveHandler(
       return fail(429, "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요");
     }
     const passNo = cleanPassNo(body.passNo);
-    if (!passNo) return fail(400, "패스 번호 여섯 자리를 넣어 주세요");
+    if (!passNo) return fail(400, "고유 일련 번호 여섯 자리를 넣어 주세요");
     const res = await resolvePassNo(db, passNo);
     if (res.kind !== "active") {
       await logAccess(db, { at: now, zoneId: session.zoneId, deviceKey: device, action: "number_fail" });

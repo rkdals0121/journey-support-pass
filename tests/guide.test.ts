@@ -195,7 +195,7 @@ describe("안내 내용: 고른 항목에 따라 달라지는 것", () => {
     expect(noStairs.gateRoute).toMatchObject({ minutes: 10, stepFree: true });
   });
 
-  it("고른 항목과 언어, 패스 번호, 운항 정보 기준 시각을 그대로 싣는다", () => {
+  it("고른 항목과 언어, 고유 일련 번호, 운항 정보 기준 시각을 그대로 싣는다", () => {
     const g = buildGuide(journey({ choices: ["gd_large", "stf_call"], lang: "en" }), "042917", at("cc-center"), poll);
     expect(g).toMatchObject({ passNo: "042917", lang: "en", choices: ["gd_large", "stf_call"], poll });
   });
