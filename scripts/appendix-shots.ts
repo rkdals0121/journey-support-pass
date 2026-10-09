@@ -10,6 +10,24 @@ import path from "node:path";
 import puppeteer, { type Page } from "puppeteer-core";
 import { readSeedZones } from "../src/lib/zones";
 
+
+// 점검용 브라우저가 쓰는 임시 폴더. 끝나면 지운다. 지우지 않으면 돌릴 때마다 수십 MB 씩 쌓인다.
+const tempProfiles: string[] = [];
+function tempProfile(prefix: string): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tempProfiles.push(dir);
+  return dir;
+}
+process.on("exit", () => {
+  for (const dir of tempProfiles) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    } catch {
+      // 브라우저가 아직 잡고 있으면 남겨 둔다.
+    }
+  }
+});
+
 const BASE = "http://localhost:3000";
 const OUT = path.resolve(process.argv[2] ?? ".e2e-shots");
 const CHROME = ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"].find((p) =>
@@ -81,7 +99,7 @@ const waitText = (page: Page, s: string) => page.waitForFunction((t) => (documen
     executablePath: CHROME,
     headless: true,
     protocolTimeout: 900_000,
-    userDataDir: fs.mkdtempSync(path.join(os.tmpdir(), "jsp-appendix-")),
+    userDataDir: tempProfile("jsp-appendix-"),
     args: ["--lang=ko-KR"],
   });
 

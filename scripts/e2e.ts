@@ -19,6 +19,24 @@ import QRCode from "qrcode";
 import { passUrl } from "../src/lib/pass-format";
 import { readSeedZones } from "../src/lib/zones";
 
+
+// 점검용 브라우저가 쓰는 임시 폴더. 끝나면 지운다. 지우지 않으면 돌릴 때마다 수십 MB 씩 쌓인다.
+const tempProfiles: string[] = [];
+function tempProfile(prefix: string): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tempProfiles.push(dir);
+  return dir;
+}
+process.on("exit", () => {
+  for (const dir of tempProfiles) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    } catch {
+      // 브라우저가 아직 잡고 있으면 남겨 둔다.
+    }
+  }
+});
+
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const SHOTS = path.resolve(process.env.SHOTS_DIR ?? ".e2e-shots");
 const CHROME =
@@ -174,7 +192,7 @@ async function launch(extra: string[] = []) {
     headless: true,
     // 느린 컴퓨터에서 개발 서버와 함께 돌면 화면 하나를 묻는 데도 오래 걸린다.
     protocolTimeout: 900_000,
-    userDataDir: fs.mkdtempSync(path.join(os.tmpdir(), "jsp-e2e-")),
+    userDataDir: tempProfile("jsp-e2e-"),
     args: ["--no-first-run", "--no-default-browser-check", "--lang=ko-KR", ...extra],
   });
 }

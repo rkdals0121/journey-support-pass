@@ -11,6 +11,24 @@ import path from "node:path";
 import puppeteer from "puppeteer-core";
 import { readSeedZones } from "../src/lib/zones";
 
+
+// 점검용 브라우저가 쓰는 임시 폴더. 끝나면 지운다. 지우지 않으면 돌릴 때마다 수십 MB 씩 쌓인다.
+const tempProfiles: string[] = [];
+function tempProfile(prefix: string): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tempProfiles.push(dir);
+  return dir;
+}
+process.on("exit", () => {
+  for (const dir of tempProfiles) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    } catch {
+      // 브라우저가 아직 잡고 있으면 남겨 둔다.
+    }
+  }
+});
+
 const BASE = "http://localhost:3000";
 const OUT = path.resolve(".e2e-shots");
 const CHROME = ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"].find((p) =>
@@ -36,7 +54,7 @@ const CHROME = ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Pro
     })
   ).json();
 
-  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, userDataDir: fs.mkdtempSync(path.join(os.tmpdir(), "jsp-sticker-")) });
+  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, userDataDir: tempProfile("jsp-sticker-") });
   const page = await browser.newPage();
   await page.setViewport({ width: 900, height: 900 });
   const [name, ...rest] = cookie.split("=");

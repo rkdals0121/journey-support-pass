@@ -4,6 +4,24 @@ import path from "node:path";
 import puppeteer from "puppeteer-core";
 import QRCode from "qrcode";
 
+
+// 점검용 브라우저가 쓰는 임시 폴더. 끝나면 지운다. 지우지 않으면 돌릴 때마다 수십 MB 씩 쌓인다.
+const tempProfiles: string[] = [];
+function tempProfile(prefix: string): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tempProfiles.push(dir);
+  return dir;
+}
+process.on("exit", () => {
+  for (const dir of tempProfiles) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    } catch {
+      // 브라우저가 아직 잡고 있으면 남겨 둔다.
+    }
+  }
+});
+
 export interface DemoPass {
   scene: string;
   flightNo: string;
@@ -57,7 +75,7 @@ export async function writeSheet(base: string, passes: DemoPass[], outDir: strin
   const browser = await puppeteer.launch({
     executablePath: chrome,
     headless: true,
-    userDataDir: fs.mkdtempSync(path.join(os.tmpdir(), "jsp-demo-")),
+    userDataDir: tempProfile("jsp-demo-"),
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
