@@ -1013,6 +1013,28 @@ html[data-kiosk] .sheet-backdrop {
 }
 
 /* ── 설정 ── */
+/* 글자를 아주 크게 하면 설정 창이 화면보다 길어진다. 닫는 버튼은 늘 창 아래에 붙어 보이게 한다. */
+.settings .sheet-actions {
+  position: sticky;
+  bottom: -1.25rem;
+  margin: 0 -1.25rem -1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.75rem 1.25rem 1.25rem;
+  background: var(--surface);
+  box-shadow: 0 -0.5rem 0.75rem -0.5rem rgba(15, 35, 27, 0.18);
+}
+/* 「확인」과 「되돌리기」를 한 줄에 둔다. 자리가 좁으면 되돌리기가 아래로 내려간다. */
+.settings .sheet-actions .btn {
+  flex: 1 1 auto;
+  width: auto;
+  margin: 0;
+}
+.settings .sheet-actions .btn-primary {
+  flex: 3 1 9rem;
+}
 .settings-group {
   display: grid;
   gap: 0.5rem;

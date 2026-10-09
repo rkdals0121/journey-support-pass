@@ -334,6 +334,12 @@ function sameSpot(a: string | null, b: string | null): boolean {
 const count = (page: Page, selector: string) => page.evaluate((sel) => document.querySelectorAll(sel).length, selector);
 const checkedCount = (page: Page) => count(page, '[aria-checked="true"]:not(.lang-pick button)');
 
+const closeInView = (page: Page) =>
+  page.evaluate(() => {
+    const r = document.querySelector(".settings .sheet-actions .btn-primary")?.getBoundingClientRect();
+    return !!r && r.top >= 0 && r.bottom <= window.innerHeight;
+  });
+
 /**
  * 모의 운항을 지금 시각 기준으로 다시 맞춘다. 탑승 마감 임박·지연·결항 같은 장면이 늘 같은 자리에 온다.
  * 점검이 오래 걸리면 금방 떠나는 편이 도중에 떠나 버리므로, 시각에 민감한 장면 앞에서 한 번 더 부른다.
@@ -405,6 +411,7 @@ async function resetFlights() {
   await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) >= b * 1.45, { timeout: WAIT }, basePx);
   const iconPx = await page.evaluate(() => document.querySelector(".choice-icon svg")!.getBoundingClientRect().width);
   check("'아주 크게'를 누르면 글자가 1.5배가 되고 그림도 함께 커진다", (await rootPx(page)) === basePx * 1.5 && iconPx >= 34, `글자 ${await rootPx(page)}px, 그림 ${Math.round(iconPx)}px`);
+  check("글자를 아주 크게 해도 설정의 닫는 버튼이 화면 안에 보인다 (휴대전화)", await closeInView(page));
   await shot(page, "휴대전화-설정-아주크게");
   await clickText(page, ".size-pick button", "작게");
   await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) < b, { timeout: WAIT }, basePx);
@@ -639,6 +646,7 @@ async function resetFlights() {
   await clickText(page, ".size-pick button", "아주 크게");
   await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) > b, { timeout: WAIT }, kPx);
   check("키오스크에서도 설정으로 글자와 그림을 더 키울 수 있다. 「직원 부르기」는 여전히 위쪽 줄 아래에 있다", (await rootPx(page)) > kPx && (await callBelowBar(page)));
+  check("글자를 아주 크게 해도 설정의 닫는 버튼이 화면 안에 보인다 (안내키오스크)", await closeInView(page));
   await shot(page, "안내키오스크-설정-아주크게");
   await clickText(page, ".sheet-box button", "처음 고른 대로 되돌리기");
   await clickText(page, ".sheet-box button", "확인");
@@ -1023,6 +1031,7 @@ async function resetFlights() {
   await shot(page, "직원-가는중");
   await clickText(page, ".call button", "도움 마침");
   await waitText(page, "방금 끝난 호출");
+  await page.waitForFunction(() => document.querySelectorAll(".call").length === 0, { timeout: WAIT }).catch(() => {});
   check("'도움 마침'을 누르면 목록에서 내려가 '방금 끝난 호출'에 남는다", (await count(page, ".call")) === 0 && (await has(page, "도움 마침")));
   await shot(page, "직원-끝난호출");
   await post(`/api/staff/calls/${c2.body.id}`, { action: "done" }, otherStaff);
@@ -1042,6 +1051,8 @@ async function resetFlights() {
   check("나가기를 누르면 로그인 화면으로 돌아간다", true);
 
   section("직원: 안내데스크");
+  // 앞에서 일부러 틀린 번호를 여러 번 넣었다. 틀린 횟수는 기기별로 세므로 안내데스크는 다른 기기로 본다.
+  await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) JSP-E2E-Desk");
   await fill(page, "#code", DESK_CODE);
   await page.keyboard.press("Enter");
   await waitText(page, "직원 호출");

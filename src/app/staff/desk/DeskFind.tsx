@@ -40,7 +40,11 @@ export function DeskFind() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) return setError(data.error ?? "패스를 찾지 못했습니다");
+      if (!res.ok) {
+        // 없는 번호였으면 입력칸을 비운다. 틀린 번호를 지우지 않고 바로 다시 칠 수 있다.
+        if (res.status === 404) setPassNo("");
+        return setError(data.error ?? "패스를 찾지 못했습니다");
+      }
       setFound({ token: data.token, guide: data.guide });
       setPassNo("");
     } catch {
