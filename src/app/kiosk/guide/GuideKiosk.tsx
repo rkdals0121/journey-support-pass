@@ -16,6 +16,7 @@ import { Scanner } from "../../components/Scanner";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { useSpeech } from "../../components/useSpeech";
+import { resetViewSettings } from "../../components/viewSettings";
 
 interface Props {
   placeLabel: string;
@@ -71,6 +72,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     setDigits("");
     setError(null);
     setStartLang("ko");
+    // 앞사람이 「설정」에서 바꾼 글자 크기와 소리도 지운다.
+    resetViewSettings();
   }, []);
 
   const busyRef = useRef(false);
@@ -438,11 +441,6 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         screenKey="home"
         speakText={speakHome}
         onHome={reset}
-        cta={
-          <button className="btn" onClick={() => setView({ kind: "survey" })}>
-            {t.finish}
-          </button>
-        }
       >
         <p className="kicker">{t.guideHello}</p>
         <FlightBoard flight={flight} t={t} lang={lang} />
@@ -476,6 +474,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
             <div className="tiles tiles-small">{others.map(tile)}</div>
           </>
         )}
+        <button className="btn finish-btn" onClick={() => setView({ kind: "survey" })}>
+          {t.finish}
+        </button>
         <p className="fine">
           {here} · {t.mock}
         </p>

@@ -63,7 +63,7 @@ export default async function PassPage({
   const qr = await QRCode.toString(passUrl(`${proto}://${host}`, found.token), { type: "svg", errorCorrectionLevel: "M", margin: 4 });
   const prefs = prefsOf(found.journey.choices);
   const early = [
-    prefs.large ? 'document.documentElement.setAttribute("data-large","")' : "",
+    prefs.large ? 'document.documentElement.style.setProperty("--scale","1.25")' : "",
     prefs.picture ? 'document.documentElement.setAttribute("data-picture","")' : "",
     `document.documentElement.lang=${JSON.stringify(found.journey.lang)}`,
   ]

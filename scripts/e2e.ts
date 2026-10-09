@@ -155,8 +155,12 @@ async function isDisabled(page: Page, s: string) {
   );
 }
 
+/** 가장 최근에 연 화면. 점검이 도중에 멈추면 그때의 화면을 그림과 글로 남긴다. */
+let lastPage: Page | null = null;
+
 async function open(browser: Browser, viewport: Viewport): Promise<Page> {
   const page = await browser.newPage();
+  lastPage = page;
   await page.setViewport(viewport);
   page.setDefaultTimeout(WAIT);
   page.on("dialog", (d) => d.accept());
@@ -300,22 +304,31 @@ async function spot(page: Page, selector: string, s: string): Promise<string | n
   );
 }
 
-/** 「직원 부르기」 버튼의 오른쪽 위 꼭짓점. 글자가 바뀌어 너비가 달라져도 이 자리는 같아야 한다. */
+/** 「직원 부르기」 버튼의 왼쪽 끝과 세로 가운데. 글자가 바뀌어 너비가 달라져도 이 자리는 같아야 한다. */
 async function callSpot(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const el = document.querySelector(".call-btn");
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    return `${Math.round(window.innerWidth - r.right)},${Math.round(r.top + r.height / 2)}`;
+    return `${Math.round(r.left)},${Math.round(r.top + r.height / 2)}`;
   });
 }
 
-/** 두 자리가 같은가. 큰 글씨를 켜면 버튼과 여백이 함께 커지므로 20화소까지는 같은 자리로 본다. */
+/** 「직원 부르기」가 위쪽 줄의 버튼(이전, 처음으로, 설정)을 가리지 않고 그 아래에 있는가. */
+async function callBelowBar(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const call = document.querySelector(".call-btn")?.getBoundingClientRect();
+    const buttons = [...document.querySelectorAll(".flow-bar .bar-btn")].map((b) => b.getBoundingClientRect());
+    return !!call && buttons.length >= 3 && buttons.every((b) => b.bottom <= call.top + 1);
+  });
+}
+
+/** 두 자리가 같은가. 큰 글씨를 켜면 위쪽 줄과 여백이 함께 커지므로 40화소까지는 같은 자리로 본다. */
 function sameSpot(a: string | null, b: string | null): boolean {
   if (!a || !b) return false;
   const [ax, ay] = a.split(",").map(Number);
   const [bx, by] = b.split(",").map(Number);
-  return Math.abs(ax - bx) <= 20 && Math.abs(ay - by) <= 20;
+  return Math.abs(ax - bx) <= 40 && Math.abs(ay - by) <= 40;
 }
 
 const count = (page: Page, selector: string) => page.evaluate((sel) => document.querySelectorAll(sel).length, selector);
@@ -381,6 +394,26 @@ async function resetFlights() {
   check("휴대전화 화면에는 「직원 부르기」가 없다 (공항 키오스크에만 있다)", (await count(page, ".call-btn")) === 0);
   const basePx = await rootPx(page);
   await shot(page, "휴대전화-안내받는방식");
+
+  // 설정: 글자와 그림의 크기를 그 자리에서 바꾼다.
+  check("위쪽 줄에 「이전」「처음으로」「설정」이 나란히 있다", (await spot(page, ".bar-btn", "설정")) !== null);
+  await clickText(page, ".bar-btn", "설정");
+  await waitText(page, "화면 설정");
+  check("설정에 글자와 그림 크기 네 단계가 있다", (await count(page, ".size-pick button")) === 4);
+  await shot(page, "휴대전화-설정");
+  await clickText(page, ".size-pick button", "아주 크게");
+  await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) >= b * 1.45, { timeout: WAIT }, basePx);
+  const iconPx = await page.evaluate(() => document.querySelector(".choice-icon svg")!.getBoundingClientRect().width);
+  check("'아주 크게'를 누르면 글자가 1.5배가 되고 그림도 함께 커진다", (await rootPx(page)) === basePx * 1.5 && iconPx >= 34, `글자 ${await rootPx(page)}px, 그림 ${Math.round(iconPx)}px`);
+  await shot(page, "휴대전화-설정-아주크게");
+  await clickText(page, ".size-pick button", "작게");
+  await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) < b, { timeout: WAIT }, basePx);
+  check("'작게'를 누르면 보통보다 작아진다", (await rootPx(page)) < basePx);
+  await clickText(page, ".sheet-box button", "처음 고른 대로 되돌리기");
+  await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) === b, { timeout: WAIT }, basePx);
+  check("'처음 고른 대로 되돌리기'를 누르면 원래 크기로 돌아온다", true);
+  await clickText(page, ".sheet-box button", "확인");
+  await waitGone(page, "화면 설정");
 
   await clickText(page, '[role="checkbox"]', "큰 글씨로 보여주세요");
   await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) > b, { timeout: WAIT }, basePx);
@@ -569,7 +602,7 @@ async function resetFlights() {
   await waitText(page, "이 기기에서는 카메라를 쓸 수 없습니다");
   check("카메라가 없으면 번호를 누르라고 알려 준다", true);
   const callAt = await callSpot(page);
-  check("처음 화면에도 「직원 부르기」가 오른쪽 위에 있다", callAt !== null, String(callAt));
+  check("처음 화면에도 「직원 부르기」가 있다. 「이전·처음으로·설정」 줄 바로 아래에 있고 그 버튼들을 가리지 않는다", callAt !== null && (await callBelowBar(page)), String(callAt));
   check("처음 화면에는 여객 정보가 하나도 없다", !(await has(page, "MK1")));
   await shot(page, "안내키오스크-처음-카메라없음");
   await clickText(page, "button", "패스 번호 누르기");
@@ -600,6 +633,16 @@ async function resetFlights() {
   check("'스스로 이용하겠습니다'를 고른 여객에게는 「직원 부르기」가 작게 보인다", (await count(page, ".call-btn.call-big")) === 0);
   check("모의 자료라는 안내가 화면에 있다", await has(page, "시연용 모의 자료"));
   check("안내 화면에 이름이 없다", !(await has(page, "이름")));
+  check("안내 화면에서도 「직원 부르기」가 위쪽 줄의 버튼을 가리지 않는다", await callBelowBar(page));
+  await clickText(page, ".bar-btn", "설정");
+  await waitText(page, "화면 설정");
+  await clickText(page, ".size-pick button", "아주 크게");
+  await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) > b, { timeout: WAIT }, kPx);
+  check("키오스크에서도 설정으로 글자와 그림을 더 키울 수 있다. 「직원 부르기」는 여전히 위쪽 줄 아래에 있다", (await rootPx(page)) > kPx && (await callBelowBar(page)));
+  await shot(page, "안내키오스크-설정-아주크게");
+  await clickText(page, ".sheet-box button", "처음 고른 대로 되돌리기");
+  await clickText(page, ".sheet-box button", "확인");
+  await waitGone(page, "화면 설정");
   await shot(page, "안내키오스크-안내-큰글씨-휠체어");
 
   await page.click(".gate-go");
@@ -653,7 +696,7 @@ async function resetFlights() {
   check("직원이 마치면 알림이 닫히고 버튼이 「직원 부르기」로 돌아온다", await has(page, "직원 부르기"));
 
   // 끝내기 → 만족도 → 처음 화면
-  await clickText(page, ".flow-cta button", "안내 끝내기");
+  await clickText(page, "button", "안내 끝내기");
   await waitText(page, "안내가 도움이 되었나요?");
   check("끝낼 때 만족도 한 문항을 묻는다. 얼굴 그림 세 개", (await count(page, ".face")) === 3);
   check("만족도 화면에서도 「직원 부르기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
@@ -664,12 +707,12 @@ async function resetFlights() {
   check("답하면 처음 화면으로 돌아가고 앞사람의 내용은 남지 않는다", !(await has(page, "MK127")) && !(await has(page, "127")));
   check("처음 화면은 다시 보통 글자 크기다 (앞사람의 큰 글씨가 남지 않는다)", (await rootPx(page)) < kPx);
 
-  // 오래 그대로 두면 계속 쓸지 묻는다. 점검에서는 기다리는 시간을 4초로 줄여서 본다(주소의 ?idle=4, 개발 서버에서만 된다).
-  // 이 장면만 따로 연다. 4초로 둔 채 다른 장면을 보면 느린 컴퓨터에서는 그림을 뜨는 사이에 묻는 창이 떠서 눌림을 가로챈다.
-  await page.goto(`${BASE}/kiosk/guide?idle=4`, { waitUntil: "load", timeout: 300_000 });
+  // 오래 그대로 두면 계속 쓸지 묻는다. 점검에서는 기다리는 시간을 20초로 줄여서 본다(주소의 ?idle=20, 개발 서버에서만 된다).
+  // 이 장면만 따로 연다. 짧게 둔 채 다른 장면을 보면 느린 컴퓨터에서는 그림을 뜨는 사이에 묻는 창이 떠서 눌림을 가로챈다.
+  await page.goto(`${BASE}/kiosk/guide?idle=20`, { waitUntil: "load", timeout: 300_000 });
   await clickText(page, "button", "패스 번호 누르기");
   await waitText(page, "패스 번호 여섯 자리를 눌러 주세요");
-  // 여섯 자리를 한꺼번에 누른다. 하나씩 누르다 4초가 지나면 번호 화면에서 묻는 창이 먼저 뜬다.
+  // 여섯 자리를 한꺼번에 누른다. 하나씩 누르다 시간이 지나면 번호 화면에서 묻는 창이 먼저 뜬다.
   await page.evaluate((no) => {
     const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
     for (const d of no) keys.find((k) => k.innerText.trim() === d)?.click();
@@ -683,7 +726,7 @@ async function resetFlights() {
   check("'계속 이용하기'를 누르면 보던 안내가 그대로 있다", await has(page, "나에게 맞춘 안내"));
   await page.click(".call-btn");
   await waitText(page, "직원을 부르고 있습니다");
-  await new Promise((r) => setTimeout(r, 7000));
+  await new Promise((r) => setTimeout(r, 26000));
   check("직원을 기다리는 동안에는 '계속 이용하시겠어요?'를 묻지 않는다", !(await has(page, "계속 이용하시겠어요?")));
   await clickText(page, ".sheet-box button", "부르기 취소");
   await waitGone(page, "직원을 부르고 있습니다");
@@ -836,7 +879,7 @@ async function resetFlights() {
   await page.waitForFunction(() => document.documentElement.hasAttribute("data-kiosk"), { timeout: WAIT });
   check("등록 키오스크 첫 화면에 '등록 시작하기'와 '이미 등록했어요'가 있다", (await has(page, "등록 시작하기")) && (await has(page, "이미 등록했어요")));
   const regCallAt = await callSpot(page);
-  check("등록 키오스크에도 「직원 부르기」가 오른쪽 위에 있다", regCallAt !== null);
+  check("등록 키오스크에도 「직원 부르기」가 위쪽 줄 바로 아래에 있다", regCallAt !== null && (await callBelowBar(page)));
   await shot(page, "등록키오스크-처음");
   await clickText(page, "button", "등록 시작하기");
   await waitText(page, "안내를 어떻게 보여 드릴까요?");
@@ -1061,8 +1104,18 @@ async function resetFlights() {
   for (const f of failed) console.log(`  실패: ${f.name}${f.note ? ` (${f.note})` : ""}`);
   console.log(`화면 그림 ${shotNo}장: ${SHOTS}`);
   process.exit(failed.length > 0 ? 1 : 0);
-})().catch((e) => {
+})().catch(async (e) => {
   console.error(e);
+  // 멈춘 순간의 화면을 남긴다. 무엇을 기다리다 멈췄는지 알 수 있다.
+  try {
+    if (lastPage) {
+      await lastPage.screenshot({ path: path.join(SHOTS, "멈춘-화면.png") as `${string}.png` });
+      console.log(`멈춘 화면의 주소: ${lastPage.url().replace(/\/p\/.*/i, "/p/…")}`);
+      console.log(`멈춘 화면의 글: ${(await lastPage.evaluate(() => document.body?.innerText ?? "")).replace(/\s+/g, " ").slice(0, 400)}`);
+    }
+  } catch {
+    // 화면을 남기지 못해도 결과는 적는다.
+  }
   writeReport();
   const failed = results.filter((r) => !r.ok);
   console.log(`\n중간에 멈춤. 그때까지 통과 ${results.length - failed.length}개, 실패 ${failed.length}개`);

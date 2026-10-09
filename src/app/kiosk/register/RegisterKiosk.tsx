@@ -14,6 +14,7 @@ import { Scanner } from "../../components/Scanner";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { useSpeech } from "../../components/useSpeech";
+import { resetViewSettings } from "../../components/viewSettings";
 
 interface Props {
   placeLabel: string;
@@ -54,6 +55,8 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     setPrefs(NO_PREFS);
     setIssued(null);
     setError(null);
+    // 앞사람이 「설정」에서 바꾼 글자 크기와 소리도 지운다.
+    resetViewSettings();
   }, []);
 
   const onPrefs = useCallback((l: Lang, p: Prefs) => {
