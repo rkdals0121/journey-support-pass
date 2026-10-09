@@ -538,7 +538,7 @@ async function resetFlights() {
   // ───────── 3. 키오스크 설치 ─────────
   section("키오스크 설치");
   await page.setViewport(KIOSK_WIDE);
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "키오스크 설치");
   check("설치하지 않은 기기에서 키오스크 화면을 열면 설치 화면으로 간다", page.url().endsWith("/kiosk"));
   await shot(page, "키오스크-설치");
@@ -565,7 +565,7 @@ async function resetFlights() {
 
   // ───────── 4. 안내 키오스크: 번호로 열기 ─────────
   section("안내 키오스크: 번호로 열기 (카메라 없음)");
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "이 기기에서는 카메라를 쓸 수 없습니다");
   check("카메라가 없으면 번호를 누르라고 알려 준다", true);
   const callAt = await callSpot(page);
@@ -691,7 +691,7 @@ async function resetFlights() {
   await clickText(page, ".sheet-box button", "끝내기");
   await waitText(page, "QR을 카메라에 보여 주세요");
   check("묻는 창에서 '끝내기'를 누르면 처음 화면으로 돌아간다", !(await has(page, "MK127")));
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
 
   // 번호를 여러 번 틀리면 잠근다
   await clickText(page, "button", "패스 번호 누르기");
@@ -723,7 +723,7 @@ async function resetFlights() {
     "window.__said = []; if (window.speechSynthesis) { const s = window.speechSynthesis; const real = s.speak.bind(s); s.speak = function (u) { window.__said.push(u.text); try { real(u); } catch (e) {} }; }",
   );
   await useCookie(page, await kioskCookie("cc-center"));
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "나에게 맞춘 안내");
   check("QR 을 카메라에 보여 주면 누르지 않아도 안내가 열린다 (기기의 QR 판독 기능이 먹통이어도)", true);
   check("쉬운 말을 고른 여객에게는 쉬운 말로 안내한다", (await has(page, "비행기 타는 문이 닫히기까지")) && (await has(page, "자주 가는 곳")));
@@ -754,7 +754,7 @@ async function resetFlights() {
   // 이번에는 기기의 QR 판독 기능이 오류를 내는 경우를 흉내 낸다.
   await page.evaluateOnNewDocument("window.BarcodeDetector = function () { this.detect = function () { return Promise.reject(new Error('unavailable')); }; };");
   await useCookie(page, await kioskCookie("t1-center"));
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "나에게 맞춘 안내");
   check("20~30cm 떨어져 작게 보이는 QR 도 읽는다 (1920x1080 화면에 170화소, 기기 판독 기능은 오류)", true);
   await page.click(".gate-go");
@@ -771,7 +771,7 @@ async function resetFlights() {
   browser = await launch(CAMERA(enFile));
   page = await open(browser, KIOSK_WIDE);
   await useCookie(page, await kioskCookie("cc-125"));
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "Guidance for you");
   check("영어로 등록한 여객이 QR 을 대면 키오스크가 영어로 바뀐다", (await has(page, "Way to Gate 130")) && (await has(page, "Call staff")));
   check("계단이 어렵다고 한 여객의 라운지 길은 lift 로 안내한다", true);
@@ -796,7 +796,7 @@ async function resetFlights() {
   ];
   for (const [flightNo, expected, name] of cases) {
     const made = await register(flightNo, ["fac_rest"]);
-    await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+    await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
     await clickText(page, "button", "패스 번호 누르기");
     for (const d of made.passNo) await clickText(page, ".pad-num .pad-key", d);
     await waitText(page, "나에게 맞춘 안내");
@@ -805,7 +805,7 @@ async function resetFlights() {
     if (flightNo === "MK403") await shot(page, "안내키오스크-결항");
   }
   const late = await register("MK402", ["mov_need_rest"]);
-  await page.goto(`${BASE}/kiosk/guide`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await clickText(page, "button", "패스 번호 누르기");
   for (const d of late.passNo) await clickText(page, ".pad-num .pad-key", d);
   await waitText(page, "나에게 맞춘 안내");
@@ -829,6 +829,8 @@ async function resetFlights() {
   await fill(page, "#code", KIOSK_CODE);
   await page.keyboard.press("Enter");
   await page.waitForFunction(() => location.pathname === "/kiosk/register", { timeout: WAIT });
+  // 느린 컴퓨터에서 점검 도중에 "계속 이용하시겠어요?"가 끼어들지 않게, 기다리는 시간을 길게 두고 다시 연다.
+  await page.goto(`${BASE}/kiosk/register?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "교통약자 지원 등록");
   // 키오스크 크기로 바뀐 뒤(화면이 살아난 뒤)에 자리를 잰다.
   await page.waitForFunction(() => document.documentElement.hasAttribute("data-kiosk"), { timeout: WAIT });
@@ -917,7 +919,7 @@ async function resetFlights() {
   page = await open(browser, KIOSK_WIDE);
   const regKiosk = await kioskCookie("t1-info");
   await useCookie(page, regKiosk);
-  await page.goto(`${BASE}/kiosk/register`, { waitUntil: "load", timeout: 300_000 });
+  await page.goto(`${BASE}/kiosk/register?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await clickText(page, "button", "이미 등록했어요");
   await waitText(page, "PASS NUMBER");
   const reNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
