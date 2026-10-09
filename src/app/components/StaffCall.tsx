@@ -41,9 +41,11 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   // 누른 직후 서버의 답을 기다리는 동안에도 "부르고 있습니다"로 보여준다. 눌렀는데 아무 설명 없이 멈춘 것처럼 보이면 안 된다.
   const shown: CallState | null = state ?? (busy && !error ? "waiting" : null);
   const active = state === "waiting" || state === "accepted";
+  // 누른 직후 서버의 답을 기다리는 동안도 "부르는 중"으로 친다. 그사이에 키오스크가 처음 화면으로 돌아가지 않는다.
+  const calling = active || shown === "waiting";
   useEffect(() => {
-    onActiveRef.current?.(active);
-  }, [active]);
+    onActiveRef.current?.(calling);
+  }, [calling]);
 
   const title =
     state === "accepted" ? t.callAccepted : state === "done" ? t.callDone : error ? t.callFailed : t.callWaiting;
