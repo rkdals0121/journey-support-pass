@@ -863,6 +863,22 @@ html[data-picture] .choice-icon svg {
 .pad-alnum {
   margin-top: 0.75rem;
 }
+@media (orientation: landscape) and (min-width: 62rem) {
+  html[data-kiosk] .flight-layout:has(.pad-alnum) {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  html[data-kiosk] .flight-layout .pad-alnum {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+  html[data-kiosk] .flight-layout .pad-alnum .pad-key {
+    min-height: 3.5rem;
+  }
+}
 .pad-key:active {
   background: var(--mint);
 }

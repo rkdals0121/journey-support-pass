@@ -324,65 +324,68 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       )}
 
       {kind === "flight" && (
-        <>
-          <label htmlFor="reg-flight">{t.flightLabel}</label>
-          <div className="input-wrap">
-            <Search size={22} aria-hidden="true" />
-            <input
-              id="reg-flight"
-              type="text"
-              value={query}
-              placeholder={t.flightPlaceholder}
-              // 키오스크에서는 화면의 글자판을 쓴다. 기기의 자판이 올라와 화면을 가리지 않게 한다.
-              inputMode={kiosk ? "none" : "text"}
-              autoCapitalize="characters"
-              autoCorrect="off"
-              autoComplete="off"
-              spellCheck={false}
-              aria-describedby="flight-state"
-              onChange={(e) => typeFlight(e.target.value)}
-            />
-          </div>
-          <p className="hint" id="flight-state" aria-live="polite">
-            {flight ? t.flightPicked : searching ? t.searching : options && options.length > 0 ? t.pickFlight : ""}
-          </p>
+        <div className="flight-layout">
+          <div>
+            <label htmlFor="reg-flight">{t.flightLabel}</label>
+            <div className="input-wrap">
+              <Search size={22} aria-hidden="true" />
+              <input
+                id="reg-flight"
+                type="text"
+                value={query}
+                placeholder={t.flightPlaceholder}
+                // 키오스크에서는 화면의 글자판을 쓴다. 기기의 자판이 올라와 화면을 가리지 않게 한다.
+                inputMode={kiosk ? "none" : "text"}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck={false}
+                aria-describedby="flight-state"
+                onChange={(e) => typeFlight(e.target.value)}
+              />
+            </div>
+            <p className="hint" id="flight-state" aria-live="polite">
+              {flight ? t.flightPicked : searching ? t.searching : options && options.length > 0 ? t.pickFlight : ""}
+            </p>
 
-          {!flight && !searching && options && options.length === 0 && query.trim().length >= 2 && (
-            <ErrorNote>{t.flightNotFound}</ErrorNote>
-          )}
+            {!flight && !searching && options && options.length === 0 && query.trim().length >= 2 && (
+              <ErrorNote>{t.flightNotFound}</ErrorNote>
+            )}
 
-          <div role="radiogroup" aria-label={t.flightChoice} className="choices">
-            {(flight ? [flight] : (options ?? [])).map((o) => (
-              <button
-                key={`${o.flightDate}-${o.flightNo}`}
-                role="radio"
-                aria-checked={sameFlight(flight, o)}
-                className={`flight-opt ${sameFlight(flight, o) ? "on" : ""} ${o.cancelled ? "cancelled" : ""}`}
-                onClick={() => {
-                  touched();
-                  setFlight(o);
-                  setQuery(o.flightNo);
-                }}
-              >
-                <span className="flight-opt-no num">{o.flightNo}</span>
-                <span className="flight-opt-main">
-                  <strong>{destOf(o)}</strong>
-                  <span>
-                    {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
+            <div role="radiogroup" aria-label={t.flightChoice} className="choices">
+              {(flight ? [flight] : (options ?? [])).map((o) => (
+                <button
+                  key={`${o.flightDate}-${o.flightNo}`}
+                  role="radio"
+                  aria-checked={sameFlight(flight, o)}
+                  className={`flight-opt ${sameFlight(flight, o) ? "on" : ""} ${o.cancelled ? "cancelled" : ""}`}
+                  onClick={() => {
+                    touched();
+                    setFlight(o);
+                    setQuery(o.flightNo);
+                  }}
+                >
+                  <span className="flight-opt-no num">{o.flightNo}</span>
+                  <span className="flight-opt-main">
+                    <strong>{destOf(o)}</strong>
+                    <span>
+                      {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
+                    </span>
                   </span>
-                </span>
-                <span className="choice-mark" aria-hidden="true">
-                  <Check size={18} strokeWidth={3} />
-                </span>
-              </button>
-            ))}
+                  <span className="choice-mark" aria-hidden="true">
+                    <Check size={18} strokeWidth={3} />
+                  </span>
+                </button>
+              ))}
+            </div>
+            {flight?.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
           </div>
-          {flight?.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
 
+          {/* 가로로 놓인 키오스크에서는 글자판이 입력란 옆에 온다. 글자판이 「다음」 버튼 밑으로 내려가지 않는다. */}
           {kiosk && !flight && (
             <AlnumPad onKey={(k) => typeFlight(query + k)} onErase={() => typeFlight(query.slice(0, -1))} eraseLabel={t.erase} />
           )}
-        </>
+        </div>
       )}
 
       {kind === "review" && flight && (
