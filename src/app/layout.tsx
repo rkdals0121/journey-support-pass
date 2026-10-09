@@ -24,8 +24,9 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // 패스 화면은 큰 글씨와 언어를 화면을 그리기 전에 html 에 적용한다. 그 차이를 React 가 오류로 보지 않게 한다(suppressHydrationWarning).
   return (
-    <html lang="ko" className={num.variable}>
+    <html lang="ko" className={num.variable} suppressHydrationWarning>
       <body>
         <MockBanner />
         {children}

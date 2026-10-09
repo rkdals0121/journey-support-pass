@@ -663,7 +663,7 @@ async function resetFlights() {
   const lounge = await page.$$eval(".route > li", (es) => es.map((e) => (e as HTMLElement).innerText.replace(/\n/g, " ")));
   check("시설을 누르면 그 시설까지의 길이 나온다 (4층 라운지: 엘리베이터로 4층)", lounge.some((s) => s.includes("엘리베이터를 타고 4층")) && lounge[lounge.length - 1].includes("4층"));
   await shot(page, "안내키오스크-시설가는길");
-  await clickText(page, ".flow-cta button", "안내 첫 화면으로");
+  await clickText(page, "button", "안내 첫 화면으로");
   await waitText(page, "나에게 맞춘 안내");
 
 

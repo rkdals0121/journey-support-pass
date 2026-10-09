@@ -373,11 +373,6 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           speakText={[title, t.routeSummary(route.minutes, route.meters), ...routeLines(route, target, t)].join(". ")}
           onBack={() => setView({ kind: "home" })}
           onHome={reset}
-          cta={
-            <button className="btn" onClick={() => setView({ kind: "home" })}>
-              {t.guideBack}
-            </button>
-          }
         >
           <h1>{title}</h1>
           <p className="lead">
@@ -389,6 +384,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
             </p>
           )}
           <RouteSteps route={route} target={target} from={here} t={t} />
+          <button className="btn finish-btn" onClick={() => setView({ kind: "home" })}>
+            {t.guideBack}
+          </button>
           <p className="fine">{t.mock}</p>
         </FlowShell>
         {call}
