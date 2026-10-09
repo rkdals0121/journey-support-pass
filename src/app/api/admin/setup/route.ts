@@ -10,7 +10,7 @@ export const maxDuration = 60;
 // 배포 DB 의 초기 설정과 모의 운항 다시 채우기. DB 비밀번호를 운영자 컴퓨터로 내려받지 않고
 // 서버가 직접 넣게 하려는 통로다. CRON_SECRET 을 아는 사람만 부를 수 있다.
 //
-//   POST { "codes": { "구역 id": "코드", ... } }   처음 한 번 (테이블, 구역, 패스)
+//   POST { "codes": { "구역 id": "코드", ... } }   테이블과 구역 (여러 번 실행해도 된다)
 //   POST { "mockFlights": true }                   모의 운항을 지금 시각 기준으로 채울 때
 //   POST { "clearMockFlights": true }              모의 운항을 지울 때
 export async function POST(request: Request) {
@@ -34,7 +34,6 @@ export async function POST(request: Request) {
       requireAllCodes: true,
       mockFlights: wantsMock,
       clearMockFlights: body.clearMockFlights === true,
-      passCount: typeof body.passCount === "number" ? body.passCount : undefined,
     },
     new Date(),
   );

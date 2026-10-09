@@ -1,27 +1,141 @@
+import { ipPart } from "./auth";
 import type { Db } from "./db";
 import { kstDate } from "./flights/normalize";
 
-// 시범 전후 비교에 쓰는 측정값(명세 5.3). 사람을 알 수 있는 값은 꺼내지 않는다.
-// 이름·편명·필요한 도움은 조회하지 않고, 시각은 시간대(시)까지만 내보낸다.
+// 제안서의 "기대 효과와 확인 방법" 세 가지를 세는 곳.
+//  1) 여객이 자신에게 맞는 안내를 받는다        → 안내 뒤 만족도 한 문항
+//  2) 기기를 쓰기 어렵던 여객도 스스로 이용한다 → 안내 방식을 켰을 때와 껐을 때의 등록 완료 비율
+//  3) 직원의 업무 부담을 늘리지 않는다          → 「직원 부르기」 횟수, 직원이 대신 입력한 건수
+// 사람을 알 수 있는 값은 세지도 꺼내지도 않는다.
 
-export interface RegistrationMetric {
-  route: string; // web / paper / assisted
-  hourKst: number; // 등록한 시간대
-  writeSec: number; // 작성 시간 (화면을 연 때부터 제출까지)
-  editCount: number; // 이전 단계로 돌아가 고친 횟수
-  linkWaitSec: number | null; // 제출부터 패스 연결까지. 연결 전이면 null
-  status: string;
-  isMock: boolean;
+export type EventKind = "reg_start" | "reg_done" | "guide_open" | "survey";
+
+export interface EventInput {
+  at: Date;
+  kind: EventKind;
+  route?: string;
+  adapted?: boolean;
+  placeId?: string | null;
+  value?: number | null;
+  deviceKey?: string;
 }
 
-export interface EncounterMetric {
-  zoneId: string;
-  gateBand: string | null; // 삭제 작업이 채운다. 그 전에는 null
-  hourKst: number;
-  scanToStartSec: number | null; // 스캔부터 응대 시작까지
-  serviceSec: number | null; // 응대 시작부터 완료까지
-  supportGroups: string[]; // 삭제 작업이 채운다
-  completed: boolean;
+export async function logEvent(db: Db, e: EventInput): Promise<void> {
+  await db.query(
+    "insert into events (at, kind, route, adapted, place_id, value, device_key) values ($1, $2, $3, $4, $5, $6, $7)",
+    [e.at, e.kind, e.route ?? "", e.adapted === true, e.placeId ?? null, e.value ?? null, e.deviceKey ?? null],
+  );
+}
+
+const EVENT_WINDOW_MIN = 10;
+const EVENT_MAX_PER_IP = 200;
+
+/** 화면이 보내는 건수 기록의 남용 방지. 같은 접속 주소에서 짧은 시간에 너무 많이 오면 받지 않는다. */
+export async function allowEvent(db: Db, deviceKey: string, now: Date): Promise<boolean> {
+  const [row] = await db.query<{ n: number }>(
+    "select count(*)::int as n from events where split_part(device_key, ':', 1) = $1 and at > $2",
+    [ipPart(deviceKey), new Date(now.getTime() - EVENT_WINDOW_MIN * 60_000)],
+  );
+  return (row?.n ?? 0) < EVENT_MAX_PER_IP;
+}
+
+export interface Completion {
+  started: number;
+  done: number;
+  /** 완료 비율(0~100). 시작이 없으면 null. */
+  rate: number | null;
+}
+
+export interface Summary {
+  date: string; // 한국 날짜
+  /** 지금 패스를 쓰고 있는 여객 수. */
+  active: number;
+  registered: number;
+  byRoute: { web: number; kiosk: number; assisted: number };
+  /** 등록 작성 시간의 가운데값(초). 직원이 대신 입력한 것은 뺀다. */
+  medianWriteSec: number | null;
+  /** 안내 방식을 켠 여객과 켜지 않은 여객의 등록 완료 비율. 여객이 스스로 한 등록만 센다. */
+  completion: { adapted: Completion; plain: Completion };
+  guideOpens: number;
+  calls: {
+    total: number;
+    fromRegister: number;
+    fromGuide: number;
+    done: number;
+    cancelled: number;
+    open: number;
+    /** 누른 뒤 직원이 받기까지 걸린 시간의 가운데값(초). */
+    medianAcceptSec: number | null;
+  };
+  survey: { good: number; fair: number; poor: number; total: number };
+}
+
+function median(values: (number | null)[]): number | null {
+  const v = values.filter((x): x is number => x !== null && x >= 0).sort((a, b) => a - b);
+  if (v.length === 0) return null;
+  const mid = Math.floor(v.length / 2);
+  return v.length % 2 === 1 ? v[mid] : Math.round((v[mid - 1] + v[mid]) / 2);
+}
+
+function completion(started: number, done: number): Completion {
+  // 시작 기록이 빠진 채 완료만 온 경우(연결이 끊겼다 이어진 경우)에도 비율이 100을 넘지 않게 한다.
+  const base = Math.max(started, done);
+  return { started: base, done, rate: base === 0 ? null : Math.round((done / base) * 100) };
+}
+
+/** since 부터의 집계. 안내데스크의 "오늘 현황"과 운영자용 측정값이 함께 쓴다. */
+export async function summarize(db: Db, since: Date, date: string): Promise<Summary> {
+  const regs = await db.query<{ route: string; write_sec: number }>(
+    `select route, extract(epoch from (submitted_at - started_at))::int as write_sec
+     from registrations where submitted_at >= $1`,
+    [since],
+  );
+  const [live] = await db.query<{ active: number }>(
+    "select count(*)::int as active from registrations where status = 'active'",
+  );
+  const events = await db.query<{ kind: EventKind; adapted: boolean; value: number | null; n: number }>(
+    "select kind, adapted, value, count(*)::int as n from events where at >= $1 group by kind, adapted, value",
+    [since],
+  );
+  const calls = await db.query<{ screen: string; end_kind: string | null; ended: boolean; accept_sec: number | null }>(
+    `select screen, end_kind, (ended_at is not null) as ended,
+            extract(epoch from (accepted_at - created_at))::int as accept_sec
+     from calls where created_at >= $1`,
+    [since],
+  );
+
+  const count = (kind: EventKind, pred: (e: (typeof events)[number]) => boolean = () => true) =>
+    events.filter((e) => e.kind === kind && pred(e)).reduce((n, e) => n + e.n, 0);
+  const route = (r: string) => regs.filter((x) => x.route === r).length;
+  const survey = { good: count("survey", (e) => e.value === 3), fair: count("survey", (e) => e.value === 2), poor: count("survey", (e) => e.value === 1) };
+
+  return {
+    date,
+    active: live?.active ?? 0,
+    registered: regs.length,
+    byRoute: { web: route("web"), kiosk: route("kiosk"), assisted: route("assisted") },
+    medianWriteSec: median(regs.filter((r) => r.route !== "assisted").map((r) => r.write_sec)),
+    completion: {
+      adapted: completion(count("reg_start", (e) => e.adapted), count("reg_done", (e) => e.adapted)),
+      plain: completion(count("reg_start", (e) => !e.adapted), count("reg_done", (e) => !e.adapted)),
+    },
+    guideOpens: count("guide_open"),
+    calls: {
+      total: calls.length,
+      fromRegister: calls.filter((c) => c.screen === "register").length,
+      fromGuide: calls.filter((c) => c.screen !== "register").length,
+      done: calls.filter((c) => c.end_kind === "done").length,
+      cancelled: calls.filter((c) => c.end_kind === "cancelled").length,
+      open: calls.filter((c) => !c.ended).length,
+      medianAcceptSec: median(calls.map((c) => c.accept_sec)),
+    },
+    survey: { ...survey, total: survey.good + survey.fair + survey.poor },
+  };
+}
+
+export async function todaySummary(db: Db, now: Date): Promise<Summary> {
+  const date = kstDate(now);
+  return summarize(db, new Date(`${date}T00:00:00+09:00`), date);
 }
 
 export interface PollMetric {
@@ -33,30 +147,8 @@ export interface PollMetric {
   lastAt: Date | null;
 }
 
-export async function collectMetrics(
-  db: Db,
-  since: Date,
-): Promise<{ registrations: RegistrationMetric[]; encounters: EncounterMetric[]; polls: PollMetric }> {
-  const registrations = await db.query<RegistrationMetric>(
-    `select route,
-            extract(hour from submitted_at at time zone 'Asia/Seoul')::int as "hourKst",
-            extract(epoch from (submitted_at - started_at))::int as "writeSec",
-            edit_count as "editCount",
-            extract(epoch from (linked_at - submitted_at))::int as "linkWaitSec",
-            status, is_mock as "isMock"
-     from registrations where submitted_at >= $1 order by submitted_at`,
-    [since],
-  );
-  const encounters = await db.query<EncounterMetric>(
-    `select zone_id as "zoneId", gate_band as "gateBand",
-            extract(hour from scanned_at at time zone 'Asia/Seoul')::int as "hourKst",
-            extract(epoch from (started_at - scanned_at))::int as "scanToStartSec",
-            extract(epoch from (ended_at - started_at))::int as "serviceSec",
-            support_groups as "supportGroups",
-            (ended_at is not null) as completed
-     from encounters where scanned_at >= $1 order by scanned_at`,
-    [since],
-  );
+/** 운항 정보 수집이 얼마나 잘 돌았는지. */
+export async function pollMetrics(db: Db, since: Date): Promise<PollMetric> {
   const [polls] = await db.query<PollMetric>(
     `select count(*)::int as total,
             count(*) filter (where not ok)::int as failed,
@@ -66,66 +158,5 @@ export async function collectMetrics(
      from flight_polls where polled_at >= $1`,
     [since],
   );
-  return { registrations, encounters, polls };
-}
-
-/** 안내데스크의 "오늘 현황". 건수와 가운데값만 담는다. 누구의 것인지 알 수 있는 값은 없다. */
-export interface TodaySummary {
-  date: string; // 한국 날짜
-  registered: number; // 오늘 받은 등록
-  byRoute: { web: number; assisted: number; paper: number };
-  linked: number; // 그 가운데 패스를 연결한 것
-  waiting: number; // 지금 패스를 기다리는 등록
-  active: number; // 지금 패스를 쓰고 있는 여객
-  medianWriteSec: number | null; // 등록 작성 시간
-  medianLinkWaitSec: number | null; // 등록부터 패스 연결까지
-  scans: number; // 직원이 여객 카드를 연 횟수
-  completed: number; // 응대 완료
-  medianScanToStartSec: number | null; // 카드를 열고 응대를 시작하기까지
-  medianServiceSec: number | null; // 응대 시간
-  /** 두 구역 이상이 이어서 응대한 여객. 카드를 열어 보기만 한 것은 세지 않는다. 출발해 지워진 여객은 빠진다. */
-  handoffs: number;
-}
-
-function median(values: (number | null)[]): number | null {
-  const v = values.filter((x): x is number => x !== null && x >= 0).sort((a, b) => a - b);
-  if (v.length === 0) return null;
-  const mid = Math.floor(v.length / 2);
-  return v.length % 2 === 1 ? v[mid] : Math.round((v[mid - 1] + v[mid]) / 2);
-}
-
-export async function todaySummary(db: Db, now: Date): Promise<TodaySummary> {
-  const date = kstDate(now);
-  const since = new Date(`${date}T00:00:00+09:00`);
-  const { registrations, encounters } = await collectMetrics(db, since);
-  const [live] = await db.query<{ waiting: number; active: number }>(
-    `select count(*) filter (where status = 'pending')::int as waiting,
-            count(*) filter (where status = 'active')::int as active
-     from registrations`,
-  );
-  const [{ handoffs }] = await db.query<{ handoffs: number }>(
-    `select count(*)::int as handoffs from (
-       select e.registration_id from encounters e
-       join zones z on z.id = e.zone_id and not z.is_desk
-       where e.scanned_at >= $1 and e.registration_id is not null and e.started_at is not null
-       group by e.registration_id having count(distinct e.zone_id) >= 2
-     ) t`,
-    [since],
-  );
-  const count = (route: string) => registrations.filter((r) => r.route === route).length;
-  return {
-    date,
-    registered: registrations.length,
-    byRoute: { web: count("web"), assisted: count("assisted"), paper: count("paper") },
-    linked: registrations.filter((r) => r.linkWaitSec !== null).length,
-    waiting: live?.waiting ?? 0,
-    active: live?.active ?? 0,
-    medianWriteSec: median(registrations.map((r) => r.writeSec)),
-    medianLinkWaitSec: median(registrations.map((r) => r.linkWaitSec)),
-    scans: encounters.length,
-    completed: encounters.filter((e) => e.completed).length,
-    medianScanToStartSec: median(encounters.map((e) => e.scanToStartSec)),
-    medianServiceSec: median(encounters.map((e) => e.serviceSec)),
-    handoffs,
-  };
+  return polls;
 }

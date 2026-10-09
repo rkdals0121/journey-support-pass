@@ -1,9 +1,8 @@
-import { Lock } from "lucide-react";
+import { BarChart3, ChevronRight, Lock, UserPlus } from "lucide-react";
 import Link from "next/link";
-import { config } from "@/lib/config";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
-import { DeskFlow } from "./DeskFlow";
+import { DeskFind } from "./DeskFind";
 
 export const dynamic = "force-dynamic";
 
@@ -15,13 +14,13 @@ export default async function DeskPage() {
         <main className="page has-nav">
           <div className="empty">
             <span className="bubble">
-              <Lock size={26} aria-hidden="true" />
+              <Lock size={28} aria-hidden="true" />
             </span>
             <strong>안내데스크에서만 쓸 수 있습니다</strong>
-            <p>패스 연결과 등록은 안내데스크 코드로 로그인해야 쓸 수 있습니다.</p>
+            <p>대신 등록과 패스 찾기는 안내데스크 코드로 로그인해야 쓸 수 있습니다.</p>
           </div>
           <Link className="btn" href="/staff">
-            여객 목록으로
+            호출 화면으로
           </Link>
         </main>
         <StaffNav isDesk={false} />
@@ -31,7 +30,32 @@ export default async function DeskPage() {
   return (
     <>
       <main className="page has-nav">
-        <DeskFlow mock={config.dataMode === "mock"} />
+        <h1>안내데스크</h1>
+        <p className="muted">키오스크를 쓰기 어려운 여객을 대신 등록하고, 패스를 다시 뽑거나 지웁니다.</p>
+
+        <Link className="desk-card" href="/staff/desk/register">
+          <span className="bubble">
+            <UserPlus size={24} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>여객 대신 등록하기</strong>
+            <small>여객께 여쭤보며 대신 누르고 스티커를 뽑아 드립니다</small>
+          </span>
+          <ChevronRight size={22} aria-hidden="true" />
+        </Link>
+        <Link className="desk-card" href="/staff/desk/stats">
+          <span className="bubble">
+            <BarChart3 size={24} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>오늘 현황</strong>
+            <small>등록, 안내, 직원 호출 건수</small>
+          </span>
+          <ChevronRight size={22} aria-hidden="true" />
+        </Link>
+
+        <h2>패스 찾기</h2>
+        <DeskFind />
       </main>
       <StaffNav isDesk />
     </>

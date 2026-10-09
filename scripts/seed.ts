@@ -1,7 +1,7 @@
 /**
- * 이 컴퓨터의 내장 DB 에 구역·패스·(선택) 모의 운항을 채운다. 미사용 패스는 30장이 되도록 채운다.
+ * 이 컴퓨터의 내장 DB 에 구역과 (선택) 모의 운항을 채운다.
  *
- *   npm run seed                      구역과 패스만
+ *   npm run seed                      구역만
  *   npm run seed -- --mock-flights    지금 시각 기준의 모의 운항까지
  *
  * 개발 서버가 떠 있으면 먼저 끄고 실행한다. 로컬 내장 DB 는 한 번에 한 프로세스만 연다.
@@ -28,7 +28,6 @@ import { readSeedZones } from "../src/lib/zones";
   if (!result.ok) throw new Error(result.error);
 
   console.log(`구역 ${result.zones}곳 적재`);
-  console.log(`미사용 패스 ${result.idlePasses}장 (새로 만든 것 ${result.newPasses}장)`);
   if (result.mockFlights) console.log(`모의 운항 ${result.mockFlights.length}편 적재: ${result.mockFlights.join(", ")}`);
 
   console.log("\n시범용 접속 코드 (모의 데이터 전용)");

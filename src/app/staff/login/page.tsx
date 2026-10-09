@@ -29,9 +29,9 @@ function LoginForm() {
         setCode("");
         return;
       }
-      // 패스 QR 을 먼저 찍고 로그인한 경우 그 패스로 돌아간다. 내부 경로만 받는다.
+      // 직원 화면의 다른 곳에서 로그인으로 넘어온 경우 그곳으로 돌아간다. 내부 경로만 받는다.
       const next = params.get("next");
-      const safe = next && /^\/(p|staff)\//.test(next) ? next : null;
+      const safe = next && /^\/staff\//.test(next) ? next : null;
       // 쿠키가 바뀌었으므로 화면을 통째로 다시 받는다. 앞서 받아 둔 화면이 남지 않게 한다.
       if (data.needsZone) window.location.replace(safe ? `/staff/zone?next=${encodeURIComponent(safe)}` : "/staff/zone");
       else window.location.replace(safe ?? "/staff");
@@ -45,7 +45,7 @@ function LoginForm() {
   return (
     <form onSubmit={submit}>
       <h1>직원 로그인</h1>
-      <p className="muted">접속 코드 여섯 자리를 입력해 주세요.</p>
+      <p className="muted">받은 접속 코드를 입력해 주세요.</p>
       <label htmlFor="code">접속 코드</label>
       <input
         id="code"
@@ -79,7 +79,7 @@ export default function StaffLoginPage() {
         </Suspense>
         <Link className="home-staff" href="/">
           <ChevronLeft size={16} aria-hidden="true" />
-          여객 등록 화면으로
+          여객 첫 화면으로
         </Link>
       </main>
     </div>

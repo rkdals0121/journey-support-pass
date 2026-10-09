@@ -1,35 +1,35 @@
 import { config } from "./config";
 import type { Db } from "./db";
 import { ingestFlights, recordPoll } from "./flights/ingest";
-import { generatePasses, linkPass, nextIdleToken } from "./passes";
+import { issuePass, passUrl } from "./passes";
 import { eraseRegistration } from "./purge";
-import { createRegistration } from "./registrations";
+import { createRegistration, type Lang } from "./registrations";
 import { mockFlights } from "./setup";
 
-// 시연용 여객. 실제로 찍으면 여객 카드가 열리는 패스를 만들어 준다. 모의 데이터 모드에서만 쓴다.
-// 이름은 모두 지어낸 것이다. 마감 임박, 지연, 탑승구 미정, 공동운항, 장비·인력 요청이 골고루 들어 있다.
-const DEMO: { name: string; flightNo: string; categories: string[]; needs: string[] }[] = [
-  { name: "김영희", flightNo: "MK101", categories: ["cat_senior"], needs: ["mov_need_rest", "com_slow"] },
+// 시연용 패스. 키오스크에 찍으면 저마다 다른 안내가 나오도록 고른 항목을 다르게 했다. 모의 데이터 모드에서만 쓴다.
+// 이름은 없다. 장면 이름은 시연하는 사람이 QR 을 고를 때 보는 것이고 어디에도 저장하지 않는다.
+export const DEMO: { scene: string; flightNo: string; lang?: Lang; choices: string[] }[] = [
   {
-    name: "박민수",
-    flightNo: "MK102",
-    categories: ["cat_disability"],
-    needs: ["mov_wheelchair_own", "mov_no_stairs", "com_hearing", "com_written", "acc_companion"],
+    scene: "큰 글씨 · 휠체어 이용 (제안서 예시)",
+    flightNo: "MK127",
+    choices: ["gd_large", "mov_wheelchair_own", "fac_restroom", "stf_self"],
   },
-  { name: "이정자", flightNo: "MK401", categories: ["cat_senior", "cat_disability"], needs: ["com_vision", "mov_escort"] },
-  { name: "최서연", flightNo: "MK111", categories: ["cat_pregnant"], needs: ["mov_no_standing"] },
-  { name: "정하준", flightNo: "MK221", categories: ["cat_infant"], needs: ["acc_stroller", "acc_companion"] },
-  { name: "한미숙", flightNo: "MK250", categories: ["cat_senior"], needs: ["com_wayfinding", "env_quiet"] },
-  { name: "오대기", flightNo: "MK900", categories: ["cat_disability"], needs: ["mov_wheelchair_need"] },
-  { name: "윤공동", flightNo: "MC830", categories: ["cat_child"], needs: ["acc_companion"] },
-  { name: "강도쿄", flightNo: "MK501", categories: ["cat_senior"], needs: ["mov_no_stairs"] },
+  { scene: "소리 안내 · 쉬어 가기", flightNo: "MK111", choices: ["gd_voice", "mov_need_rest", "fac_rest", "stf_call"] },
+  { scene: "쉬운 말 · 그림 · 심리안정실", flightNo: "MK112", choices: ["gd_easy", "gd_picture", "fac_calm", "stf_call"] },
+  { scene: "영어 · 계단 어려움 · 라운지", flightNo: "MK102", lang: "en", choices: ["mov_no_stairs", "fac_lounge", "stf_self"] },
+  { scene: "휠체어 필요 · 직원 호출 (공동운항)", flightNo: "MC830", choices: ["mov_wheelchair_need", "stf_call"] },
+  { scene: "수유실 · 쉴 곳 (제2여객터미널)", flightNo: "MK221", choices: ["fac_nursing", "fac_rest", "stf_self"] },
+  { scene: "큰 글씨 · 서 있기 어려움 (지연 편)", flightNo: "MK250", choices: ["gd_large", "mov_no_standing"] },
+  { scene: "탑승구 미정", flightNo: "MK900", choices: ["mov_no_stairs", "fac_restroom"] },
+  { scene: "그림 · 계단 어려움 (제1여객터미널)", flightNo: "MK501", choices: ["gd_picture", "mov_no_stairs", "fac_rest"] },
+  { scene: "고른 것 없음 (기본 화면)", flightNo: "MK112", choices: [] },
 ];
 
-// 모의 운항의 출발 시각을 이만큼 늘린다. 가장 이른 편이 약 2시간 뒤, 가장 늦은 편이 약 13시간 뒤에 떠난다.
+// 모의 운항의 출발 시각을 이만큼 늘린다. 가장 이른 편이 약 1시간 뒤, 가장 늦은 편이 약 16시간 뒤에 떠난다.
 const STRETCH = 4;
 
 export interface DemoPass {
-  name: string;
+  scene: string;
   flightNo: string;
   passNo: string;
   /** 패스 QR 에 들어가는 주소. 운영자에게만 돌려준다. */
@@ -37,19 +37,17 @@ export interface DemoPass {
 }
 
 /**
- * 시연용 여객을 넣고 패스를 연결한다. 다시 부르면 앞서 넣은 시연용 여객을 지우고 새로 넣는다.
+ * 시연용 패스를 만든다. 다시 부르면 모의 항공편에 걸린 등록을 모두 지우고 새로 넣는다.
  * 실제 여객 정보가 섞이지 않도록 모의 데이터 모드에서만 동작한다.
  */
 export async function seedDemo(db: Db, now: Date): Promise<{ ok: true; passes: DemoPass[] } | { ok: false; error: string }> {
-  if (config.dataMode !== "mock") return { ok: false, error: "시연용 여객은 DATA_MODE=mock 에서만 넣을 수 있습니다" };
+  if (config.dataMode !== "mock") return { ok: false, error: "시연용 패스는 DATA_MODE=mock 에서만 만들 수 있습니다" };
 
-  // 앞서 넣은 시연용 여객을 지운다. 연결된 패스는 끝낸다.
-  const old = await db.query<{ id: string; needs: string[]; categories: string[] }>(
-    `select id, needs, categories from registrations
-     where is_mock and status in ('pending', 'active') and name = any($1) and flight_no = any($2)`,
-    [DEMO.map((d) => d.name), DEMO.map((d) => d.flightNo)],
+  const old = await db.query<{ id: string }>(
+    `select id from registrations
+     where is_mock and status in ('pending', 'active') and (flight_no like 'MK%' or flight_no like 'MC%')`,
   );
-  for (const r of old) await eraseRegistration(db, r.id, r.needs, r.categories, null, now, "revoked");
+  for (const r of old) await eraseRegistration(db, r.id, now, "revoked");
 
   await db.query("delete from flights where airline like '모의%'");
   const flights = mockFlights(now, STRETCH);
@@ -63,24 +61,21 @@ export async function seedDemo(db: Db, now: Date): Promise<{ ok: true; passes: D
     const reg = await createRegistration(
       db,
       {
-        name: d.name,
         flightDate: flight.flightDate,
         flightNo: flight.flightNo,
-        categories: d.categories,
-        needs: d.needs,
-        route: "assisted",
+        choices: d.choices,
+        lang: d.lang ?? "ko",
+        route: "web",
         consent: true,
-        startedAt: new Date(now.getTime() - 90_000),
+        startedAt: new Date(now.getTime() - 60_000),
         editCount: 0,
       },
       now,
     );
-    if (!reg.ok) return { ok: false, error: `${d.name}: ${reg.error}` };
-    let token = await nextIdleToken(db);
-    if (!token) token = (await generatePasses(db, 1))[0].token;
-    const link = await linkPass(db, token, reg.registration.id, now);
-    if (!link.ok) return { ok: false, error: `${d.name}: 패스를 연결하지 못했습니다` };
-    passes.push({ name: d.name, flightNo: d.flightNo, passNo: link.passNo, url: `${config.baseUrl}/p/${token}` });
+    if (!reg.ok) return { ok: false, error: `${d.scene}: ${reg.error}` };
+    const pass = await issuePass(db, reg.registration.id, now);
+    if (!pass.ok) return { ok: false, error: `${d.scene}: 패스를 만들지 못했습니다` };
+    passes.push({ scene: d.scene, flightNo: d.flightNo, passNo: pass.passNo, url: passUrl(config.baseUrl, pass.token) });
   }
   return { ok: true, passes };
 }

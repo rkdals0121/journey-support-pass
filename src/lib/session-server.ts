@@ -8,13 +8,13 @@ export async function currentSession(now: Date = new Date()): Promise<Session | 
   return readSession((await cookies()).get(SESSION_COOKIE)?.value, now);
 }
 
-export async function setSessionCookie(token: string): Promise<void> {
+export async function setSessionCookie(token: string, hours: number = config.sessionHours): Promise<void> {
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: config.sessionHours * 3600,
+    maxAge: hours * 3600,
   });
 }
 

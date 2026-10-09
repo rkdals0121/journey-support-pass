@@ -4,14 +4,15 @@
     "탑승동 세 구역은 임시값이다. 탑승구 번호가 중앙에서 먼 순서로 나눈 것이며, 팀 운항 집계의 끝단 12개 탑승구 목록으로 교체해야 한다.",
     "제2여객터미널은 운항 조회 웹 data/zones.json 의 검증된 값이다. 제1여객터미널은 탑승구 번호 순서로 나눈 추정치다. 실제 편의 여객이 현장 직원 목록에서 빠지지 않도록 켜 두었고, 기업탐방에서 확인해 고친다.",
     "code 는 모의 시범 전용 접속 코드다. 적재할 때 해시로 바꿔 저장한다. 실제 운영에 쓰지 말 것.",
-    "facilities 는 구역 지원환경표가 나오면 채운다.",
-    "staff-common 은 구역이 아니다. 현장 직원 공통 코드로 로그인한 뒤 근무 구역을 고르기 전에 머무는 자리다."
+    "staff-common 은 구역이 아니다. 현장 직원 공통 코드로 로그인한 뒤 근무 구역을 고르기 전에 머무는 자리다.",
+    "kiosk 는 구역이 아니다. 키오스크를 설치할 때 넣는 코드의 자리다. 이 코드로 들어온 기기는 키오스크 화면만 쓴다.",
+    "시설 위치는 src/lib/airport.ts 에 있다. 여기의 facilities 칸은 쓰지 않는다."
   ],
   "zones": [
     {
       "id": "desk-t1",
       "terminal": "T1",
-      "label": "제1여객터미널 안내데스크",
+      "label": "안내데스크",
       "band": null,
       "gateRanges": [],
       "code": "100100",
@@ -32,6 +33,22 @@
       "code": "200200",
       "isDesk": false,
       "isCommon": true,
+      "active": true,
+      "facilities": {
+        "elevators": [],
+        "restrooms": [],
+        "waitingPoints": []
+      }
+    },
+    {
+      "id": "kiosk",
+      "terminal": "",
+      "label": "키오스크",
+      "band": null,
+      "gateRanges": [],
+      "code": "300300",
+      "isDesk": false,
+      "isKiosk": true,
       "active": true,
       "facilities": {
         "elevators": [],

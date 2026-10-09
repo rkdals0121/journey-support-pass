@@ -39,11 +39,10 @@ const QR_ART = [
   "1110010110101",
 ];
 
-/** 첫 화면에 놓는 패스 그림. 목걸이에 달린 카드에 해바라기, QR, 패스 번호가 있다. */
+/** 첫 화면에 놓는 패스 그림. QR 과 패스 번호가 있다. */
 export function PassArt() {
   return (
     <div className="pass-art" aria-hidden="true">
-      <div className="pass-art-strap" />
       <div className="pass-art-card">
         <svg className="qr" viewBox="0 0 13 13" shapeRendering="crispEdges">
           <rect width="13" height="13" fill="#fff" />
@@ -56,7 +55,7 @@ export function PassArt() {
         <div className="pass-art-meta">
           <Sunflower />
           <small>PASS NO.</small>
-          <b>0427</b>
+          <b>042 715</b>
         </div>
       </div>
     </div>

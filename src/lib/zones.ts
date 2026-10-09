@@ -57,7 +57,7 @@ export async function getZone(db: Db, id: string): Promise<Zone | null> {
 /** 탑승구가 속한 구역. 꺼 둔 구역은 찾지 않는다. */
 export async function zoneForGate(db: Db, terminal: string, gate: number): Promise<Zone | null> {
   const [row] = await db.query<ZoneRow>(
-    `select ${COLUMNS} from zones where active and not is_desk and terminal = $1 and $2 = any(gates) limit 1`,
+    `select ${COLUMNS} from zones where active and not is_desk and not is_kiosk and terminal = $1 and $2 = any(gates) limit 1`,
     [terminal, gate],
   );
   return row ? toZone(row) : null;
@@ -74,7 +74,7 @@ export const TERMINAL_LABEL: Record<string, string> = {
 /** 현장 직원이 고를 수 있는 근무 구역. 터미널 순, 그 안에서는 탑승구 번호 순. */
 export async function listWorkZones(db: Db): Promise<Zone[]> {
   const rows = await db.query<ZoneRow>(
-    `select ${COLUMNS} from zones where active and not is_desk and not is_common`,
+    `select ${COLUMNS} from zones where active and not is_desk and not is_common and not is_kiosk`,
   );
   const first = (z: Zone) => (z.gates.length > 0 ? Math.min(...z.gates) : 0);
   return rows
@@ -95,6 +95,8 @@ export interface SeedZone {
   isDesk: boolean;
   /** 공통 직원 코드의 자리. 구역이 아니다. */
   isCommon?: boolean;
+  /** 키오스크 설치 코드의 자리. 구역이 아니다. */
+  isKiosk?: boolean;
   active: boolean;
   facilities: Facilities;
 }
@@ -134,12 +136,13 @@ export async function seedZones(
   const zones = applyCodeOverrides(readSeedZones(), codes);
   for (const z of zones) {
     await db.query(
-      `insert into zones (id, terminal, label, band, gates, facilities, code_hash, is_desk, active, is_common)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `insert into zones (id, terminal, label, band, gates, facilities, code_hash, is_desk, active, is_common, is_kiosk)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        on conflict (id) do update set
          terminal = excluded.terminal, label = excluded.label, band = excluded.band,
          gates = excluded.gates, facilities = excluded.facilities, code_hash = excluded.code_hash,
-         is_desk = excluded.is_desk, active = excluded.active, is_common = excluded.is_common`,
+         is_desk = excluded.is_desk, active = excluded.active, is_common = excluded.is_common,
+         is_kiosk = excluded.is_kiosk`,
       [
         z.id,
         z.terminal,
@@ -151,6 +154,7 @@ export async function seedZones(
         z.isDesk,
         z.active,
         z.isCommon === true,
+        z.isKiosk === true,
       ],
     );
   }

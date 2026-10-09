@@ -1,283 +1,141 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { deviceKey, readSession, type Session } from "@/lib/auth";
-import type { Db } from "@/lib/db";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { zoneName } from "@/lib/api/dto";
+import { resolveHandler } from "@/lib/api/kiosk";
 import {
-  cancelHandler,
-  deskListHandler,
-  deskRegisterHandler,
-  getHandler,
-  linkHandler,
-  morePassesHandler,
-  receiptHandler,
-  reissueHandler,
-  updateHandler,
-} from "@/lib/api/desk";
-import { allowRegistration, registerHandler, searchFlightsHandler } from "@/lib/api/public";
+  allowRegistration,
+  eraseHandler,
+  eventHandler,
+  guideHandler,
+  lookupPass,
+  registerHandler,
+  searchFlightsHandler,
+} from "@/lib/api/public";
 import {
-  caseHandler,
-  decideTokenPage,
-  encounterHandler,
-  listHandler,
-  resolveHandler,
+  callActionHandler,
+  callsHandler,
+  deskEraseHandler,
+  summaryHandler,
   switchZoneHandler,
   zonesHandler,
+  type CallDto,
 } from "@/lib/api/staff";
-import { generatePasses, resolveToken } from "@/lib/passes";
+import { deviceKey, readSession } from "@/lib/auth";
+import { createCall } from "@/lib/calls";
+import { config } from "@/lib/config";
+import type { Db } from "@/lib/db";
+import { recordPoll } from "@/lib/flights/ingest";
+import type { GuideDto } from "@/lib/guide";
+import type { Summary } from "@/lib/metrics";
+import { passUrl } from "@/lib/passes";
 import { seedZones } from "@/lib/zones";
 import { createTestDb, kst } from "./helpers/db";
-import { addFlights, flightRow, regInput, register, registerWithPass } from "./helpers/fixtures";
+import {
+  addFlights,
+  CHOICES,
+  commonSession,
+  deskSession,
+  flightRow,
+  hasKey,
+  kioskSession,
+  regInput,
+  registerWithPass,
+  resetData,
+  sessionOf,
+} from "./helpers/fixtures";
 
 const now = kst("2026-10-05 12:00");
-const base = { canSwitch: false, needsZone: false, exp: now.getTime() + 3_600_000 };
-const staff: Session = { zoneId: "cc-end", isDesk: false, ...base };
-const common: Session = { zoneId: "staff-common", isDesk: false, ...base, canSwitch: true, needsZone: true };
-const desk: Session = { zoneId: "desk-t1", isDesk: true, ...base };
+const staff = sessionOf(now); // 탑승동 끝단
+const mid = sessionOf(now, { zoneId: "cc-mid" }); // 탑승동 중간. cc-108 키오스크의 호출을 맡는다
+const common = commonSession(now);
+const desk = deskSession(now);
+const kiosk = kioskSession(now, "cc-108");
+const web = deviceKey("203.0.113.7", "phone");
 
 let db: Db;
-beforeEach(async () => {
+beforeAll(async () => {
   db = await createTestDb();
   await seedZones(db, () => "x:y");
+});
+beforeEach(async () => {
+  await resetData(db);
   await addFlights(
     db,
-    [flightRow("KE123", "2026-10-05 14:30", { gate: 101 }), flightRow("KE123", "2026-10-06 14:30", { gate: null })],
+    [flightRow("KE123", "2026-10-05 14:30", { gate: 127 }), flightRow("KE123", "2026-10-06 14:30", { gate: null })],
     now,
   );
 });
 
-const webBody = (over: Record<string, unknown> = {}) => {
+/** 등록 화면이 보내는 본문. */
+const body = (over: Record<string, unknown> = {}) => {
   const i = regInput();
-  return { ...i, startedAt: i.startedAt.toISOString(), ...over };
+  return {
+    flightDate: i.flightDate,
+    flightNo: i.flightNo,
+    choices: i.choices,
+    lang: i.lang,
+    consent: true,
+    startedAt: i.startedAt.toISOString(),
+    editCount: 0,
+    ...over,
+  };
 };
 
 const logCount = async (action: string) =>
   (await db.query<{ n: number }>("select count(*)::int as n from access_logs where action = $1", [action]))[0].n;
+const eventRows = (kind: string) =>
+  db.query<{ route: string; adapted: boolean; place_id: string | null; value: number | null; device_key: string | null }>(
+    "select route, adapted, place_id, value, device_key from events where kind = $1 order by id",
+    [kind],
+  );
+const regRows = () =>
+  db.query<{ route: string; name: string | null; lang: string; needs: string[]; status: string }>(
+    "select route, name, lang, needs, status from registrations order by submitted_at, id",
+  );
 
-describe("공개 경로", () => {
-  it("편명 검색은 탑승구를 돌려주지 않는다", async () => {
+describe("편명 검색", () => {
+  it("탑승구를 돌려주지 않는다. 오늘인지 내일인지와 시각만 준다", async () => {
     const res = await searchFlightsHandler(db, "ke123", now);
-    const flights = res.body.flights as Record<string, unknown>[];
-    expect(flights.map((f) => f.label)).toEqual(["KE123 · 뉴욕 · 오늘 14:30 출발", "KE123 · 뉴욕 · 내일 14:30 출발"]);
-    for (const f of flights) expect(Object.keys(f)).not.toContain("gate");
-  });
-
-  it("결항 편은 결항이라고 보여준다", async () => {
-    await addFlights(db, [flightRow("CX9", "2026-10-05 16:00", { status: "결항" })], now);
-    const res = await searchFlightsHandler(db, "CX9", now);
-    expect((res.body.flights as { label: string }[])[0].label).toBe("CX9 · 뉴욕 · 오늘 16:00 · 결항");
-  });
-
-  it("등록하면 바로 패스가 만들어지고, 그 패스 번호와 QR 값만 돌려준다", async () => {
-    const res = await registerHandler(db, webBody(), "ip-1", now);
     expect(res.status).toBe(200);
-    expect(Object.keys(res.body).sort()).toEqual(["passNo", "token"]);
-    expect(res.body.passNo).toMatch(/^\d{4}$/);
-    expect(res.body.token).toMatch(/^[A-Za-z0-9_-]{24}$/);
-    // 안내데스크를 거치지 않아도 직원이 그 QR 을 찍으면 여객 카드가 열린다.
-    const found = await resolveHandler(db, staff, { scanned: `https://x.app/p/${res.body.token}` }, "d", now);
-    expect(found.body.kind).toBe("active");
-    const card = await caseHandler(db, staff, found.body.registrationId as string, now);
-    expect(card.body.case).toMatchObject({ name: "홍길동", flightNo: "KE123" });
-    // 패스 번호로도 열린다.
-    expect((await resolveHandler(db, staff, { passNo: res.body.passNo }, "d", now)).body.kind).toBe("active");
+    expect(res.body.flights).toEqual([
+      {
+        flightDate: "2026-10-05",
+        flightNo: "KE123",
+        airline: "대한항공",
+        destName: "뉴욕",
+        destCode: "JFK",
+        day: "today",
+        time: "14:30",
+        cancelled: false,
+      },
+      {
+        flightDate: "2026-10-06",
+        flightNo: "KE123",
+        airline: "대한항공",
+        destName: "뉴욕",
+        destCode: "JFK",
+        day: "tomorrow",
+        time: "14:30",
+        cancelled: false,
+      },
+    ]);
+    expect(hasKey(res.body, "gate")).toBe(false);
+    expect(hasKey(res.body, "label")).toBe(false);
   });
 
-  it("본문에 다른 등록 경로를 넣어 보내도 web 으로 저장한다", async () => {
-    await registerHandler(db, webBody({ route: "assisted" }), "ip-2", now);
-    const [row] = await db.query<{ route: string }>("select route from registrations");
-    expect(row.route).toBe("web");
-  });
-
-  it("동의하지 않으면 400", async () => {
-    expect((await registerHandler(db, webBody({ consent: false }), "ip-3", now)).status).toBe(400);
-    expect((await registerHandler(db, webBody({ consent: "true" }), "ip-3", now)).status).toBe(400);
-  });
-
-  it("같은 접속 주소에서 10분에 20건을 넘기면 막는다. 브라우저 표시를 바꿔도 같다", async () => {
-    const key = (ua: string) => deviceKey("203.0.113.7", ua);
-    for (let i = 0; i < 20; i++) {
-      expect((await registerHandler(db, webBody(), key(`ua-${i}`), now)).status).toBe(200);
-    }
-    expect((await registerHandler(db, webBody(), key("ua-new"), now)).status).toBe(429);
-    expect(await allowRegistration(db, deviceKey("198.51.100.9", "ua-0"), now)).toBe(true);
-    expect(await allowRegistration(db, key("ua-new"), new Date(now.getTime() + 10 * 60_000))).toBe(true);
-    // 거부된 등록은 저장되지 않는다.
-    expect(await db.query("select 1 from registrations")).toHaveLength(20);
-  });
-});
-
-describe("직원 경로", () => {
-  it("로그인 없이는 아무것도 열리지 않는다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    expect((await listHandler(db, null, "zone", "d", now)).status).toBe(401);
-    expect((await resolveHandler(db, null, { passNo: "0000" }, "d", now)).status).toBe(401);
-    expect((await caseHandler(db, null, registration.id, now)).status).toBe(401);
-    expect((await encounterHandler(db, null, registration.id, { action: "start" }, now)).status).toBe(401);
-  });
-
-  it("목록에는 운항 정보 기준 시각이 함께 온다", async () => {
-    await registerWithPass(db, now);
-    const res = await listHandler(db, staff, "zone", "d", now);
-    expect(res.body.zoneLabel).toContain("끝단");
-    expect(res.body.poll).toEqual({ label: "운항 정보 없음", stale: true, aged: false });
-    expect(res.body.assigned).toHaveLength(1);
-  });
-
-  it("QR 로 찾으면 조회 기록이 남는다", async () => {
-    const { registration, pass } = await registerWithPass(db, now);
-    const res = await resolveHandler(db, staff, { scanned: `https://x.app/p/${pass.token}` }, "d", now);
-    expect(res.body).toEqual({ kind: "active", registrationId: registration.id });
-    expect(await logCount("scan_view")).toBe(1);
-  });
-
-  it("연결 전 패스, 패스가 아닌 QR", async () => {
-    const [idle] = await generatePasses(db, 1);
-    expect((await resolveHandler(db, staff, { scanned: idle.token }, "d", now)).body).toEqual({ kind: "idle" });
-    expect((await resolveHandler(db, staff, { scanned: "https://naver.com" }, "d", now)).body).toEqual({
-      kind: "unknown",
-    });
-  });
-
-  it("패스 번호를 5회 틀리면 맞는 번호도 받지 않는다", async () => {
-    const { pass } = await registerWithPass(db, now);
-    const wrong = pass.passNo === "0000" ? "0001" : "0000";
-    for (let i = 0; i < 5; i++) {
-      expect((await resolveHandler(db, staff, { passNo: wrong }, "d", now)).body).toEqual({ kind: "unknown" });
-    }
-    expect((await resolveHandler(db, staff, { passNo: pass.passNo }, "d", now)).status).toBe(429);
-    expect((await resolveHandler(db, staff, { passNo: pass.passNo }, "other", now)).body.kind).toBe("active");
-    expect(await logCount("number_view")).toBe(1);
-  });
-
-  it("카드를 두 번 열어도 응대 기록은 하나", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const a = await caseHandler(db, staff, registration.id, now);
-    const b = await caseHandler(db, staff, registration.id, now);
-    expect((a.body.encounter as { id: string }).id).toBe((b.body.encounter as { id: string }).id);
-    expect(await db.query("select 1 from encounters")).toHaveLength(1);
-  });
-
-  it("카드는 문구로 바뀐 항목을 담는다", async () => {
-    const { registration } = await registerWithPass(db, now, {
-      needs: ["mov_no_stairs", "com_slow", "env_quiet", "acc_companion"],
-    });
-    const res = await caseHandler(db, staff, registration.id, now);
-    expect(res.body.case).toMatchObject({
-      name: "홍길동",
-      comm: ["천천히 설명해 주세요"],
-      categories: ["고령자입니다"],
-      needs: ["계단이나 에스컬레이터 이용이 어렵습니다", "혼잡하거나 시끄러운 곳이 힘듭니다"],
-      accompany: ["동반자가 있습니다"],
-      gate: 101,
-      schedTime: "14:30",
-      estTime: null,
-      minutesToClose: 140,
-    });
-  });
-
-  it("공공데이터가 탑승 마감을 알려 주면 추정 대신 그 값을 보여준다", async () => {
+  it("결항 편은 결항이라고 알려 주고, 지연 편은 바뀐 시각을 준다", async () => {
     await addFlights(
       db,
       [
-        flightRow("CL1", "2026-10-05 13:00", { gate: 102, status: "탑승마감" }),
-        flightRow("BD1", "2026-10-05 16:00", { gate: 103, status: "탑승중" }),
-        flightRow("CX1", "2026-10-05 16:00", { gate: 104, status: "결항" }),
+        flightRow("CX9", "2026-10-05 16:00", { status: "결항" }),
+        flightRow("DL9", "2026-10-05 16:00", { estAt: kst("2026-10-05 17:20"), status: "지연" }),
       ],
       now,
     );
-    const open = async (flightNo: string) => {
-      const { registration } = await registerWithPass(db, now, { flightNo });
-      return (await caseHandler(db, staff, registration.id, now)).body.case as Record<string, unknown>;
-    };
-    expect(await open("CL1")).toMatchObject({ closeLabel: "탑승 마감됨", urgent: true, status: "탑승마감" });
-    // 출발까지 4시간 남았어도 탑승 중이면 급한 여객이다.
-    expect(await open("BD1")).toMatchObject({ closeLabel: "탑승 마감까지 230분 (추정)", urgent: true, status: "탑승중" });
-    expect(await open("CX1")).toMatchObject({ closeLabel: "결항", urgent: false });
-    expect(await open("KE123")).toMatchObject({ closeLabel: "탑승 마감까지 140분 (추정)", urgent: false, status: "" });
+    const first = async (q: string) => ((await searchFlightsHandler(db, q, now)).body.flights as Record<string, unknown>[])[0];
+    expect(await first("CX9")).toMatchObject({ cancelled: true, time: "16:00" });
+    expect(await first("DL9")).toMatchObject({ cancelled: false, time: "17:20" });
   });
 
-  it("응대는 시작한 뒤에만 완료된다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const res = await caseHandler(db, staff, registration.id, now);
-    const id = (res.body.encounter as { id: string }).id;
-    expect((await encounterHandler(db, staff, id, { action: "end" }, now)).body).toEqual({ ok: false });
-    expect((await encounterHandler(db, staff, id, { action: "start" }, now)).body).toEqual({ ok: true });
-    expect((await encounterHandler(db, staff, id, { action: "end" }, now)).body).toEqual({ ok: true });
-    expect((await encounterHandler(db, staff, id, { action: "dance" }, now)).status).toBe(400);
-  });
-
-  it("만료된 등록의 카드는 열리지 않는다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    await db.query("update registrations set status = 'expired' where id = $1", [registration.id]);
-    expect((await caseHandler(db, staff, registration.id, now)).status).toBe(404);
-  });
-});
-
-describe("공통 직원 코드와 근무 구역", () => {
-  it("구역을 고르기 전에는 여객 정보가 열리지 않는다", async () => {
-    const { registration, pass } = await registerWithPass(db, now);
-    expect((await listHandler(db, common, "all", "d", now)).status).toBe(409);
-    expect((await caseHandler(db, common, registration.id, now)).status).toBe(409);
-    expect((await resolveHandler(db, common, { scanned: pass.token }, "d", now)).status).toBe(409);
-    expect(await decideTokenPage(db, pass.token, common, "d", now)).toEqual({ kind: "pick_zone" });
-    expect(await logCount("scan_view")).toBe(0);
-  });
-
-  it("고를 수 있는 구역은 터미널별로 묶여 오고 안내데스크와 공통 자리는 빠진다", async () => {
-    const res = await zonesHandler(db, common);
-    const groups = res.body.groups as { terminal: string; zones: { id: string; label: string }[] }[];
-    expect(groups.map((g) => g.terminal)).toEqual(["제1여객터미널", "탑승동", "제2여객터미널"]);
-    const ids = groups.flatMap((g) => g.zones.map((z) => z.id));
-    expect(ids).toContain("cc-end");
-    expect(ids).not.toContain("desk-t1");
-    expect(ids).not.toContain("staff-common");
-    expect(res.body.current).toBeNull();
-  });
-
-  it("구역을 고르면 그 구역의 세션이 된다. 만료 시각은 늘어나지 않는다", async () => {
-    const res = await switchZoneHandler(db, common, { zoneId: "cc-end" });
-    expect(res.status).toBe(200);
-    expect(readSession(res.token, now)).toEqual({ ...common, zoneId: "cc-end", needsZone: false });
-  });
-
-  it("안내데스크나 없는 구역은 고를 수 없고, 구역 코드로 들어온 직원은 바꿀 수 없다", async () => {
-    expect((await switchZoneHandler(db, common, { zoneId: "desk-t1" })).status).toBe(400);
-    expect((await switchZoneHandler(db, common, { zoneId: "staff-common" })).status).toBe(400);
-    expect((await switchZoneHandler(db, common, { zoneId: "nope" })).status).toBe(400);
-    expect((await switchZoneHandler(db, staff, { zoneId: "cc-mid" })).status).toBe(403);
-    expect((await zonesHandler(db, staff)).status).toBe(403);
-    expect((await zonesHandler(db, null)).status).toBe(401);
-  });
-});
-
-describe("전체 여객 목록", () => {
-  it("내 구역만 볼 때는 다른 구역 여객의 이름을 보내지 않고 건수만 보낸다", async () => {
-    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115 })], now);
-    await registerWithPass(db, now);
-    await registerWithPass(db, now, { name: "다른구역", flightNo: "OZ500" });
-    const res = await listHandler(db, staff, "zone", "d", now);
-    expect(res.body.assigned).toHaveLength(1);
-    expect(res.body.otherCount).toBe(1);
-    expect(res.body.others).toEqual([]);
-    expect(await logCount("list_view")).toBe(0);
-  });
-
-  it("전체를 보면 다른 구역 여객이 오고 조회 기록이 남는다. 같은 기기는 10분에 한 번만 남긴다", async () => {
-    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115 })], now);
-    await registerWithPass(db, now);
-    await registerWithPass(db, now, { name: "다른구역", flightNo: "OZ500" });
-    const res = await listHandler(db, staff, "all", "d", now);
-    const others = res.body.others as { name: string; zoneLabel: string; terminalLabel: string }[];
-    expect(others.map((c) => c.name)).toEqual(["다른구역"]);
-    expect(others[0].zoneLabel).toContain("중앙부");
-    expect(others[0].terminalLabel).toBe("탑승동");
-    await listHandler(db, staff, "all", "d", new Date(now.getTime() + 60_000));
-    expect(await logCount("list_view")).toBe(1);
-    await listHandler(db, staff, "all", "d", new Date(now.getTime() + 11 * 60_000));
-    expect(await logCount("list_view")).toBe(2);
-  });
-});
-
-describe("편명 자동 검색", () => {
   it("두 글자부터 그 글자로 시작하는 편을 찾고, 같은 편명을 맨 위에 둔다", async () => {
     await addFlights(
       db,
@@ -298,378 +156,735 @@ describe("편명 자동 검색", () => {
       db,
       [
         ...Array.from({ length: 12 }, (_, i) => flightRow("TW" + (100 + i), "2026-10-05 20:00")),
-        flightRow("TW999", "2026-10-05 11:00"),
+        flightRow("TW900", "2026-10-05 09:00"),
+        flightRow("TW901", "2026-10-05 13:00", { status: "출발" }),
       ],
       now,
     );
     const flights = (await searchFlightsHandler(db, "TW", now)).body.flights as { flightNo: string }[];
     expect(flights).toHaveLength(8);
-    expect(flights.map((f) => f.flightNo)).not.toContain("TW999");
+    expect(flights.map((f) => f.flightNo)).not.toContain("TW900");
+    expect((await searchFlightsHandler(db, "TW90", now)).body.flights).toEqual([]);
   });
 });
 
-describe("응대 이력", () => {
-  const mid: Session = { zoneId: "cc-mid", isDesk: false, ...base };
-
-  it("카드를 열어 보기만 한 것은 응대로 세지 않는다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const res = await caseHandler(db, staff, registration.id, now);
-    expect(res.body.trail).toEqual([]);
-    expect((res.body.case as { service: unknown }).service).toBeNull();
-    const list = await listHandler(db, staff, "zone", "d", now);
-    expect((list.body.assigned as { service: unknown }[])[0].service).toBeNull();
-  });
-
-  it("앞 구역의 응대가 다음 구역 직원의 카드와 목록에 보인다. 직원은 구역으로만 남는다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const at = (m: number) => new Date(now.getTime() + m * 60_000);
-    const first = await caseHandler(db, mid, registration.id, at(0));
-    const id = (first.body.encounter as { id: string }).id;
-    await encounterHandler(db, mid, id, { action: "start" }, at(1));
-
-    // 응대 중: 다른 구역 직원의 목록에 보인다.
-    let list = await listHandler(db, staff, "zone", "d", at(2));
-    expect((list.body.assigned as { service: unknown }[])[0].service).toEqual({
-      zone: "탑승동 중간",
-      startTime: "12:01",
-      endTime: null,
-    });
-
-    await encounterHandler(db, mid, id, { action: "end" }, at(6));
-    const next = await caseHandler(db, staff, registration.id, at(10));
-    expect(next.body.trail).toEqual([{ zone: "탑승동 중간", startTime: "12:01", endTime: "12:06" }]);
-
-    // 다음 구역이 시작하면 이력이 두 줄이 되고, 목록은 가장 최근 것을 보여준다.
-    await encounterHandler(db, staff, (next.body.encounter as { id: string }).id, { action: "start" }, at(11));
-    const again = await caseHandler(db, staff, registration.id, at(12));
-    expect((again.body.trail as { zone: string }[]).map((t) => t.zone)).toEqual(["탑승동 중간", "탑승동 끝단"]);
-    list = await listHandler(db, staff, "zone", "d", at(12));
-    expect((list.body.assigned as { service: { zone: string; endTime: string | null } }[])[0].service).toMatchObject({
-      zone: "탑승동 끝단",
-      endTime: null,
-    });
-  });
-});
-
-describe("인계와 조회 기록", () => {
-  const mid: Session = { zoneId: "cc-mid", isDesk: false, ...base };
-
-  it("다음 구역이 응대를 시작하면 앞 구역이 끝내지 않은 응대는 그 시각에 끝난다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const at = (m: number) => new Date(now.getTime() + m * 60_000);
-    const a = await caseHandler(db, mid, registration.id, at(0));
-    await encounterHandler(db, mid, (a.body.encounter as { id: string }).id, { action: "start" }, at(1));
-    // 완료를 누르지 않고 떠났다. 다음 구역이 시작한다.
-    const b = await caseHandler(db, staff, registration.id, at(9));
-    await encounterHandler(db, staff, (b.body.encounter as { id: string }).id, { action: "start" }, at(10));
-    const trail = (await caseHandler(db, staff, registration.id, at(11))).body.trail;
-    expect(trail).toEqual([
-      { zone: "탑승동 중간", startTime: "12:01", endTime: "12:10" },
-      { zone: "탑승동 끝단", startTime: "12:10", endTime: null },
-    ]);
-  });
-
-  it("구역을 고르기 전에는 응대 기록도 바꿀 수 없다", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const a = await caseHandler(db, staff, registration.id, now);
-    const res = await encounterHandler(db, common, (a.body.encounter as { id: string }).id, { action: "start" }, now);
-    expect(res.status).toBe(409);
-  });
-
-  it("전체 목록 조회 기록은 구역이 다르면 따로 남고, 안내데스크가 목록을 볼 때도 남는다", async () => {
-    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115 })], now);
-    await registerWithPass(db, now);
-    await registerWithPass(db, now, { name: "다른구역", flightNo: "OZ500" });
-    await listHandler(db, staff, "all", "d", now);
-    await listHandler(db, mid, "all", "d", now);
-    expect(await logCount("list_view")).toBe(2);
-    await listHandler(db, desk, "zone", "d", now);
-    await listHandler(db, desk, "zone", "d", new Date(now.getTime() + 60_000));
-    expect(await logCount("list_view")).toBe(3);
-  });
-});
-
-describe("패스 QR 주소 분기", () => {
-  it("로그인하지 않으면 DB 를 조회하지 않고 직원 전용 안내만", async () => {
-    let queries = 0;
-    const counting: Db = {
-      query: (sql, params) => {
-        queries += 1;
-        return db.query(sql, params);
-      },
-      exec: (sql) => db.exec(sql),
-    };
-    const { pass } = await registerWithPass(db, now);
-    expect(await decideTokenPage(counting, pass.token, null, "d", now)).toEqual({ kind: "staff_only" });
-    expect(await decideTokenPage(counting, "x".repeat(24), null, "d", now)).toEqual({ kind: "staff_only" });
-    expect(queries).toBe(0);
-  });
-
-  it("직원이 연결된 패스를 찍으면 카드로, 기록을 남긴다", async () => {
-    const { registration, pass } = await registerWithPass(db, now);
-    expect(await decideTokenPage(db, pass.token, staff, "d", now)).toEqual({
-      kind: "case",
-      registrationId: registration.id,
-    });
-    expect(await logCount("scan_view")).toBe(1);
-  });
-
-  it("연결 전 패스는 안내데스크만 연결 화면으로", async () => {
-    const [idle] = await generatePasses(db, 1);
-    expect(await decideTokenPage(db, idle.token, staff, "d", now)).toEqual({ kind: "idle" });
-    expect(await decideTokenPage(db, idle.token, desk, "d", now)).toEqual({ kind: "desk_link", token: idle.token });
-  });
-
-  it("없는 토큰과 폐기된 패스는 사용할 수 없음", async () => {
-    expect(await decideTokenPage(db, "x".repeat(24), staff, "d", now)).toEqual({ kind: "unusable" });
-  });
-});
-
-describe("안내데스크 경로", () => {
-  it("안내데스크가 아니면 403, 로그인 없으면 401", async () => {
-    expect((await receiptHandler(db, staff, { receiptNo: "0000" }, "d", now)).status).toBe(403);
-    expect((await linkHandler(db, staff, {}, "d", now)).status).toBe(403);
-    expect((await deskRegisterHandler(db, staff, {}, now)).status).toBe(403);
-    expect((await reissueHandler(db, staff, {}, "d", now)).status).toBe(403);
-    expect((await receiptHandler(db, null, { receiptNo: "0000" }, "d", now)).status).toBe(401);
-  });
-
-  it("접수 번호 조회 → 연결 → 같은 번호는 더 조회되지 않는다", async () => {
-    const reg = await register(db, now);
-    const [pass] = await generatePasses(db, 1);
-
-    const found = await receiptHandler(db, desk, { receiptNo: reg.receiptNo }, "d", now);
-    expect(found.body).toMatchObject({
-      registrationId: reg.id,
-      name: "홍길동",
-      flightNo: "KE123",
-      destName: "뉴욕",
-      timeLabel: "14:30",
-      categories: ["고령자입니다"],
-      needs: ["계단이나 에스컬레이터 이용이 어렵습니다", "천천히 설명해 주세요"],
-    });
-
-    const linked = await linkHandler(db, desk, { registrationId: reg.id, scanned: pass.token }, "d", now);
-    expect(linked.body).toEqual({ ok: true, passNo: pass.passNo });
-    expect((await receiptHandler(db, desk, { receiptNo: reg.receiptNo }, "d", now)).status).toBe(404);
-    expect(await logCount("receipt_view")).toBe(1);
-    expect(await logCount("link")).toBe(1);
-  });
-
-  it("사용 중인 패스로는 연결할 수 없다", async () => {
-    const { pass } = await registerWithPass(db, now);
-    const reg = await register(db, now);
-    const res = await linkHandler(db, desk, { registrationId: reg.id, scanned: pass.token }, "d", now);
-    expect(res).toEqual({ status: 400, body: { error: "이미 사용 중인 패스입니다" } });
-  });
-
-  it("패스가 아닌 QR", async () => {
-    const reg = await register(db, now);
-    const res = await linkHandler(db, desk, { registrationId: reg.id, scanned: "https://naver.com" }, "d", now);
-    expect(res.body.error).toBe("패스 QR이 아닙니다");
-  });
-
-  it("종이 체크리스트 등록은 경로를 남기고 바로 패스가 만들어진다", async () => {
-    const res = await deskRegisterHandler(db, desk, webBody({ route: "paper" }), now);
+describe("등록", () => {
+  it("등록하면 바로 패스가 만들어지고, 패스 번호와 QR 값만 돌려준다", async () => {
+    const res = await registerHandler(db, body(), null, web, now);
     expect(res.status).toBe(200);
-    const [row] = await db.query<{ route: string; status: string }>("select route, status from registrations");
-    expect(row).toEqual({ route: "paper", status: "active" });
-    expect(res.body.passNo).toMatch(/^\d{4}$/);
-    // 패스의 주소(토큰)는 안내데스크 화면으로 보내지 않는다. 인쇄 화면이 서버에서 직접 읽는다.
-    expect(Object.keys(res.body)).not.toContain("token");
-    expect((await resolveHandler(db, staff, { passNo: res.body.passNo }, "d", now)).body.kind).toBe("active");
+    expect(Object.keys(res.body).sort()).toEqual(["passNo", "token"]);
+    expect(res.body.passNo).toMatch(/^\d{6}$/);
+    expect(res.body.token).toMatch(/^[0-9A-HJKMNP-TV-Z]{16}$/);
+
+    expect(await regRows()).toEqual([{ route: "web", name: null, lang: "ko", needs: CHOICES, status: "active" }]);
+    // 그 QR 값으로 바로 안내가 열린다.
+    const guide = await guideHandler(db, res.body.token as string, null, now);
+    expect((guide.body.guide as GuideDto).passNo).toBe(res.body.passNo);
   });
 
-  it("안내데스크는 여객의 QR 로 찾은 등록의 내용과 패스 번호를 본다", async () => {
-    const reg = await registerHandler(db, webBody(), "ip-9", now);
-    const found = await resolveHandler(db, desk, { scanned: reg.body.token }, "d", now);
-    expect((await getHandler(db, staff, { registrationId: found.body.registrationId }, "d", now)).status).toBe(403);
-    const res = await getHandler(db, desk, { registrationId: found.body.registrationId }, "d", now);
-    expect(res.body).toMatchObject({ name: "홍길동", flightNo: "KE123", passNo: reg.body.passNo });
-    expect(Object.keys(res.body)).not.toContain("token");
-    expect(await logCount("receipt_view")).toBe(1);
-    expect((await getHandler(db, desk, { registrationId: "nope" }, "d", now)).status).toBe(404);
+  it("이름을 넣어 보내도 저장하지 않는다", async () => {
+    const res = await registerHandler(db, body({ name: "홍길동", categories: ["cat_senior"] }), null, web, now);
+    expect(res.status).toBe(200);
+    expect((await regRows())[0].name).toBeNull();
+    expect(JSON.stringify(await db.query("select * from registrations"))).not.toContain("홍길동");
   });
 
-  it("재발급하면 여객 휴대전화의 QR 도 못 쓰게 되고 새 패스 번호가 나온다", async () => {
-    const reg = await registerHandler(db, webBody(), "ip-9", now);
-    const found = await resolveHandler(db, desk, { scanned: reg.body.token }, "d", now);
-    const again = await reissueHandler(db, desk, { registrationId: found.body.registrationId, auto: true }, "d", now);
-    expect(again.status).toBe(200);
-    expect(again.body.passNo).not.toBe(reg.body.passNo);
-    expect((await resolveHandler(db, staff, { scanned: reg.body.token }, "d", now)).body.kind).toBe("unusable");
-    expect((await resolveHandler(db, staff, { passNo: again.body.passNo }, "d", now)).body.kind).toBe("active");
+  it("본문에 다른 등록 경로를 넣어 보내도 web 으로 저장한다", async () => {
+    await registerHandler(db, body({ route: "assisted" }), null, web, now);
+    await registerHandler(db, body({ route: "kiosk" }), staff, web, now);
+    expect((await regRows()).map((r) => r.route)).toEqual(["web", "web"]);
   });
 
-  it("안내데스크 등록은 방법을 골라야 한다", async () => {
-    expect((await deskRegisterHandler(db, desk, webBody({ route: "web" }), now)).status).toBe(400);
-    expect((await deskRegisterHandler(db, desk, webBody(), now)).status).toBe(400);
+  it("키오스크 기기에서 오면 kiosk 로 저장한다", async () => {
+    const res = await registerHandler(db, body(), kiosk, "kiosk-dev", now);
+    expect(res.status).toBe(200);
+    expect((await regRows())[0].route).toBe("kiosk");
   });
 
-  it("재발급: 이름과 편명으로 찾아 새 패스를 연결하면 옛 패스는 쓸 수 없다", async () => {
-    const { registration, pass: oldPass } = await registerWithPass(db, now);
-    const [newPass] = await generatePasses(db, 1);
+  it("직원이 대신 넣는 등록은 안내데스크만 할 수 있다", async () => {
+    for (const s of [null, staff, mid, common, kiosk]) {
+      const res = await registerHandler(db, body(), s, "dev", now, true);
+      expect(res.status).toBe(403);
+    }
+    expect(await regRows()).toHaveLength(0);
 
-    const found = await reissueHandler(db, desk, { name: "홍길동", flightNo: "ke123" }, "d", now);
-    const candidates = found.body.candidates as { registrationId: string }[];
-    expect(candidates.map((c) => c.registrationId)).toEqual([registration.id]);
-
-    const done = await reissueHandler(db, desk, { registrationId: registration.id, scanned: newPass.token }, "d", now);
-    expect(done.body).toEqual({ ok: true, passNo: newPass.passNo });
-    expect(await resolveToken(db, oldPass.token)).toEqual({ kind: "unusable" });
-    expect(await logCount("reissue")).toBe(1);
+    const res = await registerHandler(db, body(), desk, "desk-dev", now, true);
+    expect(res.status).toBe(200);
+    expect(Object.keys(res.body).sort()).toEqual(["passNo", "token"]);
+    expect((await regRows())[0].route).toBe("assisted");
   });
 
-  it("카메라를 못 쓰면 패스 번호로 연결한다. 미사용 패스만 받는다", async () => {
-    const reg = await register(db, now);
-    const used = await registerWithPass(db, now);
-    const [idle] = await generatePasses(db, 1);
-
-    const bad = await linkHandler(db, desk, { registrationId: reg.id, passNo: used.pass.passNo }, "d", now);
-    expect(bad).toEqual({ status: 400, body: { error: "쓸 수 있는 패스 번호가 아닙니다" } });
-
-    const good = await linkHandler(db, desk, { registrationId: reg.id, passNo: idle.passNo }, "d", now);
-    expect(good.body).toEqual({ ok: true, passNo: idle.passNo });
+  it("안내데스크 기기에서 여객이 스스로 한 등록은 web 이다", async () => {
+    await registerHandler(db, body(), desk, "desk-dev", now);
+    expect((await regRows())[0].route).toBe("web");
   });
 
-  it("자동 배정: 번호가 가장 작은 미사용 패스를 연결하고 그 번호를 알려 준다", async () => {
-    await db.query("delete from passes");
-    await db.query("insert into passes (token, pass_no) values ($1, '0500'), ($2, '0042')", ["a".repeat(24), "b".repeat(24)]);
-    const reg = await register(db, now);
-    expect((await linkHandler(db, staff, { registrationId: reg.id, auto: true }, "d", now)).status).toBe(403);
-    const res = await linkHandler(db, desk, { registrationId: reg.id, auto: true }, "d", now);
-    expect(res.body).toEqual({ ok: true, passNo: "0042" });
-    // 재발급도 자동 배정으로 할 수 있다. 옛 패스는 끝난다.
-    const again = await reissueHandler(db, desk, { registrationId: reg.id, auto: true }, "d", now);
-    expect(again.body).toEqual({ ok: true, passNo: "0500" });
-    expect((await resolveToken(db, "b".repeat(24))).kind).toBe("unusable");
-    // 미리 만들어 둔 패스가 없으면 새로 만들어 연결한다. 패스가 모자라 막히는 일이 없다.
-    const other = await register(db, now, { name: "두번째" });
-    const made = await linkHandler(db, desk, { registrationId: other.id, auto: true }, "d", now);
-    expect(made.status).toBe(200);
-    expect(made.body.passNo).toMatch(/^\d{4}$/);
+  it("화면 언어를 남긴다", async () => {
+    await registerHandler(db, body({ lang: "en" }), null, web, now);
+    await registerHandler(db, body({ lang: "jp" }), null, web, now);
+    expect((await regRows()).map((r) => r.lang).sort()).toEqual(["en", "ko"]);
   });
 
-  it("등록 목록: 패스를 기다리는 등록과 연결된 등록을 나눠 보여준다", async () => {
-    const waiting = await register(db, now, { name: "대기여객" });
-    const linked = await registerWithPass(db, now, { name: "연결여객" });
-    const gone = await register(db, now, { name: "만료여객" });
-    await db.query("update registrations set status = 'expired' where id = $1", [gone.id]);
-
-    const res = await deskListHandler(db, desk, "d", now);
-    const pending = res.body.pending as Record<string, unknown>[];
-    const active = res.body.active as Record<string, unknown>[];
-    expect(pending).toHaveLength(1);
-    expect(pending[0]).toMatchObject({
-      registrationId: waiting.id,
-      name: "대기여객",
-      flightNo: "KE123",
-      destName: "뉴욕",
-      timeLabel: "14:30",
-      receiptNo: waiting.receiptNo,
-      passNo: null,
-    });
-    expect(active).toHaveLength(1);
-    expect(active[0]).toMatchObject({ name: "연결여객", passNo: linked.pass.passNo });
-
-    // 여러 여객의 이름이 보이는 화면이므로 열어 본 기록을 남긴다.
-    expect(await logCount("list_view")).toBe(1);
-    expect((await deskListHandler(db, staff, "d", now)).status).toBe(403);
-    expect((await deskListHandler(db, null, "d", now)).status).toBe(401);
-    expect(await logCount("list_view")).toBe(1);
+  it("동의하지 않거나 값이 맞지 않으면 400 이고 아무것도 남기지 않는다", async () => {
+    const bad = [
+      body({ consent: false }),
+      body({ consent: "true" }),
+      body({ choices: ["nope"] }),
+      body({ choices: ["stf_call", "stf_self"] }),
+      body({ flightNo: "ZZ999" }),
+      body({ flightNo: 123 }),
+      body({ flightDate: undefined }),
+      {},
+    ];
+    for (const b of bad) expect((await registerHandler(db, b, null, web, now)).status).toBe(400);
+    expect(await regRows()).toHaveLength(0);
+    expect(await db.query("select 1 from passes")).toHaveLength(0);
+    expect(await logCount("register")).toBe(0);
+    expect(await eventRows("reg_done")).toHaveLength(0);
   });
 
-  it("등록 내용 고치기: 이름·편·선택을 바꾸고 패스는 그대로 둔다", async () => {
-    await addFlights(db, [flightRow("OZ500", "2026-10-05 15:00", { gate: 115, destName: "파리" })], now);
-    const { registration, pass } = await registerWithPass(db, now);
-    const body = {
-      registrationId: registration.id,
-      name: " 홍길순 ",
-      flightDate: "2026-10-05",
-      flightNo: "OZ500",
-      categories: ["cat_pregnant"],
-      needs: ["mov_no_standing"],
-    };
-    expect((await updateHandler(db, staff, body, "d", now)).status).toBe(403);
-    expect((await updateHandler(db, desk, { ...body, flightNo: "ZZ1" }, "d", now)).body.error).toBe("편명을 다시 확인해 주세요");
-    expect((await updateHandler(db, desk, { ...body, categories: [] }, "d", now)).status).toBe(400);
-
-    const res = await updateHandler(db, desk, body, "d", now);
-    expect(res.body).toMatchObject({ name: "홍길순", flightNo: "OZ500", destName: "파리", categoryCodes: ["cat_pregnant"] });
-    expect(await logCount("edit")).toBe(1);
-    // 같은 패스로 열면 고친 내용이 보이고, 탑승구가 바뀐 편을 따라 다른 구역으로 넘어간다.
-    const found = await resolveToken(db, pass.token);
-    expect(found.kind).toBe("active");
-    expect((await listHandler(db, staff, "zone", "d", now)).body.assigned).toHaveLength(0);
-    const card = await caseHandler(db, staff, registration.id, now);
-    expect(card.body.case).toMatchObject({ name: "홍길순", gate: 115, categories: ["임신 중입니다"] });
-    const [row] = await db.query<{ edit_count: number }>("select edit_count from registrations where id = $1", [registration.id]);
-    // 직원이 고친 것은 여객의 "되돌아가 고친 횟수"에 더하지 않는다.
-    expect(row.edit_count).toBe(0);
+  it("이미 떠난 편으로는 등록할 수 없다", async () => {
+    await addFlights(db, [flightRow("KE001", "2026-10-05 09:00"), flightRow("KE888", "2026-10-05 12:30", { status: "출발" })], now);
+    for (const flightNo of ["KE001", "KE888"]) {
+      const res = await registerHandler(db, body({ flightNo }), null, web, now);
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain("이미 출발한 편");
+    }
   });
 
-  it("이미 떠난 편으로는 고칠 수 없다. 편을 그대로 두고 이름만 고치는 것은 된다", async () => {
-    await addFlights(db, [flightRow("OZ100", "2026-10-05 11:00", { gate: 115 })], now);
-    const reg = await register(db, now);
-    const toGone = await updateHandler(db, desk, { ...webBody({ flightNo: "OZ100" }), registrationId: reg.id }, "d", now);
-    expect(toGone.status).toBe(400);
-    expect(toGone.body.error).toContain("이미 출발한 편");
-    // 등록한 편이 떠난 뒤에도 이름은 고칠 수 있다.
-    const later = kst("2026-10-05 15:00");
-    const same = await updateHandler(db, desk, { ...webBody({ name: "새이름" }), registrationId: reg.id }, "d", later);
-    expect(same.body).toMatchObject({ name: "새이름", flightNo: "KE123" });
-  });
-
-  it("같은 구역의 두 기기가 같은 순간에 카드를 열어도 응대 기록은 하나", async () => {
-    const { registration } = await registerWithPass(db, now);
-    const [a, b] = await Promise.all([
-      caseHandler(db, staff, registration.id, now),
-      caseHandler(db, staff, registration.id, now),
-    ]);
-    expect((a.body.encounter as { id: string }).id).toBe((b.body.encounter as { id: string }).id);
-    expect(await db.query("select 1 from encounters")).toHaveLength(1);
-  });
-
-  it("끝난 등록은 고칠 수 없다", async () => {
-    const reg = await register(db, now);
-    await cancelHandler(db, desk, { registrationId: reg.id }, "d", now);
-    const res = await updateHandler(db, desk, { ...webBody(), registrationId: reg.id }, "d", now);
+  it("오늘과 내일 편이 아니면 등록할 수 없다", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-07 14:30")], now);
+    const res = await registerHandler(db, body({ flightDate: "2026-10-07" }), null, web, now);
     expect(res.status).toBe(400);
+    expect(res.body.error).toBe("오늘과 내일 출발하는 편만 등록할 수 있습니다");
+    expect(await regRows()).toHaveLength(0);
+    expect((await registerHandler(db, body({ flightDate: "2026-10-06" }), null, web, now)).status).toBe(200);
   });
 
-  it("등록 취소: 사람을 알 수 있는 값을 지우고 패스를 끝낸다", async () => {
-    const waiting = await register(db, now, { name: "잘못등록" });
-    const linked = await registerWithPass(db, now, { name: "취소여객" });
+  it("고른 항목에 글자가 아닌 값이 섞여 오면 글자만 남겨 받는다", async () => {
+    const res = await registerHandler(db, body({ choices: ["gd_large", 7, null, "fac_rest"] }), null, web, now);
+    expect(res.status).toBe(200);
+    expect((await regRows())[0].needs).toEqual(["gd_large", "fac_rest"]);
+  });
 
-    expect((await cancelHandler(db, staff, { registrationId: waiting.id }, "d", now)).status).toBe(403);
-    expect((await cancelHandler(db, desk, { registrationId: waiting.id }, "d", now)).body).toEqual({ ok: true });
-    expect((await cancelHandler(db, desk, { registrationId: linked.registration.id }, "d", now)).status).toBe(200);
-    // 이미 취소한 등록은 다시 취소할 수 없다.
-    expect((await cancelHandler(db, desk, { registrationId: waiting.id }, "d", now)).status).toBe(404);
+  it("읽을 수 없는 시작 시각은 작성 시간 0 으로 남긴다", async () => {
+    await registerHandler(db, body({ startedAt: "어제" }), null, web, now);
+    await registerHandler(db, body({ startedAt: undefined }), null, web, now);
+    const rows = await db.query<{ started_at: Date; submitted_at: Date }>("select started_at, submitted_at from registrations");
+    for (const r of rows) expect(r.started_at).toEqual(r.submitted_at);
+  });
 
-    const rows = await db.query<{ name: string | null; status: string; receipt_no: string | null }>(
-      "select name, status, receipt_no from registrations order by submitted_at",
+  it("등록한 기록을 남긴다. 접속 주소는 해시로만 남는다", async () => {
+    await registerHandler(db, body(), null, web, now);
+    await registerHandler(db, body(), desk, "desk-dev", now, true);
+    const logs = await db.query<{ zone_id: string | null; device_key: string; registration_id: string | null }>(
+      "select zone_id, device_key, registration_id from access_logs where action = 'register' order by id",
     );
-    expect(rows).toEqual([
-      { name: null, status: "revoked", receipt_no: null },
-      { name: null, status: "revoked", receipt_no: null },
+    expect(logs.map((l) => [l.zone_id, l.device_key])).toEqual([
+      [null, web],
+      ["desk-t1", "desk-dev"],
     ]);
-    expect(await resolveToken(db, linked.pass.token)).toEqual({ kind: "unusable" });
-    const list = await deskListHandler(db, desk, "d", now);
-    expect(list.body.pending).toHaveLength(0);
-    expect(list.body.active).toHaveLength(0);
-    expect(await logCount("cancel")).toBe(2);
+    for (const l of logs) expect(l.registration_id).not.toBeNull();
+    expect(web).not.toContain("203.0.113.7");
+  });
+});
+
+describe("등록 횟수 제한", () => {
+  const key = (ua: string) => deviceKey("203.0.113.7", ua);
+
+  it(`같은 접속 주소에서 ${config.registerWindowMin}분에 ${config.registerMaxPerIp}건을 넘기면 막는다. 브라우저 표시를 바꿔도 같다`, async () => {
+    for (let i = 0; i < config.registerMaxPerIp; i++) {
+      expect((await registerHandler(db, body(), null, key(`ua-${i}`), now)).status).toBe(200);
+    }
+    expect((await registerHandler(db, body(), null, key("ua-new"), now)).status).toBe(429);
+    // 거부된 등록은 저장되지 않는다.
+    expect(await regRows()).toHaveLength(config.registerMaxPerIp);
+    expect(await db.query("select 1 from passes")).toHaveLength(config.registerMaxPerIp);
+
+    // 다른 접속 주소는 영향이 없고, 시간이 지나면 다시 받는다.
+    expect(await allowRegistration(db, deviceKey("198.51.100.9", "ua-0"), now)).toBe(true);
+    expect((await registerHandler(db, body(), null, deviceKey("198.51.100.9", "ua-0"), now)).status).toBe(200);
+    const later = new Date(now.getTime() + config.registerWindowMin * 60_000);
+    expect(await allowRegistration(db, key("ua-new"), later)).toBe(true);
+    expect((await registerHandler(db, body(), null, key("ua-new"), later)).status).toBe(200);
   });
 
-  it("패스 더 만들기: 안내데스크만, 한 번에 50장까지", async () => {
-    expect((await morePassesHandler(db, staff, { count: 10 })).status).toBe(403);
-    expect((await morePassesHandler(db, desk, { count: 0 })).status).toBe(400);
-    expect((await morePassesHandler(db, desk, { count: 51 })).status).toBe(400);
-    expect((await morePassesHandler(db, desk, { count: 10 })).body).toEqual({ ok: true, made: 10 });
-    expect(await db.query("select 1 from passes where state = 'idle'")).toHaveLength(10);
+  it("키오스크와 안내데스크의 대신 입력은 횟수를 막지 않는다", async () => {
+    for (let i = 0; i < config.registerMaxPerIp; i++) await registerHandler(db, body(), null, key(`ua-${i}`), now);
+    expect(await allowRegistration(db, key("kiosk"), now)).toBe(false);
+
+    expect((await registerHandler(db, body(), kiosk, key("kiosk"), now)).status).toBe(200);
+    expect((await registerHandler(db, body(), desk, key("desk"), now, true)).status).toBe(200);
+    // 같은 주소의 휴대전화는 여전히 막힌다.
+    expect((await registerHandler(db, body(), null, key("phone"), now)).status).toBe(429);
+    expect((await registerHandler(db, body(), desk, key("desk"), now)).status).toBe(429);
   });
 
-  it("재발급 검색은 이름과 편명이 모두 필요하다", async () => {
-    expect((await reissueHandler(db, desk, { name: "홍길동" }, "d", now)).status).toBe(400);
+  it("키오스크와 안내데스크에서 받은 등록은 휴대전화 등록의 횟수로 세지 않는다", async () => {
+    // 공항 안에서는 키오스크와 여객의 휴대전화가 같은 접속 주소로 나갈 수 있다.
+    for (let i = 0; i < config.registerMaxPerIp; i++) await registerHandler(db, body(), kiosk, key("kiosk"), now);
+    for (let i = 0; i < 3; i++) await registerHandler(db, body(), desk, key("desk"), now, true);
+    expect(await logCount("register")).toBe(config.registerMaxPerIp + 3);
+    expect(await allowRegistration(db, key("phone"), now)).toBe(true);
+
+    // 휴대전화 등록은 한도까지 그대로 받는다.
+    for (let i = 0; i < config.registerMaxPerIp; i++) {
+      expect((await registerHandler(db, body(), null, key(`ua-${i}`), now)).status).toBe(200);
+    }
+    expect((await registerHandler(db, body(), null, key("phone"), now)).status).toBe(429);
+  });
+
+  it("키오스크 한 대가 한도보다 많이 받아도 계속 받는다", async () => {
+    for (let i = 0; i < config.registerMaxPerIp + 3; i++) {
+      expect((await registerHandler(db, body(), kiosk, key("kiosk"), now)).status).toBe(200);
+    }
+    expect((await regRows()).every((r) => r.route === "kiosk")).toBe(true);
+  });
+});
+
+describe("등록 완료 기록", () => {
+  it("휴대전화와 키오스크에서 한 등록은 완료로 센다. 키오스크는 놓인 자리도 남긴다", async () => {
+    await registerHandler(db, body(), null, web, now);
+    await registerHandler(db, body(), kiosk, "kiosk-dev", now);
+    expect(await eventRows("reg_done")).toEqual([
+      { route: "web", adapted: true, place_id: null, value: null, device_key: web },
+      { route: "kiosk", adapted: true, place_id: "cc-108", value: null, device_key: "kiosk-dev" },
+    ]);
+  });
+
+  it("직원이 대신 넣은 등록은 완료로 세지 않는다", async () => {
+    await registerHandler(db, body(), desk, "desk-dev", now, true);
+    expect(await regRows()).toHaveLength(1);
+    expect(await db.query("select 1 from events")).toHaveLength(0);
+  });
+
+  it("시작할 때의 값을 보내지 않으면 고른 항목에서 안내 방식을 켰는지 본다", async () => {
+    await registerHandler(db, body({ choices: ["gd_voice"] }), null, web, now);
+    await registerHandler(db, body({ choices: ["mov_no_stairs", "fac_rest"] }), null, web, now);
+    await registerHandler(db, body({ choices: [] }), null, web, now);
+    expect((await eventRows("reg_done")).map((e) => e.adapted)).toEqual([true, false, false]);
+  });
+
+  it("시작할 때의 값을 보내면 그 값으로 센다. 고른 항목과 달라도 그렇다", async () => {
+    // 안내 방식을 켜고 시작했다가 끄고 마친 여객, 끄고 시작했다가 켜고 마친 여객.
+    await registerHandler(db, body({ choices: ["mov_no_stairs"], startAdapted: true }), null, web, now);
+    await registerHandler(db, body({ choices: ["gd_large"], startAdapted: false }), null, web, now);
+    expect((await eventRows("reg_done")).map((e) => e.adapted)).toEqual([true, false]);
+  });
+
+  it("시작할 때의 값이 참·거짓이 아니면 고른 항목으로 센다", async () => {
+    await registerHandler(db, body({ choices: ["gd_large"], startAdapted: "false" }), null, web, now);
+    await registerHandler(db, body({ choices: [], startAdapted: 1 }), null, web, now);
+    expect((await eventRows("reg_done")).map((e) => e.adapted)).toEqual([true, false]);
+  });
+});
+
+describe("안내 내용", () => {
+  it("로그인 없이 QR 값만으로 열린다. 자리가 없으니 길과 시설은 비어 있다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    await recordPoll(db, { at: kst("2026-10-05 11:55"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
+    const res = await guideHandler(db, pass.token, null, now);
+    expect(res.status).toBe(200);
+    expect(Object.keys(res.body)).toEqual(["guide"]);
+    expect(res.body.guide).toMatchObject({
+      passNo: pass.passNo,
+      lang: "ko",
+      choices: CHOICES,
+      place: null,
+      gateRoute: null,
+      routeNote: "no_place",
+      pace: null,
+      facilities: [],
+      flight: { flightNo: "KE123", gate: 127, area: "CONCOURSE", schedTime: "14:30", close: "open", minutesToClose: 140 },
+      poll: { label: "운항 정보 11:55 기준", stale: false },
+    });
+  });
+
+  it("QR 값(token)은 안내 내용에 다시 싣지 않는다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    const res = await guideHandler(db, pass.token, null, now);
+    expect(JSON.stringify(res.body)).not.toContain(pass.token);
+    expect(hasKey(res.body, "token")).toBe(false);
+    expect(hasKey(res.body, "registrationId")).toBe(false);
+  });
+
+  it("주소째로 넣어도, 소문자로 넣어도 열린다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    expect((await guideHandler(db, passUrl("https://x.app", pass.token), null, now)).status).toBe(200);
+    expect((await guideHandler(db, pass.token.toLowerCase(), null, now)).status).toBe(200);
+  });
+
+  it("키오스크에서 열면 그 자리를 기준으로 길과 가까운 시설이 들어간다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    const g = (await guideHandler(db, pass.token, kiosk, now)).body.guide as GuideDto;
+    expect(g.place).toMatchObject({ id: "cc-108", landside: false });
+    expect(g.routeNote).toBeNull();
+    // 108번 앞에서 127번 탑승구까지 570m. 계단이 어렵다고 한 여객이라 천천히 걷는 시간으로 잰다.
+    expect(g.gateRoute).toMatchObject({ meters: 570, minutes: 13, levelChanges: 0 });
+    expect(g.pace).toBe("ok");
+    expect(g.facilities).toHaveLength(6);
+  });
+
+  it("직원 세션으로 열어도 자리가 없으니 길은 비어 있다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    for (const s of [staff, desk]) {
+      expect((await guideHandler(db, pass.token, s, now)).body.guide).toMatchObject({ place: null, routeNote: "no_place" });
+    }
+  });
+
+  it("없는 값은 404, 끝난 패스는 410", async () => {
+    const { registration, pass } = await registerWithPass(db, now);
+    expect((await guideHandler(db, "7K2M9QXW4HT8VB3N", null, now)).status).toBe(404);
+    expect((await guideHandler(db, "https://naver.com", null, now)).status).toBe(404);
+    expect((await guideHandler(db, "", null, now)).status).toBe(404);
+
+    await db.query("update registrations set status = 'expired' where id = $1", [registration.id]);
+    const ended = await guideHandler(db, pass.token, null, now);
+    expect(ended.status).toBe(410);
+    expect(Object.keys(ended.body)).toEqual(["error"]);
+  });
+
+  it("안내를 여러 번 읽어도 건수 기록과 조회 기록은 늘지 않는다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    for (let i = 0; i < 3; i++) await guideHandler(db, pass.token, kiosk, now);
+    expect(await db.query("select 1 from events")).toHaveLength(0);
+    expect(await db.query("select 1 from access_logs")).toHaveLength(0);
+  });
+
+  it("운항 정보를 받은 지 오래되면 그렇다고 알려 준다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    const poll = async () => ((await guideHandler(db, pass.token, null, now)).body.guide as GuideDto).poll;
+    expect(await poll()).toEqual({ label: "운항 정보 없음", stale: true });
+    // 수집 간격에 15분을 더한 시간보다 오래된 수집만 있으면 멈춘 것으로 본다.
+    await recordPoll(db, { at: kst("2026-10-05 10:40"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
+    expect(await poll()).toEqual({ label: "운항 정보 10:40 기준", stale: true });
+    await recordPoll(db, { at: kst("2026-10-05 11:40"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
+    expect(await poll()).toEqual({ label: "운항 정보 11:40 기준", stale: false });
+    // 실패한 수집은 기준 시각이 되지 않는다.
+    await recordPoll(db, { at: kst("2026-10-05 11:59"), ok: false, rowCount: 0, durationMs: 1, gateChanges: 0, error: "x" });
+    expect((await poll()).label).toBe("운항 정보 11:40 기준");
+  });
+});
+
+describe("여객이 등록 지우기", () => {
+  it("QR 값으로 지우면 항공편과 고른 항목이 사라지고 패스는 더 열리지 않는다", async () => {
+    const { registration, pass } = await registerWithPass(db, now);
+    const res = await eraseHandler(db, { token: pass.token }, web, now);
+    expect(res).toEqual({ status: 200, body: { erased: true } });
+
+    const [row] = await db.query<Record<string, unknown>>(
+      "select flight_no, flight_date, needs, status, purged_at from registrations where id = $1",
+      [registration.id],
+    );
+    expect(row).toEqual({ flight_no: null, flight_date: null, needs: [], status: "revoked", purged_at: now });
+    const [p] = await db.query<Record<string, unknown>>("select state, registration_id from passes");
+    expect(p).toEqual({ state: "revoked", registration_id: null });
+
+    expect(await lookupPass(db, pass.token, now)).toEqual({ kind: "ended" });
+    expect((await guideHandler(db, pass.token, null, now)).status).toBe(410);
+    expect((await resolveHandler(db, kiosk, { scanned: pass.token }, "kiosk-dev", now)).status).toBe(410);
+    // 번호로는 끝난 패스가 있었는지도 알려 주지 않는다.
+    expect((await resolveHandler(db, kiosk, { passNo: pass.passNo }, "kiosk-dev", now)).status).toBe(404);
+  });
+
+  it("주소째로 보내도 지운다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    expect((await eraseHandler(db, { token: passUrl("https://x.app", pass.token) }, web, now)).status).toBe(200);
+    expect((await regRows())[0].status).toBe("revoked");
+  });
+
+  it("지운 기록을 남기되 등록과는 잇지 않는다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    await eraseHandler(db, { token: pass.token }, web, now);
+    const logs = await db.query<{ device_key: string; registration_id: string | null }>(
+      "select device_key, registration_id from access_logs where action = 'cancel'",
+    );
+    expect(logs).toEqual([{ device_key: web, registration_id: null }]);
+  });
+
+  it("두 번 지워도 같은 답이고 기록은 한 번만 남는다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    await eraseHandler(db, { token: pass.token }, web, now);
+    expect(await eraseHandler(db, { token: pass.token }, web, now)).toEqual({ status: 200, body: { erased: true } });
+    expect(await logCount("cancel")).toBe(1);
+  });
+
+  it("없는 값이나 값이 없으면 404 이고 아무것도 지우지 않는다", async () => {
+    await registerWithPass(db, now);
+    expect((await eraseHandler(db, { token: "7K2M9QXW4HT8VB3N" }, web, now)).status).toBe(404);
+    expect((await eraseHandler(db, {}, web, now)).status).toBe(404);
+    expect((await eraseHandler(db, { token: 123456 }, web, now)).status).toBe(404);
+    expect((await regRows())[0].status).toBe("active");
+  });
+
+  it("패스 번호로는 지울 수 없다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    expect((await eraseHandler(db, { token: pass.passNo }, web, now)).status).toBe(404);
+    expect((await regRows())[0].status).toBe("active");
+  });
+
+  it("한 여객이 지워도 다른 여객의 패스는 그대로다", async () => {
+    const a = await registerWithPass(db, now);
+    const b = await registerWithPass(db, now);
+    await eraseHandler(db, { token: a.pass.token }, web, now);
+    expect((await guideHandler(db, b.pass.token, null, now)).status).toBe(200);
+  });
+});
+
+describe("화면이 보내는 건수 기록", () => {
+  it("등록을 시작했다는 기록을 받는다. 안내 방식을 켰는지와 어디서 했는지를 남긴다", async () => {
+    expect(await eventHandler(db, { kind: "reg_start", adapted: true }, null, web, now)).toEqual({ status: 200, body: {} });
+    expect((await eventHandler(db, { kind: "reg_start" }, kiosk, "kiosk-dev", now)).status).toBe(200);
+    expect((await eventHandler(db, { kind: "reg_start", adapted: "yes" }, desk, "desk-dev", now)).status).toBe(200);
+    expect(await eventRows("reg_start")).toEqual([
+      { route: "web", adapted: true, place_id: null, value: null, device_key: web },
+      { route: "kiosk", adapted: false, place_id: "cc-108", value: null, device_key: "kiosk-dev" },
+      { route: "web", adapted: false, place_id: null, value: null, device_key: "desk-dev" },
+    ]);
+  });
+
+  it("만족도는 1, 2, 3 만 받는다", async () => {
+    for (const value of [1, 2, 3]) {
+      expect((await eventHandler(db, { kind: "survey", value }, kiosk, "kiosk-dev", now)).status).toBe(200);
+    }
+    for (const value of [0, 4, -1, 2.5, "3", null, undefined, true]) {
+      expect((await eventHandler(db, { kind: "survey", value }, kiosk, "kiosk-dev", now)).status, String(value)).toBe(400);
+    }
+    expect((await eventRows("survey")).map((e) => e.value)).toEqual([1, 2, 3]);
+  });
+
+  it("완료와 안내 열람은 화면이 보낼 수 없다. 서버가 직접 센다", async () => {
+    for (const kind of ["reg_done", "guide_open", "page_view", "", null, undefined, 1]) {
+      expect((await eventHandler(db, { kind, value: 3 }, null, web, now)).status, String(kind)).toBe(400);
+    }
+    expect(await db.query("select 1 from events")).toHaveLength(0);
+  });
+
+  it("같은 접속 주소에서 너무 많이 오면 받지 않는다", async () => {
+    await db.query(
+      `insert into events (at, kind, device_key) select $1::timestamptz, 'reg_start', $2::text from generate_series(1, 200)`,
+      [now, deviceKey("203.0.113.7", "other")],
+    );
+    expect((await eventHandler(db, { kind: "reg_start" }, null, web, now)).status).toBe(429);
+    expect((await eventHandler(db, { kind: "reg_start" }, null, deviceKey("198.51.100.9", "phone"), now)).status).toBe(200);
+  });
+});
+
+describe("직원 화면: 로그인과 근무 구역", () => {
+  it("로그인하지 않았거나 키오스크 기기면 직원 화면을 열 수 없다", async () => {
+    for (const s of [null, kiosk]) {
+      expect((await callsHandler(db, s, now)).status).toBe(401);
+      expect((await callActionHandler(db, s, "x", { action: "accept" }, now)).status).toBe(401);
+      expect((await summaryHandler(db, s, now)).status).toBe(401);
+      expect((await deskEraseHandler(db, s, { token: "x" }, "d", now)).status).toBe(401);
+      expect((await zonesHandler(db, s)).status).toBe(401);
+      expect((await switchZoneHandler(db, s, { zoneId: "cc-end" })).status).toBe(401);
+    }
+  });
+
+  it("안내데스크 권한을 가진 것처럼 꾸민 키오스크 세션도 직원 화면을 열 수 없다", async () => {
+    const forged = { ...kiosk, isDesk: true, canSwitch: true };
+    expect((await summaryHandler(db, forged, now)).status).toBe(401);
+    expect((await deskEraseHandler(db, forged, { token: "x" }, "d", now)).status).toBe(401);
+    expect((await switchZoneHandler(db, forged, { zoneId: "cc-end" })).status).toBe(401);
+  });
+
+  it("근무 구역을 고르기 전에는 호출을 볼 수도 받을 수도 없다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    expect((await callsHandler(db, common, now)).status).toBe(409);
+    expect((await callActionHandler(db, common, call!.id, { action: "accept" }, now)).status).toBe(409);
+    expect((await summaryHandler(db, common, now)).status).toBe(409);
+    expect((await deskEraseHandler(db, common, { token: "x" }, "d", now)).status).toBe(409);
+    expect((await db.query<{ accepted_at: Date | null }>("select accepted_at from calls"))[0].accepted_at).toBeNull();
+  });
+
+  it("고를 수 있는 구역은 터미널별로 묶여 오고 안내데스크, 공통 자리, 키오스크 자리는 빠진다", async () => {
+    const res = await zonesHandler(db, common);
+    const groups = res.body.groups as { terminal: string; zones: { id: string; label: string }[] }[];
+    expect(groups.map((g) => g.terminal)).toEqual(["제1여객터미널", "탑승동", "제2여객터미널"]);
+    const ids = groups.flatMap((g) => g.zones.map((z) => z.id));
+    expect(ids).toContain("cc-end");
+    expect(ids).not.toContain("desk-t1");
+    expect(ids).not.toContain("staff-common");
+    expect(ids).not.toContain("kiosk");
+    expect(res.body.current).toBeNull();
+    expect(hasKey(res.body, "code")).toBe(false);
+    expect(hasKey(res.body, "code_hash")).toBe(false);
+  });
+
+  it("구역을 고르면 그 구역의 세션이 된다. 만료 시각은 늘어나지 않는다", async () => {
+    const res = await switchZoneHandler(db, common, { zoneId: "cc-end" });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ zoneLabel: "탑승동 끝단 (101~106, 127~132)" });
+    const next = readSession(res.token, now);
+    expect(next).toEqual({ ...common, zoneId: "cc-end", needsZone: false });
+    // 고른 뒤에는 지금 구역이 표시되고 호출 목록이 열린다.
+    expect((await zonesHandler(db, next)).body.current).toBe("cc-end");
+    expect((await callsHandler(db, next, now)).status).toBe(200);
+  });
+
+  it("안내데스크, 키오스크 자리, 없는 구역은 고를 수 없고, 구역 코드로 들어온 직원은 바꿀 수 없다", async () => {
+    for (const zoneId of ["desk-t1", "staff-common", "kiosk", "nope", 7, undefined]) {
+      expect((await switchZoneHandler(db, common, { zoneId })).status, String(zoneId)).toBe(400);
+    }
+    expect((await switchZoneHandler(db, staff, { zoneId: "cc-mid" })).status).toBe(403);
+    expect((await switchZoneHandler(db, desk, { zoneId: "cc-mid" })).status).toBe(403);
+    expect((await zonesHandler(db, staff)).status).toBe(403);
+  });
+
+  it("구역 이름에서 탑승구 범위를 뗀다", () => {
+    expect(zoneName("탑승동 끝단 (101~106, 127~132)")).toBe("탑승동 끝단");
+    expect(zoneName("안내데스크")).toBe("안내데스크");
+    expect(zoneName("")).toBe("");
+  });
+});
+
+describe("직원 화면: 호출 목록", () => {
+  const list = async (s = staff, at = now) => (await callsHandler(db, s, at)).body.calls as CallDto[];
+
+  it("호출이 없으면 빈 목록과 내 구역 이름이 온다", async () => {
+    expect((await callsHandler(db, staff, now)).body).toEqual({
+      calls: [],
+      zoneLabel: "탑승동 끝단",
+      isDesk: false,
+      canSwitch: false,
+    });
+    expect((await callsHandler(db, desk, now)).body).toMatchObject({ zoneLabel: "안내데스크", isDesk: true });
+  });
+
+  it("어느 키오스크에서 언제 불렀는지, 얼마나 기다렸는지를 보여준다", async () => {
+    const call = await createCall(db, "cc-108", null, "register", now);
+    const at = new Date(now.getTime() + 3 * 60_000 + 59_000);
+    expect(await list(mid, at)).toEqual([
+      {
+        id: call!.id,
+        state: "waiting",
+        place: "탑승동 3층 108번 탑승구 앞",
+        mine: true,
+        screen: "register",
+        time: "12:00",
+        waitedMin: 3,
+        acceptedBy: null,
+        acceptedByMe: false,
+        pass: null,
+      },
+    ]);
+  });
+
+  it("내 구역의 키오스크에서 온 호출만 내 것으로 표시한다. 다른 구역 직원에게도 목록은 보인다", async () => {
+    await createCall(db, "cc-108", null, "guide", now); // 탑승동 중간
+    await createCall(db, "t1-info", null, "guide", new Date(now.getTime() + 1000)); // 안내데스크
+    const mine = async (s: typeof staff) => (await list(s)).map((c) => c.mine);
+    expect(await mine(mid)).toEqual([true, false]);
+    expect(await mine(staff)).toEqual([false, false]);
+    expect(await mine(desk)).toEqual([false, true]);
+  });
+
+  it("패스 없이 부른 호출에는 여객의 정보가 없다", async () => {
+    await registerWithPass(db, now);
+    await createCall(db, "cc-108", null, "guide", now);
+    const [c] = await list(mid);
+    expect(c.pass).toBeNull();
+    expect(JSON.stringify(c)).not.toContain("KE123");
+  });
+
+  it("패스를 찍고 부른 호출에는 고른 항목의 줄인 말과 항공편이 함께 온다", async () => {
+    const { registration } = await registerWithPass(db, now, { lang: "en" });
+    await createCall(db, "cc-108", registration.id, "guide", now);
+    const [c] = await list(mid);
+    expect(c.pass).toMatchObject({
+      choices: ["큰 글씨", "계단 어려움", "직원 호출 원함"],
+      lang: "en",
+      flight: { flightNo: "KE123", gate: 127, area: "CONCOURSE", schedTime: "14:30", close: "open", minutesToClose: 140 },
+    });
+    expect(Object.keys(c.pass!).sort()).toEqual(["choices", "flight", "lang"]);
+    // 항목 코드와 등록 id, QR 값은 나가지 않는다.
+    const dump = JSON.stringify(c);
+    for (const code of CHOICES) expect(dump).not.toContain(code);
+    expect(dump).not.toContain(registration.id);
+    expect(hasKey(c, "token")).toBe(false);
+    expect(hasKey(c, "passNo")).toBe(false);
+  });
+
+  it("임박한 편은 항공편에 urgent 가 켜져 온다", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const urgentAt = async (at: Date) => (await list(mid, at))[0].pass?.flight.urgent;
+    await createCall(db, "cc-108", registration.id, "guide", kst("2026-10-05 13:40"));
+    expect(await urgentAt(kst("2026-10-05 13:45"))).toBe(false); // 마감 35분 전
+    expect(await urgentAt(kst("2026-10-05 13:50"))).toBe(true); // 마감 30분 전
+  });
+
+  it("여정이 끝난 여객의 호출에는 지워지기 전이라도 여객의 정보가 오지 않는다", async () => {
+    const { registration } = await registerWithPass(db, now);
+    const call = await createCall(db, "cc-108", registration.id, "guide", kst("2026-10-05 14:50"));
+    // 출발 29분 뒤까지는 보인다.
+    expect((await list(mid, kst("2026-10-05 14:59")))[0].pass).not.toBeNull();
+    // 출발 30분 뒤. 삭제 작업은 아직 돌지 않아 등록은 그대로 남아 있다.
+    const [c] = await list(mid, kst("2026-10-05 15:00"));
+    expect(c).toMatchObject({ id: call!.id, state: "waiting", pass: null });
+    expect(JSON.stringify(c)).not.toContain("KE123");
+    expect((await regRows())[0].status).toBe("active");
+  });
+
+  it("등록이 지워진 호출에는 여객의 정보가 더는 오지 않는다", async () => {
+    const { registration, pass } = await registerWithPass(db, now);
+    await createCall(db, "cc-108", registration.id, "guide", now);
+    await eraseHandler(db, { token: pass.token }, web, now);
+    const [c] = await list(mid);
+    expect(c).toMatchObject({ state: "cancelled", pass: null });
+  });
+
+  it("끝나지 않은 호출을 오래 기다린 순으로 먼저 보여주고, 끝난 호출은 30분 뒤에 빠진다", async () => {
+    const t = (min: number) => new Date(now.getTime() + min * 60_000);
+    const a = await createCall(db, "cc-108", null, "guide", t(0));
+    const b = await createCall(db, "cc-125", null, "guide", t(1));
+    await callActionHandler(db, mid, a!.id, { action: "done" }, t(2));
+    expect((await list(mid, t(3))).map((c) => [c.id, c.state])).toEqual([
+      [b!.id, "waiting"],
+      [a!.id, "done"],
+    ]);
+    // 끝난 호출의 기다린 시간은 끝날 때까지 걸린 시간에서 멈춘다.
+    expect((await list(mid, t(20))).find((c) => c.id === a!.id)?.waitedMin).toBe(2);
+    expect((await list(mid, t(20))).find((c) => c.id === b!.id)?.waitedMin).toBe(19);
+    expect((await list(mid, t(32))).map((c) => c.id)).not.toContain(a!.id);
+  });
+});
+
+describe("직원 화면: 호출 받기와 마치기", () => {
+  const list = async (s = staff) => (await callsHandler(db, s, now)).body.calls as CallDto[];
+
+  it("받으면 받은 구역 이름이 보인다. 받은 직원에게만 내가 받은 것으로 표시된다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    expect(await callActionHandler(db, mid, call!.id, { action: "accept" }, now)).toEqual({ status: 200, body: {} });
+    expect((await list(mid))[0]).toMatchObject({ state: "accepted", acceptedBy: "탑승동 중간", acceptedByMe: true });
+    expect((await list(staff))[0]).toMatchObject({ state: "accepted", acceptedBy: "탑승동 중간", acceptedByMe: false });
+  });
+
+  it("다른 구역 직원도 받을 수 있다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    expect((await callActionHandler(db, staff, call!.id, { action: "accept" }, now)).status).toBe(200);
+    expect((await list(mid))[0]).toMatchObject({ mine: true, acceptedBy: "탑승동 끝단", acceptedByMe: false });
+  });
+
+  it("두 번째로 받으려는 구역은 409 를 받는다. 처음 받은 구역이 그대로 남는다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    expect((await callActionHandler(db, mid, call!.id, { action: "accept" }, now)).status).toBe(200);
+    const second = await callActionHandler(db, staff, call!.id, { action: "accept" }, now);
+    expect(second.status).toBe(409);
+    expect(second.body.error).toContain("먼저 받았거나");
+    expect((await callActionHandler(db, desk, call!.id, { action: "accept" }, now)).status).toBe(409);
+    expect((await list())[0].acceptedBy).toBe("탑승동 중간");
+  });
+
+  it("마치면 done 이 되고, 다시 마치거나 받을 수 없다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    await callActionHandler(db, mid, call!.id, { action: "accept" }, now);
+    expect((await callActionHandler(db, mid, call!.id, { action: "done" }, now)).status).toBe(200);
+    expect((await list())[0].state).toBe("done");
+    expect((await callActionHandler(db, mid, call!.id, { action: "done" }, now)).status).toBe(409);
+    expect((await callActionHandler(db, staff, call!.id, { action: "accept" }, now)).status).toBe(409);
+  });
+
+  it("받지 않고 바로 마칠 수 있다. 마친 구역이 받은 구역으로 남는다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    expect((await callActionHandler(db, staff, call!.id, { action: "done" }, now)).status).toBe(200);
+    expect((await list(staff))[0]).toMatchObject({ state: "done", acceptedBy: "탑승동 끝단", acceptedByMe: true });
+  });
+
+  it("여객이 거둔 호출, 없는 호출, 모양이 다른 id 는 409", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    await db.query("update calls set ended_at = $1, end_kind = 'cancelled'", [now]);
+    for (const id of [call!.id, "00000000-0000-4000-8000-000000000009", "nope", ""]) {
+      expect((await callActionHandler(db, mid, id, { action: "accept" }, now)).status, id).toBe(409);
+      expect((await callActionHandler(db, mid, id, { action: "done" }, now)).status, id).toBe(409);
+    }
+  });
+
+  it("받기와 마치기가 아닌 동작은 400", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", now);
+    for (const action of ["cancel", "", undefined, 1]) {
+      expect((await callActionHandler(db, mid, call!.id, { action }, now)).status, String(action)).toBe(400);
+    }
+    expect((await list())[0].state).toBe("waiting");
+  });
+});
+
+describe("안내데스크: 오늘 현황", () => {
+  it("안내데스크만 본다", async () => {
+    expect((await summaryHandler(db, null, now)).status).toBe(401);
+    expect((await summaryHandler(db, staff, now)).status).toBe(403);
+    expect((await summaryHandler(db, mid, now)).status).toBe(403);
+    expect((await summaryHandler(db, desk, now)).status).toBe(200);
+  });
+
+  it("오늘 받은 등록, 완료 비율, 호출, 만족도의 건수가 온다", async () => {
+    await eventHandler(db, { kind: "reg_start", adapted: true }, null, web, now);
+    await registerHandler(db, body({ startAdapted: true }), null, web, now);
+    await eventHandler(db, { kind: "reg_start", adapted: false }, kiosk, "kiosk-dev", now);
+    const reg = await registerHandler(db, body(), desk, "desk-dev", now, true);
+    await resolveHandler(db, kiosk, { scanned: reg.body.token, purpose: "guide" }, "kiosk-dev", now);
+    await eventHandler(db, { kind: "survey", value: 3 }, kiosk, "kiosk-dev", now);
+    await createCall(db, "cc-108", null, "guide", now);
+
+    const res = await summaryHandler(db, desk, kst("2026-10-05 12:30"));
+    expect(Object.keys(res.body)).toEqual(["summary"]);
+    expect(res.body.summary as Summary).toMatchObject({
+      date: "2026-10-05",
+      active: 2,
+      registered: 2,
+      byRoute: { web: 1, kiosk: 0, assisted: 1 },
+      completion: { adapted: { started: 1, done: 1, rate: 100 }, plain: { started: 1, done: 0, rate: 0 } },
+      guideOpens: 1,
+      calls: { total: 1, open: 1 },
+      survey: { good: 1, fair: 0, poor: 0, total: 1 },
+    });
+  });
+
+  it("건수만 있다. 편명도 고른 항목도 기기 값도 담기지 않는다", async () => {
+    await registerHandler(db, body(), null, web, now);
+    const res = await summaryHandler(db, desk, now);
+    const dump = JSON.stringify(res.body);
+    expect(dump).not.toMatch(/KE123|gd_large|mov_no_stairs/);
+    expect(dump).not.toContain(web);
+    expect(hasKey(res.body, "name")).toBe(false);
+  });
+});
+
+describe("안내데스크: 여객 요청으로 지우기", () => {
+  it("안내데스크만 할 수 있다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    expect((await deskEraseHandler(db, null, { token: pass.token }, "d", now)).status).toBe(401);
+    expect((await deskEraseHandler(db, staff, { token: pass.token }, "d", now)).status).toBe(403);
+    expect((await regRows())[0].status).toBe("active");
+  });
+
+  it("QR 값으로 지우고 누가(어느 구역이) 지웠는지 남긴다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    const res = await deskEraseHandler(db, desk, { token: pass.token }, "desk-dev", now);
+    expect(res).toEqual({ status: 200, body: { erased: true } });
+    expect((await regRows())[0]).toMatchObject({ status: "revoked", needs: [] });
+    expect((await guideHandler(db, pass.token, null, now)).status).toBe(410);
+    const logs = await db.query("select zone_id, device_key, registration_id from access_logs where action = 'cancel'");
+    expect(logs).toEqual([{ zone_id: "desk-t1", device_key: "desk-dev", registration_id: null }]);
+  });
+
+  it("키오스크나 안내데스크에서 번호로 찾아 받은 QR 값으로 지울 수 있다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    const found = await resolveHandler(db, desk, { passNo: pass.passNo }, "desk-dev", now);
+    expect(found.body.token).toBe(pass.token);
+    expect((await deskEraseHandler(db, desk, { token: found.body.token }, "desk-dev", now)).status).toBe(200);
+    expect((await regRows())[0].status).toBe("revoked");
+  });
+
+  it("없는 값은 404, 이미 끝난 패스는 지웠다고만 답하고 기록을 더 남기지 않는다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    expect((await deskEraseHandler(db, desk, { token: "7K2M9QXW4HT8VB3N" }, "desk-dev", now)).status).toBe(404);
+    expect((await deskEraseHandler(db, desk, {}, "desk-dev", now)).status).toBe(404);
+    await deskEraseHandler(db, desk, { token: pass.token }, "desk-dev", now);
+    expect(await deskEraseHandler(db, desk, { token: pass.token }, "desk-dev", now)).toEqual({
+      status: 200,
+      body: { erased: true },
+    });
+    expect(await logCount("cancel")).toBe(1);
   });
 });

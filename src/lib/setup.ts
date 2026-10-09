@@ -2,11 +2,8 @@ import { hashCode } from "./auth";
 import { migrate, type Db } from "./db";
 import { ingestFlights, recordPoll } from "./flights/ingest";
 import { kstDate, type FlightRow } from "./flights/normalize";
-import { generatePasses } from "./passes";
 import { readSeedZones, seedZones } from "./zones";
 
-export const DEFAULT_PASS_COUNT = 30;
-const MAX_PASS_COUNT = 500;
 const MIN = 60_000;
 
 // 영어 화면은 도착지 이름 대신 공항 코드를 보여준다.
@@ -23,6 +20,7 @@ const MOCK_DEST_CODE: Record<string, string> = {
   후쿠오카: "FUK",
   싱가포르: "SIN",
   도쿄: "NRT",
+  프랑크푸르트: "FRA",
 };
 
 /** 지금 시각 기준으로 곧 출발하는 모의 운항. 실제 편명과 겹치지 않게 MK·MC 로 시작한다. */
@@ -60,6 +58,7 @@ export function mockFlights(now: Date, stretch = 1): FlightRow[] {
     f("MK102", 70, "CONCOURSE", 130, "방콕"), // 끝단
     f("MK111", 120, "CONCOURSE", 115, "타이베이"), // 중앙부
     f("MK112", 180, "CONCOURSE", 124, "마닐라"), // 중간
+    f("MK127", 160, "CONCOURSE", 127, "프랑크푸르트"), // 제안서의 예시 장면 (탑승동 키오스크 → 127번 탑승구)
     f("MK221", 90, "T2", 220, "뉴욕"),
     f("MK250", 150, "T2", 250, "파리", { estAt: at(190), status: "지연" }),
     f("MK900", 200, "CONCOURSE", null, "다낭"), // 탑승구 미정
@@ -81,20 +80,17 @@ export interface SetupOptions {
   mockFlights: boolean;
   /** true 면 모의 운항을 지운다. 실제 운항 정보를 연결한 뒤에 쓴다. */
   clearMockFlights?: boolean;
-  passCount?: number;
 }
 
 export interface SetupResult {
   ok: boolean;
   error?: string;
   zones?: number;
-  idlePasses?: number;
-  newPasses?: number;
   mockFlights?: string[];
   clearedMockFlights?: number;
 }
 
-/** 테이블을 만들고 구역·패스·(선택) 모의 운항을 채운다. 여러 번 실행해도 안전하다. */
+/** 테이블을 만들고 구역·(선택) 모의 운항을 채운다. 여러 번 실행해도 안전하다. 패스는 등록할 때 만들어지므로 미리 만들지 않는다. */
 export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<SetupResult> {
   await migrate(db);
 
@@ -111,14 +107,6 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
     const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from zones");
     if (n === 0) return { ok: false, error: "구역이 없습니다. 접속 코드와 함께 다시 실행하세요" };
   }
-
-  // 패스는 일회용이라 쓸수록 줄어든다. 미사용 패스가 정한 장수가 되도록 채운다.
-  const want = Math.min(Math.max(opts.passCount ?? DEFAULT_PASS_COUNT, 0), MAX_PASS_COUNT);
-  const [{ idle }] = await db.query<{ idle: number }>(
-    "select count(*)::int as idle from passes where state = 'idle'",
-  );
-  const newPasses = Math.max(want - idle, 0);
-  if (newPasses > 0) await generatePasses(db, newPasses);
 
   let cleared: number | undefined;
   if (opts.clearMockFlights && !opts.mockFlights) {
@@ -137,8 +125,6 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
   return {
     ok: true,
     zones,
-    idlePasses: Math.max(idle, want),
-    newPasses,
     mockFlights: flights,
     clearedMockFlights: cleared,
   };

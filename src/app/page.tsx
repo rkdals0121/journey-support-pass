@@ -1,11 +1,11 @@
-import { ArrowRight, ChevronRight, ClipboardList, ConciergeBell, Languages, PhoneOff, ScanLine, ShieldCheck, Ticket, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronRight, ClipboardList, ConciergeBell, Languages, QrCode, ScanLine, ShieldCheck, Trash2, UserX } from "lucide-react";
 import Link from "next/link";
-import { langOf, TEXT } from "@/lib/i18n";
+import { langOf, textOf } from "@/lib/i18n";
 import { Brand, PassArt } from "./components/Sunflower";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const lang = langOf((await searchParams).lang);
-  const t = TEXT[lang];
+  const t = textOf(lang);
   const q = lang === "en" ? "?lang=en" : "";
 
   return (
@@ -13,8 +13,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       <div className="hero">
         <div className="hero-top">
           <Brand />
-          <Link className="lang-switch" href={lang === "en" ? "/" : "/?lang=en"} hrefLang={lang === "en" ? "ko" : "en"}>
-            <Languages size={15} aria-hidden="true" />
+          <Link className="lang-switch" href={lang === "en" ? "/" : "/?lang=en"} hrefLang={lang === "en" ? "ko" : "en"} lang={lang === "en" ? "ko" : "en"}>
+            <Languages size={16} aria-hidden="true" />
             {t.otherLang}
           </Link>
         </div>
@@ -30,7 +30,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       <ol className="steps-list">
         <li>
           <span className="bubble">
-            <ClipboardList size={20} aria-hidden="true" />
+            <ClipboardList size={22} aria-hidden="true" />
           </span>
           <div>
             <strong>{t.step1}</strong>
@@ -39,7 +39,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </li>
         <li>
           <span className="bubble">
-            <Ticket size={20} aria-hidden="true" />
+            <QrCode size={22} aria-hidden="true" />
           </span>
           <div>
             <strong>{t.step2}</strong>
@@ -48,7 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </li>
         <li>
           <span className="bubble bubble-sun">
-            <ScanLine size={20} aria-hidden="true" />
+            <ScanLine size={22} aria-hidden="true" />
           </span>
           <div>
             <strong>{t.step3}</strong>
@@ -58,35 +58,41 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       </ol>
 
       <p className="assist">
-        <ConciergeBell size={18} aria-hidden="true" />
+        <ConciergeBell size={20} aria-hidden="true" />
         <span>{t.assist}</span>
       </p>
 
       <div className="trust">
         <span className="chip">
-          <PhoneOff size={15} aria-hidden="true" />
+          <UserX size={16} aria-hidden="true" />
           {t.trust1}
         </span>
         <span className="chip">
-          <Trash2 size={15} aria-hidden="true" />
+          <Trash2 size={16} aria-hidden="true" />
           {t.trust2}
         </span>
         <span className="chip">
-          <ShieldCheck size={15} aria-hidden="true" />
+          <ShieldCheck size={16} aria-hidden="true" />
           {t.trust3}
         </span>
       </div>
 
-      <Link className="home-staff" href="/staff">
-        {t.staffLink}
-        <ChevronRight size={16} aria-hidden="true" />
-      </Link>
+      <div className="home-links">
+        <Link className="home-staff" href="/staff">
+          {t.staffLink}
+          <ChevronRight size={16} aria-hidden="true" />
+        </Link>
+        <Link className="home-staff" href="/kiosk">
+          {t.kioskLink}
+          <ChevronRight size={16} aria-hidden="true" />
+        </Link>
+      </div>
 
       <div className="cta-bar">
         <div className="cta-inner">
           <Link className="btn btn-primary" href={`/register${q}`}>
             {t.start}
-            <ArrowRight size={20} aria-hidden="true" />
+            <ArrowRight size={22} aria-hidden="true" />
           </Link>
         </div>
       </div>

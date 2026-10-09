@@ -2,7 +2,7 @@
  * 배포된 서버의 초기 설정 통로(/api/admin/setup)를 부른다.
  * DB 비밀번호는 이 컴퓨터로 내려오지 않는다. 서버가 직접 테이블과 자료를 넣는다.
  *
- *   npx tsx scripts/remote-setup.ts                 테이블, 구역(접속 코드 포함), 패스. 여러 번 실행해도 안전하다
+ *   npx tsx scripts/remote-setup.ts                 테이블과 구역(접속 코드 포함). 여러 번 실행해도 안전하다
  *   npx tsx scripts/remote-setup.ts --mock-flights  모의 운항을 지금 시각 기준으로 채운다
  *   npx tsx scripts/remote-setup.ts --clear-mock    모의 운항을 지운다
  *

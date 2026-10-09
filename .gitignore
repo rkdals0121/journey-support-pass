@@ -50,3 +50,5 @@ next-env.d.ts
 .vercel
 .env*
 .e2e-shots
+.e2e.log
+/out/

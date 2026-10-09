@@ -10,6 +10,10 @@ export interface Session {
   canSwitch: boolean;
   /** 아직 근무 구역을 고르지 않았다. 고르기 전에는 여객 정보를 열 수 없다. */
   needsZone: boolean;
+  /** 키오스크 설치 코드로 들어온 기기. 직원 화면은 열 수 없고 키오스크 화면만 쓴다. */
+  isKiosk: boolean;
+  /** 키오스크가 놓인 자리 (airport.ts 의 PLACES). 키오스크가 아니면 null. */
+  placeId: string | null;
   exp: number; // epoch ms
 }
 
@@ -68,6 +72,8 @@ export function readSession(token: string | undefined, now: Date): Session | nul
       isDesk: s.isDesk === true,
       canSwitch: s.canSwitch === true,
       needsZone: s.needsZone === true,
+      isKiosk: s.isKiosk === true,
+      placeId: s.isKiosk === true && typeof s.placeId === "string" ? s.placeId : null,
       exp: s.exp,
     };
   } catch {
@@ -75,18 +81,8 @@ export function readSession(token: string | undefined, now: Date): Session | nul
   }
 }
 
-export type LogAction =
-  | "scan_view"
-  | "number_view"
-  | "receipt_view"
-  | "list_view"
-  | "register"
-  | "cancel"
-  | "edit"
-  | "link"
-  | "reissue"
-  | "login_fail"
-  | "number_fail";
+// DB 의 제약(schema.sql)에는 예전 구조의 값도 남아 있다. 먼저 만들어진 DB 의 옛 기록 때문이다. 지금 쓰는 것은 아래 네 가지다.
+export type LogAction = "register" | "cancel" | "login_fail" | "number_fail";
 
 export async function logAccess(
   db: Db,
@@ -116,14 +112,25 @@ export async function isLocked(
      where split_part(device_key, ':', 1) = $2 and action = $3 and at > $4`,
     [device, ipPart(device), failAction, since],
   );
-  return (row?.by_device ?? 0) >= config.lockMaxFails || (row?.by_ip ?? 0) >= config.lockIpMaxFails;
+  const maxFails = failAction === "number_fail" ? config.numberLockMaxFails : config.lockMaxFails;
+  return (row?.by_device ?? 0) >= maxFails || (row?.by_ip ?? 0) >= config.lockIpMaxFails;
 }
 
 export type LoginResult =
   | { ok: true; token: string; session: Session; zoneLabel: string }
   | { ok: false; reason: "locked" | "invalid" };
 
-export async function login(db: Db, code: string, device: string, now: Date): Promise<LoginResult> {
+/**
+ * 접속 코드로 들어온다. kiosk 에 자리를 주면 키오스크 설치 코드만, 주지 않으면 직원 코드만 맞춰 본다.
+ * 직원 코드로 키오스크를 열거나 설치 코드로 직원 화면을 열 수는 없다.
+ */
+export async function login(
+  db: Db,
+  code: string,
+  device: string,
+  now: Date,
+  kiosk: { placeId: string } | null = null,
+): Promise<LoginResult> {
   if (await isLocked(db, device, "login_fail", now)) return { ok: false, reason: "locked" };
 
   const zones = await db.query<{
@@ -132,11 +139,12 @@ export async function login(db: Db, code: string, device: string, now: Date): Pr
     code_hash: string;
     is_desk: boolean;
     is_common: boolean;
-  }>("select id, label, code_hash, is_desk, is_common from zones where active");
+    is_kiosk: boolean;
+  }>("select id, label, code_hash, is_desk, is_common, is_kiosk from zones where active");
   // 일치 여부와 무관하게 모든 구역을 대조해 걸린 시간으로 구역 수를 짐작하지 못하게 한다.
   let matched: (typeof zones)[number] | null = null;
   for (const z of zones) {
-    if (verifyCode(code, z.code_hash) && !matched) matched = z;
+    if (verifyCode(code, z.code_hash) && !matched && z.is_kiosk === (kiosk !== null)) matched = z;
   }
   if (!matched) {
     await logAccess(db, { at: now, deviceKey: device, action: "login_fail" });
@@ -147,7 +155,9 @@ export async function login(db: Db, code: string, device: string, now: Date): Pr
     isDesk: matched.is_desk,
     canSwitch: matched.is_common,
     needsZone: matched.is_common,
-    exp: now.getTime() + config.sessionHours * 3_600_000,
+    isKiosk: kiosk !== null,
+    placeId: kiosk?.placeId ?? null,
+    exp: now.getTime() + (kiosk ? config.kioskSessionDays * 24 : config.sessionHours) * 3_600_000,
   };
   return { ok: true, token: signSession(session), session, zoneLabel: matched.label };
 }
@@ -161,9 +171,9 @@ export async function switchZone(
   session: Session,
   zoneId: string,
 ): Promise<{ ok: true; token: string; session: Session; zoneLabel: string } | { ok: false }> {
-  if (!session.canSwitch) return { ok: false };
+  if (!session.canSwitch || session.isKiosk) return { ok: false };
   const [zone] = await db.query<{ id: string; label: string }>(
-    "select id, label from zones where id = $1 and active and not is_desk and not is_common",
+    "select id, label from zones where id = $1 and active and not is_desk and not is_common and not is_kiosk",
     [zoneId],
   );
   if (!zone) return { ok: false };

@@ -68,25 +68,22 @@ describe("운항 정보 신선도", () => {
   const ago = (min: number, extraMs = 0) => new Date(now.getTime() - min * 60_000 - extraMs);
 
   it("한국 시각으로 기준 시각을 적는다", () => {
-    expect(pollState(kst("2026-10-05 14:45"), now)).toEqual({
-      label: "운항 정보 14:45 기준",
-      stale: false,
-      aged: false,
-    });
-  });
-
-  it("15분보다 오래되면 전광판을 한 번 더 보라고 안내한다", () => {
-    expect(pollState(ago(15), now)).toMatchObject({ aged: false, stale: false });
-    expect(pollState(ago(15, 1000), now)).toMatchObject({ aged: true, stale: false });
+    expect(pollState(kst("2026-10-05 14:45"), now)).toEqual({ label: "운항 정보 14:45 기준", stale: false });
   });
 
   it("수집 간격에 15분을 더한 시간을 넘기면 수집이 멈춘 것으로 본다", () => {
     expect(config.staleMin).toBe(config.pollMin + 15);
-    expect(pollState(ago(config.staleMin), now)).toMatchObject({ stale: false, aged: true });
-    expect(pollState(ago(config.staleMin, 1000), now)).toMatchObject({ stale: true, aged: false });
+    expect(pollState(ago(15, 1000), now).stale).toBe(false);
+    expect(pollState(ago(config.staleMin), now).stale).toBe(false);
+    expect(pollState(ago(config.staleMin, 1000), now)).toEqual({ label: "운항 정보 13:34 기준", stale: true });
+  });
+
+  it("오래됐는지는 stale 하나로만 알린다", () => {
+    expect(Object.keys(pollState(ago(20), now)).sort()).toEqual(["label", "stale"]);
+    expect(Object.keys(pollState(null, now)).sort()).toEqual(["label", "stale"]);
   });
 
   it("수집 기록이 없으면 늦은 것으로 본다", () => {
-    expect(pollState(null, now)).toEqual({ label: "운항 정보 없음", stale: true, aged: false });
+    expect(pollState(null, now)).toEqual({ label: "운항 정보 없음", stale: true });
   });
 });

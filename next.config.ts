@@ -1,11 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 개발 서버가 화면 구석에 띄우는 표시를 끈다. 화면 그림과 키오스크 시연에 끼어들지 않게 한다.
+  devIndicators: false,
   // 서버에서만 쓰는 DB 드라이버는 번들에 넣지 않는다.
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
   // 초기 설정 경로가 실행 중에 읽는 파일. 적어 두지 않으면 배포 묶음에서 빠진다.
   outputFileTracingIncludes: {
     "/api/admin/setup": ["./db/schema.sql", "./db/seed-zones.json"],
+  },
+  // 패스 QR 의 주소는 전부 대문자다(QR 을 작게 만들기 위해서). 대문자 /P/ 로 온 것을 /p/ 로 받아 준다.
+  async rewrites() {
+    return [{ source: "/P/:token", destination: "/p/:token" }];
   },
   async headers() {
     return [

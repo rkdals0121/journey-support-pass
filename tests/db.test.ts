@@ -1,20 +1,25 @@
-import { describe, expect, it } from "vitest";
-import { migrate, pgOptions } from "@/lib/db";
+import { beforeAll, describe, expect, it } from "vitest";
+import { migrate, pgOptions, type Db } from "@/lib/db";
 import { createTestDb } from "./helpers/db";
 
-const insertPending = `
-  insert into registrations (receipt_no, name, route, consent_at, started_at, submitted_at)
-  values ($1, '홍길동', 'web', now(), now(), now()) returning id`;
+const insertRegistration = `
+  insert into registrations (route, consent_at, started_at, submitted_at)
+  values ($1, now(), now(), now()) returning id`;
 
 describe("스키마", () => {
-  it("테이블 7개를 만든다", async () => {
-    const db = await createTestDb();
+  let db: Db;
+  beforeAll(async () => {
+    db = await createTestDb();
+  });
+
+  it("테이블 8개를 만든다. 응대 기록 표는 없다", async () => {
     const rows = await db.query<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public'",
     );
     expect(rows.map((r) => r.table_name).sort()).toEqual([
       "access_logs",
-      "encounters",
+      "calls",
+      "events",
       "flight_polls",
       "flights",
       "passes",
@@ -24,17 +29,80 @@ describe("스키마", () => {
   });
 
   it("두 번 적용해도 오류가 없다", async () => {
-    const db = await createTestDb();
+    await expect(migrate(db)).resolves.toBeUndefined();
     await expect(migrate(db)).resolves.toBeUndefined();
   });
 
-  it("접수 번호는 연결 대기 중인 건 안에서만 겹치지 않는다", async () => {
-    const db = await createTestDb();
-    const [first] = await db.query<{ id: string }>(insertPending, ["0427"]);
-    await expect(db.query(insertPending, ["0427"])).rejects.toThrow();
+  it("구역에는 키오스크 자리 표시가, 등록에는 화면 언어가 있다", async () => {
+    const cols = await db.query<{ table_name: string; column_name: string; column_default: string | null }>(
+      `select table_name, column_name, column_default from information_schema.columns
+       where (table_name = 'zones' and column_name = 'is_kiosk') or (table_name = 'registrations' and column_name = 'lang')`,
+    );
+    expect(cols.find((c) => c.table_name === "zones")?.column_default).toBe("false");
+    expect(cols.find((c) => c.table_name === "registrations")?.column_default).toContain("ko");
+  });
 
-    await db.query("update registrations set status = 'active' where id = $1", [first.id]);
-    await expect(db.query(insertPending, ["0427"])).resolves.toHaveLength(1);
+  it("등록 경로는 web, kiosk, assisted 와 예전의 paper 만 받는다", async () => {
+    for (const route of ["web", "kiosk", "assisted", "paper"]) {
+      await expect(db.query(insertRegistration, [route]), route).resolves.toHaveLength(1);
+    }
+    await expect(db.query(insertRegistration, ["phone"])).rejects.toThrow();
+    await expect(db.query(insertRegistration, [""])).rejects.toThrow();
+  });
+
+  it("이름 없이 등록 행을 만들 수 있다. 이름 칸은 비어 있다", async () => {
+    const [{ id }] = await db.query<{ id: string }>(insertRegistration, ["web"]);
+    const [row] = await db.query("select name, receipt_no, lang, status, needs from registrations where id = $1", [id]);
+    expect(row).toEqual({ name: null, receipt_no: null, lang: "ko", status: "pending", needs: [] });
+  });
+
+  it("한 등록에 사용 중인 패스는 한 장뿐이다. 끝난 패스는 여러 장 있어도 된다", async () => {
+    const [{ id }] = await db.query<{ id: string }>(insertRegistration, ["web"]);
+    const insert = "insert into passes (token, pass_no, registration_id, state) values ($1, $2, $3, $4)";
+    await db.query(insert, ["A".repeat(16), "100001", id, "active"]);
+    await expect(db.query(insert, ["B".repeat(16), "100002", id, "active"])).rejects.toThrow();
+    await expect(db.query(insert, ["C".repeat(16), "100003", id, "revoked"])).resolves.toBeDefined();
+    await expect(db.query(insert, ["D".repeat(16), "100004", id, "expired"])).resolves.toBeDefined();
+  });
+
+  it("패스 번호는 살아 있는 패스 안에서만 겹치지 않는다. QR 값은 언제나 겹치지 않는다", async () => {
+    const insert = "insert into passes (token, pass_no, state) values ($1, $2, $3)";
+    await db.query(insert, ["E".repeat(16), "200001", "active"]);
+    await expect(db.query(insert, ["F".repeat(16), "200001", "active"])).rejects.toThrow();
+    await expect(db.query(insert, ["F".repeat(16), "200001", "expired"])).resolves.toBeDefined();
+    await expect(db.query(insert, ["E".repeat(16), "200002", "expired"])).rejects.toThrow();
+    await expect(db.query(insert, ["G".repeat(16), "200003", "lost"])).rejects.toThrow();
+  });
+
+  it("한 키오스크에서 끝나지 않은 호출은 하나뿐이다. 끝난 호출은 여러 개 있어도 된다", async () => {
+    const open = "insert into calls (created_at, place_id, zone_id) values (now(), $1, 'cc-mid')";
+    const ended = "insert into calls (created_at, place_id, zone_id, ended_at, end_kind) values (now(), $1, 'cc-mid', now(), $2)";
+    await db.query(open, ["cc-108"]);
+    await expect(db.query(open, ["cc-108"])).rejects.toThrow();
+    await expect(db.query(open, ["cc-125"])).resolves.toBeDefined();
+    await expect(db.query(ended, ["cc-108", "done"])).resolves.toBeDefined();
+    await expect(db.query(ended, ["cc-108", "cancelled"])).resolves.toBeDefined();
+    await expect(db.query(ended, ["cc-108", "lost"])).rejects.toThrow();
+  });
+
+  it("건수 기록은 정해진 네 종류만 받는다", async () => {
+    const insert = "insert into events (at, kind) values (now(), $1)";
+    for (const kind of ["reg_start", "reg_done", "guide_open", "survey"]) {
+      await expect(db.query(insert, [kind]), kind).resolves.toBeDefined();
+    }
+    await expect(db.query(insert, ["page_view"])).rejects.toThrow();
+  });
+
+  it("건수 기록과 호출에는 이름이나 편명을 담을 칸이 없다", async () => {
+    const cols = await db.query<{ table_name: string; column_name: string }>(
+      "select table_name, column_name from information_schema.columns where table_name in ('events', 'calls')",
+    );
+    const names = cols.map((c) => c.column_name);
+    expect(names).not.toContain("name");
+    expect(names).not.toContain("flight_no");
+    expect(cols.filter((c) => c.table_name === "events").map((c) => c.column_name).sort()).toEqual(
+      ["adapted", "at", "device_key", "id", "kind", "place_id", "route", "value"].sort(),
+    );
   });
 });
 
