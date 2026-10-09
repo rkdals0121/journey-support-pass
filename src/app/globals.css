@@ -1319,9 +1319,11 @@ html[data-kiosk] .sheet-backdrop {
   color: #fff;
   box-shadow: var(--shadow-2);
 }
+/* 아래쪽의 .pace-late 는 길 안내 화면의 띠에 쓰는 색(빨간 글자)이다. 빨간 바탕인 이 버튼에서는 글자가 흰색이어야 읽힌다. */
 .gate-go.pace-late {
   border-color: var(--red);
   background: var(--red);
+  color: #fff;
 }
 .gate-go-ico {
   display: inline-flex;
