@@ -1,12 +1,13 @@
 import { ArrowUpDown, CircleAlert, Clock, Flag, MapPin, Milestone, PlaneTakeoff, TrainFront, TrendingUp } from "lucide-react";
 import type { FacilityKind, Route, Step } from "@/lib/airport";
+import { destLabel } from "@/lib/dest-en";
 import type { FlightView, Pace } from "@/lib/guide";
 import type { Lang, Text } from "@/lib/i18n";
 import { FacilityIcon } from "./NeedIcon";
 
-/** 영어 화면에서는 도착지 이름 대신 공항 코드를 쓴다. 운항 정보의 도착지 이름이 한국어뿐이기 때문이다. */
+/** 영어 화면에서는 도착지를 영어 도시 이름으로 쓴다. 운항 정보의 도착지 이름이 한국어뿐이라 공항 코드로 찾는다. */
 export function destOf(f: FlightView, lang: Lang): string {
-  return lang === "en" && f.destCode ? f.destCode : f.destName;
+  return destLabel(lang, f);
 }
 
 /** 탑승 마감까지의 상태를 한 줄로. 공공데이터에 마감 시각이 없어 출발 시각에서 계산한 값에는 "추정"을 붙인다. */

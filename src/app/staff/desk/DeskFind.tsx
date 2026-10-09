@@ -74,7 +74,7 @@ export function DeskFind() {
       });
       if (!res.ok) throw new Error();
       setFound(null);
-      setNotice("등록을 지웠습니다. 그 QR과 번호는 더 쓸 수 없습니다.");
+      setNotice("등록을 지웠습니다. 그 QR과 고유 일련 번호는 더 쓸 수 없습니다.");
     } catch {
       setError("지우지 못했습니다. 잠시 후 다시 해 주세요.");
     } finally {
@@ -135,7 +135,7 @@ export function DeskFind() {
 
   return (
     <div>
-      <p className="muted">여객이 보여 준 QR을 찍거나, 불러 준 번호 여섯 자리를 넣어 주세요.</p>
+      <p className="muted">여객이 보여 준 QR을 찍거나, 불러 준 고유 일련 번호 여섯 자리를 넣어 주세요.</p>
       {notice && (
         <p className="banner" role="status">
           <span>{notice}</span>
@@ -146,7 +146,7 @@ export function DeskFind() {
         onScan={onScan}
         paused={busy}
         prefer="environment"
-        text={{ starting: ko.camStarting, ready: ko.camReady, read: ko.camRead, none: "이 기기에서는 카메라를 쓸 수 없습니다. 번호를 넣어 주세요.", switchCamera: ko.camSwitch }}
+        text={{ starting: ko.camStarting, ready: ko.camReady, read: ko.camRead, none: "이 기기에서는 카메라를 쓸 수 없습니다. 고유 일련 번호를 넣어 주세요.", switchCamera: ko.camSwitch }}
       />
       <form
         onSubmit={(e) => {

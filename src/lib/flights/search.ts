@@ -1,4 +1,5 @@
 import type { Db } from "../db";
+import { codesByCity } from "../dest-en";
 import { addDays, kstDate, normalizeFlightNo } from "./normalize";
 
 export interface FlightChoice {
@@ -72,15 +73,54 @@ export async function findFlights(db: Db, input: string, now: Date): Promise<Fli
 }
 
 const SUGGEST_LIMIT = 8;
+// 도착지로 찾으면 같은 곳으로 가는 편이 여럿이다. 여객이 시각을 보고 고를 수 있게 더 많이 보여 준다.
+const DEST_LIMIT = 24;
 
 /**
  * 편명을 치는 동안 보여줄 후보. 두 글자 이상이면 그 글자로 시작하는 편을 찾는다.
  * 정확히 같은 편명을 맨 위에, 나머지는 출발 시각 순으로 놓는다.
+ *
+ * 편명을 모르는 여객도 찾을 수 있게 세 가지를 더 받는다.
+ *  - 도착지 이름: "도쿄" (한글이 들어 있으면 도착지 이름에서 찾는다)
+ *  - 영어 도시 이름이나 공항 코드: "tokyo", "NRT"
+ *  - 편명의 숫자만: "501" → KE501, OZ501 …
  */
 export async function suggestFlights(db: Db, input: string, now: Date): Promise<FlightChoice[]> {
-  const prefix = normalizeFlightNo(input);
-  if (!/^[A-Z0-9]{2,8}$/.test(prefix)) return [];
   const today = kstDate(now);
+  const open = `flight_date in ($2, $3) and coalesce(est_at, sched_at) > $4 and position('출발' in status) = 0`;
+
+  const name = input.trim().replace(/\s+/g, " ");
+  if (/[가-힣]/.test(name)) {
+    if (name.replace(/[^가-힣]/g, "").length < 2 || name.length > 16) return [];
+    const rows = await db.query<Row>(
+      `select ${COLUMNS} from flights
+       where position($1 in dest_name) > 0 and ${open}
+       order by sched_at, flight_no
+       limit ${DEST_LIMIT}`,
+      [name, today, addDays(today, 1), now],
+    );
+    return rows.map(toChoice);
+  }
+
+  const prefix = normalizeFlightNo(input);
+  if (!/^[A-Z0-9]{2,16}$/.test(prefix)) return [];
+
+  // 숫자만 넣었으면 편명의 숫자 부분(항공사 두 글자 뒤)에서 찾는다. 앞의 0 은 있어도 없어도 같게 본다.
+  if (/^[0-9]+$/.test(prefix)) {
+    const digits = prefix.replace(/^0+/, "");
+    if (!digits) return [];
+    const rows = await db.query<Row>(
+      `select ${COLUMNS} from flights
+       where left(ltrim(substr(flight_no, 3), '0'), $5) = $1 and ${open}
+       order by (ltrim(substr(flight_no, 3), '0') = $1) desc, sched_at, flight_no
+       limit ${DEST_LIMIT}`,
+      [digits, today, addDays(today, 1), now, digits.length],
+    );
+    return rows.map(toChoice);
+  }
+
+  // 글자만 넣었고 편명으로는 없으면 공항 코드나 영어 도시 이름으로 본다.
+  const codes = /^[A-Z]{3,16}$/.test(prefix) ? [...new Set([prefix.length === 3 ? prefix : "", ...codesByCity(prefix)].filter(Boolean))] : [];
   const rows = await db.query<Row>(
     `select ${COLUMNS} from flights
      where left(flight_no, $5) = $1 and flight_date in ($2, $3)
@@ -90,7 +130,16 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
      limit ${SUGGEST_LIMIT}`,
     [prefix, today, addDays(today, 1), now, prefix.length],
   );
-  return rows.map(toChoice);
+  if (rows.length > 0 || codes.length === 0) return rows.map(toChoice);
+
+  const byDest = await db.query<Row>(
+    `select ${COLUMNS} from flights
+     where dest_code = any($1) and ${open}
+     order by sched_at, flight_no
+     limit ${DEST_LIMIT}`,
+    [codes, today, addDays(today, 1), now],
+  );
+  return byDest.map(toChoice);
 }
 
 export async function getFlight(db: Db, flightDate: string, flightNo: string): Promise<FlightChoice | null> {

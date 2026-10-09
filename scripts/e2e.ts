@@ -842,7 +842,7 @@ async function resetFlights() {
   await useCookie(page, kc);
   const cases: [string, string, string][] = [
     ["MK900", "탑승구가 아직 정해지지 않았습니다", "탑승구가 정해지지 않은 편은 그렇다고 알리고 시설 안내는 그대로 한다"],
-    ["MK221", "다른 터미널에서 출발합니다", "다른 터미널에서 출발하는 편은 직원을 부르라고 안내한다"],
+    ["MK221", "제2여객터미널에서 출발합니다. 여기서는 걸어서 갈 수 없습니다", "다른 터미널에서 출발하는 편은 어느 터미널인지 알리고 직원을 부르라고 안내한다"],
     ["MK403", "결항된 편", "결항된 편은 결항이라고 알린다"],
   ];
   for (const [flightNo, expected, name] of cases) {

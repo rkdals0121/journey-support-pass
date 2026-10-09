@@ -22,6 +22,8 @@ interface Props {
   placeLabel: string;
   placeLabelEn: string;
   refreshSec: number;
+  /** 휴대전화로 찍어 바로 등록할 수 있는 QR 그림(svg). 아직 등록하지 않은 여객에게 처음 화면에서 보여 준다. */
+  registerQr: string;
   idleAskSec: number;
   idleAnswerSec: number;
 }
@@ -38,7 +40,7 @@ const SAME_PASS_GUARD_MS = 8000;
  * 안내 키오스크. 여객이 QR 을 보여 주거나 번호를 누르면, 그 여객이 고른 대로 화면이 바뀌고 길과 시설을 안내한다.
  * 한 페이지 안에서 처음 화면 → 안내 → 끝내기 → 처음 화면으로 돈다. 끝내면 앞사람의 내용은 화면에서 지운다.
  */
-export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec }: Props) {
+export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec, registerQr }: Props) {
   const [view, setView] = useState<View>({ kind: "scan" });
   const [token, setToken] = useState<string | null>(null);
   const [guide, setGuide] = useState<GuideDto | null>(null);
@@ -183,7 +185,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff} token={token} screen="guide" onActive={setCallActive} say={prefs.voice ? speak : undefined} />
+        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={setCallActive} say={prefs.voice ? speak : undefined} />
       </div>
     </div>
   );
@@ -267,6 +269,10 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                   <strong>{t.noPassTitle}</strong>
                   <span>{t.noPassBody}</span>
                 </div>
+                <figure className="register-qr">
+                  <div dangerouslySetInnerHTML={{ __html: registerQr }} role="img" aria-label={t.noPassQr} />
+                  <figcaption>{t.noPassQr}</figcaption>
+                </figure>
               </div>
             </div>
             <Scanner
@@ -338,13 +344,15 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   }
 
   const flight = guide.flight;
+  // 다른 터미널에서 출발하는 편이면 여기서는 길을 알려 줄 수 없다. 아래 시설은 "지금 계신 곳 가까운 시설"이라고 밝힌다.
+  const otherTerminal = guide.routeNote === "other_terminal";
   const noteText =
     guide.routeNote === "no_gate"
       ? t.noteNoGate
       : guide.routeNote === "landside"
         ? t.noteLandside
         : guide.routeNote === "other_terminal"
-          ? t.noteOtherTerminal
+          ? t.noteOtherTerminal(t.area[flight.area] ?? flight.area)
           : guide.routeNote === "cancelled"
             ? t.noteCancelled
             : "";
@@ -465,13 +473,13 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
 
         {chosen.length > 0 && (
           <>
-            <h2>{t.myPlaces}</h2>
+            <h2>{otherTerminal ? t.nearHere : t.myPlaces}</h2>
             <div className="tiles">{chosen.map(tile)}</div>
           </>
         )}
         {others.length > 0 && (
           <>
-            <h2>{chosen.length > 0 ? t.otherPlaces : t.myPlaces}</h2>
+            <h2>{chosen.length > 0 ? t.otherPlaces : otherTerminal ? t.nearHere : t.myPlaces}</h2>
             <div className="tiles tiles-small">{others.map(tile)}</div>
           </>
         )}

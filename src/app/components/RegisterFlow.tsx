@@ -3,12 +3,14 @@
 import { ArrowRight, BarChart3, Check, FileText, MonitorSmartphone, Plane, Search, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
+import { destLabel } from "@/lib/dest-en";
 import { textOf, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "./Alert";
 import { FlowShell } from "./FlowShell";
 import { AlnumPad, Choice } from "./Inputs";
 
 export interface FlightOption {
+  airline: string;
   flightDate: string;
   flightNo: string;
   destName: string;
@@ -70,8 +72,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const kind: StepKind = ORDER[step];
   const itemLabel = (i: Item) => (lang === "en" ? i.en : i.label);
   const groupLabel = (g: Group) => (lang === "en" ? GROUP_EN[g] : GROUP_LABEL[g]);
-  // 운항 정보의 도착지 이름은 한국어뿐이다. 영어 화면에서는 공항 코드를 쓴다.
-  const destOf = (f: FlightOption) => (lang === "en" && f.destCode ? f.destCode : f.destName);
+  // 운항 정보의 도착지 이름은 한국어뿐이다. 영어 화면에서는 공항 코드로 영어 도시 이름을 찾아 쓴다.
+  const destOf = (f: FlightOption) => destLabel(lang, f);
   const whenOf = (f: FlightOption) => `${f.day === "today" ? t.today : t.tomorrow} ${f.time}`;
 
   const onPrefsRef = useRef(onPrefs);
@@ -130,7 +132,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
 
   const typeFlight = (value: string) => {
     touched();
-    setQuery(value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8));
+    // 편명(KE123) 말고 도착 도시(도쿄, tokyo)나 편명의 숫자만 넣어도 찾는다. 그래서 한글과 띄어쓰기도 받는다.
+    setQuery(value.toUpperCase().replace(/[^A-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ ]/g, "").replace(/^ +/, "").slice(0, 16));
     setOptions(null);
     setFlight(null);
   };
@@ -207,7 +210,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     move: t.moveHint,
     facility: t.facilityHint,
     staff: t.staffHint,
-    flight: t.flightHint,
+    flight: kiosk ? t.flightHintKiosk : t.flightHint,
   };
 
   // 소리로 읽어 줄 글. 제목, 설명, 고를 것들.
@@ -371,6 +374,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                     <strong>{destOf(o)}</strong>
                     <span>
                       {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
+                      {o.airline ? ` · ${o.airline}` : ""}
                     </span>
                   </span>
                   <span className="choice-mark" aria-hidden="true">

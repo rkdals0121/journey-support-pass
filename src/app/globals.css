@@ -811,6 +811,31 @@ html[data-picture] .choice-icon svg {
 .info-row + .info-row {
   border-top: 1px solid var(--line);
 }
+/* 안내 키오스크 처음 화면: 아직 등록하지 않은 여객이 휴대전화로 찍는 등록용 QR */
+.register-qr {
+  flex: none;
+  width: 8rem;
+  margin: 0 0 0 auto;
+  text-align: center;
+}
+.register-qr > div {
+  padding: 0.25rem;
+  border: 0.0625rem solid var(--line);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.register-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.register-qr figcaption {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
 .info-row.quiet {
   padding: 0.5rem 0;
   border: 0;

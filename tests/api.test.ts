@@ -136,6 +136,20 @@ describe("편명 검색", () => {
     expect(await first("DL9")).toMatchObject({ cancelled: false, time: "17:20" });
   });
 
+  it("편명을 몰라도 도착 도시 이름, 영어 도시 이름, 공항 코드, 편명의 숫자로 찾는다", async () => {
+    const nos = async (q: string) => ((await searchFlightsHandler(db, q, now)).body.flights as { flightNo: string }[]).map((f) => f.flightNo);
+    expect(await nos("뉴욕")).toContain("KE123");
+    expect(await nos("new york")).toContain("KE123");
+    expect(await nos("JFK")).toContain("KE123");
+    expect(await nos("123")).toContain("KE123");
+    expect(await nos("0123")).toContain("KE123");
+    // 없는 곳, 한 글자, 뜻 없는 글자는 빈 목록이다. 오류가 나지 않는다.
+    expect(await nos("없는도시")).toEqual([]);
+    expect(await nos("뉴")).toEqual([]);
+    expect(await nos("zzzzzz")).toEqual([]);
+    expect(await nos("%")).toEqual([]);
+  });
+
   it("두 글자부터 그 글자로 시작하는 편을 찾고, 같은 편명을 맨 위에 둔다", async () => {
     await addFlights(
       db,

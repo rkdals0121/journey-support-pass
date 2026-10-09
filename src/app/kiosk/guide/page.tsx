@@ -1,4 +1,6 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import QRCode from "qrcode";
 import { placeOf } from "@/lib/airport";
 import { config } from "@/lib/config";
 import { currentSession } from "@/lib/session-server";
@@ -14,11 +16,17 @@ export default async function KioskGuidePage({ searchParams }: { searchParams: P
   const session = await currentSession();
   const place = session?.isKiosk ? placeOf(session.placeId) : null;
   if (!place) redirect("/kiosk");
+  // 아직 등록하지 않은 여객이 자기 휴대전화로 찍어 바로 등록할 수 있게, 등록 화면의 주소를 QR 로 보여 준다.
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
+  const registerQr = await QRCode.toString(`${proto}://${host}/register`, { type: "svg", errorCorrectionLevel: "M", margin: 2 });
   return (
     <GuideKiosk
       placeLabel={place.label}
       placeLabelEn={place.labelEn}
       refreshSec={config.guideRefreshSec}
+      registerQr={registerQr}
       idleAskSec={idleAskSec}
       idleAnswerSec={config.idleAnswerSec}
     />
