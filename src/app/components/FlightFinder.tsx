@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPin, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Lang, Text } from "@/lib/i18n";
 
 export interface Destination {
@@ -38,6 +38,12 @@ export function CityPicker({ lang, t, onPick, onClose }: Props) {
   const [list, setList] = useState<Destination[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [initial, setInitial] = useState<string | null>(null);
+  // 열리면 초점을 이 안으로 옮긴다. 키보드나 화면 읽기 프로그램을 쓰는 여객이 자리를 잃지 않는다.
+  const boxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    boxRef.current?.focus({ preventScroll: true });
+    boxRef.current?.scrollIntoView({ block: "nearest" });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +67,7 @@ export function CityPicker({ lang, t, onPick, onClose }: Props) {
   const shown = initial ? sorted.filter((d) => initialOf(d, lang) === initial) : popular;
 
   return (
-    <div className="city-picker">
+    <div className="city-picker" ref={boxRef} tabIndex={-1} role="group" aria-label={t.cityTitle}>
       <div className="city-head">
         <strong>{t.cityTitle}</strong>
         <button className="icon-btn" onClick={onClose} aria-label={t.close}>

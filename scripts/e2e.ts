@@ -363,11 +363,12 @@ const closeInView = (page: Page) =>
  * 점검이 오래 걸리면 금방 떠나는 편이 도중에 떠나 버리므로, 시각에 민감한 장면 앞에서 한 번 더 부른다.
  * 이미 등록한 여객은 편명으로 이어져 있어 그대로 남는다.
  */
-async function resetFlights() {
+async function resetFlights(clearLocks = false) {
   const res = await fetch(`${BASE}/api/admin/setup`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${CRON_SECRET}` },
-    body: JSON.stringify({ mockFlights: true }),
+    // 이 점검은 일부러 틀린 번호를 여러 번 넣는다. 연달아 돌려도 "번호 잠금"에 걸리지 않게 앞선 실행의 틀린 기록을 지운다.
+    body: JSON.stringify({ mockFlights: true, clearLocks }),
   });
   if (!res.ok) throw new Error(`모의 운항을 넣지 못했습니다 (${res.status}). .env.local 의 CRON_SECRET 을 확인하세요.`);
 }
@@ -378,7 +379,7 @@ async function resetFlights() {
   fs.mkdirSync(SHOTS, { recursive: true });
   for (const f of fs.readdirSync(SHOTS)) if (f.endsWith(".png")) fs.unlinkSync(path.join(SHOTS, f));
 
-  await resetFlights();
+  await resetFlights(true);
   // 앞선 점검이 도중에 멈췄으면 끝나지 않은 호출이 남아 있을 수 있다. 직원 화면의 점검이 그 호출에 걸리지 않게 모두 마친다.
   {
     const cleaner = await staffCookie(DESK_CODE);
@@ -1092,7 +1093,7 @@ async function resetFlights() {
   check("'도움 마침'을 누르면 목록에서 내려가 '방금 끝난 호출'에 남는다", (await count(page, ".call")) === 0 && (await has(page, "도움 마침")));
   await shot(page, "직원-끝난호출");
   await post(`/api/staff/calls/${c2.body.id}`, { action: "done" }, otherStaff);
-  check("직원 메뉴에 안내데스크가 없다 (현장 직원 코드)", !(await has(page, "안내데스크")));
+  check("직원 메뉴에 안내데스크가 없다 (현장 직원 코드)", !(await page.evaluate(() => (document.querySelector(".staff-nav") as HTMLElement).innerText.includes("안내데스크"))));
   await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "안내데스크에서만 쓸 수 있습니다");
   check("현장 직원은 안내데스크 화면을 쓸 수 없다", true);

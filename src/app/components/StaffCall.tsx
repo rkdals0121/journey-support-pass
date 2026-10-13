@@ -3,6 +3,7 @@
 import { BellRing, CircleCheck, UserCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Text } from "@/lib/i18n";
+import { useFocusTrap } from "./useFocusTrap";
 
 type CallState = "waiting" | "accepted" | "done" | "cancelled";
 
@@ -33,6 +34,8 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(boxRef, open);
   const sayRef = useRef(say);
   sayRef.current = say;
   const onActiveRef = useRef(onActive);
@@ -142,6 +145,7 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
       {open && (
         <div className="sheet-backdrop" onClick={() => setOpen(false)}>
           <div
+            ref={boxRef}
             className="sheet-box call-sheet"
             role="alertdialog"
             aria-modal="true"

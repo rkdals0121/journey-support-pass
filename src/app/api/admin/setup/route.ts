@@ -13,6 +13,7 @@ export const maxDuration = 60;
 //   POST { "codes": { "구역 id": "코드", ... } }   테이블과 구역 (여러 번 실행해도 된다)
 //   POST { "mockFlights": true }                   모의 운항을 지금 시각 기준으로 채울 때
 //   POST { "clearMockFlights": true }              모의 운항을 지울 때
+//   POST { "clearLocks": true }                    코드나 번호를 여러 번 틀려 잠긴 것을 풀 때
 export async function POST(request: Request) {
   if (!isCronAuthorized(request)) return Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
       requireAllCodes: true,
       mockFlights: wantsMock,
       clearMockFlights: body.clearMockFlights === true,
+      clearLocks: body.clearLocks === true,
     },
     new Date(),
   );

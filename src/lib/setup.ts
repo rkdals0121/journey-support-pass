@@ -91,6 +91,8 @@ export interface SetupOptions {
   mockFlights: boolean;
   /** true 면 모의 운항을 지운다. 실제 운항 정보를 연결한 뒤에 쓴다. */
   clearMockFlights?: boolean;
+  /** true 면 "여러 번 틀려서 잠김"을 푼다. 코드나 번호를 틀린 기록만 지운다. 운영자가 잠긴 키오스크를 풀 때와 화면 점검을 연달아 돌릴 때 쓴다. */
+  clearLocks?: boolean;
 }
 
 export interface SetupResult {
@@ -99,6 +101,7 @@ export interface SetupResult {
   zones?: number;
   mockFlights?: string[];
   clearedMockFlights?: number;
+  clearedLocks?: number;
 }
 
 /** 테이블을 만들고 구역·(선택) 모의 운항을 채운다. 여러 번 실행해도 안전하다. 패스는 등록할 때 만들어지므로 미리 만들지 않는다. */
@@ -117,6 +120,11 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
   } else {
     const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from zones");
     if (n === 0) return { ok: false, error: "구역이 없습니다. 접속 코드와 함께 다시 실행하세요" };
+  }
+
+  let clearedLocks: number | undefined;
+  if (opts.clearLocks) {
+    clearedLocks = (await db.query("delete from access_logs where action in ('login_fail', 'number_fail') returning id")).length;
   }
 
   let cleared: number | undefined;
@@ -138,5 +146,6 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
     zones,
     mockFlights: flights,
     clearedMockFlights: cleared,
+    clearedLocks,
   };
 }

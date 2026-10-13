@@ -4,6 +4,7 @@ import { ChevronLeft, House, Settings, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Prefs } from "@/lib/catalog";
 import { textOf, type Lang } from "@/lib/i18n";
+import { useFocusTrap } from "./useFocusTrap";
 import { useSpeech } from "./useSpeech";
 import { resetViewSettings, SCALES, setViewSettings, useViewSettings } from "./viewSettings";
 
@@ -23,7 +24,7 @@ interface Props {
   progress?: { n: number; total: number; name: string };
   /** 화면 아래에 붙는 가장 중요한 버튼. */
   cta?: React.ReactNode;
-  /** 휴대전화에서 버튼을 화면 아래에 붙이지 않고 내용 끝에 둔다. 끝까지 읽어야 버튼이 나오는 동의 화면에 쓴다. */
+  /** 버튼을 화면 아래에 붙이지 않고 내용 끝에 둔다. 글이 길면 끝까지 읽어야 버튼이 나오는 동의 화면에 쓴다. */
   ctaAfterContent?: boolean;
   children: React.ReactNode;
 }
@@ -41,6 +42,8 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, on
   const bodyRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(sheetRef, settingsOpen);
 
   // 등록할 때 고른 것이 기본이고, 「설정」에서 바꾼 것이 있으면 그 값을 쓴다.
   const view = useViewSettings();
@@ -178,7 +181,7 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, on
 
       {settingsOpen && (
         <div className="sheet-backdrop" onClick={() => setSettingsOpen(false)}>
-          <div className="sheet-box settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
+          <div ref={sheetRef} className="sheet-box settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
             <h2 id="settings-title">{t.settingsTitle}</h2>
 
             <div className="settings-group" role="radiogroup" aria-label={t.sizeLabel}>

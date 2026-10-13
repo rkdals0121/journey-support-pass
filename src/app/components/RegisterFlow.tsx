@@ -49,6 +49,19 @@ const SEARCH_DELAY_MS = 250;
 const sameFlight = (a: FlightOption | null, b: FlightOption) =>
   a !== null && a.flightDate === b.flightDate && a.flightNo === b.flightNo;
 
+/** 하나만 고르는 묶음에서는 화살표 키로 옆 항목으로 옮겨 가며 고른다. 키보드와 화면 읽기 프로그램이 기대하는 동작이다. */
+function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
+  const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+  if (step === 0) return;
+  const radios = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]:not(:disabled)')];
+  const at = radios.indexOf(document.activeElement as HTMLElement);
+  if (at < 0 || radios.length < 2) return;
+  e.preventDefault();
+  const next = radios[(at + step + radios.length) % radios.length];
+  next.focus();
+  next.click();
+}
+
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. */
 export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Props) {
   const kiosk = mode !== "web";
@@ -148,6 +161,16 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setBucket(null);
     setAirline(null);
   };
+  // 도시를 고르거나 도시 고르기를 닫으면 초점을 항공편 칸으로 돌려준다. (도시 고르기가 사라지면서 초점이 화면 밖으로 빠지지 않게)
+  const flightZone = useRef<HTMLDivElement>(null);
+  const cityState = `${cityOpen}-${cityPick?.city ?? ""}`;
+  const lastCityState = useRef(cityState);
+  useEffect(() => {
+    if (lastCityState.current === cityState) return;
+    lastCityState.current = cityState;
+    if (!cityOpen) flightZone.current?.focus({ preventScroll: true });
+  }, [cityState, cityOpen]);
+
   const pickCity = (d: Destination) => {
     touched();
     setQuery("");
@@ -319,14 +342,15 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       onBack={back}
       onHome={onExit}
       progress={{ n: step + 1, total: ORDER.length, name: t.steps[kind] }}
-      cta={cta}
+      // 키오스크의 항공편 화면에서는 편을 고를 때까지 「다음」을 치워 둔다. 화면 글자판과 도시 목록이 버튼에 가려지지 않는다.
+      cta={kiosk && kind === "flight" && !flight ? undefined : cta}
       ctaAfterContent={kind === "consent"}
     >
       <h1>{titleOf[kind]}</h1>
       {hintOf[kind] && <p className="lead">{hintOf[kind]}</p>}
 
       {kind === "guide" && (
-        <div className="lang-pick" role="radiogroup" aria-label={t.language}>
+        <div className="lang-pick" role="radiogroup" aria-label={t.language} onKeyDown={radioKeys}>
           <span className="lang-pick-label">{t.language} · Language</span>
           {(["ko", "en"] as const).map((l) => (
             <button key={l} role="radio" aria-checked={lang === l} className={lang === l ? "on" : ""} onClick={() => setLang(l)} lang={l}>
@@ -337,7 +361,12 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       )}
 
       {groupOfStep && (
-        <div role={groupOfStep === "staff" ? "radiogroup" : "group"} aria-label={groupLabel(groupOfStep)} className="choices">
+        <div
+          role={groupOfStep === "staff" ? "radiogroup" : "group"}
+          aria-label={groupLabel(groupOfStep)}
+          className="choices"
+          onKeyDown={groupOfStep === "staff" ? radioKeys : undefined}
+        >
           {itemsOf(groupOfStep).map((i) => (
             <Choice
               key={i.code}
@@ -366,7 +395,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
 
       {kind === "flight" && (
         <div className="flight-layout">
-          <div>
+          <div ref={flightZone} tabIndex={-1} className="flight-zone">
             {!cityMode && (
               <>
                 <label htmlFor="reg-flight">{kiosk ? t.flightLabelKiosk : t.flightLabel}</label>
@@ -489,7 +518,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
             )}
 
             {!cityOpen && (
-              <div role="radiogroup" aria-label={t.flightChoice} className="choices">
+              <div role="radiogroup" aria-label={t.flightChoice} className="choices" onKeyDown={radioKeys}>
                 {(flight ? [flight] : shownOptions).map((o) => (
                   <button
                     key={`${o.flightDate}-${o.flightNo}`}

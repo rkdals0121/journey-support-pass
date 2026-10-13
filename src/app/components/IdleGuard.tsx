@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Text } from "@/lib/i18n";
+import { useFocusTrap } from "./useFocusTrap";
 
 interface Props {
   t: Text;
@@ -24,6 +25,7 @@ export function IdleGuard({ t, enabled, askSec, answerSec, onTimeout }: Props) {
   const onTimeoutRef = useRef(onTimeout);
   onTimeoutRef.current = onTimeout;
   const stayRef = useRef<HTMLButtonElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
   const asking = left !== null;
 
   // 화면을 건드리면 처음부터 다시 잰다. 묻는 창이 떠 있는 동안에는 버튼으로만 답한다.
@@ -62,10 +64,12 @@ export function IdleGuard({ t, enabled, askSec, answerSec, onTimeout }: Props) {
     if (asking) stayRef.current?.focus();
   }, [asking]);
 
+  useFocusTrap(boxRef, left !== null);
+
   if (left === null) return null;
   return (
     <div className="sheet-backdrop">
-      <div className="sheet-box" role="alertdialog" aria-modal="true" aria-labelledby="idle-title" aria-describedby="idle-body">
+      <div ref={boxRef} className="sheet-box" role="alertdialog" aria-modal="true" aria-labelledby="idle-title" aria-describedby="idle-body">
         <h2 id="idle-title">{t.idleTitle}</h2>
         <p id="idle-body">{t.idleBody(left)}</p>
         <div className="sheet-actions">
