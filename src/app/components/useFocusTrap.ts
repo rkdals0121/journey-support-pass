@@ -15,6 +15,9 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     const items = () => [...(ref.current?.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], input, [tabindex]:not([tabindex='-1'])") ?? [])];
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
+      // 창이 둘 겹쳐 있으면(설정 창 위에 "계속 이용하시겠어요?"가 뜬 경우) 맨 위의 창만 초점을 붙든다.
+      const open = document.querySelectorAll('[aria-modal="true"]');
+      if (open.length > 0 && open[open.length - 1] !== ref.current) return;
       const list = items();
       if (list.length === 0) return;
       const first = list[0];
