@@ -10,7 +10,10 @@ const CITY: Record<string, string> = {
   KMQ: "Komatsu", TOY: "Toyama", KIJ: "Niigata", SDJ: "Sendai", AOJ: "Aomori", FSZ: "Shizuoka", OKJ: "Okayama",
   YGJ: "Yonago", KKJ: "Kitakyushu", HSG: "Saga", KMI: "Miyazaki", ISG: "Ishigaki", SHM: "Shirahama", TKS: "Tokushima",
   UBJ: "Ube", AKJ: "Asahikawa", HKD: "Hakodate", MMY: "Miyako", SHI: "Shimojishima", IBR: "Ibaraki", KCZ: "Kochi",
+  UKB: "Kobe", PUS: "Busan", TAE: "Daegu", CJU: "Jeju",
   // 중국, 홍콩, 마카오, 대만, 몽골
+  LJG: "Lijiang", WDS: "Shiyan", YTY: "Yangzhou", WNZ: "Wenzhou", YIH: "Yichang", JMU: "Jiamusi", TXN: "Huangshan",
+  BSZ: "Bishkek", TBS: "Tbilisi",
   PEK: "Beijing", PKX: "Beijing Daxing", PVG: "Shanghai Pudong", SHA: "Shanghai Hongqiao", CAN: "Guangzhou", SZX: "Shenzhen",
   TAO: "Qingdao", DLC: "Dalian", SHE: "Shenyang", TSN: "Tianjin", HGH: "Hangzhou", NKG: "Nanjing", XIY: "Xi'an",
   CTU: "Chengdu", TFU: "Chengdu Tianfu", CKG: "Chongqing", WUH: "Wuhan", CSX: "Changsha", XMN: "Xiamen", KMG: "Kunming",

@@ -3,6 +3,7 @@
 import { ArrowRight, BarChart3, Check, FileText, MapPin, MonitorSmartphone, Plane, Search, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
+import { airlineLabel } from "@/lib/airline-en";
 import { destLabel } from "@/lib/dest-en";
 import { textOf, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "./Alert";
@@ -69,6 +70,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const [cityOpen, setCityOpen] = useState(false);
   const [cityPick, setCityPick] = useState<Destination | null>(null);
   const [bucket, setBucket] = useState<string | null>(null);
+  const [airline, setAirline] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [flight, setFlight] = useState<FlightOption | null>(null);
   const [busy, setBusy] = useState(false);
@@ -144,6 +146,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setCityPick(null);
     setCityOpen(false);
     setBucket(null);
+    setAirline(null);
   };
   const pickCity = (d: Destination) => {
     touched();
@@ -151,6 +154,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setOptions(null);
     setFlight(null);
     setBucket(null);
+    setAirline(null);
     setCityPick(d);
     setCityOpen(false);
   };
@@ -215,7 +219,15 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const MANY = 8;
   const buckets = options && options.length > MANY ? bucketsOf(options, t) : [];
   // 시간대 단추가 나왔으면 하나를 누르기 전에는 목록을 펼치지 않는다. 수십 편이 한꺼번에 쏟아지지 않게 한다.
-  const shownOptions = buckets.length <= 1 ? (options ?? []) : bucket === null ? [] : (options ?? []).filter((o) => bucket === "all" || bucketKey(o) === bucket);
+  const inBucket = buckets.length <= 1 ? (options ?? []) : bucket === null ? [] : (options ?? []).filter((o) => bucket === "all" || bucketKey(o) === bucket);
+  // 시간대를 골라도 편이 많으면(도쿄는 한 시간대에 마흔 편) 항공사를 한 번 더 묻는다.
+  const airlines = inBucket.length > MANY ? [...new Set(inBucket.map((o) => o.airline).filter(Boolean))].sort((x, y) => x.localeCompare(y, "ko")) : [];
+  const askAirline = airlines.length > 1;
+  const airlineName = (name: string) => {
+    const sample = inBucket.find((o) => o.airline === name);
+    return sample ? airlineLabel(lang, sample) : name;
+  };
+  const shownOptions = !askAirline ? inBucket : airline === null ? [] : inBucket.filter((o) => airline === "all" || o.airline === airline);
   // 도착 도시에서 고르는 동안에는 편명 입력란을 치우고 그 자리에 도시와 편 목록을 보여 준다.
   const cityMode = cityOpen || cityPick !== null;
 
@@ -389,7 +401,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                     : options && options.length > 0
                       ? buckets.length > 1 && bucket === null
                         ? t.whenFirst
-                        : t.pickFlight
+                        : askAirline && airline === null
+                          ? t.airlineFirst
+                          : t.pickFlight
                       : ""}
             </p>
 
@@ -403,6 +417,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                     setFlight(null);
                     setOptions(null);
                     setBucket(null);
+    setAirline(null);
                     setCityPick(null);
                     setCityOpen(true);
                   }}
@@ -435,11 +450,39 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
               <div className="pick-row" role="group" aria-label={t.whenAsk}>
                 <span className="pick-label">{t.whenAsk}</span>
                 {buckets.map((b) => (
-                  <button key={b.key} className={`pick ${bucket === b.key ? "on" : ""}`} aria-pressed={bucket === b.key} onClick={() => setBucket(b.key)}>
+                  <button
+                    key={b.key}
+                    className={`pick ${bucket === b.key ? "on" : ""}`}
+                    aria-pressed={bucket === b.key}
+                    onClick={() => {
+                      setBucket(b.key);
+                      setAirline(null);
+                    }}
+                  >
                     {b.label}
                   </button>
                 ))}
-                <button className={`pick ${bucket === "all" ? "on" : ""}`} aria-pressed={bucket === "all"} onClick={() => setBucket("all")}>
+                <button
+                  className={`pick ${bucket === "all" ? "on" : ""}`}
+                  aria-pressed={bucket === "all"}
+                  onClick={() => {
+                    setBucket("all");
+                    setAirline(null);
+                  }}
+                >
+                  {t.allTimes}
+                </button>
+              </div>
+            )}
+            {!flight && !cityOpen && askAirline && (
+              <div className="pick-row" role="group" aria-label={t.airlineAsk}>
+                <span className="pick-label">{t.airlineAsk}</span>
+                {airlines.map((name) => (
+                  <button key={name} className={`pick ${airline === name ? "on" : ""}`} aria-pressed={airline === name} onClick={() => setAirline(name)}>
+                    {airlineName(name)}
+                  </button>
+                ))}
+                <button className={`pick ${airline === "all" ? "on" : ""}`} aria-pressed={airline === "all"} onClick={() => setAirline("all")}>
                   {t.allTimes}
                 </button>
               </div>
@@ -465,7 +508,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                       <strong>{destOf(o)}</strong>
                       <span>
                         {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
-                        {o.airline ? ` · ${o.airline}` : ""}
+                        {o.airline ? ` · ${airlineLabel(lang, o)}` : ""}
                       </span>
                     </span>
                     <span className="choice-mark" aria-hidden="true">

@@ -15,11 +15,11 @@ const allCodes = Object.fromEntries(activeIds.map((id, i) => [id, String(900000 
 const SLOW = 400_000;
 
 describe("모의 운항", () => {
-  it("편명이 겹치지 않고 모두 MK·MC 로 시작한다", () => {
+  it("편명이 겹치지 않고 모두 모의 항공사 코드(MK·MC·MQ·MZ)로 시작한다", () => {
     const rows = mockFlights(now);
     expect(new Set(rows.map((r) => r.flightNo)).size).toBe(rows.length);
     for (const r of rows) {
-      expect(r.flightNo).toMatch(/^M[KC]\d+$/);
+      expect(r.flightNo).toMatch(/^M[KCQZ]\d+$/);
       expect(r.airline.startsWith("모의")).toBe(true);
       expect(r.schedAt.getTime()).toBeGreaterThan(now.getTime());
     }

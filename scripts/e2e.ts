@@ -538,6 +538,14 @@ async function resetFlights() {
   check("도시에서 편을 고르면 「다음」으로 갈 수 있다", (await isDisabled(page, "다음")) === false);
   await clickText(page, ".link-btn", "다른 편 고르기");
   check("「다른 편 고르기」를 누르면 고르던 목록으로 돌아간다", (await count(page, ".flight-opt")) === inBucket);
+  await clickText(page, ".pick-row .pick", "전체");
+  await waitText(page, "어느 항공사인가요?");
+  check("시간대를 골라도 편이 많으면 항공사를 한 번 더 묻는다. 누르기 전에는 목록을 펼치지 않는다", (await count(page, ".flight-opt")) === 0);
+  await page.evaluate(() => ([...document.querySelectorAll(".pick-row")][1].querySelector(".pick") as HTMLElement).click());
+  await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length >= 1, { timeout: WAIT });
+  const byAirline = await page.$$eval(".flight-opt", (els) => els.map((e) => (e as HTMLElement).innerText.split("·").pop()!.trim()));
+  check("항공사를 누르면 그 항공사의 편만 나온다", byAirline.length >= 1 && new Set(byAirline).size === 1, byAirline.join(", "));
+  await shot(page, "휴대전화-도착도시-항공사");
   await clickText(page, ".link-btn", "도시 다시 고르기");
   await waitText(page, "어디로 가시나요?");
   await page.click(".city-head .icon-btn");
