@@ -446,7 +446,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                   : t.flightPicked
                 : cityOpen
                   ? ""
-                  : searching
+                  : searching && options === null
                     ? t.searching
                     : options && options.length > 0
                       ? buckets.length > 1 && bucket === null
@@ -558,8 +558,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                       <strong>{destOf(o)}</strong>
                       <span>
                         {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
-                        {o.airline ? ` · ${airlineLabel(lang, o)}` : ""}
                       </span>
+                      {o.airline && <span>{airlineLabel(lang, o)}</span>}
                     </span>
                     <span className="choice-mark" aria-hidden="true">
                       <Check size={18} strokeWidth={3} />
@@ -588,7 +588,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
               </button>
             </dt>
             <dd>
-              <Plane size={18} aria-hidden="true" /> <b className="num">{flight.flightNo}</b> · {destOf(flight)} · {whenOf(flight)}
+              <Plane size={18} aria-hidden="true" /> <b className="num">{flight.flightNo}</b>
+              {/* 줄이 넘어가도 가운뎃점이 줄 맨 앞에 오지 않게 한 덩어리로 둔다. */}
+              <span>
+                {destOf(flight)} · {whenOf(flight)}
+              </span>
             </dd>
             {GROUPS.map((g) => (
               <ReviewGroup
