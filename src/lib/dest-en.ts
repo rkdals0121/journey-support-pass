@@ -48,6 +48,15 @@ export function destEn(destCode: string, destName: string): string {
   return city ? `${city} (${code})` : code;
 }
 
+// 한 도시에 공항이 여럿일 때 붙는 공항 이름. 도시 목록에서는 떼고 보여 준다.
+const AIRPORT_WORDS = / (Narita|Haneda|Pudong|Hongqiao|Daxing|Don Mueang|Songshan|Tianfu)$/;
+
+/** 도시 목록에 쓸 영어 도시 이름. "Tokyo Narita" → "Tokyo". 모르는 공항이면 빈 글자. */
+export function cityEn(destCode: string): string {
+  const city = CITY[destCode.trim().toUpperCase()];
+  return city ? city.replace(AIRPORT_WORDS, "") : "";
+}
+
 /** 화면 언어에 맞는 도착지 이름. */
 export function destLabel(lang: "ko" | "en", f: { destCode: string; destName: string }): string {
   return lang === "en" ? destEn(f.destCode, f.destName) : f.destName;

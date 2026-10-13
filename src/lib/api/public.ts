@@ -4,7 +4,7 @@ import { isAdapted } from "../catalog";
 import { config } from "../config";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
-import { suggestFlights } from "../flights/search";
+import { suggestFlights, listDestinations } from "../flights/search";
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, type Journey } from "../journey";
 import { allowEvent, logEvent } from "../metrics";
@@ -32,6 +32,11 @@ export async function allowRegistration(db: Db, clientKey: string, now: Date): P
 export async function searchFlightsHandler(db: Db, q: string, now: Date): Promise<ApiResult> {
   const flights = await suggestFlights(db, q ?? "", now);
   return ok({ flights: flights.map((f) => toFlightDto(f, now)) });
+}
+
+/** 오늘과 내일 떠날 편이 있는 도착 도시 목록. */
+export async function destinationsHandler(db: Db, now: Date): Promise<ApiResult> {
+  return ok({ destinations: await listDestinations(db, now) });
 }
 
 export interface RegisterBody {

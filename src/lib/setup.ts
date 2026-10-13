@@ -9,6 +9,7 @@ const MIN = 60_000;
 // 영어 화면은 도착지 이름 대신 공항 코드를 보여준다.
 const MOCK_DEST_CODE: Record<string, string> = {
   호찌민: "SGN",
+  "오사카/간사이": "KIX",
   방콕: "BKK",
   타이베이: "TPE",
   마닐라: "MNL",
@@ -69,6 +70,10 @@ export function mockFlights(now: Date, stretch = 1): FlightRow[] {
     f("MK402", 12, "CONCOURSE", 128, "후쿠오카", { status: "탑승마감" }),
     f("MK403", 240, "CONCOURSE", 103, "싱가포르", { status: "결항" }),
     f("MK501", 110, "T1", 20, "도쿄"), // 제1여객터미널 중앙
+    // 같은 곳으로 가는 편이 많은 경우. 도착 도시로 찾으면 출발 시간대를 먼저 고르게 되는 장면을 확인한다.
+    ...[60, 140, 220, 330, 450, 570, 690, 810, 930, 1050, 1230, 1410].map((min, i) =>
+      f(`MK7${String(i + 1).padStart(2, "0")}`, min, "CONCOURSE", 106 + i * 2, "오사카/간사이"),
+    ),
   ];
 }
 

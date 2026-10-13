@@ -3,6 +3,7 @@ import { zoneName } from "@/lib/api/dto";
 import { resolveHandler } from "@/lib/api/kiosk";
 import {
   allowRegistration,
+  destinationsHandler,
   eraseHandler,
   eventHandler,
   guideHandler,
@@ -148,6 +149,31 @@ describe("편명 검색", () => {
     expect(await nos("뉴")).toEqual([]);
     expect(await nos("zzzzzz")).toEqual([]);
     expect(await nos("%")).toEqual([]);
+  });
+
+  it("도착 도시 목록: 공항이 여럿인 도시는 하나로 묶고, 떠난 편만 있는 도시는 뺀다", async () => {
+    await addFlights(
+      db,
+      [
+        flightRow("BX164", "2026-10-05 15:00", { destName: "도쿄/나리타", destCode: "NRT" }),
+        flightRow("LJ201", "2026-10-05 16:00", { destName: "도쿄/나리타", destCode: "NRT" }),
+        flightRow("KE2101", "2026-10-06 09:00", { destName: "도쿄/하네다", destCode: "HND" }),
+        flightRow("ZZ1", "2026-10-05 09:00", { destName: "이미떠난곳", destCode: "ZZZ" }),
+        flightRow("QQ7", "2026-10-05 17:00", { destName: "모르는곳", destCode: "QQQ" }),
+      ],
+      now,
+    );
+    const res = await destinationsHandler(db, now);
+    expect(res.status).toBe(200);
+    const list = res.body.destinations as { city: string; en: string; count: number }[];
+    expect(list.find((d) => d.city === "도쿄")).toEqual({ city: "도쿄", en: "Tokyo", count: 3 });
+    expect(list.find((d) => d.city === "뉴욕")).toMatchObject({ en: "New York", count: 2 });
+    // 영어 이름을 모르는 공항은 공항 코드를 보여 준다.
+    expect(list.find((d) => d.city === "모르는곳")).toMatchObject({ en: "QQQ" });
+    expect(list.some((d) => d.city === "이미떠난곳")).toBe(false);
+    // 목록의 도시 이름으로 다시 찾으면 그 도시의 편이 모두 나온다.
+    const found = ((await searchFlightsHandler(db, "도쿄", now)).body.flights as { flightNo: string }[]).map((f) => f.flightNo);
+    expect(found.sort()).toEqual(["BX164", "KE2101", "LJ201"]);
   });
 
   it("두 글자부터 그 글자로 시작하는 편을 찾고, 같은 편명을 맨 위에 둔다", async () => {

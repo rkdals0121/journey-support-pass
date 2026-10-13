@@ -794,6 +794,107 @@ html[data-picture] .choice-icon svg {
   color: #fff;
 }
 
+/* ── 항공편 찾기: 도착 도시 고르기, 출발 시간대 ── */
+.city-open {
+  justify-content: flex-start;
+  margin: 0.25rem 0 0.75rem;
+  border-style: dashed;
+  color: var(--green-press);
+  font-size: 1rem;
+  text-align: left;
+}
+.city-picker {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.875rem;
+  border: 0.0625rem solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.city-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+}
+.pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.25rem 0 0.75rem;
+}
+.pick-label {
+  flex: 0 0 100%;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.pick {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem;
+  border: 0.09375rem solid var(--line-strong);
+  border-radius: 62rem;
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pick.on {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(9rem, 100%), 1fr));
+  gap: 0.5rem;
+}
+.city {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 0.09375rem solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.city svg {
+  color: var(--green);
+}
+.city:active {
+  background: var(--mint);
+}
+.picked-city {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.75rem;
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius);
+  background: var(--mint);
+}
+.picked-city svg {
+  color: var(--green);
+}
+.link-btn {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.375rem;
+  border: 0;
+  background: none;
+  color: var(--green-press);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
 /* ── 설명 칸 ── */
 .panel {
   padding: 0.25rem 1rem;

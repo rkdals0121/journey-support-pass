@@ -1,5 +1,5 @@
 import type { Db } from "../db";
-import { codesByCity } from "../dest-en";
+import { cityEn, codesByCity } from "../dest-en";
 import { addDays, kstDate, normalizeFlightNo } from "./normalize";
 
 export interface FlightChoice {
@@ -73,8 +73,8 @@ export async function findFlights(db: Db, input: string, now: Date): Promise<Fli
 }
 
 const SUGGEST_LIMIT = 8;
-// 도착지로 찾으면 같은 곳으로 가는 편이 여럿이다. 여객이 시각을 보고 고를 수 있게 더 많이 보여 준다.
-const DEST_LIMIT = 24;
+// 도착지로 찾으면 같은 곳으로 가는 편이 여럿이다(도쿄는 이틀에 백 편이 넘는다). 화면이 출발 시간대로 나눠 보여 주므로 넉넉히 준다.
+const DEST_LIMIT = 200;
 
 /**
  * 편명을 치는 동안 보여줄 후보. 두 글자 이상이면 그 글자로 시작하는 편을 찾는다.
@@ -140,6 +140,43 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
     [codes, today, addDays(today, 1), now],
   );
   return byDest.map(toChoice);
+}
+
+export interface Destination {
+  /** 도시 이름. 운항 정보의 "도쿄/나리타" 에서 "/" 앞부분. 이 값으로 다시 찾는다. */
+  city: string;
+  /** 영어 도시 이름. 모르는 공항이면 공항 코드. */
+  en: string;
+  /** 오늘과 내일 남은 편 수. */
+  count: number;
+}
+
+/** 오늘과 내일 떠날 편이 있는 도착 도시. 편명을 모르는 여객이 도시를 눌러 고르게 하는 데 쓴다. */
+export async function listDestinations(db: Db, now: Date): Promise<Destination[]> {
+  const today = kstDate(now);
+  const rows = await db.query<{ dest_name: string; dest_code: string; n: number }>(
+    `select dest_name, dest_code, count(*)::int as n from flights
+     where flight_date in ($1, $2) and coalesce(est_at, sched_at) > $3 and position('출발' in status) = 0
+       and dest_name <> ''
+     group by dest_name, dest_code`,
+    [today, addDays(today, 1), now],
+  );
+  const byCity = new Map<string, { count: number; top: number; code: string }>();
+  for (const r of rows) {
+    const city = r.dest_name.split("/")[0].trim();
+    if (!city) continue;
+    const cur = byCity.get(city) ?? { count: 0, top: 0, code: "" };
+    cur.count += r.n;
+    // 그 도시에서 편이 가장 많은 공항의 코드로 영어 이름을 정한다.
+    if (r.n > cur.top) {
+      cur.top = r.n;
+      cur.code = r.dest_code;
+    }
+    byCity.set(city, cur);
+  }
+  return [...byCity.entries()]
+    .map(([city, v]) => ({ city, en: cityEn(v.code) || v.code || city, count: v.count }))
+    .sort((a, b) => a.city.localeCompare(b.city, "ko"));
 }
 
 export async function getFlight(db: Db, flightDate: string, flightNo: string): Promise<FlightChoice | null> {

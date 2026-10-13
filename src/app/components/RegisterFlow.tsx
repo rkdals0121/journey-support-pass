@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowRight, BarChart3, Check, FileText, MonitorSmartphone, Plane, Search, Trash2 } from "lucide-react";
+import { ArrowRight, BarChart3, Check, FileText, MapPin, MonitorSmartphone, Plane, Search, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
 import { destLabel } from "@/lib/dest-en";
 import { textOf, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "./Alert";
+import { bucketKey, bucketsOf, CityPicker, type Destination } from "./FlightFinder";
 import { FlowShell } from "./FlowShell";
 import { AlnumPad, Choice } from "./Inputs";
 
@@ -64,6 +65,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const [declined, setDeclined] = useState(false);
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<FlightOption[] | null>(null);
+  // 편명을 모르는 여객은 도착 도시를 눌러 고른다. 편이 많으면 출발 시간대로 좁힌다.
+  const [cityOpen, setCityOpen] = useState(false);
+  const [cityPick, setCityPick] = useState<Destination | null>(null);
+  const [bucket, setBucket] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [flight, setFlight] = useState<FlightOption | null>(null);
   const [busy, setBusy] = useState(false);
@@ -85,7 +90,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   // 편명을 넣는 동안 후보를 찾는다. 찾기 버튼을 따로 누르지 않아도 된다.
   const offline = t.offline;
   useEffect(() => {
-    const q = query.trim();
+    const q = cityPick ? cityPick.city : query.trim();
     if (flight || q.length < 2) {
       setSearching(false);
       return;
@@ -110,7 +115,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, flight, offline]);
+  }, [query, cityPick, flight, offline]);
 
   // 이전 질문으로 돌아가 값을 바꾼 횟수를 센다(잘못 넣어 고친 횟수).
   const touched = () => {
@@ -136,6 +141,18 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setQuery(value.toUpperCase().replace(/[^A-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ ]/g, "").replace(/^ +/, "").slice(0, 16));
     setOptions(null);
     setFlight(null);
+    setCityPick(null);
+    setCityOpen(false);
+    setBucket(null);
+  };
+  const pickCity = (d: Destination) => {
+    touched();
+    setQuery("");
+    setOptions(null);
+    setFlight(null);
+    setBucket(null);
+    setCityPick(d);
+    setCityOpen(false);
   };
 
   const goTo = (target: number, revisit: boolean) => {
@@ -194,6 +211,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     }
   }
 
+  // 후보가 많을 때만 출발 시간대 단추를 보여 준다. 몇 편 안 되면 그대로 고르는 편이 빠르다.
+  const MANY = 8;
+  const buckets = options && options.length > MANY ? bucketsOf(options, t) : [];
+  // 시간대 단추가 나왔으면 하나를 누르기 전에는 목록을 펼치지 않는다. 수십 편이 한꺼번에 쏟아지지 않게 한다.
+  const shownOptions = buckets.length <= 1 ? (options ?? []) : bucket === null ? [] : (options ?? []).filter((o) => bucket === "all" || bucketKey(o) === bucket);
+  // 도착 도시에서 고르는 동안에는 편명 입력란을 치우고 그 자리에 도시와 편 목록을 보여 준다.
+  const cityMode = cityOpen || cityPick !== null;
+
   const pickedIn = (g: Group) => itemsOf(g).filter((i) => choices.includes(i.code));
   const groupOfStep: Group | null = kind === "guide" || kind === "move" || kind === "facility" || kind === "staff" ? kind : null;
   const titleOf: Record<StepKind, string> = {
@@ -210,7 +235,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     move: t.moveHint,
     facility: t.facilityHint,
     staff: t.staffHint,
-    flight: kiosk ? t.flightHintKiosk : t.flightHint,
+    flight: cityMode ? undefined : kiosk ? t.flightHintKiosk : t.flightHint,
   };
 
   // 소리로 읽어 줄 글. 제목, 설명, 고를 것들.
@@ -330,64 +355,131 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       {kind === "flight" && (
         <div className="flight-layout">
           <div>
-            <label htmlFor="reg-flight">{t.flightLabel}</label>
-            <div className="input-wrap">
-              <Search size={22} aria-hidden="true" />
-              <input
-                id="reg-flight"
-                type="text"
-                value={query}
-                placeholder={t.flightPlaceholder}
-                // 키오스크에서는 화면의 글자판을 쓴다. 기기의 자판이 올라와 화면을 가리지 않게 한다.
-                inputMode={kiosk ? "none" : "text"}
-                autoCapitalize="characters"
-                autoCorrect="off"
-                autoComplete="off"
-                spellCheck={false}
-                aria-describedby="flight-state"
-                onChange={(e) => typeFlight(e.target.value)}
-              />
-            </div>
+            {!cityMode && (
+              <>
+                <label htmlFor="reg-flight">{kiosk ? t.flightLabelKiosk : t.flightLabel}</label>
+                <div className="input-wrap">
+                  <Search size={22} aria-hidden="true" />
+                  <input
+                    id="reg-flight"
+                    type="text"
+                    value={query}
+                    placeholder={kiosk ? t.flightPlaceholderKiosk : t.flightPlaceholder}
+                    // 키오스크에서는 화면의 글자판을 쓴다. 기기의 자판이 올라와 화면을 가리지 않게 한다.
+                    inputMode={kiosk ? "none" : "text"}
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    autoComplete="off"
+                    spellCheck={false}
+                    aria-describedby="flight-state"
+                    onChange={(e) => typeFlight(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
             <p className="hint" id="flight-state" aria-live="polite">
-              {flight ? t.flightPicked : searching ? t.searching : options && options.length > 0 ? t.pickFlight : ""}
+              {flight
+                ? cityPick
+                  ? t.flightPickedCity
+                  : t.flightPicked
+                : cityOpen
+                  ? ""
+                  : searching
+                    ? t.searching
+                    : options && options.length > 0
+                      ? buckets.length > 1 && bucket === null
+                        ? t.whenFirst
+                        : t.pickFlight
+                      : ""}
             </p>
 
-            {!flight && !searching && options && options.length === 0 && query.trim().length >= 2 && (
+            {cityPick && (
+              <p className="picked-city">
+                <MapPin size={20} aria-hidden="true" />
+                <strong>{lang === "en" ? cityPick.en : cityPick.city}</strong>
+                <button
+                  className="link-btn"
+                  onClick={() => {
+                    setFlight(null);
+                    setOptions(null);
+                    setBucket(null);
+                    setCityPick(null);
+                    setCityOpen(true);
+                  }}
+                >
+                  {t.cityChange}
+                </button>
+                {flight && (
+                  <button className="link-btn" onClick={() => setFlight(null)}>
+                    {t.flightReselect}
+                  </button>
+                )}
+              </p>
+            )}
+
+            {!flight && !searching && !cityOpen && options && options.length === 0 && (cityPick !== null || query.trim().length >= 2) && (
               <ErrorNote>{t.flightNotFound}</ErrorNote>
             )}
 
-            <div role="radiogroup" aria-label={t.flightChoice} className="choices">
-              {(flight ? [flight] : (options ?? [])).map((o) => (
-                <button
-                  key={`${o.flightDate}-${o.flightNo}`}
-                  role="radio"
-                  aria-checked={sameFlight(flight, o)}
-                  className={`flight-opt ${sameFlight(flight, o) ? "on" : ""} ${o.cancelled ? "cancelled" : ""}`}
-                  onClick={() => {
-                    touched();
-                    setFlight(o);
-                    setQuery(o.flightNo);
-                  }}
-                >
-                  <span className="flight-opt-no num">{o.flightNo}</span>
-                  <span className="flight-opt-main">
-                    <strong>{destOf(o)}</strong>
-                    <span>
-                      {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
-                      {o.airline ? ` · ${o.airline}` : ""}
-                    </span>
-                  </span>
-                  <span className="choice-mark" aria-hidden="true">
-                    <Check size={18} strokeWidth={3} />
-                  </span>
+            {/* 편명을 모르면 도착 도시를 눌러 고른다. 글자를 치지 않아도 된다. */}
+            {!flight && !cityOpen && !cityPick && (
+              <button className="btn city-open" onClick={() => setCityOpen(true)}>
+                <MapPin size={20} aria-hidden="true" />
+                {t.cityOpen}
+              </button>
+            )}
+            {!flight && cityOpen && <CityPicker lang={lang} t={t} onPick={pickCity} onClose={() => setCityOpen(false)} />}
+
+            {/* 같은 곳으로 가는 편이 많으면 출발 시간대를 먼저 고르게 한다. */}
+            {!flight && !cityOpen && buckets.length > 1 && (
+              <div className="pick-row" role="group" aria-label={t.whenAsk}>
+                <span className="pick-label">{t.whenAsk}</span>
+                {buckets.map((b) => (
+                  <button key={b.key} className={`pick ${bucket === b.key ? "on" : ""}`} aria-pressed={bucket === b.key} onClick={() => setBucket(b.key)}>
+                    {b.label}
+                  </button>
+                ))}
+                <button className={`pick ${bucket === "all" ? "on" : ""}`} aria-pressed={bucket === "all"} onClick={() => setBucket("all")}>
+                  {t.allTimes}
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {!cityOpen && (
+              <div role="radiogroup" aria-label={t.flightChoice} className="choices">
+                {(flight ? [flight] : shownOptions).map((o) => (
+                  <button
+                    key={`${o.flightDate}-${o.flightNo}`}
+                    role="radio"
+                    aria-checked={sameFlight(flight, o)}
+                    className={`flight-opt ${sameFlight(flight, o) ? "on" : ""} ${o.cancelled ? "cancelled" : ""}`}
+                    onClick={() => {
+                      touched();
+                      setFlight(o);
+                      // 도시에서 고른 경우에는 입력란을 비워 둔다. 「다른 편 고르기」로 목록에 돌아갈 수 있다.
+                      if (!cityPick) setQuery(o.flightNo);
+                    }}
+                  >
+                    <span className="flight-opt-no num">{o.flightNo}</span>
+                    <span className="flight-opt-main">
+                      <strong>{destOf(o)}</strong>
+                      <span>
+                        {whenOf(o)} {o.cancelled ? `· ${t.cancelled}` : t.departs}
+                        {o.airline ? ` · ${o.airline}` : ""}
+                      </span>
+                    </span>
+                    <span className="choice-mark" aria-hidden="true">
+                      <Check size={18} strokeWidth={3} />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             {flight?.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
           </div>
 
           {/* 가로로 놓인 키오스크에서는 글자판이 입력란 옆에 온다. 글자판이 「다음」 버튼 밑으로 내려가지 않는다. */}
-          {kiosk && !flight && (
+          {kiosk && !flight && !cityOpen && !cityPick && (
             <AlnumPad onKey={(k) => typeFlight(query + k)} onErase={() => typeFlight(query.slice(0, -1))} eraseLabel={t.erase} />
           )}
         </div>

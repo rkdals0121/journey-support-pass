@@ -513,6 +513,37 @@ async function resetFlights() {
   await fill(page, "#reg-flight", "zz99");
   await waitText(page, "찾지 못했습니다");
   check("없는 편명은 찾지 못했다고 알려 준다", true);
+  // 편명을 모르는 여객은 도착 도시를 눌러 고른다.
+  await fill(page, "#reg-flight", "");
+  await clickText(page, ".city-open", "도착 도시에서 고르기");
+  await waitText(page, "어디로 가시나요?");
+  await page.waitForFunction(() => document.querySelectorAll(".city").length >= 3, { timeout: WAIT });
+  check("편명을 모르면 도착 도시를 눌러 고를 수 있다. 글자를 치는 칸은 치워진다", (await count(page, ".city")) >= 3 && (await count(page, "#reg-flight")) === 0);
+  await shot(page, "휴대전화-도착도시-고르기");
+  await clickText(page, ".pick", "ㅇ");
+  await clickText(page, ".city", "오사카");
+  await waitText(page, "언제 출발하나요?");
+  check(
+    "같은 곳으로 가는 편이 많으면 출발 시간대를 먼저 묻는다. 누르기 전에는 목록을 펼치지 않는다",
+    (await count(page, ".flight-opt")) === 0 && (await count(page, ".pick-row .pick")) >= 3,
+    `시간대 단추 ${await count(page, ".pick-row .pick")}개`,
+  );
+  await shot(page, "휴대전화-도착도시-시간대");
+  await page.evaluate(() => (document.querySelector(".pick-row .pick") as HTMLElement).click());
+  await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length >= 1, { timeout: WAIT });
+  const inBucket = await count(page, ".flight-opt");
+  check("시간대를 누르면 그 시간대에 떠나는 편만 나온다", inBucket >= 1 && inBucket < 12, `${inBucket}편`);
+  await page.evaluate(() => (document.querySelector(".flight-opt") as HTMLElement).click());
+  await waitText(page, "다른 편 고르기");
+  check("도시에서 편을 고르면 「다음」으로 갈 수 있다", (await isDisabled(page, "다음")) === false);
+  await clickText(page, ".link-btn", "다른 편 고르기");
+  check("「다른 편 고르기」를 누르면 고르던 목록으로 돌아간다", (await count(page, ".flight-opt")) === inBucket);
+  await clickText(page, ".link-btn", "도시 다시 고르기");
+  await waitText(page, "어디로 가시나요?");
+  await page.click(".city-head .icon-btn");
+  await page.waitForSelector("#reg-flight", { timeout: WAIT });
+  check("도시 고르기를 닫으면 편명 넣는 칸으로 돌아온다", (await count(page, ".city")) === 0);
+
   await fill(page, "#reg-flight", "mk1");
   await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length >= 2, { timeout: WAIT });
   check("편명을 넣는 동안 후보가 자동으로 뜬다 (찾기 버튼 없음)", (await count(page, ".flight-opt")) >= 2);
