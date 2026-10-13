@@ -104,6 +104,7 @@ const ko = {
   flightLabelKiosk: "편명",
   flightPlaceholderKiosk: "예: KE123",
   flightReselect: "다른 편 고르기",
+  searchAgain: "다시 찾기",
   cityOpen: "편명을 모르겠어요 · 도착 도시에서 고르기",
   cityTitle: "어디로 가시나요?",
   cityInitial: "첫 글자",
@@ -299,6 +300,7 @@ const koEasy: Partial<Text> = {
   airlineAsk: "어느 항공사 비행기인가요?",
   airlineFirst: "항공사를 누르세요.",
   flightReselect: "다른 비행기 고르기",
+
   cityOpen: "비행기 표가 없어요 · 가는 도시에서 고르기",
   cityTitle: "어디로 가나요?",
   cityPopular: "많이 가는 곳입니다. 없으면 위에서 도시 이름의 첫 글자를 누르세요.",
@@ -435,6 +437,7 @@ const en: Text = {
   flightLabelKiosk: "Flight number",
   flightPlaceholderKiosk: "e.g. KE123",
   flightReselect: "Choose another flight",
+  searchAgain: "Search again",
   cityOpen: "I do not know my flight number · Choose my destination",
   cityTitle: "Where are you flying to?",
   cityInitial: "First letter",

@@ -176,6 +176,31 @@ describe("편명 검색", () => {
     expect(found.sort()).toEqual(["BX164", "KE2101", "LJ201"]);
   });
 
+  it("도시 목록에서 고른 도시는 이름이 정확히 같은 곳만 찾는다. 한 글자 도시도 된다", async () => {
+    await addFlights(
+      db,
+      [
+        flightRow("LJ641", "2026-10-05 15:00", { destName: "괌", destCode: "GUM" }),
+        flightRow("7C3102", "2026-10-06 09:00", { destName: "괌", destCode: "GUM" }),
+        flightRow("CA124", "2026-10-05 16:00", { destName: "난징", destCode: "NKG" }),
+        flightRow("ZH600", "2026-10-05 17:00", { destName: "난징루", destCode: "XXX" }),
+        flightRow("BX164", "2026-10-05 18:00", { destName: "도쿄/나리타", destCode: "NRT" }),
+        flightRow("KE2101", "2026-10-05 19:00", { destName: "도쿄/하네다", destCode: "HND" }),
+      ],
+      now,
+    );
+    const to = async (city: string) => ((await searchFlightsHandler(db, "", now, city)).body.flights as { flightNo: string }[]).map((f) => f.flightNo).sort();
+    expect(await to("괌")).toEqual(["7C3102", "LJ641"]);
+    // 이름이 다른 도시 이름에 들어 있어도 섞이지 않는다.
+    expect(await to("난징")).toEqual(["CA124"]);
+    // 공항이 여럿인 도시는 모두 나온다.
+    expect(await to("도쿄")).toEqual(["BX164", "KE2101"]);
+    expect(await to("없는곳")).toEqual([]);
+    // 목록에 나온 도시는 모두 이 방법으로 다시 찾을 수 있어야 한다.
+    const list = (await destinationsHandler(db, now)).body.destinations as { city: string; count: number }[];
+    for (const d of list) expect((await to(d.city)).length, d.city).toBe(d.count);
+  });
+
   it("두 글자부터 그 글자로 시작하는 편을 찾고, 같은 편명을 맨 위에 둔다", async () => {
     await addFlights(
       db,

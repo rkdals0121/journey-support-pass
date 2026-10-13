@@ -549,6 +549,12 @@ async function resetFlights(clearLocks = false) {
   await shot(page, "휴대전화-도착도시-항공사");
   await clickText(page, ".link-btn", "도시 다시 고르기");
   await waitText(page, "어디로 가시나요?");
+  await clickText(page, ".pick", "ㄱ");
+  await clickText(page, ".city", "괌");
+  await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length === 1, { timeout: WAIT });
+  check("이름이 한 글자인 도시(괌)도 고르면 편이 나온다. 편이 적으면 시간대를 묻지 않고 바로 보여 준다", (await count(page, ".pick-row")) === 0 && (await has(page, "MK601")));
+  await clickText(page, ".link-btn", "도시 다시 고르기");
+  await waitText(page, "어디로 가시나요?");
   await page.click(".city-head .icon-btn");
   await page.waitForSelector("#reg-flight", { timeout: WAIT });
   check("도시 고르기를 닫으면 편명 넣는 칸으로 돌아온다", (await count(page, ".city")) === 0);
@@ -558,6 +564,11 @@ async function resetFlights(clearLocks = false) {
   check("편명을 넣는 동안 후보가 자동으로 뜬다 (찾기 버튼 없음)", (await count(page, ".flight-opt")) >= 2);
   check("후보에는 탑승구가 보이지 않는다", !(await has(page, "탑승구")));
   await shot(page, "휴대전화-편명찾기");
+  await clickText(page, ".flight-opt", "MK127");
+  await waitText(page, "항공편을 골랐습니다");
+  await clickText(page, ".link-btn", "다른 편 고르기");
+  await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length >= 2, { timeout: WAIT });
+  check("편명으로 고른 편도 「다른 편 고르기」로 다시 고를 수 있다 (키오스크는 편을 고르면 글자판이 사라진다)", (await isDisabled(page, "다음")) === true);
   await clickText(page, ".flight-opt", "MK127");
   await waitText(page, "항공편을 골랐습니다");
   await clickText(page, ".flow-cta button", "다음");

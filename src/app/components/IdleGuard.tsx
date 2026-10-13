@@ -27,6 +27,8 @@ export function IdleGuard({ t, enabled, askSec, answerSec, onTimeout }: Props) {
   const stayRef = useRef<HTMLButtonElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const asking = left !== null;
+  // 창이 뜨기 전에 있던 자리를 기억해야 닫을 때 돌려줄 수 있다. 그래서 아래의 "버튼에 초점 두기"보다 먼저 건다.
+  useFocusTrap(boxRef, asking);
 
   // 화면을 건드리면 처음부터 다시 잰다. 묻는 창이 떠 있는 동안에는 버튼으로만 답한다.
   useEffect(() => {
@@ -63,8 +65,6 @@ export function IdleGuard({ t, enabled, askSec, answerSec, onTimeout }: Props) {
   useEffect(() => {
     if (asking) stayRef.current?.focus();
   }, [asking]);
-
-  useFocusTrap(boxRef, left !== null);
 
   if (left === null) return null;
   return (

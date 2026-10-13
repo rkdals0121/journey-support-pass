@@ -59,6 +59,9 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
   e.preventDefault();
   const next = radios[(at + step + radios.length) % radios.length];
   next.focus();
+  // 편 목록처럼 고르면 목록이 접히는 묶음(data-browse)에서는 옮겨 가기만 한다. 고르는 것은 Space 나 Enter 로 한다.
+  // 그 밖의 묶음에서는 옮겨 간 항목을 고른다. 이미 고른 항목은 다시 누르지 않는다(누르면 풀린다).
+  if (e.currentTarget.hasAttribute("data-browse") || next.getAttribute("aria-checked") === "true") return;
   next.click();
 }
 
@@ -84,6 +87,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const [cityPick, setCityPick] = useState<Destination | null>(null);
   const [bucket, setBucket] = useState<string | null>(null);
   const [airline, setAirline] = useState<string | null>(null);
+  // 찾다가 연결이 끊겼을 때 「다시 찾기」로 한 번 더 찾게 한다.
+  const [retry, setRetry] = useState(0);
   const [searching, setSearching] = useState(false);
   const [flight, setFlight] = useState<FlightOption | null>(null);
   const [busy, setBusy] = useState(false);
@@ -105,8 +110,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   // 편명을 넣는 동안 후보를 찾는다. 찾기 버튼을 따로 누르지 않아도 된다.
   const offline = t.offline;
   useEffect(() => {
-    const q = cityPick ? cityPick.city : query.trim();
-    if (flight || q.length < 2) {
+    const q = query.trim();
+    // 도시에서 고른 경우는 글자 수와 상관없이 그 도시로 찾는다(괌처럼 한 글자인 도시도 있다).
+    if (flight || (!cityPick && q.length < 2)) {
       setSearching(false);
       return;
     }
@@ -114,7 +120,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/flights/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(cityPick ? `/api/flights/search?city=${encodeURIComponent(cityPick.city)}` : `/api/flights/search?q=${encodeURIComponent(q)}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (cancelled) return;
@@ -130,7 +136,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, cityPick, flight, offline]);
+  }, [query, cityPick, flight, offline, retry]);
 
   // 이전 질문으로 돌아가 값을 바꾼 횟수를 센다(잘못 넣어 고친 횟수).
   const touched = () => {
@@ -242,7 +248,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const MANY = 8;
   const buckets = options && options.length > MANY ? bucketsOf(options, t) : [];
   // 시간대 단추가 나왔으면 하나를 누르기 전에는 목록을 펼치지 않는다. 수십 편이 한꺼번에 쏟아지지 않게 한다.
-  const inBucket = buckets.length <= 1 ? (options ?? []) : bucket === null ? [] : (options ?? []).filter((o) => bucket === "all" || bucketKey(o) === bucket);
+  // 고른 뒤에 시간이 지나 그 시간대의 편이 모두 떠났으면, 고르지 않은 것으로 되돌린다.
+  const bucketNow = bucket !== null && (bucket === "all" || buckets.some((b) => b.key === bucket)) ? bucket : null;
+  const inBucket = buckets.length <= 1 ? (options ?? []) : bucketNow === null ? [] : (options ?? []).filter((o) => bucketNow === "all" || bucketKey(o) === bucketNow);
   // 시간대를 골라도 편이 많으면(도쿄는 한 시간대에 마흔 편) 항공사를 한 번 더 묻는다.
   const airlines = inBucket.length > MANY ? [...new Set(inBucket.map((o) => o.airline).filter(Boolean))].sort((x, y) => x.localeCompare(y, "ko")) : [];
   const askAirline = airlines.length > 1;
@@ -250,7 +258,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     const sample = inBucket.find((o) => o.airline === name);
     return sample ? airlineLabel(lang, sample) : name;
   };
-  const shownOptions = !askAirline ? inBucket : airline === null ? [] : inBucket.filter((o) => airline === "all" || o.airline === airline);
+  const airlineNow = airline !== null && (airline === "all" || airlines.includes(airline)) ? airline : null;
+  const shownOptions = !askAirline ? inBucket : airlineNow === null ? [] : inBucket.filter((o) => airlineNow === "all" || o.airline === airlineNow);
   // 도착 도시에서 고르는 동안에는 편명 입력란을 치우고 그 자리에 도시와 편 목록을 보여 준다.
   const cityMode = cityOpen || cityPick !== null;
 
@@ -281,14 +290,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     : cityOpen
       ? [t.cityTitle, t.cityPopular]
       : options === null
-        ? cityPick
+        ? cityPick || query.trim().length > 0
           ? [t.searching]
           : []
         : options.length === 0
           ? [t.flightNotFound]
-          : buckets.length > 1 && bucket === null
+          : buckets.length > 1 && bucketNow === null
             ? [cityPick ? (lang === "en" ? cityPick.en : cityPick.city) : "", t.whenAsk, ...buckets.map((x) => x.label), t.allTimes]
-            : askAirline && airline === null
+            : askAirline && airlineNow === null
               ? [t.airlineAsk, ...airlines.map(airlineName), t.allTimes]
               : [t.pickFlight, ...shownOptions.slice(0, READ_MAX).map(flightLine)];
   const flightKey = kind === "flight" ? flightSpeak.join("|") : "";
@@ -449,9 +458,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                   : searching && options === null
                     ? t.searching
                     : options && options.length > 0
-                      ? buckets.length > 1 && bucket === null
+                      ? buckets.length > 1 && bucketNow === null
                         ? t.whenFirst
-                        : askAirline && airline === null
+                        : askAirline && airlineNow === null
                           ? t.airlineFirst
                           : t.pickFlight
                       : ""}
@@ -486,6 +495,19 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
               <ErrorNote>{t.flightNotFound}</ErrorNote>
             )}
 
+            {/* 도시에서 고른 편을 찾다가 연결이 끊기면 다시 찾을 길을 준다. */}
+            {cityPick && !flight && !searching && options === null && error && (
+              <button
+                className="btn"
+                onClick={() => {
+                  setError(null);
+                  setRetry((n) => n + 1);
+                }}
+              >
+                {t.searchAgain}
+              </button>
+            )}
+
             {/* 편명을 모르면 도착 도시를 눌러 고른다. 글자를 치지 않아도 된다. */}
             {!flight && !cityOpen && !cityPick && (
               <button className="btn city-open" onClick={() => setCityOpen(true)}>
@@ -502,8 +524,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                 {buckets.map((b) => (
                   <button
                     key={b.key}
-                    className={`pick ${bucket === b.key ? "on" : ""}`}
-                    aria-pressed={bucket === b.key}
+                    className={`pick ${bucketNow === b.key ? "on" : ""}`}
+                    aria-pressed={bucketNow === b.key}
                     onClick={() => {
                       setBucket(b.key);
                       setAirline(null);
@@ -513,8 +535,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                   </button>
                 ))}
                 <button
-                  className={`pick ${bucket === "all" ? "on" : ""}`}
-                  aria-pressed={bucket === "all"}
+                  className={`pick ${bucketNow === "all" ? "on" : ""}`}
+                  aria-pressed={bucketNow === "all"}
                   onClick={() => {
                     setBucket("all");
                     setAirline(null);
@@ -528,18 +550,18 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
               <div className="pick-row" role="group" aria-label={t.airlineAsk}>
                 <span className="pick-label">{t.airlineAsk}</span>
                 {airlines.map((name) => (
-                  <button key={name} className={`pick ${airline === name ? "on" : ""}`} aria-pressed={airline === name} onClick={() => setAirline(name)}>
+                  <button key={name} className={`pick ${airlineNow === name ? "on" : ""}`} aria-pressed={airlineNow === name} onClick={() => setAirline(name)}>
                     {airlineName(name)}
                   </button>
                 ))}
-                <button className={`pick ${airline === "all" ? "on" : ""}`} aria-pressed={airline === "all"} onClick={() => setAirline("all")}>
+                <button className={`pick ${airlineNow === "all" ? "on" : ""}`} aria-pressed={airlineNow === "all"} onClick={() => setAirline("all")}>
                   {t.allTimes}
                 </button>
               </div>
             )}
 
             {!cityOpen && (
-              <div role="radiogroup" aria-label={t.flightChoice} className="choices" onKeyDown={radioKeys}>
+              <div role="radiogroup" aria-label={t.flightChoice} className="choices" onKeyDown={radioKeys} data-browse="">
                 {(flight ? [flight] : shownOptions).map((o) => (
                   <button
                     key={`${o.flightDate}-${o.flightNo}`}
@@ -569,6 +591,12 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
               </div>
             )}
             {flight?.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
+            {/* 편명으로 찾아 고른 편도 눌러서 바꿀 수 있게 한다. 키오스크는 편을 고르면 글자판이 사라지므로 이 버튼이 있어야 바꿀 수 있다. */}
+            {flight && !cityPick && (
+              <button className="link-btn" onClick={() => setFlight(null)}>
+                {t.flightReselect}
+              </button>
+            )}
           </div>
 
           {/* 가로로 놓인 키오스크에서는 글자판이 입력란 옆에 온다. 글자판이 「다음」 버튼 밑으로 내려가지 않는다. */}

@@ -4,7 +4,7 @@ import { isAdapted } from "../catalog";
 import { config } from "../config";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
-import { suggestFlights, listDestinations } from "../flights/search";
+import { flightsToCity, suggestFlights, listDestinations } from "../flights/search";
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, type Journey } from "../journey";
 import { allowEvent, logEvent } from "../metrics";
@@ -29,8 +29,9 @@ export async function allowRegistration(db: Db, clientKey: string, now: Date): P
   return (row?.n ?? 0) < config.registerMaxPerIp;
 }
 
-export async function searchFlightsHandler(db: Db, q: string, now: Date): Promise<ApiResult> {
-  const flights = await suggestFlights(db, q ?? "", now);
+export async function searchFlightsHandler(db: Db, q: string, now: Date, city = ""): Promise<ApiResult> {
+  // city 가 오면 도시 목록에서 고른 것이다. 그 도시와 이름이 정확히 같은 곳만 찾는다.
+  const flights = city ? await flightsToCity(db, city, now) : await suggestFlights(db, q ?? "", now);
   return ok({ flights: flights.map((f) => toFlightDto(f, now)) });
 }
 

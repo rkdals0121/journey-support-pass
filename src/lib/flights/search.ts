@@ -142,6 +142,25 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
   return byDest.map(toChoice);
 }
 
+/**
+ * 도시 목록(listDestinations)에서 고른 도시로 가는 편. 도시 이름이 정확히 같은 곳만 찾는다.
+ * 글자로 찾는 것과 달리 한 글자 도시(괌)도 되고, 이름이 다른 도시에 들어 있어도 섞이지 않는다.
+ */
+export async function flightsToCity(db: Db, city: string, now: Date): Promise<FlightChoice[]> {
+  const name = city.trim();
+  if (!name || name.length > 40) return [];
+  const today = kstDate(now);
+  const rows = await db.query<Row>(
+    `select ${COLUMNS} from flights
+     where trim(split_part(dest_name, '/', 1)) = $1 and flight_date in ($2, $3)
+       and coalesce(est_at, sched_at) > $4 and position('출발' in status) = 0
+     order by sched_at, flight_no
+     limit ${DEST_LIMIT}`,
+    [name, today, addDays(today, 1), now],
+  );
+  return rows.map(toChoice);
+}
+
 export interface Destination {
   /** 도시 이름. 운항 정보의 "도쿄/나리타" 에서 "/" 앞부분. 이 값으로 다시 찾는다. */
   city: string;
