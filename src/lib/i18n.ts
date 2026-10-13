@@ -216,7 +216,8 @@ const ko = {
   boardingNow: "지금 탑승 중입니다",
   toGate: (gate: number) => `${gate}번 탑승구 가는 길`,
   toGateShort: "탑승구 가는 길",
-  routeSummary: (min: number, m: number) => `약 ${min}분 · ${m}m`,
+  // 키오스크가 그 탑승구나 시설 바로 앞에 있으면 "약 0분 · 0m" 대신 바로 앞이라고 알려 준다.
+  routeSummary: (min: number, m: number) => (m <= 0 ? "바로 앞입니다" : `약 ${Math.max(1, min)}분 · ${m}m`),
   stepFree: "계단 없는 길",
   sameLevel: "같은 층",
   paceOk: "시간이 넉넉합니다.",
@@ -544,7 +545,7 @@ const en: Text = {
   boardingNow: "Now boarding",
   toGate: (gate) => `Way to Gate ${gate}`,
   toGateShort: "Way to the gate",
-  routeSummary: (min, m) => `About ${min} min · ${m} m`,
+  routeSummary: (min, m) => (m <= 0 ? "Right here" : `About ${Math.max(1, min)} min · ${m} m`),
   stepFree: "Step-free",
   sameLevel: "Same floor",
   paceOk: "You have plenty of time.",
