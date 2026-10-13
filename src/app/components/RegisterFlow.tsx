@@ -273,12 +273,32 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     flight: cityMode ? undefined : kiosk ? t.flightHintKiosk : t.flightHint,
   };
 
+  // 항공편 화면은 한 화면 안에서 내용이 여러 번 바뀐다(도시 고르기, 시간대, 항공사, 편 목록). 바뀔 때마다 그 내용을 읽어 준다.
+  const flightLine = (o: FlightOption) => `${o.flightNo.split("").join(" ")}, ${destOf(o)}, ${whenOf(o)}${o.airline ? `, ${airlineLabel(lang, o)}` : ""}`;
+  const READ_MAX = 6;
+  const flightSpeak: string[] = flight
+    ? [cityPick ? t.flightPickedCity : t.flightPicked, flightLine(flight)]
+    : cityOpen
+      ? [t.cityTitle, t.cityPopular]
+      : options === null
+        ? cityPick
+          ? [t.searching]
+          : []
+        : options.length === 0
+          ? [t.flightNotFound]
+          : buckets.length > 1 && bucket === null
+            ? [cityPick ? (lang === "en" ? cityPick.en : cityPick.city) : "", t.whenAsk, ...buckets.map((x) => x.label), t.allTimes]
+            : askAirline && airline === null
+              ? [t.airlineAsk, ...airlines.map(airlineName), t.allTimes]
+              : [t.pickFlight, ...shownOptions.slice(0, READ_MAX).map(flightLine)];
+  const flightKey = kind === "flight" ? flightSpeak.join("|") : "";
+
   // 소리로 읽어 줄 글. 제목, 설명, 고를 것들.
   const speakText = declined
     ? `${t.declinedTitle}. ${t.declinedBody}`
     : [
-        titleOf[kind],
-        hintOf[kind] ?? "",
+        // 항공편 화면에서 내용이 바뀐 뒤에는 제목과 설명을 되풀이하지 않고 바뀐 내용만 읽는다.
+        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [titleOf[kind], hintOf[kind] ?? ""]),
         ...(groupOfStep ? itemsOf(groupOfStep).map(itemLabel) : []),
         ...(kind === "consent"
           ? [t.whatTitle, t.whatBody, t.useTitle, t.useBody, t.whenTitle, t.whenBody, t.keepTitle, t.keepBody, t.consentNote]
@@ -339,6 +359,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       kiosk={kiosk}
       screenKey={kind}
       speakText={speakText}
+      speakKey={flightKey}
       onBack={back}
       onHome={onExit}
       progress={{ n: step + 1, total: ORDER.length, name: t.steps[kind] }}

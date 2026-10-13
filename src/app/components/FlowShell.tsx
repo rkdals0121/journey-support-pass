@@ -17,6 +17,8 @@ interface Props {
   screenKey: string;
   /** 소리로 읽어 줄 글. 화면의 제목과 설명, 고를 것들. */
   speakText: string;
+  /** 같은 화면 안에서 내용이 바뀌어 다시 읽어 줘야 할 때 달라지는 값. 제목으로 초점을 옮기거나 맨 위로 올리지는 않는다. */
+  speakKey?: string;
   /** 주지 않으면 「이전」이 흐리게 보이고 눌리지 않는다. 자리는 그대로다. */
   onBack?: () => void;
   onHome?: () => void;
@@ -36,7 +38,7 @@ interface Props {
  *  - 여객이 고른 안내 방식(큰 글씨, 그림, 소리)은 고른 그 화면부터 바로 적용된다.
  *  - 「설정」에서 글자와 그림의 크기, 소리, 그림 크게 보기를 그 자리에서 바꿀 수 있다.
  */
-export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, onHome, progress, cta, ctaAfterContent, children }: Props) {
+export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, onBack, onHome, progress, cta, ctaAfterContent, children }: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -113,7 +115,7 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, onBack, on
   useEffect(() => {
     if (voice) speak(speakRef.current);
     else stop();
-  }, [voice, screenKey, lang, speak, stop]);
+  }, [voice, screenKey, speakKey, lang, speak, stop]);
 
   useEffect(() => {
     if (!settingsOpen) return;

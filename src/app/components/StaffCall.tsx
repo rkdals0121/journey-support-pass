@@ -56,7 +56,8 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
 
   // 상태가 바뀌면 읽어 준다.
   useEffect(() => {
-    if (open && (state || error)) sayRef.current?.(`${title}. ${body}`);
+    // 여객이 스스로 거둔 호출은 읽지 않는다. 창이 바로 닫히는데 "부르고 있습니다"라고 읽으면 틀린 말이 된다.
+    if (open && state !== "cancelled" && (state || error)) sayRef.current?.(`${title}. ${body}`);
   }, [state, error, open, title, body]);
 
   // 직원이 받았는지, 끝냈는지 주기적으로 확인한다.
