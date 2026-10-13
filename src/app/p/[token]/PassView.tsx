@@ -34,6 +34,34 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
     if (isNew) window.history.replaceState(null, "", window.location.pathname);
   }, [isNew]);
 
+  // 이 화면을 보는 동안에는 휴대전화 화면이 저절로 꺼지지 않게 한다. 키오스크에 QR 을 대려는 순간 화면이 어두워지면 읽히지 않는다.
+  // 지원하지 않는 기기에서는 아무 일도 없다. 다른 화면에 갔다 오면 풀리므로 돌아올 때 다시 청한다.
+  useEffect(() => {
+    if (erased) return;
+    type Lock = { release(): Promise<void> };
+    const nav = navigator as Navigator & { wakeLock?: { request(type: "screen"): Promise<Lock> } };
+    if (!nav.wakeLock) return;
+    let lock: Lock | null = null;
+    let gone = false;
+    const keep = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const got = await nav.wakeLock!.request("screen");
+        if (gone) void got.release();
+        else lock = got;
+      } catch {
+        // 절전 모드 등으로 거절되면 그대로 둔다.
+      }
+    };
+    void keep();
+    document.addEventListener("visibilitychange", keep);
+    return () => {
+      gone = true;
+      document.removeEventListener("visibilitychange", keep);
+      void lock?.release().catch(() => {});
+    };
+  }, [erased]);
+
   // 탑승구와 남은 시간을 가끔 다시 받는다.
   useEffect(() => {
     if (erased) return;
