@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 개발 서버가 화면 구석에 띄우는 표시를 끈다. 화면 그림과 키오스크 시연에 끼어들지 않게 한다.
   devIndicators: false,
+  // 개발 서버에서만 쓰인다. 개발 서버는 한동안 열지 않은 화면과 API 를 메모리에서 내렸다가 다음 요청 때 다시 만든다.
+  // 느린 컴퓨터에서는 그 사이 10초 넘게 걸려, 화면의 요청 시간 제한(8~15초)에 걸려 화면 점검이 들쭉날쭉 실패한다.
+  // 점검하는 동안 한 번 만든 것을 내리지 않게 한다. 운영 빌드에는 영향이 없다.
+  onDemandEntries: { maxInactiveAge: 60 * 60 * 1000, pagesBufferLength: 200 },
   // 서버에서만 쓰는 DB 드라이버는 번들에 넣지 않는다.
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
   // 초기 설정 경로가 실행 중에 읽는 파일. 적어 두지 않으면 배포 묶음에서 빠진다.

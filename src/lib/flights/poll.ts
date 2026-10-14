@@ -47,7 +47,7 @@ export async function runPoll(
       .map(normalizeRow)
       .filter((r): r is FlightRow => r !== null && keep.has(r.flightDate));
     // 정상 응답이면 하루 출발편이 천 편을 넘는다. 0건은 장애로 본다.
-    if (rows.length === 0) throw new Error("오늘·내일 출발편이 0건입니다");
+    if (rows.length === 0) throw new Error("받아 두는 날짜(어제~모레)의 출발편이 0건입니다");
 
     const todayRows = rows.filter((r) => r.flightDate === today);
     const statuses: Record<string, number> = {};

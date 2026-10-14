@@ -25,6 +25,10 @@ const POLL_MS = 3000;
 // 상태 확인 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않는 요청 하나 때문에
 // 다음 확인이 모두 건너뛰어지면, 직원이 받고 끝내도 화면이 "부르고 있습니다"에 멈춘다.
 const POLL_TIMEOUT_MS = 8000;
+// 부르기·거두기 한 번을 기다리는 가장 긴 시간. 답이 오지 않는 요청 하나에 붙잡히면 화면이 "부르고 있습니다"에 멈추고
+// 버튼도 다시 듣지 않으며, 처음 화면으로도 돌아가지 않아 앞사람의 항공편이 공용 화면에 남는다.
+// 확인보다 조금 더 기다린다. 느리게라도 만들어진 호출을 "부르지 못했습니다"로 알리는 일을 줄인다.
+const SEND_TIMEOUT_MS = 12_000;
 const DONE_SHOW_MS = 4000;
 
 /**
@@ -48,6 +52,12 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   callIdRef.current = callId;
   // 마지막으로 호출을 보낼 때 붙인 패스. 앞사람의 호출이 남은 키오스크에서 다음 사람이 누르면 다시 보내 패스를 바꾼다.
   const sentToken = useRef<string | null>(null);
+  // 보내는 중인 부르기·거두기 요청. 화면이 사라지면 끊는다. 더는 답을 쓸 곳이 없다.
+  const sending = useRef(new Set<AbortController>());
+  useEffect(() => {
+    const live = sending.current;
+    return () => live.forEach((c) => c.abort());
+  }, []);
 
   // 누른 직후 서버의 답을 기다리는 동안에도 "부르고 있습니다"로 보여준다. 눌렀는데 아무 설명 없이 멈춘 것처럼 보이면 안 된다.
   const shown: CallState | null = state ?? (busy && !error ? "waiting" : null);
@@ -145,11 +155,16 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
     if (active && token === sentToken.current) return;
     setBusy(true);
     setError(false);
+    // 답이 오지 않으면 끊는다. 끊긴 것은 아래 catch 로 가서 "부르지 못했습니다"가 되고, 버튼과 자동 종료가 다시 돈다.
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), SEND_TIMEOUT_MS);
+    sending.current.add(ctrl);
     try {
       const res = await fetch("/api/kiosk/call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, screen }),
+        signal: ctrl.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error();
@@ -161,6 +176,8 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
       // 직원은 이 자리로 온다. "안내데스크로 와 주세요"라고 하면 여객이 자리를 떠나 버린다. 다시 누르면 다시 바꿔 본다.
       if (!active) setError(true);
     } finally {
+      clearTimeout(limit);
+      sending.current.delete(ctrl);
       setBusy(false);
     }
   }, [active, busy, token, screen]);
@@ -171,10 +188,17 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
       return;
     }
     setBusy(true);
+    // 답이 오지 않으면 끊고 거둔 것으로 친다. 끊지 않으면 버튼이 막힌 채 화면이 "부르고 있습니다"로 남는다.
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), SEND_TIMEOUT_MS);
+    sending.current.add(ctrl);
     try {
-      await fetch(`/api/kiosk/call/${callId}`, { method: "DELETE" });
+      await fetch(`/api/kiosk/call/${callId}`, { method: "DELETE", signal: ctrl.signal });
     } catch {
-      // 못 거뒀으면 30분 뒤 서버가 스스로 닫는다.
+      // 못 거뒀으면(답이 없어 끊은 것 포함) 30분 뒤 서버가 스스로 닫는다.
+    } finally {
+      clearTimeout(limit);
+      sending.current.delete(ctrl);
     }
     setBusy(false);
     setState("cancelled");

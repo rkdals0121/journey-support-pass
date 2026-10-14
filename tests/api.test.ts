@@ -624,13 +624,14 @@ describe("안내 내용", () => {
   it("운항 정보를 받은 지 오래되면 그렇다고 알려 준다", async () => {
     const { pass } = await registerWithPass(db, now);
     const poll = async () => ((await guideHandler(db, pass.token, null, now)).body.guide as GuideDto).poll;
-    expect(await poll()).toEqual({ label: "운항 정보 없음", stale: true });
+    expect(await poll()).toEqual({ label: "운항 정보 없음", stale: true, staleInMs: null });
     // 수집이 멈춘 것으로 볼 시간(config.staleMin, 수집 간격의 두 배에 15분)보다 오래된 수집만 있으면 멈춘 것으로 본다.
     expect(config.staleMin).toBe(135);
     await recordPoll(db, { at: kst("2026-10-05 09:44"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
-    expect(await poll()).toEqual({ label: "운항 정보 09:44 기준", stale: true });
+    expect(await poll()).toEqual({ label: "운항 정보 09:44 기준", stale: true, staleInMs: -60_000 });
     await recordPoll(db, { at: kst("2026-10-05 11:40"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
-    expect(await poll()).toEqual({ label: "운항 정보 11:40 기준", stale: false });
+    // 12:00 에 만든 내용이다. 115분이 더 지나면(13:55) 오래된 정보가 된다. 남겨 둔 화면은 이 값으로 스스로 알아본다.
+    expect(await poll()).toEqual({ label: "운항 정보 11:40 기준", stale: false, staleInMs: 115 * 60_000 });
     // 실패한 수집은 기준 시각이 되지 않는다.
     await recordPoll(db, { at: kst("2026-10-05 11:59"), ok: false, rowCount: 0, durationMs: 1, gateChanges: 0, error: "x" });
     expect((await poll()).label).toBe("운항 정보 11:40 기준");

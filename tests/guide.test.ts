@@ -8,7 +8,7 @@ import type { PollState } from "@/lib/timing";
 import { createTestDb, kst } from "./helpers/db";
 import { addFlights, flightRow, hasKey, register, registerWithPass, resetData } from "./helpers/fixtures";
 
-const poll: PollState = { label: "운항 정보 11:55 기준", stale: false };
+const poll: PollState = { label: "운항 정보 11:55 기준", stale: false, staleInMs: 130 * 60_000 };
 
 /** 탑승동 127번 탑승구에서 14:30 에 떠나는 편의 여객. 마감까지 140분 남았다. */
 function journey(over: Partial<Journey> = {}): Journey {

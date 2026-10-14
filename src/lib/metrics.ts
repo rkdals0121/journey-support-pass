@@ -1,8 +1,9 @@
 import { ipPart } from "./auth";
-import { closeStale } from "./calls";
+import { CALL_EXPIRE_MIN, closeStale } from "./calls";
 import type { Db } from "./db";
 import { SEED_POLL } from "./flights/ingest";
 import { kstDate } from "./flights/normalize";
+import { isJourneyOver, loadJourneys } from "./journey";
 
 // 제안서의 "기대 효과와 확인 방법" 세 가지를 세는 곳.
 //  1) 여객이 자신에게 맞는 안내를 받는다        → 안내 뒤 만족도 한 문항
@@ -64,7 +65,10 @@ export interface Summary {
     fromRegister: number;
     fromGuide: number;
     done: number;
+    /** 여객이 거둔 호출. */
     cancelled: number;
+    /** 아무도 받지 않은 채 시간이 지나 닫힌 호출. 직원 화면의 "응답 없이 닫힘"과 같은 기준이다. */
+    expired: number;
     open: number;
     /** 누른 뒤 직원이 받기까지 걸린 시간의 가운데값(초). */
     medianAcceptSec: number | null;
@@ -86,24 +90,36 @@ function completion(started: number, done: number): Completion {
 }
 
 /** since 부터의 집계. 안내데스크의 "오늘 현황"과 운영자용 측정값이 함께 쓴다. */
-export async function summarize(db: Db, since: Date, date: string): Promise<Summary> {
+export async function summarize(db: Db, since: Date, date: string, now: Date): Promise<Summary> {
+  // 아무도 받지 않아 시간이 지난 호출은 닫은 뒤에 센다.
+  await closeStale(db, now);
   const regs = await db.query<{ route: string; write_sec: number }>(
     `select route, extract(epoch from (submitted_at - started_at))::int as write_sec
      from registrations where submitted_at >= $1`,
     [since],
   );
-  const [live] = await db.query<{ active: number }>(
-    "select count(*)::int as active from registrations where status = 'active'",
-  );
+  // 출발해서 여정이 끝난 여객은 삭제 작업(한 시간마다)이 아직 돌지 않았어도 빼고 센다.
+  // 패스 화면·키오스크·직원 화면이 끝난 패스를 열지 않는 기준(isJourneyOver)과 같다. 쿼리는 한 번이다.
+  const active = (await loadJourneys(db, now)).filter((j) => !isJourneyOver(j, now)).length;
   const events = await db.query<{ kind: EventKind; adapted: boolean; value: number | null; n: number }>(
     "select kind, adapted, value, count(*)::int as n from events where at >= $1 group by kind, adapted, value",
     [since],
   );
-  const calls = await db.query<{ screen: string; end_kind: string | null; ended: boolean; accept_sec: number | null }>(
+  // 받지 않은 채 CALL_EXPIRE_MIN 분 넘게 열려 있다 닫힌 호출은 "여객이 거둠"과 나눈다.
+  // 직원 화면의 끝난 까닭(endReason)과 같은 기준이다. 놓친 호출이 여객이 거둔 것으로 보이지 않게 한다.
+  const calls = await db.query<{
+    screen: string;
+    end_kind: string | null;
+    ended: boolean;
+    accept_sec: number | null;
+    expired: boolean;
+  }>(
     `select screen, end_kind, (ended_at is not null) as ended,
-            extract(epoch from (accepted_at - created_at))::int as accept_sec
+            extract(epoch from (accepted_at - created_at))::int as accept_sec,
+            (ended_at is not null and end_kind = 'cancelled' and accepted_at is null
+              and ended_at - created_at >= make_interval(mins => $2::int)) as expired
      from calls where created_at >= $1`,
-    [since],
+    [since, CALL_EXPIRE_MIN],
   );
   // "지금 열려 있는 호출"은 언제 만들어졌든 센다. 자정 직전에 부른 호출도 아직 열려 있으면 보여야 한다.
   const [openNow] = await db.query<{ n: number }>("select count(*)::int as n from calls where ended_at is null");
@@ -115,7 +131,7 @@ export async function summarize(db: Db, since: Date, date: string): Promise<Summ
 
   return {
     date,
-    active: live?.active ?? 0,
+    active,
     registered: regs.length,
     byRoute: { web: route("web"), kiosk: route("kiosk"), assisted: route("assisted") },
     medianWriteSec: median(regs.filter((r) => r.route !== "assisted").map((r) => r.write_sec)),
@@ -129,7 +145,8 @@ export async function summarize(db: Db, since: Date, date: string): Promise<Summ
       fromRegister: calls.filter((c) => c.screen === "register").length,
       fromGuide: calls.filter((c) => c.screen !== "register").length,
       done: calls.filter((c) => c.end_kind === "done").length,
-      cancelled: calls.filter((c) => c.end_kind === "cancelled").length,
+      cancelled: calls.filter((c) => c.end_kind === "cancelled" && !c.expired).length,
+      expired: calls.filter((c) => c.expired).length,
       open: openNow?.n ?? 0,
       medianAcceptSec: median(calls.map((c) => c.accept_sec)),
     },
@@ -138,10 +155,8 @@ export async function summarize(db: Db, since: Date, date: string): Promise<Summ
 }
 
 export async function todaySummary(db: Db, now: Date): Promise<Summary> {
-  // 아무도 받지 않아 시간이 지난 호출은 닫은 뒤에 센다.
-  await closeStale(db, now);
   const date = kstDate(now);
-  return summarize(db, new Date(`${date}T00:00:00+09:00`), date);
+  return summarize(db, new Date(`${date}T00:00:00+09:00`), date, now);
 }
 
 export interface PollMetric {

@@ -34,6 +34,9 @@ interface Issued {
 
 const NO_PREFS: Prefs = { large: false, voice: false, picture: false, easy: false, wantsStaff: false };
 export const AUTOPRINT_KEY = "jsp:kiosk:autoprint";
+// QR 확인 한 번을 기다리는 가장 긴 시간(안내 키오스크와 같다). 약한 와이파이에서 답이 오지 않는 요청 하나에
+// 붙잡히면 카메라가 멈춘 채로 남아, 다음 여객도 스티커를 다시 뽑지 못한다.
+const RESOLVE_TIMEOUT_MS = 15_000;
 
 /**
  * 등록 키오스크. 사전에 등록하지 않은 여객이 공항에서 직접 등록하고 QR 스티커를 받는다.
@@ -65,7 +68,19 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     if (error && voiceRef.current) speak(error);
   }, [error, speak]);
 
+  const busyRef = useRef(false);
+  // QR 확인의 차례와 그 요청. 처음 화면으로 돌아가면 차례를 넘기고 요청을 끊는다.
+  const scanSeq = useRef(0);
+  const scanCtrl = useRef<AbortController | null>(null);
+
   const reset = useCallback(() => {
+    // 앞사람의 QR 을 확인하던 요청은 끊고, 늦게 온 답도 버린다. 끊지 않으면 「확인하는 중」이 남아 다음 여객의 QR 을 읽지 않고,
+    // 늦게 온 답을 쓰면 떠난 여객의 스티커 화면(고유 일련 번호와 QR)이 다음 사람 앞에 열린다.
+    scanSeq.current++;
+    scanCtrl.current?.abort();
+    scanCtrl.current = null;
+    busyRef.current = false;
+    setBusy(false);
     setView("start");
     setLang("ko");
     setPrefs(NO_PREFS);
@@ -104,7 +119,6 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     return () => clearTimeout(timer);
   }, [view, issued, printedFor]);
 
-  const busyRef = useRef(false);
   const onScan = useCallback(
     async (text: string) => {
       if (busyRef.current) return;
@@ -116,13 +130,21 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
       busyRef.current = true;
       setBusy(true);
       setError(null);
+      // 답이 오지 않는 요청은 끊는다. 끊긴 것은 catch 로 가서 연결 오류로 알리고, 카메라가 다시 읽는다.
+      const mine = ++scanSeq.current;
+      const ctrl = new AbortController();
+      scanCtrl.current = ctrl;
+      const limit = setTimeout(() => ctrl.abort(), RESOLVE_TIMEOUT_MS);
       try {
         const res = await fetch("/api/kiosk/resolve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ scanned: text, purpose: "print" }),
+          signal: ctrl.signal,
         });
+        if (mine !== scanSeq.current) return;
         const data = await res.json();
+        if (mine !== scanSeq.current) return;
         if (!res.ok) {
           setError(res.status === 410 ? tt.passEnded : res.status === 404 ? tt.passUnknown : lang === "en" ? tt.offline : (data.error ?? tt.offline));
           return;
@@ -132,10 +154,16 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         setIssued({ token: data.token, passNo: data.guide.passNo });
         setView("done");
       } catch {
-        setError(tt.offline);
+        // 처음 화면으로 돌아가며 끊은 것이면 알리지 않는다. 알리면 다음 여객 앞에 앞사람의 오류가 뜬다.
+        if (mine === scanSeq.current) setError(tt.offline);
       } finally {
-        busyRef.current = false;
-        setBusy(false);
+        clearTimeout(limit);
+        // 그사이 처음 화면으로 돌아갔으면 reset 이 이미 풀었다. 뒤에 시작한 확인의 「확인하는 중」을 지우지 않는다.
+        if (mine === scanSeq.current) {
+          scanCtrl.current = null;
+          busyRef.current = false;
+          setBusy(false);
+        }
       }
     },
     [lang],
@@ -218,18 +246,22 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
       </FlowShell>
     );
   } else if (view === "reprint") {
+    // 키오스크의 카메라는 그 앞에 선 여객을 향한다(앞 카메라). 안내데스크에서는 직원이 기기를 들고 여객의 휴대전화를 비추므로
+    // 뒤 카메라를 쓰고, 여객에게 하는 말 대신 직원에게 하는 말을 쓴다(같은 데스크의 「패스 찾기」와 같다).
+    const reprintTitle = assisted ? "여객의 QR을 찍어 주세요" : t.reprintTitle;
+    const reprintBody = assisted ? "여객이 휴대전화로 받은 QR을 카메라로 비춰 주세요. 같은 QR을 스티커로 뽑습니다." : t.reprintBody;
     screen = (
-      <FlowShell lang={lang} prefs={prefs} kiosk screenKey="reprint" speakText={`${t.reprintTitle}. ${t.reprintBody}`} onBack={reset} onHome={reset}>
+      <FlowShell lang={lang} prefs={prefs} kiosk screenKey="reprint" speakText={`${reprintTitle}. ${reprintBody}`} onBack={reset} onHome={reset}>
         <div className="scan-layout">
           <div>
-            <h1>{t.reprintTitle}</h1>
-            <p className="lead">{t.reprintBody}</p>
+            <h1>{reprintTitle}</h1>
+            <p className="lead">{reprintBody}</p>
             {error && <ErrorNote>{error}</ErrorNote>}
           </div>
           <Scanner
             onScan={onScan}
             paused={busy}
-            prefer="user"
+            prefer={assisted ? "environment" : "user"}
             text={{ starting: t.camStarting, ready: t.camReady, read: t.camRead, none: t.camNone, switchCamera: t.camSwitch }}
           />
         </div>

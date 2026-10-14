@@ -60,6 +60,8 @@ export const CALL_EXPIRE_MIN = 30;
 export const CALL_ACCEPTED_EXPIRE_MIN = 90;
 /** 끝난 호출을 직원 화면에 이만큼 더 보여준다. */
 const RECENT_MIN = 30;
+/** 패스 없이 부른 지 이만큼 안에 패스를 찍고 다시 누르면 같은 여객으로 보고 처음 누른 시각을 둔다. */
+const SAME_PASSENGER_MIN = 5;
 
 export type CallEndReason = "done" | "cancelled" | "expired";
 
@@ -113,14 +115,15 @@ export async function createCall(
   );
   // 다른 여객에게 넘어가면 누른 시각도 지금으로 바꾼다. 앞사람의 시각을 두면 다음 사람의 호출이
   // 누른 지 몇 분 만에 "30분 지남"으로 닫히고, 직원 화면에도 오래 기다린 호출로 보인다.
-  // 다만 패스 없이 불렀던 호출에 패스가 붙는 것은 시각을 그대로 둔다. 등록 중에 부르고 패스를 받은 뒤
-  // 다시 누른 같은 여객이다(부르는 동안 키오스크는 처음 화면으로 돌아가지 않는다). 시각을 바꾸면
-  // 직원 화면에서 "0분 전"으로 뒤로 밀리고, 기다린 시간도 짧게 잡힌다.
+  // 다만 패스 없이 부른 지 SAME_PASSENGER_MIN 분 안에 패스가 붙으면 시각을 그대로 둔다. 등록 중에 부르고
+  // 패스를 받은 뒤 다시 누른 같은 여객이다(부르는 동안 키오스크는 처음 화면으로 돌아가지 않는다).
+  // 시각을 바꾸면 직원 화면에서 "0분 전"으로 뒤로 밀리고, 기다린 시간도 짧게 잡힌다.
+  // 그보다 오래 지났으면 앞사람이 패스 없이 부르고 떠난 것으로 보고, 위와 같이 지금 시각으로 바꾼다.
   await db.query(
     `update calls set registration_id = $2, screen = $3,
-       created_at = case when registration_id is null then created_at else $4 end
+       created_at = case when registration_id is null and created_at > $5 then created_at else $4 end
      where place_id = $1 and ended_at is null and accepted_at is null and registration_id is distinct from $2`,
-    [place.id, reg, screen, now],
+    [place.id, reg, screen, now, new Date(now.getTime() - SAME_PASSENGER_MIN * MIN)],
   );
   const [row] = await db.query<Row>(`select ${COLUMNS} from calls where place_id = $1 and ended_at is null`, [place.id]);
   return row ? toCall(row) : null;

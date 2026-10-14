@@ -10,7 +10,9 @@
  * 이름은 없다. 장면 이름은 QR 을 고르기 쉽게 붙인 것이고 서버에 저장하지 않는다.
  */
 import path from "node:path";
-import { loadDeployEnv, writeSheet, type DemoPass } from "./demo-sheet";
+import { checkSheetWritable, loadDeployEnv, writeSheet, type DemoPass } from "./demo-sheet";
+
+const NAME = "시연용_패스QR";
 
 (async () => {
   const local = process.argv.includes("--local");
@@ -20,6 +22,8 @@ import { loadDeployEnv, writeSheet, type DemoPass } from "./demo-sheet";
   // 개발 서버는 .env.local 의 값을, 없으면 개발용 기본값을 쓴다.
   const secret = local ? (process.env.CRON_SECRET ?? "dev-only-secret-change-me") : process.env.CRON_SECRET;
   if (!base || !secret) throw new Error(".env.deploy.local 에 BASE_URL 과 CRON_SECRET 이 필요합니다.");
+  // 서버를 부르면 이전 패스가 바로 못 쓰게 되므로, 저장할 수 없는 상태면 그 전에 멈춘다.
+  checkSheetWritable(out, NAME);
 
   const res = await fetch(`${base}/api/admin/demo`, { method: "POST", headers: { Authorization: `Bearer ${secret}` } });
   const body = (await res.json()) as { ok: boolean; error?: string; passes?: DemoPass[] };
@@ -28,10 +32,11 @@ import { loadDeployEnv, writeSheet, type DemoPass } from "./demo-sheet";
   if (body.passes.some((p) => !p.url.startsWith(base.toUpperCase()))) {
     console.log(`주의: QR 주소가 ${base} 로 시작하지 않습니다. 서버의 BASE_URL 설정을 확인하세요.`);
   }
-  await writeSheet(base, body.passes, out, "시연용_패스QR");
   // 주소(QR 값)는 화면에 찍지 않는다. 번호와 장면만 보여준다.
+  // 저장보다 먼저 찍는다. 저장이 실패해도 키오스크에 고유 일련 번호를 눌러 새 패스를 쓸 수 있다.
   for (const p of body.passes) console.log(`${p.passNo.slice(0, 3)} ${p.passNo.slice(3)}  ${p.flightNo}  ${p.scene}`);
-  console.log(`\n${path.join(out, "시연용_패스QR.png")} 과 .pdf 로 저장했습니다.`);
+  await writeSheet(base, body.passes, out, NAME);
+  console.log(`\n${path.join(out, `${NAME}.png`)} 과 .pdf 로 저장했습니다.`);
 })().catch((e) => {
   console.error(String(e));
   process.exit(1);

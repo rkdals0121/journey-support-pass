@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { GROUPS, itemsOf, prefsOf } from "@/lib/catalog";
 import type { FlightView, GuideDto } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
+import { staleNow } from "@/lib/timing";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { FlowShell } from "../../components/FlowShell";
@@ -217,6 +218,9 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
   // 이 화면에서 받은 내용이면 휴대전화에서 흐른 시간으로 잰다. 휴대전화 시계가 빨라도 막 받은 내용에 "HH:MM 기준"이 붙지 않는다.
   // 언제 받았는지 모르는 첫 화면만 서버가 만든 시각과 견주고, 휴대전화 시계가 늦어 그 차이가 음수이면 새 내용으로 본다.
   const old = now !== null && (!online || now - (fetchedAt ?? guide.generatedAt) > OLD_MS);
+  // 운항 정보가 오래되었는지도 지금 시각으로 다시 본다. 남겨 둔 화면은 만들 때는 새 정보였어도(poll.stale 이 false)
+  // 몇 시간 뒤에 열면 탑승구가 바뀌었을 수 있다. 서버가 알려 준 "오래되기까지 남은 시간"과 그 뒤 흐른 시간을 남은 시간 세듯이 견준다.
+  const stale = staleNow(guide, now, fetchedAt);
   const asOf = lang === "en" ? `As of ${kstHm(guide.generatedAt)}` : `${kstHm(guide.generatedAt)} 기준`;
   const speakText = [
     isNew ? t.passNew : t.passTitle,
@@ -262,7 +266,7 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       <h2>{t.passFlight}</h2>
       <FlightBoard flight={flight} t={t} lang={lang} />
       {old && <Banner role="status">{asOf}</Banner>}
-      {guide.poll.stale && <Banner role="status">{t.stale}</Banner>}
+      {stale && <Banner role="status">{t.stale}</Banner>}
 
       <h2>{t.passChoices}</h2>
       {picked.length === 0 ? (

@@ -114,8 +114,8 @@ describe("직원 부르기: 패스 붙이기", () => {
     const first = await createCall(db, "cc-108", null, "register", t0);
     expect(first).toMatchObject({ registrationId: null, screen: "register" });
 
-    // 등록 중에 부르고 패스를 받은 뒤 다시 누른 같은 여객이다. 누른 시각은 처음 누른 때로 둔다.
-    const second = await createCall(db, "cc-108", registration.id, "guide", after(1));
+    // 등록 중에 부르고 몇 분 뒤 패스를 받아 다시 누른 같은 여객이다. 누른 시각은 처음 누른 때로 둔다.
+    const second = await createCall(db, "cc-108", registration.id, "guide", after(3));
     expect(second).toMatchObject({ id: first!.id, registrationId: registration.id, screen: "guide", createdAt: t0 });
     expect(await rowCount()).toBe(1);
   });
@@ -149,6 +149,27 @@ describe("직원 부르기: 패스 붙이기", () => {
     expect((await listCalls(db, after(31)))[0]).toMatchObject({ id: call!.id, state: "waiting" });
     // B 가 누른 지 30분이 넘으면 닫힌다.
     expect((await getCallAt(db, call!.id, "cc-108", after(57, 1)))?.state).toBe("cancelled");
+  });
+
+  it("앞사람이 패스 없이 부르고 떠난 호출도, 다음 여객이 패스를 찍고 누르면 그때부터 30분을 센다", async () => {
+    // 앞사람 A 가 12:00 에 패스 없이 부르고 떠났다. 12:27 에 B 가 패스를 찍고 눌렀다.
+    const b = await registerWithPass(db, t0);
+    const call = await createCall(db, "cc-108", null, "guide", t0);
+    const again = await createCall(db, "cc-108", b.registration.id, "guide", after(27));
+    expect(again).toMatchObject({ id: call!.id, registrationId: b.registration.id, createdAt: after(27) });
+    // 12:31. A 가 누른 지는 30분이 넘었지만 B 가 누른 지는 4분이다.
+    expect(await getCallAt(db, call!.id, "cc-108", after(31))).toMatchObject({ state: "waiting", createdAt: after(27) });
+  });
+
+  it("패스 없이 부른 지 5분 안에 패스가 붙으면 누른 시각을 그대로 두고, 5분이 되면 지금으로 바꾼다", async () => {
+    const { registration } = await registerWithPass(db, t0);
+    const kept = await createCall(db, "cc-108", null, "register", t0);
+    expect((await createCall(db, "cc-108", registration.id, "guide", after(4, 59)))?.createdAt).toEqual(t0);
+    await cancelCall(db, kept!.id, "cc-108", after(6));
+
+    const moved = await createCall(db, "cc-108", null, "register", after(10));
+    const again = await createCall(db, "cc-108", registration.id, "guide", after(15));
+    expect(again).toMatchObject({ id: moved!.id, createdAt: after(15) });
   });
 
   it("직원이 이미 받은 호출은 다른 사람이 다시 눌러도 처음 부른 여객의 것으로 남는다", async () => {

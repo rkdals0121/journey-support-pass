@@ -16,6 +16,9 @@ interface Data {
 }
 
 const ko = textOf("ko");
+// 불러오기(받기·마침도) 한 번을 기다리는 가장 긴 시간. 약한 연결에서 답이 오지 않는 요청 하나를 붙잡고 있으면
+// 그 뒤의 자동 불러오기가 모두 건너뛰어져, 새 호출이 떠도 목록이 그대로이고 진동·소리도 나지 않는다.
+const LOAD_TIMEOUT_MS = 10_000;
 
 /**
  * 직원 호출 목록. 여객이 부를 때만 뜬다. 직원이 먼저 여객을 찾아 다가가는 화면이 아니다.
@@ -43,8 +46,11 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
     if (inFlight.current && !force) return;
     const mine = ++sent.current;
     inFlight.current = true;
+    // 답이 오지 않는 요청은 끊는다. 끊긴 것은 catch 로 가서 연결 오류로 알리고, 다음 차례에 다시 불러온다.
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS);
     try {
-      const res = await fetch("/api/staff/calls", { cache: "no-store" });
+      const res = await fetch("/api/staff/calls", { cache: "no-store", signal: ctrl.signal });
       if (mine !== sent.current) return;
       if (res.status === 401) return window.location.replace("/staff/login");
       if (res.status === 409) return window.location.replace("/staff/zone");
@@ -62,6 +68,7 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
     } catch {
       if (mine === sent.current) setError("연결할 수 없습니다. 잠시 후 다시 불러옵니다.");
     } finally {
+      clearTimeout(limit);
       if (mine === sent.current) inFlight.current = false;
     }
   }, []);
@@ -92,15 +99,21 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
   async function act(id: string, action: "accept" | "done") {
     setBusy(id);
     setActError(null);
+    // 받기·마침도 답이 오지 않으면 끊는다. 끊지 않으면 그 호출의 단추가 몇 분씩 눌리지 않고, 실패했다는 말도 없다.
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS);
     try {
       const res = await fetch(`/api/staff/calls/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
+        signal: ctrl.signal,
       });
       if (!res.ok) setActError((await res.json().catch(() => ({}))).error ?? "처리하지 못했습니다");
     } catch {
       setActError("연결할 수 없습니다. 잠시 후 다시 해 주세요.");
+    } finally {
+      clearTimeout(limit);
     }
     setBusy(null);
     await load(true);

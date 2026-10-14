@@ -106,6 +106,7 @@ export interface GuideDto {
   routeNote: RouteNote | null;
   pace: Pace | null;
   facilities: GuideFacility[];
+  /** 운항 정보 기준 시각과 오래됐는지. poll.staleInMs 는 generatedAt 에서부터 센 남은 시간이다. */
   poll: PollState;
   /** 서버가 이 내용을 만든 시각(ms). 화면이 오래된 내용인지 알아보고 "HH:MM 기준"을 붙일 때 쓴다. */
   generatedAt: number;

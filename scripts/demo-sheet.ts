@@ -40,6 +40,16 @@ export function loadDeployEnv(): void {
 
 const fmt = (n: string) => `${n.slice(0, 3)} ${n.slice(3)}`;
 
+/** 그림과 PDF 를 뽑을 브라우저(Chrome, 없으면 Edge). 둘 다 없으면 멈춘다. */
+export function findBrowser(): string {
+  const found = [
+    "C:/Program Files/Google/Chrome/Application/chrome.exe",
+    "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  ].find((p) => fs.existsSync(p));
+  if (!found) throw new Error("Chrome 이나 Edge 가 설치되어 있지 않아 QR 을 그림과 PDF 로 뽑을 수 없습니다. 둘 중 하나를 설치하고 다시 실행하세요.");
+  return found;
+}
+
 /** 시연용 패스의 QR 을 한 장짜리 그림과 A4 PDF 로 뽑는다. 장면 이름은 시연하는 사람이 고르기 쉽게 붙인 것이다. */
 export async function writeSheet(base: string, passes: DemoPass[], outDir: string, name: string): Promise<void> {
   const cells = await Promise.all(
@@ -68,20 +78,40 @@ export async function writeSheet(base: string, passes: DemoPass[], outDir: strin
     <div class="grid">${cells.join("")}</div>
   </body></html>`;
 
-  const chrome = [
-    "C:/Program Files/Google/Chrome/Application/chrome.exe",
-    "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-  ].find((p) => fs.existsSync(p));
   const browser = await puppeteer.launch({
-    executablePath: chrome,
+    executablePath: findBrowser(),
     headless: true,
     userDataDir: tempProfile("jsp-demo-"),
   });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
-  await page.setContent(html);
+  // 중간에 실패해도 브라우저는 꼭 닫는다. 열린 채로 끝나면 브라우저가 임시 폴더를 잡고 있어 위의 정리가 지우지 못한다.
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
+    await page.setContent(html);
+    fs.mkdirSync(outDir, { recursive: true });
+    await page.pdf({ path: path.join(outDir, `${name}.pdf`), format: "A4", printBackground: true });
+    await page.screenshot({ path: path.join(outDir, `${name}.png`) as `${string}.png`, fullPage: true });
+  } finally {
+    await browser.close().catch(() => {});
+  }
+}
+
+/**
+ * 서버를 부르기 전에 결과를 저장할 수 있는지 먼저 본다.
+ * 서버는 부르는 순간 이전 패스를 못 쓰게 하고 새 패스를 만든다. 그 뒤에 저장이 실패하면 새 패스의 QR 은 어디에도 남지 않는다.
+ * 지난번 PDF 를 열어 둔 채로 다시 돌리는 일이 흔한데, Windows 는 열려 있는 파일에 쓰지 못한다.
+ * 그림과 PDF 를 뽑을 브라우저가 없는 컴퓨터도 같은 일이 생기므로 함께 본다.
+ */
+export function checkSheetWritable(outDir: string, name: string): void {
+  findBrowser();
   fs.mkdirSync(outDir, { recursive: true });
-  await page.pdf({ path: path.join(outDir, `${name}.pdf`), format: "A4", printBackground: true });
-  await page.screenshot({ path: path.join(outDir, `${name}.png`) as `${string}.png`, fullPage: true });
-  await browser.close();
+  for (const ext of ["pdf", "png"]) {
+    const file = path.join(outDir, `${name}.${ext}`);
+    if (!fs.existsSync(file)) continue;
+    try {
+      fs.closeSync(fs.openSync(file, "r+"));
+    } catch {
+      throw new Error(`${file} 에 쓸 수 없습니다. 이 파일을 연 창(PDF 보기 등)을 닫고 다시 실행하세요.`);
+    }
+  }
 }

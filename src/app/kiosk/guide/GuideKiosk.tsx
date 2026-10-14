@@ -36,7 +36,7 @@ const THANKS_MS = 3500;
 const ERROR_SHOW_MS = 6000;
 // 안내를 끝낸 여객이 QR 을 아직 카메라 앞에 들고 있어도 곧바로 다시 열리지 않게, 방금 끝낸 패스는 잠시 읽지 않는다.
 const SAME_PASS_GUARD_MS = 8000;
-// 다시 받기 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않는 요청을 끝없이 붙잡지 않는다.
+// 다시 받기(그리고 QR·번호 확인) 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않는 요청을 끝없이 붙잡지 않는다.
 const REFRESH_TIMEOUT_MS = 15_000;
 
 /**
@@ -91,8 +91,21 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
   useEffect(() => resetViewSettings(), []);
 
+  const busyRef = useRef(false);
+  // QR·번호 확인의 차례와 그 요청. 처음 화면으로 돌아가면 차례를 넘기고 요청을 끊는다.
+  const openSeq = useRef(0);
+  const openCtrl = useRef<AbortController | null>(null);
+
   const reset = useCallback(() => {
     if (tokenRef.current) justEnded.current = { token: tokenRef.current, at: Date.now() };
+    // 앞사람의 QR·번호를 확인하던 요청은 끊고, 늦게 온 답도 버린다. 끊지 않으면 답이 오지 않는 요청 하나에
+    // 「확인하는 중」이 남아 다음 여객이 QR 을 보여 주거나 번호를 눌러도 열리지 않는다.
+    // 늦게 온 답을 쓰면 떠난 여객의 안내가 다음 사람 앞에 열린다.
+    openSeq.current++;
+    openCtrl.current?.abort();
+    openCtrl.current = null;
+    busyRef.current = false;
+    setBusy(false);
     setView({ kind: "scan" });
     setToken(null);
     setGuide(null);
@@ -103,7 +116,6 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     resetViewSettings();
   }, []);
 
-  const busyRef = useRef(false);
   const open = useCallback(
     async (body: { scanned: string } | { passNo: string }) => {
       if (busyRef.current) return;
@@ -111,13 +123,21 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       setBusy(true);
       setError(null);
       const tt = textOf(startLang);
+      // 답이 오지 않는 요청은 끊는다. 끊긴 것은 catch 로 가서 연결 오류로 알리고, 다시 찍거나 누를 수 있게 된다.
+      const mine = ++openSeq.current;
+      const ctrl = new AbortController();
+      openCtrl.current = ctrl;
+      const limit = setTimeout(() => ctrl.abort(), REFRESH_TIMEOUT_MS);
       try {
         const res = await fetch("/api/kiosk/resolve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...body, purpose: "guide" }),
+          signal: ctrl.signal,
         });
+        if (mine !== openSeq.current) return;
         const data = await res.json();
+        if (mine !== openSeq.current) return;
         if (!res.ok) {
           // 서버의 문구는 한국어다. 영어 화면에서는 상태에 맞는 영어 문구로 바꾼다.
           // 번호를 여러 번 틀려 잠긴 것(429)은 연결 문제가 아니다. "연결할 수 없습니다"라고 하면 엉뚱하게 와이파이를 살핀다.
@@ -140,10 +160,20 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         setDigits("");
         setView({ kind: "home" });
       } catch {
-        setError(tt.offline);
+        // 처음 화면으로 돌아가며 끊은 것이면 알리지 않는다. 알리면 다음 여객 앞에 앞사람의 오류가 뜬다.
+        // 누른 번호도 지운다. 여섯 칸이 찬 채로 두면 번호판이 눌리지 않아 고장 난 것처럼 보인다.
+        if (mine === openSeq.current) {
+          setError(tt.offline);
+          setDigits("");
+        }
       } finally {
-        busyRef.current = false;
-        setBusy(false);
+        clearTimeout(limit);
+        // 그사이 처음 화면으로 돌아갔으면 reset 이 이미 풀었다. 뒤에 시작한 확인의 「확인하는 중」을 지우지 않는다.
+        if (mine === openSeq.current) {
+          openCtrl.current = null;
+          busyRef.current = false;
+          setBusy(false);
+        }
       }
     },
     [startLang],

@@ -70,7 +70,7 @@ export default async function DeskStatsPage() {
         </div>
         <p className="hint">
           등록하다가 {s.calls.fromRegister}회 · 안내를 보다가 {s.calls.fromGuide}회 · 도움 마침 {s.calls.done}회 · 여객이 거둠{" "}
-          {s.calls.cancelled}회
+          {s.calls.cancelled}회 · 응답 없이 닫힘 {s.calls.expired}회
         </p>
         <p className="fine">건수와 시간만 셉니다. 항공편이나 여객이 고른 항목은 여기에 쓰이지 않습니다.</p>
       </main>

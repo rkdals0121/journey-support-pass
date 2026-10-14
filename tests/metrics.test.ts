@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { deviceKey } from "@/lib/auth";
-import { acceptCall, cancelCall, createCall, finishCall } from "@/lib/calls";
+import { acceptCall, cancelCall, createCall, endReason, finishCall, getCallAt } from "@/lib/calls";
 import type { Db } from "@/lib/db";
 import { recordPoll, SEED_POLL } from "@/lib/flights/ingest";
 import { allowEvent, logEvent, pollMetrics, summarize, todaySummary, type EventKind } from "@/lib/metrics";
@@ -168,6 +168,7 @@ describe("직원 부르기 집계", () => {
       fromGuide: 4,
       done: 2,
       cancelled: 1,
+      expired: 0,
       open: 2,
       medianAcceptSec: 100, // 40, 100, 200 의 가운데
     });
@@ -179,9 +180,32 @@ describe("직원 부르기 집계", () => {
     expect((await todaySummary(db, lateNow)).calls).toMatchObject({ total: 0, open: 1 });
   });
 
-  it("아무도 받지 않아 시간이 지난 호출은 열려 있는 호출로 세지 않는다", async () => {
+  it("아무도 받지 않아 시간이 지난 호출은 열려 있는 호출로 세지 않고, '여객이 거둠'이 아니라 '응답 없이 닫힘'으로 센다", async () => {
     await createCall(db, "cc-108", null, "guide", at("13:00"));
-    expect((await todaySummary(db, now)).calls).toMatchObject({ total: 1, open: 0, cancelled: 1 });
+    expect((await todaySummary(db, now)).calls).toMatchObject({ total: 1, open: 0, cancelled: 0, expired: 1 });
+  });
+
+  it("거둔 호출과 응답 없이 닫힌 호출을 직원 화면의 끝난 까닭과 같은 기준으로 나눈다", async () => {
+    // 여객이 2분 만에 거뒀다.
+    const withdrawn = await createCall(db, "cc-108", null, "guide", at("12:00"));
+    await cancelCall(db, withdrawn!.id, "cc-108", at("12:02"));
+    // 직원이 받았고, 40분 뒤에 여객이 거뒀다. 받았으므로 놓친 호출이 아니다.
+    const acceptedThenWithdrawn = await createCall(db, "cc-125", null, "guide", at("12:00"));
+    await acceptCall(db, acceptedThenWithdrawn!.id, "cc-mid", at("12:01"));
+    await cancelCall(db, acceptedThenWithdrawn!.id, "cc-125", at("12:40"));
+    // 아무도 받지 않아 30분 뒤에 닫혔다.
+    const missed = await createCall(db, "t1-west", null, "guide", at("12:10"));
+
+    const s = await todaySummary(db, now);
+    expect(s.calls).toMatchObject({ total: 3, done: 0, cancelled: 2, expired: 1, open: 0 });
+    const reasons = await Promise.all(
+      [
+        [withdrawn!.id, "cc-108"],
+        [acceptedThenWithdrawn!.id, "cc-125"],
+        [missed!.id, "t1-west"],
+      ].map(async ([id, place]) => endReason((await getCallAt(db, id, place))!)),
+    );
+    expect(reasons).toEqual(["cancelled", "cancelled", "expired"]);
   });
 
   it("받은 호출이 짝수 개면 가운데 두 값의 평균이다", async () => {
@@ -234,12 +258,27 @@ describe("등록 집계", () => {
     expect(s.registered).toBe(3);
     expect(s.byRoute.web).toBe(3);
   });
+
+  it("출발해서 여정이 끝난 여객은 삭제 작업이 돌기 전이라도 지금 패스를 쓰는 여객 수에서 뺀다", async () => {
+    await registerWithPass(db, at("12:00")); // KE123, 18:30 출발
+    expect((await todaySummary(db, at("18:59"))).active).toBe(1);
+    // 출발 30분 뒤. 패스 화면과 키오스크도 이때부터 끝난 패스로 본다. 등록은 아직 지워지지 않았다.
+    expect((await todaySummary(db, at("19:00"))).active).toBe(0);
+    expect(await db.query("select 1 from registrations where status = 'active'")).toHaveLength(1);
+  });
+
+  it("운항 정보가 '출발'이 되면 예정 시각 전이라도 지금 패스를 쓰는 여객 수에서 뺀다", async () => {
+    await registerWithPass(db, at("12:00"));
+    await addFlights(db, [flightRow("KE123", "2026-10-05 18:30", { gate: 127, status: "출발" })], at("13:00"));
+    expect((await todaySummary(db, now)).active).toBe(0);
+  });
 });
 
 describe("오늘 현황", () => {
   it("한국 날짜로 오늘 것만 센다. 어제 것은 세지 않는다", async () => {
     const yesterday = kst("2026-10-04 23:59");
-    await addFlights(db, [flightRow("KE900", "2026-10-05 08:00")], yesterday);
+    // 오늘 16:00 에 떠나는 편이다. 14:00 에는 아직 패스를 쓰고 있다.
+    await addFlights(db, [flightRow("KE900", "2026-10-05 16:00")], yesterday);
     await registerWithPass(db, yesterday, { flightNo: "KE900", startedAt: kst("2026-10-04 23:58") });
     await events(2, "reg_start", { when: yesterday });
     await events(1, "survey", { when: yesterday, value: 3 });
@@ -271,7 +310,7 @@ describe("오늘 현황", () => {
       medianWriteSec: null,
       completion: { adapted: { started: 0, done: 0, rate: null }, plain: { started: 0, done: 0, rate: null } },
       guideOpens: 0,
-      calls: { total: 0, fromRegister: 0, fromGuide: 0, done: 0, cancelled: 0, open: 0, medianAcceptSec: null },
+      calls: { total: 0, fromRegister: 0, fromGuide: 0, done: 0, cancelled: 0, expired: 0, open: 0, medianAcceptSec: null },
       survey: { good: 0, fair: 0, poor: 0, total: 0 },
     });
   });
@@ -279,9 +318,9 @@ describe("오늘 현황", () => {
   it("기간을 정해 집계할 수 있다", async () => {
     await events(1, "guide_open", { when: at("09:00") });
     await events(1, "guide_open", { when: at("13:00") });
-    expect((await summarize(db, at("12:00"), "오후")).guideOpens).toBe(1);
-    expect((await summarize(db, at("12:00"), "오후")).date).toBe("오후");
-    expect((await summarize(db, at("08:00"), "종일")).guideOpens).toBe(2);
+    expect((await summarize(db, at("12:00"), "오후", now)).guideOpens).toBe(1);
+    expect((await summarize(db, at("12:00"), "오후", now)).date).toBe("오후");
+    expect((await summarize(db, at("08:00"), "종일", now)).guideOpens).toBe(2);
   });
 
   it("사람을 알 수 있는 값은 담기지 않는다. 편명도 고른 항목도 없다", async () => {

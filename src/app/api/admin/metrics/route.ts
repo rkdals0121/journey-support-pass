@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   return Response.json({
     since,
     days,
-    summary: await summarize(db, since, kstDate(now)),
+    summary: await summarize(db, since, kstDate(now), now),
     polls: await pollMetrics(db, since),
   });
 }
