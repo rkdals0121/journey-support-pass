@@ -107,7 +107,9 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       });
       if (!res.ok) throw new Error();
       // 휴대전화에 남겨 둔 이 화면도 지운다. 지운 뒤에 인터넷이 끊긴 채로 열어도 예전 QR 이 나오지 않게 한다.
-      navigator.serviceWorker?.controller?.postMessage({ type: "forget-pass", token });
+      // 화면에서 바로 지우고(워커가 이 화면을 맡지 않은 때에도 지워지게), 워커에게도 알려 지우는 사이에 다시 써 넣지 않게 한다.
+      void window.caches?.open("jsp-pass-v1").then((c) => c.delete(`${window.location.origin}/p/${token.toUpperCase()}`)).catch(() => {});
+      void navigator.serviceWorker?.ready.then((reg) => reg.active?.postMessage({ type: "forget-pass", token })).catch(() => {});
       setErased(true);
     } catch {
       erasing.current = false;

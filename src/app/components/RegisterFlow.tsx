@@ -290,9 +290,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     : cityOpen
       ? [t.cityTitle, t.cityPopular]
       : options === null
-        ? cityPick || query.trim().length > 0
+        ? searching
           ? [t.searching]
-          : []
+          : error
+            ? [error]
+            : []
         : options.length === 0
           ? [t.flightNotFound]
           : buckets.length > 1 && bucketNow === null
