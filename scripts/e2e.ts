@@ -349,6 +349,7 @@ function sameSpot(a: string | null, b: string | null): boolean {
   return Math.abs(ax - bx) <= 40 && Math.abs(ay - by) <= 40;
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const count = (page: Page, selector: string) => page.evaluate((sel) => document.querySelectorAll(sel).length, selector);
 const checkedCount = (page: Page) => count(page, '[aria-checked="true"]:not(.lang-pick button)');
 
@@ -464,8 +465,20 @@ async function resetFlights(clearLocks = false) {
   // 큰 글씨가 켜진 상태에서의 자리를 적어 둔다. 다음 화면들에서 같은 자리인지 견준다.
   const backAt = await spot(page, ".bar-btn", "이전");
   const homeAt = await spot(page, ".bar-btn", "처음으로");
-  await clickText(page, ".flow-cta button", "다음");
+  // 손이 떨려 「다음」을 두 번 빠르게 누른 여객: 두 번째 누름이 다음 화면의 「동의하고 계속」에 들어가면 안 된다.
+  await sleep(700);
+  {
+    const r = await page.$eval(".flow-cta .btn-primary", (e) => {
+      const b = (e as HTMLElement).getBoundingClientRect();
+      return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+    });
+    await page.mouse.click(r.x, r.y);
+    await sleep(80);
+    await page.mouse.click(r.x, r.y);
+  }
   await waitText(page, "등록 전에 확인해 주세요");
+  await sleep(900);
+  check("「다음」을 두 번 빠르게 눌러도 한 화면만 넘어간다. 동의 화면을 읽지 않고 지나치지 않는다", await has(page, "등록 전에 확인해 주세요"));
   check("두 번째는 동의다. 무엇을 받는지, 어디에 쓰는지, 언제 지우는지, 무엇이 남는지 네 가지를 보여준다", (await count(page, ".info-row")) === 4);
   check("동의 글에 이름·연락처·진단명을 받지 않는다고 적혀 있다", await has(page, "이름, 연락처, 진단명은 받지 않습니다"));
   check("동의 글에 「직원 부르기」를 누르면 고른 항목이 직원에게 전달된다고 적혀 있다", await has(page, "그 직원에게 전달됩니다"));
@@ -680,6 +693,11 @@ async function resetFlights(clearLocks = false) {
   const callAt = await callSpot(page);
   check("처음 화면에도 「직원 부르기」가 있다. 「이전·처음으로·설정」 줄 바로 아래에 있고 그 버튼들을 가리지 않는다", callAt !== null && (await callBelowBar(page)), String(callAt));
   check("처음 화면에는 여객 정보가 하나도 없다", !(await has(page, "MK1")));
+  await clickText(page, ".listen-start", "소리로 안내 듣기");
+  await page.waitForFunction(() => document.querySelector(".listen-start")?.getAttribute("aria-pressed") === "true", { timeout: WAIT });
+  check("처음 화면에 큰 「소리로 안내 듣기」가 있고, 누르면 켜진다 (QR 을 대기 전에도 소리 안내를 켤 수 있다)", await has(page, "소리 안내 끄기"));
+  await clickText(page, ".listen-start", "소리 안내 끄기");
+  await page.waitForFunction(() => document.querySelector(".listen-start")?.getAttribute("aria-pressed") === "false", { timeout: WAIT });
   await shot(page, "안내키오스크-처음-카메라없음");
   await clickText(page, "button", "고유 일련 번호 누르기");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");

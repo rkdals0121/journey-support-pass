@@ -650,6 +650,21 @@ html[data-kiosk] .bar-btn {
   position: static;
   background: none;
 }
+/* 키오스크 처음 화면의 「소리로 안내 듣기」. 손으로 찾기 쉽게 크게 둔다. */
+.listen-start {
+  margin: 0.25rem 0 1rem;
+  border-width: 0.125rem;
+  border-color: var(--green);
+  color: var(--green-press);
+}
+.listen-start.on {
+  background: var(--green);
+  color: #fff;
+}
+/* 번호 화면의 알림 자리. 알림이 사라져도 번호판이 움직이지 않게 자리를 남긴다. */
+.pad-status .ghost {
+  visibility: hidden;
+}
 .flow-cta .btn:first-child {
   margin-top: 0;
 }

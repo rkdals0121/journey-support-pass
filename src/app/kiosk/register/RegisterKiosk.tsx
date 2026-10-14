@@ -11,6 +11,7 @@ import { IdleGuard } from "../../components/IdleGuard";
 import { PassQr, Sticker } from "../../components/PassQr";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { Scanner } from "../../components/Scanner";
+import { ListenStart } from "../../components/ListenStart";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { useSpeech } from "../../components/useSpeech";
@@ -240,6 +241,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
             <Smartphone size={24} aria-hidden="true" />
             {t.kioskReprint}
           </button>
+          {!assisted && <ListenStart t={t} />}
         </div>
         <p className="kiosk-foot">{here}</p>
       </FlowShell>

@@ -13,6 +13,7 @@ import { IdleGuard } from "../../components/IdleGuard";
 import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
 import { Scanner } from "../../components/Scanner";
+import { ListenStart } from "../../components/ListenStart";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { useSpeech } from "../../components/useSpeech";
@@ -55,6 +56,15 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const t = textOf(lang, prefs.easy);
   const { speak } = useSpeech(lang);
   const here = lang === "en" ? placeLabelEn : placeLabel;
+
+  // 마지막으로 보여 준 오류 문구. 문구가 사라진 뒤에도 그 자리를 비워 두는 데만 쓴다(번호 화면).
+  const [lastError, setLastError] = useState<string | null>(null);
+  useEffect(() => {
+    if (error) setLastError(error);
+  }, [error]);
+  useEffect(() => {
+    if (view.kind !== "number") setLastError(null);
+  }, [view.kind]);
 
   // 오류 문구는 잠시 보여준 뒤 치운다. 다음 사람이 앞사람의 오류를 보고 헷갈리지 않게 한다.
   useEffect(() => {
@@ -225,8 +235,19 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                 </span>
               ))}
             </div>
-            {busy && <p className="hint center">{t.camRead}</p>}
-            {error && <ErrorNote>{error}</ErrorNote>}
+            {/* 오류 문구는 잠시 뒤 사라진다. 그때 번호판이 위로 올라가면 누르려던 자리에 다른 키가 온다.
+                그래서 문구가 차지하던 자리는 비워 둔 채로 두고 글만 감춘다. */}
+            <div className="pad-status">
+              {error ? (
+                <ErrorNote>{error}</ErrorNote>
+              ) : lastError ? (
+                <div aria-hidden="true" className="ghost">
+                  <ErrorNote>{lastError}</ErrorNote>
+                </div>
+              ) : busy ? (
+                <p className="hint center">{t.camRead}</p>
+              ) : null}
+            </div>
             <NumPad
               onKey={(k) => setDigits((d) => (d.length < PASS_NO_LENGTH && !busy ? d + k : d))}
               onErase={() => setDigits((d) => d.slice(0, -1))}
@@ -253,6 +274,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                 <QrCode size={32} aria-hidden="true" /> {t.scanTitle}
               </h1>
               <p className="lead">{t.scanBody}</p>
+              <ListenStart t={t} />
               {error && <ErrorNote>{error}</ErrorNote>}
               <div className="scan-alt">
                 <span>{t.scanOr}</span>

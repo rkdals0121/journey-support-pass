@@ -1,12 +1,21 @@
 "use client";
 
 import { ChevronLeft, House, Settings, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Prefs } from "@/lib/catalog";
 import { textOf, type Lang } from "@/lib/i18n";
 import { useFocusTrap } from "./useFocusTrap";
 import { useSpeech } from "./useSpeech";
 import { resetViewSettings, SCALES, setViewSettings, useViewSettings } from "./viewSettings";
+
+const SETTLE_MS = 500;
+// 마지막으로 사람이 화면을 누른 시각. 화면이 "누름 때문에" 바뀌었는지 가리는 데 쓴다.
+let lastTapAt = 0;
+if (typeof window !== "undefined") {
+  window.addEventListener("pointerdown", (e) => {
+    if (e.isTrusted) lastTapAt = Date.now();
+  }, true);
+}
 
 interface Props {
   lang: Lang;
@@ -43,6 +52,22 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
   const { supported, speaking, speak, stop } = useSpeech(lang);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // 화면이 바뀐 직후 잠깐은 누름을 받지 않는다. 손이 떨려 같은 자리를 두 번 누르면 두 번째 누름이
+  // 다음 화면의 같은 자리 버튼(「동의하고 계속」, 「등록하기」)에 들어가, 읽지도 않고 넘어가 버리기 때문이다.
+  // 누름 때문에 화면이 바뀐 경우에만 막는다. QR 을 대서 바뀌었거나 저절로 바뀐 화면은 바로 누를 수 있다.
+  // 타이머로 풀지 않고 누른 시각을 견준다. 탭이 뒤로 갔다 오면 타이머가 늦게 돌아 계속 막혀 있을 수 있기 때문이다.
+  const settleUntil = useRef(0);
+  useLayoutEffect(() => {
+    const now = Date.now();
+    settleUntil.current = now - lastTapAt < SETTLE_MS ? now + SETTLE_MS : 0;
+  }, [screenKey]);
+  const swallowEarly = (e: React.MouseEvent) => {
+    // 사람이 실제로 누른 것만 본다(화면 점검 프로그램이 코드로 누르는 것은 막지 않는다).
+    if (e.nativeEvent.isTrusted && Date.now() < settleUntil.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
   const closeRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   useFocusTrap(sheetRef, settingsOpen);
@@ -54,14 +79,17 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
   const voice = view.voice ?? prefs.voice;
 
   // 등록 화면에서 "큰 글씨·그림·소리" 항목을 직접 켜고 끄면 그쪽을 따른다. 설정에서 바꿔 둔 값이 그 선택을 가리지 않게 한다.
-  const chosen = `${prefs.large}-${prefs.picture}-${prefs.voice}`;
-  const lastChosen = useRef(chosen);
+  // 바뀐 항목만 되돌린다. 키오스크 처음 화면에서 소리를 켠 여객이 QR 을 댔을 때 소리가 꺼지지 않게 하기 위해서다.
+  const last = useRef(prefs);
   useEffect(() => {
-    if (lastChosen.current !== chosen) {
-      lastChosen.current = chosen;
-      resetViewSettings();
-    }
-  }, [chosen]);
+    const before = last.current;
+    last.current = prefs;
+    const patch: { scale?: null; picture?: null; voice?: null } = {};
+    if (before.large !== prefs.large) patch.scale = null;
+    if (before.picture !== prefs.picture) patch.picture = null;
+    if (before.voice !== prefs.voice) patch.voice = null;
+    if (Object.keys(patch).length > 0) setViewSettings(patch);
+  }, [prefs]);
 
   // 글자 크기와 그림 크기는 문서 전체에 건다. 화면의 모든 치수가 글자 크기를 따라 함께 커진다.
   useEffect(() => {
@@ -130,7 +158,7 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
   const changed = view.scale !== null || view.picture !== null || view.voice !== null;
 
   return (
-    <div className="flow" lang={lang}>
+    <div className="flow" lang={lang} onClickCapture={swallowEarly}>
       <header className="flow-bar" ref={barRef}>
         <div className="flow-bar-side">
           <button className="bar-btn" onClick={onBack} disabled={!onBack}>
