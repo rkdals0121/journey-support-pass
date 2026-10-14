@@ -1,5 +1,5 @@
 import { placeOf, PLACES } from "../airport";
-import { claimAttempt, forgetAttempt, logAccess, login, type Session } from "../auth";
+import { claimAttempt, forgetAttempt, login, type Session } from "../auth";
 import { cancelCall, createCall, getCallAt } from "../calls";
 import { isAdapted } from "../catalog";
 import type { Db } from "../db";

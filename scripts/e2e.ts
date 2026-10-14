@@ -351,7 +351,6 @@ function sameSpot(a: string | null, b: string | null): boolean {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const count = (page: Page, selector: string) => page.evaluate((sel) => document.querySelectorAll(sel).length, selector);
-const checkedCount = (page: Page) => count(page, '[aria-checked="true"]:not(.lang-pick button)');
 
 const closeInView = (page: Page) =>
   page.evaluate(() => {
@@ -851,6 +850,23 @@ async function resetFlights(clearLocks = false) {
   const farFile = await cameraFile(tmp, myToken, true);
   const enFile = await cameraFile(tmp, enPass.token, false);
   await tmp.close();
+
+  // 기기 점검 화면(/check). 시연 전에 그 기기에서 카메라, 소리, 인터넷을 본다. 읽은 QR 로 여객 정보를 열지 않는다.
+  section("기기 점검 화면");
+  browser = await launch(CAMERA(nearFile));
+  page = await open(browser, PHONE);
+  await page.goto(`${BASE}/check`, { waitUntil: "load", timeout: 300_000 });
+  await waitText(page, "서버가");
+  check("인터넷이 되는지 보고 서버가 답한 시간을 알려 준다", (await count(page, ".dc-item.dc-ok")) >= 1 && (await has(page, "초 만에 답했습니다")));
+  check("카메라, 소리, 인터넷, 화면, 인터넷 없이 열기, 화면 꺼짐 막기 여섯 가지를 본다", (await count(page, ".dc-item")) === 6);
+  await page.waitForSelector(".dc-qr svg", { timeout: WAIT });
+  check("다른 기기로 읽어 볼 점검용 QR 이 있고, 그 QR 은 이 점검 화면 주소다", (await readQr(page, ".dc-qr svg")) === `${BASE}/CHECK`.toUpperCase());
+  await clickText(page, "button", "카메라 켜기");
+  await waitText(page, "고유 일련 번호 화면의 QR을 읽었습니다");
+  check("카메라를 켜고 QR 을 보여 주면 읽었다고 알려 준다", true);
+  check("점검 화면은 읽은 QR 로 여객 정보를 열지 않는다", !(await has(page, "MK112")) && page.url().endsWith("/check"));
+  await shot(page, "기기점검");
+  await browser.close();
 
   browser = await launch(CAMERA(nearFile));
   page = await open(browser, KIOSK_TALL);

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ClipboardPen, Navigation } from "lucide-react";
+import { ChevronLeft, ClipboardPen, Navigation, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ErrorNote } from "../components/Alert";
@@ -136,6 +136,10 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
       <button className="btn btn-primary" disabled={busy || !code.trim() || !placeId}>
         {busy ? "확인하는 중…" : "이 기기를 키오스크로 쓰기"}
       </button>
+      <Link className="home-staff" href="/check">
+        <Stethoscope size={16} aria-hidden="true" />
+        이 기기 점검하기 (카메라·소리·인터넷)
+      </Link>
       <Link className="home-staff" href="/">
         <ChevronLeft size={16} aria-hidden="true" />
         여객 첫 화면으로

@@ -2576,6 +2576,87 @@ html[data-picture] .route > li::before {
   size: 50mm 30mm;
   margin: 0;
 }
+/* 기기 점검(/check) */
+.device-check h1 {
+  margin-bottom: 0.25rem;
+}
+.dc-item {
+  margin-top: 1rem;
+  padding: 1rem 1.125rem;
+  border: 0.0625rem solid var(--line);
+  border-left: 0.375rem solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.dc-item.dc-ok {
+  border-left-color: var(--green);
+}
+.dc-item.dc-bad {
+  border-left-color: var(--red);
+}
+.dc-item.dc-warn {
+  border-left-color: var(--sun-press);
+}
+.dc-item h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.125rem;
+}
+.dc-item h2 > span {
+  flex: 1;
+}
+.dc-item > p {
+  margin: 0.5rem 0;
+}
+.dc-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9375rem;
+}
+.dc-ok .dc-mark {
+  color: var(--green);
+}
+.dc-bad .dc-mark {
+  color: var(--red);
+}
+.dc-warn .dc-mark,
+.dc-wait .dc-mark {
+  color: var(--muted);
+}
+.dc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.dc-item .btn-inline {
+  min-height: 3rem;
+}
+.dc-item .scan {
+  margin-top: 0.5rem;
+}
+.dc-qr {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.dc-qr h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+.dc-qr div {
+  width: min(16rem, 70vw);
+  margin: 0.5rem auto 0;
+  background: #fff;
+}
+.dc-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 @media print {
   html,
   body {
