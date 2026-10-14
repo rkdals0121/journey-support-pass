@@ -108,9 +108,9 @@ export async function callHandler(
   return ok({ id: call.id, state: call.state });
 }
 
-export async function callStateHandler(db: Db, session: Session | null, id: string): Promise<ApiResult> {
+export async function callStateHandler(db: Db, session: Session | null, id: string, now?: Date): Promise<ApiResult> {
   if (!session?.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
-  const call = await getCallAt(db, id, session.placeId);
+  const call = await getCallAt(db, id, session.placeId, now);
   if (!call) return fail(404, "호출을 찾을 수 없습니다");
   return ok({ id: call.id, state: call.state });
 }

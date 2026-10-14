@@ -24,52 +24,86 @@ const ko = textOf("ko");
 export function CallList({ refreshSec }: { refreshSec: number }) {
   const [data, setData] = useState<Data | null>(null);
   const [scope, setScope] = useState<"mine" | "all">("mine");
+  // 불러오기 오류(다음 불러오기에서 저절로 사라진다)와 누른 것의 오류(다른 것을 누를 때까지 남는다)를 따로 둔다.
+  // 한데 두면 "다른 직원이 먼저 받았습니다"가 바로 뒤의 불러오기에 지워져 한순간만 보인다.
   const [error, setError] = useState<string | null>(null);
+  const [actError, setActError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  // 새로 고침 단추를 직접 눌렀을 때만 돈다. 5초마다 저절로 불러올 때 단추를 막으면 그 단추에 있던 초점이 사라진다.
+  const [manual, setManual] = useState(false);
   const known = useRef<Set<string> | null>(null);
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
+  // 불러오기가 겹치면 늦게 온 옛 답이 새 답을 덮는다. 보낸 차례를 세어 가장 나중에 보낸 것의 답만 쓴다.
+  const sent = useRef(0);
+  const inFlight = useRef(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (force = false) => {
+    // 저절로 불러올 때는 앞의 것이 아직 오는 중이면 건너뛴다(느린 연결에서 쌓이지 않게).
+    if (inFlight.current && !force) return;
+    const mine = ++sent.current;
+    inFlight.current = true;
     try {
       const res = await fetch("/api/staff/calls", { cache: "no-store" });
+      if (mine !== sent.current) return;
       if (res.status === 401) return window.location.replace("/staff/login");
       if (res.status === 409) return window.location.replace("/staff/zone");
       const body = await res.json();
+      if (mine !== sent.current) return;
       if (!res.ok) return setError(body.error ?? "호출을 불러오지 못했습니다");
       setError(null);
       setData(body);
       // 처음 불러올 때 이미 있던 호출은 알리지 않는다. 그 뒤에 새로 온 것만 알린다.
-      const waiting = (body.calls as CallDto[]).filter((c) => c.state === "waiting").map((c) => c.id);
-      if (known.current && waiting.some((id) => !known.current!.has(id))) notify();
-      known.current = new Set(waiting);
+      // 「내 구역」을 보고 있으면 내 구역 호출만 알린다. 다른 구역 호출로 울리면 화면에는 아무것도 없어 헷갈린다.
+      const waiting = (body.calls as CallDto[]).filter((c) => c.state === "waiting");
+      const fresh = known.current ? waiting.filter((c) => !known.current!.has(c.id)) : [];
+      if (fresh.some((c) => c.mine || scopeRef.current === "all")) notify();
+      known.current = new Set(waiting.map((c) => c.id));
     } catch {
-      setError("연결할 수 없습니다. 잠시 후 다시 불러옵니다.");
+      if (mine === sent.current) setError("연결할 수 없습니다. 잠시 후 다시 불러옵니다.");
     } finally {
-      setLoading(false);
+      if (mine === sent.current) inFlight.current = false;
     }
   }, []);
 
   useEffect(() => {
     void load();
-    const timer = setInterval(load, refreshSec * 1000);
+    const timer = setInterval(() => void load(), refreshSec * 1000);
     return () => clearInterval(timer);
   }, [load, refreshSec]);
 
+  // 소리를 낼 준비. 아이폰은 사람이 화면을 누를 때 소리 장치를 깨워 두어야 나중에 소리가 난다.
+  useEffect(() => {
+    const unlock = () => void wakeAudio();
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  async function refresh() {
+    setManual(true);
+    await load(true);
+    setManual(false);
+  }
+
   async function act(id: string, action: "accept" | "done") {
     setBusy(id);
+    setActError(null);
     try {
       const res = await fetch(`/api/staff/calls/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      if (!res.ok) setError((await res.json()).error ?? "처리하지 못했습니다");
+      if (!res.ok) setActError((await res.json().catch(() => ({}))).error ?? "처리하지 못했습니다");
     } catch {
-      setError("연결할 수 없습니다. 잠시 후 다시 해 주세요.");
+      setActError("연결할 수 없습니다. 잠시 후 다시 해 주세요.");
     }
     setBusy(null);
-    await load();
+    await load(true);
   }
 
   async function logout() {
@@ -118,11 +152,16 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
         <button aria-pressed={scope === "all"} className={scope === "all" ? "on" : ""} onClick={() => setScope("all")}>
           전체 <span className="count">{open.length}</span>
         </button>
-        <button className="seg-refresh" onClick={load} aria-label="새로 고침" disabled={loading}>
-          <RefreshCw size={18} aria-hidden="true" className={loading ? "spin" : ""} />
+        <button className="seg-refresh" onClick={() => void refresh()} aria-label="새로 고침" aria-busy={manual}>
+          <RefreshCw size={18} aria-hidden="true" className={manual ? "spin" : ""} />
         </button>
       </div>
 
+      {/* 화면 읽기 프로그램에는 기다리는 호출 수가 바뀔 때만 알린다. 목록 전체를 알리면 "N분 전"이 바뀔 때마다 다시 읽는다. */}
+      <p className="sr-only" aria-live="polite">
+        {data ? `기다리는 호출 ${shownOpen.filter((c) => c.state === "waiting").length}건` : ""}
+      </p>
+      {actError && <ErrorNote>{actError}</ErrorNote>}
       {error && <ErrorNote>{error}</ErrorNote>}
 
       {data && shownOpen.length === 0 && (
@@ -143,7 +182,7 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
         </div>
       )}
 
-      <ul className="calls" aria-live="polite">
+      <ul className="calls">
         {shownOpen.map((c) => (
           <li key={c.id} className={`call call-${c.state} ${c.mine ? "" : "call-other"}`}>
             <div className="call-head">
@@ -227,23 +266,44 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
   );
 }
 
-/** 새 호출을 진동과 짧은 소리로 알린다. 소리는 화면을 한 번이라도 누른 뒤에만 난다(브라우저의 규칙). */
-function notify() {
-  navigator.vibrate?.([200, 100, 200]);
+// 화면 하나에 소리 장치 하나를 두고 계속 쓴다.
+let audio: AudioContext | null = null;
+
+/**
+ * 소리 장치를 만들고 깨운다. 브라우저는 사람이 화면을 누를 때 깨운 소리 장치로만 소리를 낸다.
+ * 특히 아이폰은 누름 밖에서 만든 소리 장치를 멈춘 채로 두므로, 누를 때 미리 만들어 깨워 둔다.
+ */
+async function wakeAudio(): Promise<AudioContext | null> {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.5);
-    osc.onended = () => void ctx.close();
+    if (!Ctx) return null;
+    audio ??= new Ctx();
+    if (audio.state === "suspended") await audio.resume();
+    return audio;
   } catch {
-    // 소리를 낼 수 없는 기기에서는 화면과 진동으로만 알린다.
+    return null;
   }
+}
+
+/**
+ * 새 호출을 진동과 짧은 소리로 알린다. 소리는 화면을 한 번이라도 누른 뒤에만 난다(브라우저의 규칙).
+ * 아이폰은 진동을 지원하지 않아 소리로만 알린다.
+ */
+function notify() {
+  navigator.vibrate?.([200, 100, 200]);
+  void wakeAudio().then((ctx) => {
+    if (!ctx || ctx.state !== "running") return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch {
+      // 소리를 낼 수 없는 기기에서는 화면과 진동으로만 알린다.
+    }
+  });
 }

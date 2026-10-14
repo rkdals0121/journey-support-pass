@@ -173,6 +173,17 @@ describe("직원 부르기 집계", () => {
     });
   });
 
+  it("자정 전에 불러 아직 열려 있는 호출도 '지금 열려 있는 호출'에 센다. 오늘 부른 수에는 넣지 않는다", async () => {
+    const lateNow = kst("2026-10-05 00:10");
+    await createCall(db, "cc-108", null, "guide", kst("2026-10-04 23:55"));
+    expect((await todaySummary(db, lateNow)).calls).toMatchObject({ total: 0, open: 1 });
+  });
+
+  it("아무도 받지 않아 시간이 지난 호출은 열려 있는 호출로 세지 않는다", async () => {
+    await createCall(db, "cc-108", null, "guide", at("13:00"));
+    expect((await todaySummary(db, now)).calls).toMatchObject({ total: 1, open: 0, cancelled: 1 });
+  });
+
   it("받은 호출이 짝수 개면 가운데 두 값의 평균이다", async () => {
     const a = await createCall(db, "cc-108", null, "guide", at("12:00"));
     await acceptCall(db, a!.id, "cc-mid", at("12:00", 40));

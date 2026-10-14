@@ -326,6 +326,12 @@ describe("직원 부르기: 오래된 호출", () => {
     expect((await getCallAt(db, old!.id, "cc-108"))?.state).toBe("cancelled");
   });
 
+  it("직원 화면이 모두 꺼져 있어도, 키오스크가 상태를 물으면 오래된 호출이 닫힌다", async () => {
+    const call = await createCall(db, "cc-108", null, "guide", t0);
+    expect((await getCallAt(db, call!.id, "cc-108", after(30)))?.state).toBe("waiting");
+    expect(await getCallAt(db, call!.id, "cc-108", after(30, 1))).toMatchObject({ state: "cancelled", endedAt: after(30, 1) });
+  });
+
   it("다른 자리에서 누를 때도 오래된 호출이 함께 닫힌다", async () => {
     const old = await createCall(db, "cc-108", null, "guide", t0);
     await createCall(db, "cc-125", null, "guide", after(40));

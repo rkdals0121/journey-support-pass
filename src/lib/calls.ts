@@ -61,7 +61,7 @@ export const CALL_ACCEPTED_EXPIRE_MIN = 90;
 /** 끝난 호출을 직원 화면에 이만큼 더 보여준다. */
 const RECENT_MIN = 30;
 
-async function closeStale(db: Db, now: Date): Promise<void> {
+export async function closeStale(db: Db, now: Date): Promise<void> {
   await db.query(
     `update calls set ended_at = $1, end_kind = 'cancelled'
      where ended_at is null and accepted_at is null and created_at < $2`,
@@ -105,9 +105,14 @@ export async function createCall(
   return row ? toCall(row) : null;
 }
 
-/** 키오스크가 자기 호출의 상태를 확인한다. 다른 키오스크의 호출은 보지 못한다. */
-export async function getCallAt(db: Db, id: string, placeId: string): Promise<Call | null> {
+/**
+ * 키오스크가 자기 호출의 상태를 확인한다. 다른 키오스크의 호출은 보지 못한다.
+ * now 를 주면 오래된 호출을 먼저 닫는다. 직원 화면이 모두 꺼져 있으면 아무도 닫지 않아,
+ * 키오스크가 "직원을 부르고 있습니다"에 머물러 다음 여객에게 앞사람의 호출이 남기 때문이다.
+ */
+export async function getCallAt(db: Db, id: string, placeId: string, now?: Date): Promise<Call | null> {
   if (!isUuid(id)) return null;
+  if (now) await closeStale(db, now);
   const [row] = await db.query<Row>(`select ${COLUMNS} from calls where id = $1 and place_id = $2`, [id, placeId]);
   return row ? toCall(row) : null;
 }

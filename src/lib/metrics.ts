@@ -1,4 +1,5 @@
 import { ipPart } from "./auth";
+import { closeStale } from "./calls";
 import type { Db } from "./db";
 import { kstDate } from "./flights/normalize";
 
@@ -103,6 +104,8 @@ export async function summarize(db: Db, since: Date, date: string): Promise<Summ
      from calls where created_at >= $1`,
     [since],
   );
+  // "지금 열려 있는 호출"은 언제 만들어졌든 센다. 자정 직전에 부른 호출도 아직 열려 있으면 보여야 한다.
+  const [openNow] = await db.query<{ n: number }>("select count(*)::int as n from calls where ended_at is null");
 
   const count = (kind: EventKind, pred: (e: (typeof events)[number]) => boolean = () => true) =>
     events.filter((e) => e.kind === kind && pred(e)).reduce((n, e) => n + e.n, 0);
@@ -126,7 +129,7 @@ export async function summarize(db: Db, since: Date, date: string): Promise<Summ
       fromGuide: calls.filter((c) => c.screen !== "register").length,
       done: calls.filter((c) => c.end_kind === "done").length,
       cancelled: calls.filter((c) => c.end_kind === "cancelled").length,
-      open: calls.filter((c) => !c.ended).length,
+      open: openNow?.n ?? 0,
       medianAcceptSec: median(calls.map((c) => c.accept_sec)),
     },
     survey: { ...survey, total: survey.good + survey.fair + survey.poor },
@@ -134,6 +137,8 @@ export async function summarize(db: Db, since: Date, date: string): Promise<Summ
 }
 
 export async function todaySummary(db: Db, now: Date): Promise<Summary> {
+  // 아무도 받지 않아 시간이 지난 호출은 닫은 뒤에 센다.
+  await closeStale(db, now);
   const date = kstDate(now);
   return summarize(db, new Date(`${date}T00:00:00+09:00`), date);
 }

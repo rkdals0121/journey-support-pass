@@ -1098,6 +1098,19 @@ async function resetFlights(clearLocks = false) {
   section("직원: 호출 화면");
   browser = await launch();
   page = await open(browser, PHONE);
+  // 새 호출 알림(진동)이 몇 번 울렸는지 센다. 호출 목록을 잠시 멈추는 손잡이(__hold)도 둔다.
+  await page.evaluateOnNewDocument(`
+    window.__buzz = 0;
+    navigator.vibrate = function () { window.__buzz++; return true; };
+    window.__hold = false;
+    const realFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      const url = typeof input === "string" ? input : input.url;
+      if (window.__hold && url.includes("/api/staff/calls") && !(init && init.method === "POST")) return new Promise(() => {});
+      return realFetch(input, init);
+    };
+  `);
+  const buzz = () => page.evaluate("window.__buzz") as Promise<number>;
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "직원 로그인");
   check("로그인하지 않으면 직원 화면이 열리지 않는다", true);
@@ -1117,15 +1130,21 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "지금은 호출이 없습니다");
   check("호출이 없으면 '여객이 부를 때 갑니다'라고 안내한다 (먼저 다가가는 화면이 아니다)", (await has(page, "지금은 호출이 없습니다")) && (await has(page, "먼저 다가가 돕지 않고")));
   check("직원 화면에 여객 목록이 없다", !(await has(page, "여객 목록")));
+  await page.focus(".seg-refresh");
+  await sleep(6500);
+  check("5초마다 저절로 다시 읽어도 「새로 고침」에 있던 초점이 사라지지 않는다 (키보드·화면 읽기 프로그램)", await page.evaluate(() => document.activeElement?.classList.contains("seg-refresh") === true));
   await shot(page, "직원-호출없음");
 
-  // 여객이 키오스크에서 부른다 (화면 대신 서버에 직접).
+  // 여객이 키오스크에서 부른다 (화면 대신 서버에 직접). 다른 구역 호출이 먼저 온다.
+  const c2 = await post("/api/kiosk/call", { screen: "guide" }, await kioskCookie("t2-center"));
+  await page.waitForFunction(() => document.querySelectorAll(".seg .count")[1]?.textContent === "1", { timeout: WAIT });
+  check("「내 구역」을 보고 있으면 다른 구역의 새 호출로는 울리지 않는다", (await buzz()) === 0, `${await buzz()}번`);
   const callKiosk = await kioskCookie("cc-center");
   const c1 = await post("/api/kiosk/call", { token: voicePass.token, screen: "guide" }, callKiosk);
   const c1again = await post("/api/kiosk/call", { token: voicePass.token, screen: "guide" }, callKiosk);
   check("여객이 버튼을 여러 번 눌러도 호출은 하나만 생긴다", c1.body.id === c1again.body.id);
-  const c2 = await post("/api/kiosk/call", { screen: "guide" }, await kioskCookie("t2-center"));
   await waitText(page, "기다리는 중");
+  check("내 구역에 새 호출이 오면 한 번 울린다", (await buzz()) === 1, `${await buzz()}번`);
   check("새 호출이 몇 초 안에 직원 화면에 저절로 뜬다 (새로 고치지 않아도)", await has(page, "탑승동 3층 중앙"));
   const card = await page.$eval(".call", (e) => (e as HTMLElement).innerText.replace(/\n/g, " "));
   check("호출 카드에 어느 키오스크인지, 언제 불렀는지, 여객이 고른 항목과 항공편이 나온다", ["탑승동 3층 중앙", "소리 안내", "쉬운 말", "쉬어 가기", "MK112", "124"].every((s) => card.includes(s)), card.slice(0, 160));
@@ -1137,6 +1156,18 @@ async function resetFlights(clearLocks = false) {
   check("전체 탭에는 다른 구역의 호출도 보인다 (점선 테두리)", (await count(page, ".call.call-other")) === 1);
   check("패스 없이 부른 호출은 '가서 여쭤봐 주세요'라고 안내한다", await has(page, "패스를 찍지 않고 불렀습니다"));
   await shot(page, "직원-호출-전체");
+  // 다른 구역 직원이 먼저 받은 호출을 이 화면에서 늦게 누른다. 목록이 그 사이에 바뀌지 않게 잠시 멈춘다.
+  await page.evaluate("window.__hold = true");
+  await sleep(6000);
+  await post(`/api/staff/calls/${c2.body.id}`, { action: "accept" }, otherStaff);
+  await page.evaluate("window.__hold = false");
+  await page.evaluate(() => {
+    const other = document.querySelector(".call.call-other") as HTMLElement;
+    ([...other.querySelectorAll("button")].find((b) => b.innerText.includes("가겠습니다")) as HTMLElement).click();
+  });
+  await waitText(page, "다른 직원이 먼저 받았거나 끝난 호출입니다");
+  await sleep(6500);
+  check("다른 직원이 먼저 받은 호출을 누르면 그렇다고 알리고, 목록을 다시 읽어도 그 알림이 바로 사라지지 않는다", await has(page, "다른 직원이 먼저 받았거나 끝난 호출입니다"));
   await clickText(page, ".seg button", "내 구역");
   await clickText(page, ".call button", "가겠습니다");
   await waitText(page, "내 구역이 가는 중");
@@ -1148,6 +1179,7 @@ async function resetFlights(clearLocks = false) {
   check("'도움 마침'을 누르면 목록에서 내려가 '방금 끝난 호출'에 남는다", (await count(page, ".call")) === 0 && (await has(page, "도움 마침")));
   await shot(page, "직원-끝난호출");
   await post(`/api/staff/calls/${c2.body.id}`, { action: "done" }, otherStaff);
+  check("알림은 새 호출마다 한 번씩만 울렸다 (같은 호출로 다시 울리지 않는다)", (await buzz()) === 1, `${await buzz()}번`);
   check("직원 메뉴에 안내데스크가 없다 (현장 직원 코드)", !(await page.evaluate(() => (document.querySelector(".staff-nav") as HTMLElement).innerText.includes("안내데스크"))));
   await page.goto(`${BASE}/staff/desk`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "안내데스크에서만 쓸 수 있습니다");
