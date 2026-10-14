@@ -40,6 +40,10 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   sayRef.current = say;
   const onActiveRef = useRef(onActive);
   onActiveRef.current = onActive;
+  const callIdRef = useRef(callId);
+  callIdRef.current = callId;
+  // 마지막으로 호출을 보낼 때 붙인 패스. 앞사람의 호출이 남은 키오스크에서 다음 사람이 누르면 다시 보내 패스를 바꾼다.
+  const sentToken = useRef<string | null>(null);
 
   // 누른 직후 서버의 답을 기다리는 동안에도 "부르고 있습니다"로 보여준다. 눌렀는데 아무 설명 없이 멈춘 것처럼 보이면 안 된다.
   const shown: CallState | null = state ?? (busy && !error ? "waiting" : null);
@@ -63,14 +67,23 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   // 직원이 받았는지, 끝냈는지 주기적으로 확인한다.
   useEffect(() => {
     if (!callId || !active) return;
+    let inFlight = false;
     const timer = setInterval(async () => {
+      // 앞의 확인이 아직 오는 중이면 건너뛴다. 늦게 온 옛 답이 새 상태를 덮지 않게 한다.
+      if (inFlight) return;
+      inFlight = true;
       try {
         const res = await fetch(`/api/kiosk/call/${callId}`, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
-        setState(data.state);
+        // 그사이 여객이 거뒀거나 다른 호출로 바뀌었으면 이 답은 버린다.
+        // 버리지 않으면 거둔 뒤에 "기다리는 중"이 돌아와 키오스크가 "부르는 중"에 갇힌다.
+        if (callIdRef.current !== callId) return;
+        setState((s) => (s === "waiting" || s === "accepted" ? data.state : s));
       } catch {
         // 한 번 못 읽은 것은 넘어간다. 다음 차례에 다시 읽는다.
+      } finally {
+        inFlight = false;
       }
     }, POLL_MS);
     return () => clearInterval(timer);
@@ -96,7 +109,10 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
 
   const press = useCallback(async () => {
     setOpen(true);
-    if (active || busy) return;
+    if (busy) return;
+    // 이미 부른 상태에서 같은 사람이 다시 누르면 창만 연다. 다른 사람(다른 패스, 또는 패스 없이)이 누르면
+    // 다시 보내 호출에 붙은 패스를 지금 누른 사람의 것으로 바꾼다(직원이 아직 받지 않았을 때만 바뀐다).
+    if (active && token === sentToken.current) return;
     setBusy(true);
     setError(false);
     try {
@@ -107,6 +123,7 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error();
+      sentToken.current = token;
       setCallId(data.id);
       setState(data.state);
     } catch {

@@ -52,6 +52,8 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
   const { supported, speaking, speak, stop } = useSpeech(lang);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // 화면이 바뀌면 설정 창을 닫는다. 앞사람이 열어 둔 채 떠나 처음 화면으로 돌아가도 다음 사람에게 남지 않게 한다.
+  useEffect(() => setSettingsOpen(false), [screenKey]);
   // 화면이 바뀐 직후 잠깐은 누름을 받지 않는다. 손이 떨려 같은 자리를 두 번 누르면 두 번째 누름이
   // 다음 화면의 같은 자리 버튼(「동의하고 계속」, 「등록하기」)에 들어가, 읽지도 않고 넘어가 버리기 때문이다.
   // 누름 때문에 화면이 바뀐 경우에만 막는다. QR 을 대서 바뀌었거나 저절로 바뀐 화면은 바로 누를 수 있다.

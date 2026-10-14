@@ -837,6 +837,20 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "계속 이용하시겠어요?");
   await clickText(page, ".sheet-box button", "끝내기");
   await waitText(page, "QR을 카메라에 보여 주세요");
+  // 앞사람이 「설정」을 열어 둔 채 떠난다. 처음 화면으로 돌아가면 설정 창이 닫혀 있어야 한다.
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
+  await page.evaluate((no) => {
+    const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
+    for (const d of no) keys.find((k) => k.innerText.trim() === d)?.click();
+  }, myNo);
+  await waitText(page, "나에게 맞춘 안내");
+  await clickText(page, ".bar-btn", "설정");
+  await waitText(page, "화면 설정");
+  await waitText(page, "계속 이용하시겠어요?");
+  await clickText(page, ".sheet-box button", "끝내기");
+  await waitText(page, "QR을 카메라에 보여 주세요");
+  check("앞사람이 「설정」을 열어 둔 채 떠나도, 처음 화면으로 돌아가면 설정 창이 닫혀 있다", !(await has(page, "화면 설정")));
   check("묻는 창에서 '끝내기'를 누르면 처음 화면으로 돌아간다", !(await has(page, "MK127")));
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
 
@@ -861,13 +875,109 @@ async function resetFlights(clearLocks = false) {
   const enFile = await cameraFile(tmp, enPass.token, false);
   await tmp.close();
 
+  // ───────── 다음 여객으로 넘어갈 때 ─────────
+  // 서버의 답을 일부러 늦게 건네 "앞사람의 늦은 답"을 만든다. 요청은 바로 보내고, 답만 붙잡아 두었다가 놓는다.
+  section("안내 키오스크: 다음 여객으로 넘어갈 때");
+  browser = await launch();
+  page = await open(browser, KIOSK_WIDE);
+  await page.evaluateOnNewDocument(`
+    window.__said = [];
+    if (window.speechSynthesis) { const s = window.speechSynthesis; const real = s.speak.bind(s); s.speak = function (u) { window.__said.push(u.text); try { real(u); } catch (e) {} }; }
+    window.__holdUrl = ""; window.__holdMethod = ""; window.__held = [];
+    const realFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      const url = typeof input === "string" ? input : input.url;
+      const method = (init && init.method) || "GET";
+      const p = realFetch(input, init);
+      if (window.__holdUrl && url.includes(window.__holdUrl) && method === window.__holdMethod) {
+        return new Promise((res, rej) => window.__held.push(() => p.then(res, rej)));
+      }
+      return p;
+    };
+    window.__release = () => { const h = window.__held; window.__held = []; window.__holdUrl = ""; h.forEach((f) => f()); return h.length; };
+  `);
+  const typeNo = (no: string) =>
+    page.evaluate((n) => {
+      const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
+      for (const d of n) keys.find((k) => k.innerText.trim() === d)?.click();
+    }, no);
+  const hold = (url: string, method: string) => page.evaluate((u, m) => Object.assign(window, { __holdUrl: u, __holdMethod: m, __held: [] }), url, method);
+  // 앞의 점검이 이 기기(접속 주소와 브라우저 표시의 짝)의 번호 입력을 일부러 잠갔다. 다른 키오스크인 것으로 한다.
+  await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) JSP-E2E-Kiosk-3");
+  await useCookie(page, await kioskCookie("cc-center"));
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+
+  // 앞사람(MK112)이 안내를 보는 중에 30초마다 다시 받는 답이 오는 사이 「처음으로」를 누른다.
+  // 늦게 온 앞사람의 답이 안내를 되살리면, 다음 사람이 번호 화면을 열 때 앞사람의 항공편이 나온다.
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await waitText(page, "여섯 자리를 눌러 주세요");
+  await typeNo(voicePass.passNo);
+  await waitText(page, "MK112");
+  await hold("/api/guide", "POST");
+  await page.waitForFunction("window.__held.length > 0", { timeout: 60_000 });
+  await clickText(page, ".bar-btn", "처음으로");
+  await waitText(page, "QR을 카메라에 보여 주세요");
+  const lateGuide = await page.evaluate("window.__release()");
+  await sleep(2500);
+  const startClean = !(await has(page, "MK112")) && (await has(page, "QR을 카메라에 보여 주세요"));
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await page.waitForFunction(() => /여섯 자리를 눌러 주세요|MK112|나에게 맞춘 안내/.test(document.body.innerText), { timeout: WAIT });
+  check("「처음으로」를 누른 뒤 앞사람의 안내를 다시 받은 답이 늦게 와도, 다음 사람 화면에 앞사람의 항공편이나 안내가 나오지 않는다", startClean && !(await has(page, "MK112")) && !(await has(page, "나에게 맞춘 안내")), `늦은 답 ${lateGuide}개`);
+  await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+
+  // 등록 때 소리를 고르지 않은 여객(MK127)이 처음 화면에서 소리를 켜고 직원을 부른다.
+  await clickText(page, ".listen-start", "소리로 안내 듣기");
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await waitText(page, "여섯 자리를 눌러 주세요");
+  await typeNo(myNo);
+  await waitText(page, "나에게 맞춘 안내");
+  await page.evaluate("window.__said = []");
+  await page.click(".call-btn");
+  await waitText(page, "직원을 부르고 있습니다");
+  const callSaid = await page
+    .waitForFunction(() => (window as unknown as { __said: string[] }).__said.some((s) => s.includes("직원을 부르고 있습니다")), { timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false);
+  check("처음 화면에서 「소리로 안내 듣기」를 켠 여객에게는 직원 부르기 상태도 읽어 준다 (등록 때 소리를 고르지 않았어도)", callSaid);
+
+  // 상태 확인 답이 오는 사이에 거둔다. 늦게 온 "기다리는 중"이 거둔 호출을 되살리면 안 된다.
+  await hold("/api/kiosk/call/", "GET");
+  await page.waitForFunction("window.__held.length > 0", { timeout: 30_000 });
+  await clickText(page, ".sheet-box button", "부르기 취소");
+  await page.waitForFunction(() => !document.querySelector(".call-sheet"), { timeout: WAIT });
+  const lateCall = await page.evaluate("window.__release()");
+  await sleep(4000);
+  const chip = await page.$eval(".call-btn", (e) => ({ text: (e as HTMLElement).innerText, on: e.classList.contains("call-active") }));
+  check("직원 부르기를 거둔 직후에 앞서 보낸 확인의 답('기다리는 중')이 늦게 와도 '부르는 중'으로 돌아가지 않는다", chip.text.includes("직원 부르기") && !chip.on, `늦은 답 ${lateCall}개, 단추 "${chip.text.replace(/\n/g, " ")}"`);
+
+  // 앞사람(MK127)이 부른 채로 떠나고 다음 사람(MK112)이 다시 누른다. 호출에는 지금 사람의 패스가 붙어야 한다.
+  await page.click(".call-btn");
+  await waitText(page, "직원을 부르고 있습니다");
+  await clickText(page, ".sheet-box button", "기다리면서 계속 보기");
+  await clickText(page, ".bar-btn", "처음으로");
+  await waitText(page, "QR을 카메라에 보여 주세요");
+  await clickText(page, "button", "고유 일련 번호 누르기");
+  await waitText(page, "여섯 자리를 눌러 주세요");
+  await typeNo(voicePass.passNo);
+  await waitText(page, "MK112");
+  await page.click(".call-btn");
+  await waitText(page, "직원을 부르고 있습니다");
+  await sleep(1500);
+  const deskSide = await staffCookie(COMMON_CODE, "cc-center");
+  const nowCall = ((await get("/api/staff/calls", deskSide)).body.calls as any[]).find((c) => c.mine && c.state === "waiting");
+  check("앞사람의 호출이 남은 키오스크에서 다음 사람이 「직원 부르기」를 누르면 호출에 지금 사람의 항공편이 붙는다", nowCall?.pass?.flight.flightNo === "MK112", nowCall?.pass?.flight.flightNo ?? "패스 없음");
+  if (nowCall) await post(`/api/staff/calls/${nowCall.id}`, { action: "done" }, deskSide);
+
+  await browser.close();
+
   // 기기 점검 화면(/check). 시연 전에 그 기기에서 카메라, 소리, 인터넷을 본다. 읽은 QR 로 여객 정보를 열지 않는다.
   section("기기 점검 화면");
   browser = await launch(CAMERA(nearFile));
   page = await open(browser, PHONE);
   await page.goto(`${BASE}/check`, { waitUntil: "load", timeout: 300_000 });
-  await waitText(page, "서버가");
-  check("인터넷이 되는지 보고 서버가 답한 시간을 알려 준다", (await count(page, ".dc-item.dc-ok")) >= 1 && (await has(page, "초 만에 답했습니다")));
+  // 개발 서버가 바쁘면 "느립니다"로 나올 수 있다. 어느 쪽이든 걸린 시간을 알려 주면 된다. "닿지 않습니다"만 틀린 것이다.
+  await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 닿지 않습니다/.test(document.body.innerText), { timeout: WAIT });
+  check("인터넷이 되는지 보고 서버가 답한 시간을 알려 준다", /초 만에 답했습니다|연결은 되지만 느립니다\(\d/.test(await text(page)) && !(await has(page, "서버에 닿지 않습니다")));
   check("카메라, 소리, 인터넷, 화면, 인터넷 없이 열기, 화면 꺼짐 막기 여섯 가지를 본다", (await count(page, ".dc-item")) === 6);
   await page.waitForSelector(".dc-qr svg", { timeout: WAIT });
   check("다른 기기로 읽어 볼 점검용 QR 이 있고, 그 QR 은 이 점검 화면 주소다", (await readQr(page, ".dc-qr svg")) === `${BASE}/CHECK`.toUpperCase());

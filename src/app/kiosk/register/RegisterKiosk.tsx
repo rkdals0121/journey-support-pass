@@ -15,7 +15,7 @@ import { ListenStart } from "../../components/ListenStart";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { useSpeech } from "../../components/useSpeech";
-import { resetViewSettings } from "../../components/viewSettings";
+import { resetViewSettings, useViewSettings } from "../../components/viewSettings";
 
 interface Props {
   placeLabel: string;
@@ -49,6 +49,8 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   const [callActive, setCallActive] = useState(false);
   const t = textOf(lang, prefs.easy);
   const { speak } = useSpeech(lang);
+  // 직원 부르기의 상태도 소리로 읽는다. 처음 화면의 「소리로 안내 듣기」나 「설정」으로 켰어도 읽는다.
+  const voiceOn = useViewSettings().voice ?? prefs.voice;
 
   // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
   useEffect(() => resetViewSettings(), []);
@@ -125,7 +127,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   const call = assisted ? null : (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff} token={issued?.token ?? null} screen="register" onActive={setCallActive} say={prefs.voice ? speak : undefined} />
+        <StaffCall t={t} big={prefs.wantsStaff} token={issued?.token ?? null} screen="register" onActive={setCallActive} say={voiceOn ? speak : undefined} />
       </div>
     </div>
   );

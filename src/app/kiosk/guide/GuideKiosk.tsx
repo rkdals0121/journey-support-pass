@@ -17,7 +17,7 @@ import { ListenStart } from "../../components/ListenStart";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { useSpeech } from "../../components/useSpeech";
-import { resetViewSettings } from "../../components/viewSettings";
+import { resetViewSettings, useViewSettings } from "../../components/viewSettings";
 
 interface Props {
   placeLabel: string;
@@ -36,6 +36,8 @@ const THANKS_MS = 3500;
 const ERROR_SHOW_MS = 6000;
 // 안내를 끝낸 여객이 QR 을 아직 카메라 앞에 들고 있어도 곧바로 다시 열리지 않게, 방금 끝낸 패스는 잠시 읽지 않는다.
 const SAME_PASS_GUARD_MS = 8000;
+// 다시 받기 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않는 요청을 끝없이 붙잡지 않는다.
+const REFRESH_TIMEOUT_MS = 15_000;
 
 /**
  * 안내 키오스크. 여객이 QR 을 보여 주거나 번호를 누르면, 그 여객이 고른 대로 화면이 바뀌고 길과 시설을 안내한다.
@@ -55,6 +57,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const prefs = guide ? prefsOf(guide.choices) : NO_PREFS;
   const t = textOf(lang, prefs.easy);
   const { speak } = useSpeech(lang);
+  // 직원 부르기의 상태도 소리로 읽는다. 등록 때 소리를 고르지 않았어도 키오스크에서 소리를 켰으면 읽는다.
+  const voiceOn = useViewSettings().voice ?? prefs.voice;
   const here = lang === "en" ? placeLabelEn : placeLabel;
 
   // 마지막으로 보여 준 오류 문구. 문구가 사라진 뒤에도 그 자리를 비워 두는 데만 쓴다(번호 화면).
@@ -158,28 +162,52 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const [fails, setFails] = useState(0);
   const offlineNow = fails >= 2;
 
+  // 새 여객이면 연결 실패 수를 처음부터 센다. 같은 여객이 안내와 길 화면을 오갈 때는 그대로 둔다
+  // (오갈 때마다 지우면 인터넷이 끊긴 채인데도 알림이 사라진다).
+  useEffect(() => setFails(0), [token]);
+
   // 안내를 보는 동안 탑승구와 남은 시간을 다시 받는다. 탑승구가 바뀌면 길도 바뀐다.
+  // 안내와 길 화면을 오가도 시계를 새로 시작하지 않는다. 30초보다 자주 오가면 한 번도 다시 받지 못하기 때문이다.
+  const viewing = view.kind === "home" || view.kind === "route";
   useEffect(() => {
-    if (!token || (view.kind !== "home" && view.kind !== "route")) return;
-    setFails(0);
+    if (!token || !viewing) return;
+    let alive = true;
+    let inFlight = false;
+    // 늦게 온 답이 지금 여객의 것인지 본다. 「처음으로」를 누른 뒤에 앞사람의 답이 오면
+    // 앞사람의 안내(항공편, 고른 시설)가 다음 사람 앞에 다시 나타나므로 버린다.
+    const stillMine = () => alive && tokenRef.current === token;
     const timer = setInterval(async () => {
+      if (inFlight) return;
+      inFlight = true;
+      const ctrl = new AbortController();
+      const limit = setTimeout(() => ctrl.abort(), REFRESH_TIMEOUT_MS);
       try {
         const res = await fetch("/api/guide", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
+          signal: ctrl.signal,
         });
+        if (!stillMine()) return;
         if (res.status === 410 || res.status === 404) return reset();
         if (!res.ok) return setFails((n) => n + 1);
-        setGuide((await res.json()).guide);
+        const data = await res.json();
+        if (!stillMine()) return;
+        setGuide(data.guide);
         setFails(0);
       } catch {
         // 한 번 못 받은 것은 넘어가고, 거듭 못 받으면 알린다.
-        setFails((n) => n + 1);
+        if (stillMine()) setFails((n) => n + 1);
+      } finally {
+        clearTimeout(limit);
+        inFlight = false;
       }
     }, refreshSec * 1000);
-    return () => clearInterval(timer);
-  }, [token, view.kind, refreshSec, reset]);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [token, viewing, refreshSec, reset]);
 
   // 고맙다는 화면은 잠깐만 보여주고 처음으로 돌아간다.
   useEffect(() => {
@@ -203,7 +231,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={setCallActive} say={prefs.voice ? speak : undefined} />
+        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={setCallActive} say={voiceOn ? speak : undefined} />
       </div>
     </div>
   );

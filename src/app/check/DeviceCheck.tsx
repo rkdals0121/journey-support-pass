@@ -57,17 +57,26 @@ export function DeviceCheck() {
   const [qr, setQr] = useState("");
   const voices = useRef<SpeechSynthesisVoice[]>([]);
 
-  // 인터넷: 이 화면 주소를 한 번 더 받아 걸린 시간을 잰다. 받아 둔 것을 쓰지 않게 매번 새로 묻는다.
+  // 인터넷: 이 화면 주소를 다시 받아 걸린 시간을 잰다. 받아 둔 것을 쓰지 않게 매번 새로 묻는다.
+  // 한동안 아무도 열지 않은 서버는 첫 답이 1~2초 늦다(잠에서 깨는 시간). 그래서 한 번 먼저 깨우고 두 번째를 잰다.
+  // 첫 번째가 실패하면 그대로 "닿지 않는다"로 본다.
   async function checkNet() {
     setNet({ state: "wait", text: "인터넷 연결을 확인하는 중…" });
-    const started = performance.now();
-    try {
+    const ping = async () => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 8000);
-      const res = await fetch(`/check?ping=${Date.now()}`, { method: "HEAD", cache: "no-store", signal: ctrl.signal });
-      clearTimeout(timer);
+      try {
+        const res = await fetch(`/check?ping=${Date.now()}`, { method: "HEAD", cache: "no-store", signal: ctrl.signal });
+        if (!res.ok) throw new Error(String(res.status));
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+    try {
+      await ping();
+      const started = performance.now();
+      await ping();
       const ms = Math.round(performance.now() - started);
-      if (!res.ok) throw new Error(String(res.status));
       setNet(
         ms < 1500
           ? { state: "ok", text: `연결되어 있습니다. 서버가 ${ms / 1000}초 만에 답했습니다.` }
