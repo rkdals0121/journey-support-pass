@@ -34,6 +34,19 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
     if (isNew) window.history.replaceState(null, "", window.location.pathname);
   }, [isNew]);
 
+  // 인터넷이 끊겨도 이 화면이 열리도록 휴대전화에 남겨 두게 한다(public/sw.js).
+  // 개발 서버에서는 켜지 않는다. 화면을 그리는 파일이 수시로 바뀌어 남겨 둔 것이 오히려 방해가 된다.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => navigator.serviceWorker.ready)
+      .then((reg) => reg.active?.postMessage({ type: "save-pass", token }))
+      .catch(() => {
+        // 등록하지 못해도 화면은 그대로 쓴다. 인터넷이 끊기면 열리지 않을 뿐이다.
+      });
+  }, [token]);
+
   // 이 화면을 보는 동안에는 휴대전화 화면이 저절로 꺼지지 않게 한다. 키오스크에 QR 을 대려는 순간 화면이 어두워지면 읽히지 않는다.
   // 지원하지 않는 기기에서는 아무 일도 없다. 다른 화면에 갔다 오면 풀리므로 돌아올 때 다시 청한다.
   useEffect(() => {
@@ -93,6 +106,8 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
         body: JSON.stringify({ token }),
       });
       if (!res.ok) throw new Error();
+      // 휴대전화에 남겨 둔 이 화면도 지운다. 지운 뒤에 인터넷이 끊긴 채로 열어도 예전 QR 이 나오지 않게 한다.
+      navigator.serviceWorker?.controller?.postMessage({ type: "forget-pass", token });
       setErased(true);
     } catch {
       erasing.current = false;

@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // 서비스 워커 파일은 휴대전화가 묵혀 두지 않고 매번 새로 확인하게 한다. 고친 것이 바로 퍼지게 하기 위해서다.
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] },
       {
         source: "/(.*)",
         headers: [
