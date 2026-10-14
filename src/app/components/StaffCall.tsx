@@ -17,6 +17,8 @@ interface Props {
   screen: "register" | "guide";
   /** 호출이 진행 중인지 알린다. 진행 중에는 키오스크가 처음 화면으로 돌아가지 않는다. */
   onActive?: (active: boolean) => void;
+  /** 버튼을 누를 때마다 알린다. 키오스크가 지금 여객이 부른 호출인지 가려, 앞사람이 남기고 간 호출이 다음 여객의 자동 종료를 막지 않게 한다. */
+  onPress?: () => void;
   /** 소리 안내를 켠 여객에게 상태가 바뀔 때 읽어 준다. */
   say?: (text: string) => void;
 }
@@ -30,12 +32,14 @@ const POLL_TIMEOUT_MS = 8000;
 // 확인보다 조금 더 기다린다. 느리게라도 만들어진 호출을 "부르지 못했습니다"로 알리는 일을 줄인다.
 const SEND_TIMEOUT_MS = 12_000;
 const DONE_SHOW_MS = 4000;
+// 키오스크 설치(로그인)가 풀려 서버가 401 로 답하면 설치 화면으로 보낸다. 이 기기로는 더 부를 수 없다.
+const KIOSK_SETUP = "/kiosk";
 
 /**
  * 「직원 부르기」. 키오스크의 모든 화면에서 같은 자리(오른쪽 위)에 있다.
  * 누르면 이 키오스크가 속한 구역의 직원 화면에 호출이 뜬다. 직원이 받으면 여기에 "오고 있습니다"로 바뀐다.
  */
-export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
+export function StaffCall({ t, big, token, screen, onActive, onPress, say }: Props) {
   const [callId, setCallId] = useState<string | null>(null);
   const [state, setState] = useState<CallState | null>(null);
   const [open, setOpen] = useState(false);
@@ -48,6 +52,8 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   sayRef.current = say;
   const onActiveRef = useRef(onActive);
   onActiveRef.current = onActive;
+  const onPressRef = useRef(onPress);
+  onPressRef.current = onPress;
   const callIdRef = useRef(callId);
   callIdRef.current = callId;
   // 마지막으로 호출을 보낼 때 붙인 패스. 앞사람의 호출이 남은 키오스크에서 다음 사람이 누르면 다시 보내 패스를 바꾼다.
@@ -106,6 +112,7 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
       const limit = setTimeout(() => mine.abort(), POLL_TIMEOUT_MS);
       try {
         const res = await fetch(`/api/kiosk/call/${callId}`, { cache: "no-store", signal: mine.signal });
+        if (res.status === 401) return window.location.replace(KIOSK_SETUP);
         if (!res.ok) return;
         const data = await res.json();
         // 그사이 여객이 거뒀거나 다른 호출로 바뀌었으면 이 답은 버린다.
@@ -146,6 +153,8 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
   }, [open]);
 
   const press = useCallback(async () => {
+    // 이미 열린 호출의 창만 여는 경우에도 알린다. 앞사람이 남긴 호출을 다음 여객이 눌러 이어받으면 그 여객의 호출이 된다.
+    onPressRef.current?.();
     setOpen(true);
     // 창을 열면 창이 알려 준다. 알림 칸의 지난 소식은 비워 둔다.
     setNews("");
@@ -166,6 +175,7 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
         body: JSON.stringify({ token, screen }),
         signal: ctrl.signal,
       });
+      if (res.status === 401) return window.location.replace(KIOSK_SETUP);
       const data = await res.json();
       if (!res.ok) throw new Error();
       sentToken.current = token;
@@ -193,7 +203,8 @@ export function StaffCall({ t, big, token, screen, onActive, say }: Props) {
     const limit = setTimeout(() => ctrl.abort(), SEND_TIMEOUT_MS);
     sending.current.add(ctrl);
     try {
-      await fetch(`/api/kiosk/call/${callId}`, { method: "DELETE", signal: ctrl.signal });
+      const res = await fetch(`/api/kiosk/call/${callId}`, { method: "DELETE", signal: ctrl.signal });
+      if (res.status === 401) return window.location.replace(KIOSK_SETUP);
     } catch {
       // 못 거뒀으면(답이 없어 끊은 것 포함) 30분 뒤 서버가 스스로 닫는다.
     } finally {

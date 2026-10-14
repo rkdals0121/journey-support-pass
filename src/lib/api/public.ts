@@ -82,6 +82,9 @@ export async function registerHandler(
   now: Date,
   assisted = false,
 ): Promise<ApiResult> {
+  // 직원이 대신 넣는 등록에서 로그인이 아예 없으면(안내데스크의 로그인이 풀렸으면) 401 로 답해, 화면이 다시 로그인하러 보내게 한다.
+  // 로그인은 했지만 안내데스크가 아닌 기기는 그대로 403 이다.
+  if (assisted && !session) return fail(401, "로그인이 필요합니다");
   if (assisted && !session?.isDesk) return fail(403, "안내데스크 권한이 필요합니다");
   const route: Route = assisted ? "assisted" : session?.isKiosk ? "kiosk" : "web";
   // 키오스크와 안내데스크는 한 기기로 여러 명을 받으므로 횟수를 막지 않는다. 접속 코드로 확인된 기기다.

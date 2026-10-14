@@ -48,7 +48,11 @@ export async function resolveHandler(
   device: string,
   now: Date,
 ): Promise<ApiResult> {
-  if (!session || !(session.isKiosk || session.isDesk)) return fail(403, NEED_KIOSK);
+  // 로그인이 아예 없으면(안내데스크의 로그인 시간이 지나 풀렸거나 키오스크 설치가 풀렸으면) 401 로 답한다.
+  // 화면은 이것을 보고 다시 로그인하러 보낸다. 403 으로 답하면 안내데스크에 "키오스크로 설정된 기기에서만"이라는 엉뚱한 말이 뜬다.
+  // 로그인은 했지만 키오스크도 안내데스크도 아닌 기기(현장 직원)는 그대로 403 이다.
+  if (!session) return fail(401, "로그인이 필요합니다");
+  if (!(session.isKiosk || session.isDesk)) return fail(403, NEED_KIOSK);
 
   let found: PassLookup;
   if (typeof body.scanned === "string" && body.scanned.trim()) {
@@ -96,7 +100,11 @@ export async function callHandler(
   body: { token?: unknown; screen?: unknown },
   now: Date,
 ): Promise<ApiResult> {
-  if (!session?.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
+  // 키오스크 설치(로그인)가 풀렸으면 401 로 답한다. 화면(StaffCall)은 이것을 보고 설치 화면(/kiosk)으로 돌아간다.
+  // 403 으로 답하면 여객에게 "부르지 못했습니다"만 뜨고 키오스크는 다시 설치되지 않는다. 아래 상태 확인·거두기도 같다.
+  // 로그인은 했지만 키오스크가 아니거나 자리가 없는 기기는 그대로 403 이다.
+  if (!session) return fail(401, "로그인이 필요합니다");
+  if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
   const found = typeof body.token === "string" && body.token ? await lookupPass(db, body.token, now) : null;
   const call = await createCall(
     db,
@@ -110,14 +118,16 @@ export async function callHandler(
 }
 
 export async function callStateHandler(db: Db, session: Session | null, id: string, now?: Date): Promise<ApiResult> {
-  if (!session?.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
+  if (!session) return fail(401, "로그인이 필요합니다");
+  if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
   const call = await getCallAt(db, id, session.placeId, now);
   if (!call) return fail(404, "호출을 찾을 수 없습니다");
   return ok({ id: call.id, state: call.state });
 }
 
 export async function callCancelHandler(db: Db, session: Session | null, id: string, now: Date): Promise<ApiResult> {
-  if (!session?.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
+  if (!session) return fail(401, "로그인이 필요합니다");
+  if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
   await cancelCall(db, id, session.placeId, now);
   const call = await getCallAt(db, id, session.placeId);
   if (!call) return fail(404, "호출을 찾을 수 없습니다");

@@ -174,13 +174,18 @@ export async function finishCall(db: Db, id: string, zoneId: string, now: Date):
   return rows.length === 1;
 }
 
-/** 직원 화면에 보여줄 호출. 끝나지 않은 것 전부와 방금 끝난 것. 오래 기다린 순. */
+/**
+ * 직원 화면에 보여줄 호출. 끝나지 않은 것 전부와 방금 끝난 것.
+ * 아직 아무도 받지 않은 호출을 맨 위에 오래 기다린 순으로, 그다음 받았지만 끝나지 않은 것, 끝난 것 순으로 둔다.
+ * 받은 호출이 위에 남아 있으면 새로 온 호출이 휴대전화 화면 아래로 밀려, 울리기는 했는데 어느 것인지 바로 보이지 않는다.
+ * 끝난 것끼리는 받았는지와 상관없이 누른 순으로 둔다.
+ */
 export async function listCalls(db: Db, now: Date): Promise<Call[]> {
   await closeStale(db, now);
   const rows = await db.query<Row>(
     `select ${COLUMNS} from calls
      where ended_at is null or ended_at > $1
-     order by (ended_at is not null), created_at`,
+     order by (ended_at is not null), (ended_at is null and accepted_at is not null), created_at`,
     [new Date(now.getTime() - RECENT_MIN * MIN)],
   );
   return rows.map(toCall);

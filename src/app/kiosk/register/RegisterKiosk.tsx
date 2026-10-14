@@ -37,6 +37,9 @@ export const AUTOPRINT_KEY = "jsp:kiosk:autoprint";
 // QR 확인 한 번을 기다리는 가장 긴 시간(안내 키오스크와 같다). 약한 와이파이에서 답이 오지 않는 요청 하나에
 // 붙잡히면 카메라가 멈춘 채로 남아, 다음 여객도 스티커를 다시 뽑지 못한다.
 const RESOLVE_TIMEOUT_MS = 15_000;
+// 로그인(키오스크 설치)이 풀려 서버가 401 로 답하면 보낼 곳. 안내데스크 화면은 직원 로그인으로, 키오스크는 설치 화면으로.
+const KIOSK_SETUP = "/kiosk";
+const STAFF_LOGIN = "/staff/login";
 
 /**
  * 등록 키오스크. 사전에 등록하지 않은 여객이 공항에서 직접 등록하고 QR 스티커를 받는다.
@@ -50,6 +53,17 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callActive, setCallActive] = useState(false);
+  // 지금 여객의 차례. 처음 화면으로 돌아갈 때마다 하나 올린다. 늦게 온 등록 답과 앞사람이 남긴 호출을 가려내는 데 쓴다.
+  const sessionSeq = useRef(0);
+  // 「직원 부르기」를 누른 차례. 앞사람이 부르고 간 호출은 처음 화면으로 돌아간 뒤에도 열려 있다(직원은 그 자리로 온다).
+  // 그 호출이 다음 여객의 자동 종료까지 막으면, 다음 여객이 그냥 떠났을 때 그 사람의 QR 과 고유 일련 번호가 공용 화면에 남는다.
+  // 그래서 지금 여객이 직접 누른 호출일 때만 자동 종료를 끈다.
+  const [callSeq, setCallSeq] = useState<number | null>(null);
+  const onCallActive = useCallback((active: boolean) => {
+    setCallActive(active);
+    if (!active) setCallSeq(null);
+  }, []);
+  const ownCall = callActive && callSeq === sessionSeq.current;
   // 스티커를 이미 뽑은 패스(token). 아래 자동 인쇄와 「스티커 다시 뽑기」 버튼이 본다.
   const [printedFor, setPrintedFor] = useState<string | null>(null);
   const t = textOf(lang, prefs.easy);
@@ -81,6 +95,10 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     scanCtrl.current = null;
     busyRef.current = false;
     setBusy(false);
+    // 다음 여객의 차례로 넘긴다. 등록 중이던 앞사람의 답이 늦게 와도 버리고(아래 onDone), 앞사람의 호출은 열린 채로 두되
+    // 이제는 자동 종료를 막지 않는다.
+    sessionSeq.current++;
+    setCallSeq(null);
     setView("start");
     setLang("ko");
     setPrefs(NO_PREFS);
@@ -143,6 +161,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
           signal: ctrl.signal,
         });
         if (mine !== scanSeq.current) return;
+        if (res.status === 401) return window.location.replace(assisted ? STAFF_LOGIN : KIOSK_SETUP);
         const data = await res.json();
         if (mine !== scanSeq.current) return;
         if (!res.ok) {
@@ -166,20 +185,28 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         }
       }
     },
-    [lang],
+    [lang, assisted],
   );
 
   const call = assisted ? null : (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff} token={issued?.token ?? null} screen="register" onActive={setCallActive} say={voiceOn ? speak : undefined} />
+        <StaffCall
+          t={t}
+          big={prefs.wantsStaff}
+          token={issued?.token ?? null}
+          screen="register"
+          onActive={onCallActive}
+          onPress={() => setCallSeq(sessionSeq.current)}
+          say={voiceOn ? speak : undefined}
+        />
       </div>
     </div>
   );
   const idle = assisted ? null : (
     <IdleGuard
       t={t}
-      enabled={view !== "start" && !callActive}
+      enabled={view !== "start" && !ownCall}
       askSec={idleAskSec}
       answerSec={idleAnswerSec}
       onTimeout={reset}
@@ -191,13 +218,19 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
 
   let screen: React.ReactNode;
   if (view === "flow") {
+    // 이 등록을 시작한 여객의 차례. 「등록 중…」에서 답이 늦는 사이에 처음 화면으로 돌아갔으면(「처음으로」, 자동 종료)
+    // 늦게 온 답은 버린다. 쓰면 떠난 여객의 QR 과 고유 일련 번호가 다음 사람 앞에 열리고, 자동 인쇄면 스티커까지 뽑힌다.
+    // 차례마다 새 등록 화면(key)을 써서 앞사람의 등록 화면이 이어지지 않게 한다.
+    const seq = sessionSeq.current;
     screen = (
       <RegisterFlow
+        key={seq}
         mode={assisted ? "assisted" : "kiosk"}
         initialLang={lang}
         onExit={reset}
         onPrefs={onPrefs}
         onDone={(r) => {
+          if (seq !== sessionSeq.current) return;
           setIssued({ token: r.token, passNo: r.passNo });
           setView("done");
         }}

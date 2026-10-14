@@ -689,7 +689,8 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "직원 로그인");
   check("키오스크가 된 기기로는 직원 화면을 열 수 없다", true);
   const noSession = await post("/api/kiosk/resolve", { passNo: myNo });
-  check("설치하지 않은 기기는 번호로 패스를 열 수 없다 (403)", noSession.status === 403);
+  // 로그인(설치)이 아예 없는 기기는 401 이다. 로그인이 풀린 안내데스크가 이 답을 보고 다시 로그인하러 간다.
+  check("설치하지 않은 기기는 번호로 패스를 열 수 없다 (401)", noSession.status === 401);
   const pub = await post("/api/guide", { token: myToken });
   check("QR 값만 아는 기기(휴대전화)에는 길과 시설을 주지 않는다. 항공편과 고른 항목만 준다", pub.status === 200 && pub.body.guide.place === null && pub.body.guide.facilities.length === 0 && pub.body.guide.gateRoute === null);
   check("어느 응답에도 이름이 없다", !JSON.stringify(pub.body).includes("name\""));
@@ -1011,7 +1012,8 @@ async function resetFlights(clearLocks = false) {
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "나에게 맞춘 안내");
   check("QR 을 카메라에 보여 주면 누르지 않아도 안내가 열린다 (기기의 QR 판독 기능이 먹통이어도)", true);
-  check("쉬운 말을 고른 여객에게는 쉬운 말로 안내한다", (await has(page, "비행기 타는 문이 닫히기까지")) && (await has(page, "자주 가는 곳")));
+  // 마감까지 2시간 넘게 남으면 분 대신 "비행기 타는 문이 08:15에 닫힙니다"처럼 시각으로 알린다. 어느 쪽이든 쉬운 말이다.
+  check("쉬운 말을 고른 여객에게는 쉬운 말로 안내한다", /비행기 타는 문이 (닫히기까지|\d{2}:\d{2}에 닫힙니다)/.test(await text(page)) && (await has(page, "자주 가는 곳")));
   check("그림을 고른 여객에게는 그림을 크게 보여준다", await page.evaluate(() => document.documentElement.hasAttribute("data-picture")));
   check("'직원을 부르고 싶습니다'를 고른 여객에게는 「직원 부르기」가 크게 보인다", (await count(page, ".call-btn.call-big")) === 1);
   const said = (await page.evaluate("window.__said")) as string[];

@@ -1,8 +1,10 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { closeText, departsTomorrow, departureText } from "@/app/components/GuideParts";
 import { FACILITY_KINDS, placeOf, type Place } from "@/lib/airport";
 import { config } from "@/lib/config";
 import type { Db } from "@/lib/db";
 import { buildGuide, toFlightView } from "@/lib/guide";
+import { textOf } from "@/lib/i18n";
 import { getJourney, loadJourneys, type Journey } from "@/lib/journey";
 import type { PollState } from "@/lib/timing";
 import { createTestDb, kst } from "./helpers/db";
@@ -45,7 +47,7 @@ const at = (id: string): Place => {
 
 describe("안내 화면의 항공편", () => {
   it("시각은 한국 시각 글자로 만들고, 터미널은 그대로 싣는다", () => {
-    expect(toFlightView(journey())).toEqual({
+    expect(toFlightView(journey(), kst("2026-10-05 12:00"))).toEqual({
       flightNo: "KE123",
       operatingNo: null,
       destName: "뉴욕",
@@ -56,6 +58,7 @@ describe("안내 화면의 항공편", () => {
       schedTime: "14:30",
       estTime: null,
       delayed: false,
+      day: "today",
       cancelled: false,
       status: "",
       close: "open",
@@ -120,16 +123,109 @@ describe("안내 화면의 항공편", () => {
     expect(v).toMatchObject({ close: "unknown", minutesToClose: null, schedTime: null, estTime: null, area: "", gate: null });
   });
 
-  it("바뀐 출발 시각은 지연되었을 때만 싣는다", () => {
+  it("출발 시각이 바뀌면 늦어졌든 앞당겨졌든 바뀐 시각을 싣는다. 지연(delayed)은 늦어졌을 때만이다", () => {
     const est = kst("2026-10-05 16:10");
     expect(toFlightView(journey({ estAt: est, delayed: true }))).toMatchObject({ schedTime: "14:30", estTime: "16:10", delayed: true });
-    // 예정보다 이르거나 같은 시각이 와도 지연이 아니면 싣지 않는다.
+    // 앞당겨진 편도 바뀐 시각을 싣는다. 남은 시간과 마감 시각은 이 시각으로 세므로, 화면의 시각도 같아야 한다.
+    expect(toFlightView(journey({ estAt: kst("2026-10-05 14:20"), delayed: false }))).toMatchObject({
+      schedTime: "14:30",
+      estTime: "14:20",
+      delayed: false,
+    });
+    // 같은 시각이 오거나 초만 다르면 바뀐 것이 아니다. 화면에는 분까지만 보인다.
     expect(toFlightView(journey({ estAt: kst("2026-10-05 14:30"), delayed: false })).estTime).toBeNull();
+    expect(toFlightView(journey({ estAt: new Date(kst("2026-10-05 14:30").getTime() + 40_000), delayed: true })).estTime).toBeNull();
+  });
+
+  it("실제로 떠나는 날이 만든 때의 내일이면 day 는 tomorrow 다. 등록 화면과 같은 기준이다", () => {
+    const now = kst("2026-10-05 16:00");
+    const day = (over: Partial<Journey>) => toFlightView(journey(over), now).day;
+    expect(day({})).toBe("today");
+    expect(day({ schedAt: kst("2026-10-06 14:30") })).toBe("tomorrow");
+    // 오늘 23:40 편이 00:15 로 늦어지면 내일 떠난다. 내일 00:10 편이 23:55 로 앞당겨지면 오늘 떠난다.
+    expect(day({ schedAt: kst("2026-10-05 23:40"), estAt: kst("2026-10-06 00:15"), delayed: true })).toBe("tomorrow");
+    expect(day({ schedAt: kst("2026-10-06 00:10"), estAt: kst("2026-10-05 23:55") })).toBe("today");
+    expect(day({ schedAt: null, minutesToClose: null })).toBe("today");
+    // 안내 내용을 만들 때도 그 시각으로 정한다.
+    const g = buildGuide(journey({ schedAt: kst("2026-10-06 14:30"), minutesToClose: 1340 }), "123456", null, poll, now);
+    expect(g.flight.day).toBe("tomorrow");
   });
 
   it("탑승 중 표시와 공동운항의 실제 운항 편명을 그대로 싣는다", () => {
     const v = toFlightView(journey({ flightNo: "MC830", operatingNo: "MK300", status: "탑승중", boardingNow: true }));
     expect(v).toMatchObject({ flightNo: "MC830", operatingNo: "MK300", boardingNow: true, status: "탑승중" });
+  });
+});
+
+describe("항공편 판의 날과 마감 문구", () => {
+  const ko = textOf("ko");
+  const en = textOf("en");
+  // 16:00 에 본 내일 14:30 편. 마감(내일 14:20)까지 22시간 20분 남았다.
+  const now = kst("2026-10-05 16:00");
+  const tomorrow = () => toFlightView(journey({ schedAt: kst("2026-10-06 14:30"), minutesToClose: 1340 }), now);
+
+  it("마감까지 120분이 안 남으면 남은 분을, 그 이상이면 추정 마감 시각을 보여 준다", () => {
+    expect(closeText(toFlightView(journey({ minutesToClose: 119 })), ko)).toBe("탑승 마감까지 119분 (추정)");
+    // journey() 는 12:00 에 본 14:30 편이다. 마감은 14:20.
+    expect(closeText(toFlightView(journey()), ko)).toBe("탑승 마감 14:20 (추정)");
+    expect(closeText(toFlightView(journey({ lang: "en" })), en)).toBe("Boarding closes at 14:20 (estimate)");
+  });
+
+  it("내일 떠나는 편은 시각 앞에 내일을 붙이고, 마감 시각에도 내일을 붙인다", () => {
+    expect(departsTomorrow(tomorrow())).toBe(true);
+    expect(closeText(tomorrow(), ko)).toBe("탑승 마감 내일 14:20 (추정)");
+    expect(closeText(tomorrow(), en)).toBe("Boarding closes tomorrow at 14:20 (estimate)");
+    expect(closeText(tomorrow(), textOf("ko", true))).toBe("비행기 타는 문이 내일 14:20에 닫힙니다 (추정)");
+    expect(departsTomorrow(toFlightView(journey(), kst("2026-10-05 12:00")))).toBe(false);
+  });
+
+  it("남겨 둔 패스를 다음 날 열어 남은 시간을 다시 세면 내일이 붙지 않는다", () => {
+    // 다음 날 09:00 에 다시 센 것처럼 남은 분만 줄인다(PassView 의 liveFlight). 서버가 정한 day 는 그대로 tomorrow 다.
+    const next = { ...tomorrow(), minutesToClose: 320 };
+    expect(next.day).toBe("tomorrow");
+    expect(departsTomorrow(next)).toBe(false);
+    expect(closeText(next, ko)).toBe("탑승 마감 14:20 (추정)");
+    // 마감이 지났으면 곧 떠나는 편이라 내일을 붙이지 않는다.
+    expect(departsTomorrow({ ...tomorrow(), close: "past", minutesToClose: null })).toBe(false);
+  });
+
+  it("오늘 23:55 마감, 내일 00:05 출발이면 출발에만 내일을 붙인다", () => {
+    const f = toFlightView(journey({ schedAt: kst("2026-10-06 00:05"), minutesToClose: 475 }), now);
+    expect(f.day).toBe("tomorrow");
+    expect(departsTomorrow(f)).toBe(true);
+    expect(closeText(f, ko)).toBe("탑승 마감 23:55 (추정)");
+  });
+
+  it("자정 1분 전에 센 남은 시간도 내일을 붙인다. 남은 분을 내림해 센 때가 다음 날 00:00 으로 올라가지 않는다", () => {
+    // 23:59:30 에 센 내일 14:30 편. 마감(내일 14:20)까지 860.5분이라 남은 분은 860 이다.
+    const late = new Date(kst("2026-10-05 23:59").getTime() + 30_000);
+    const f = toFlightView(journey({ schedAt: kst("2026-10-06 14:30"), minutesToClose: 860 }), late);
+    expect(f.day).toBe("tomorrow");
+    expect(departsTomorrow(f)).toBe(true);
+    expect(closeText(f, ko)).toBe("탑승 마감 내일 14:20 (추정)");
+    // 자정을 넘겨 00:00:30 에 다시 세면(859분) 오늘 편이다.
+    const after = { ...f, minutesToClose: 859 };
+    expect(departsTomorrow(after)).toBe(false);
+    expect(closeText(after, ko)).toBe("탑승 마감 14:20 (추정)");
+  });
+
+  it("소리 안내의 출발 시각도 항공편 판처럼 내일을 말한다. 영어는 문장 가운데라 소문자다", () => {
+    expect(departureText(tomorrow(), ko)).toBe("출발 내일 14:30");
+    expect(departureText(tomorrow(), en)).toBe("Departure tomorrow 14:30");
+    expect(departureText(toFlightView(journey(), kst("2026-10-05 12:00")), ko)).toBe("출발 14:30");
+    // 바뀐 출발 시각이 있으면 그 시각을 말한다. 오늘 23:40 편이 내일 00:15 로 늦어졌다.
+    const delayed = toFlightView(journey({ schedAt: kst("2026-10-05 23:40"), estAt: kst("2026-10-06 00:15"), delayed: true, minutesToClose: 485 }), now);
+    expect(departureText(delayed, ko)).toBe("출발 내일 00:15");
+    expect(departureText(toFlightView(journey({ schedAt: null, minutesToClose: null })), ko)).toBe("");
+    // 쉬운 말에도 같은 낱말이 있다.
+    expect(textOf("en", true).departTomorrow).toBe("tomorrow");
+    expect(textOf("ko", true).departTomorrow).toBe("내일");
+  });
+
+  it("결항이면 남은 시간이 없으므로 서버가 정한 날을 따른다", () => {
+    const f = toFlightView(journey({ schedAt: kst("2026-10-06 14:30"), status: "결항", cancelled: true, minutesToClose: null }), now);
+    expect(departsTomorrow(f)).toBe(true);
+    expect(closeText(f, ko)).toBe(ko.closeCancelled);
   });
 });
 

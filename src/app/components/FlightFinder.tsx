@@ -22,6 +22,8 @@ export function initialOf(d: Destination, lang: Lang): string {
 }
 
 const POPULAR = 8;
+// 도시 목록을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않으면 "찾는 중…"에 머물지 않고 다시 찾기를 보여 준다.
+const CITY_TIMEOUT_MS = 10_000;
 
 interface Props {
   lang: Lang;
@@ -37,6 +39,8 @@ interface Props {
 export function CityPicker({ lang, t, onPick, onClose }: Props) {
   const [list, setList] = useState<Destination[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // 「다시 찾기」를 누를 때마다 늘려 목록을 다시 받는다.
+  const [tries, setTries] = useState(0);
   const [initial, setInitial] = useState<string | null>(null);
   // 열리면 초점을 이 안으로 옮긴다. 키보드나 화면 읽기 프로그램을 쓰는 여객이 자리를 잃지 않는다.
   const boxRef = useRef<HTMLDivElement>(null);
@@ -47,18 +51,24 @@ export function CityPicker({ lang, t, onPick, onClose }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/flights/destinations")
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), CITY_TIMEOUT_MS);
+    fetch("/api/flights/destinations", { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         if (!cancelled) setList(d.destinations ?? []);
       })
       .catch(() => {
+        // 시간이 다 되어 끊은 것도 여기로 온다. 창을 닫아 끊은 것(cancelled)은 알리지 않는다.
         if (!cancelled) setFailed(true);
-      });
+      })
+      .finally(() => clearTimeout(limit));
     return () => {
       cancelled = true;
+      clearTimeout(limit);
+      ctrl.abort();
     };
-  }, []);
+  }, [tries]);
 
   const label = (d: Destination) => (lang === "en" ? d.en : d.city);
   const sorted = [...(list ?? [])].sort((a, b) => label(a).localeCompare(label(b), lang === "en" ? "en" : "ko"));
@@ -74,7 +84,22 @@ export function CityPicker({ lang, t, onPick, onClose }: Props) {
           <X size={22} aria-hidden="true" />
         </button>
       </div>
-      {failed && <p className="hint">{t.offline}</p>}
+      {failed && (
+        <>
+          <p className="hint">{t.offline}</p>
+          <button
+            className="btn btn-inline"
+            onClick={() => {
+              // 누른 단추가 사라지므로 초점을 이 창으로 옮겨 둔다(키보드·화면 읽기 프로그램이 자리를 잃지 않게).
+              boxRef.current?.focus({ preventScroll: true });
+              setFailed(false);
+              setTries((n) => n + 1);
+            }}
+          >
+            {t.searchAgain}
+          </button>
+        </>
+      )}
       {!failed && list === null && <p className="hint">{t.searching}</p>}
       {list !== null && list.length === 0 && <p className="hint">{t.flightNotFound}</p>}
       {list !== null && list.length > 0 && (

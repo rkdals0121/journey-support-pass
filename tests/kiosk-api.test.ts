@@ -151,9 +151,12 @@ describe("키오스크 설치와 직원 로그인", () => {
 });
 
 describe("패스 열기: 누가 열 수 있는가", () => {
-  it("키오스크나 안내데스크가 아니면 403", async () => {
+  it("로그인이 없으면 401, 로그인했지만 키오스크나 안내데스크가 아니면 403", async () => {
     const { pass } = await registerWithPass(db, now);
-    for (const s of [null, staff, mid, common]) {
+    // 로그인이 풀린 안내데스크는 401 을 보고 다시 로그인하러 간다.
+    expect(await resolveHandler(db, null, { scanned: pass.token }, dev, now)).toEqual({ status: 401, body: { error: "로그인이 필요합니다" } });
+    expect((await resolveHandler(db, null, { passNo: pass.passNo }, dev, now)).status).toBe(401);
+    for (const s of [staff, mid, common]) {
       expect((await resolveHandler(db, s, { scanned: pass.token }, dev, now)).status).toBe(403);
       expect((await resolveHandler(db, s, { passNo: pass.passNo }, dev, now)).status).toBe(403);
     }
@@ -452,10 +455,15 @@ describe("패스 열기: 안내 열람 기록", () => {
 describe("키오스크에서 직원 부르기", () => {
   const staffList = async () => (await callsHandler(db, mid, now)).body.calls as CallDto[];
 
-  it("키오스크가 아니면 부를 수도, 볼 수도, 거둘 수도 없다", async () => {
+  it("키오스크가 아니면 부를 수도, 볼 수도, 거둘 수도 없다. 로그인이 없으면 401, 키오스크가 아니면 403", async () => {
     const made = await callHandler(db, other, {}, now);
     const id = made.body.id as string;
-    for (const s of [null, staff, desk, common, sessionOf(now, { zoneId: "kiosk", isKiosk: true, placeId: null })]) {
+    // 설치가 풀린 키오스크는 401 을 보고 설치 화면(/kiosk)으로 돌아간다.
+    const needLogin = { status: 401, body: { error: "로그인이 필요합니다" } };
+    expect(await callHandler(db, null, {}, now)).toEqual(needLogin);
+    expect(await callStateHandler(db, null, id)).toEqual(needLogin);
+    expect(await callCancelHandler(db, null, id, now)).toEqual(needLogin);
+    for (const s of [staff, desk, common, sessionOf(now, { zoneId: "kiosk", isKiosk: true, placeId: null })]) {
       expect((await callHandler(db, s, {}, now)).status).toBe(403);
       expect((await callStateHandler(db, s, id)).status).toBe(403);
       expect((await callCancelHandler(db, s, id, now)).status).toBe(403);

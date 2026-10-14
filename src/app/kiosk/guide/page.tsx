@@ -20,13 +20,19 @@ export default async function KioskGuidePage({ searchParams }: { searchParams: P
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
-  const registerQr = await QRCode.toString(`${proto}://${host}/register`, { type: "svg", errorCorrectionLevel: "M", margin: 2 });
+  // 영어 화면에서 보여 줄 QR 은 영어 등록 화면을 연다. 영어 안내를 보고 찍었는데 한국어 화면이 열리면 언어 단추부터 찾아야 한다.
+  // 두 그림은 함께 만들어 서버가 두 번 기다리지 않게 한다.
+  const base = `${proto}://${host}`;
+  const [registerQr, registerQrEn] = await Promise.all(
+    [`${base}/register`, `${base}/register?lang=en`].map((url) => QRCode.toString(url, { type: "svg", errorCorrectionLevel: "M", margin: 2 })),
+  );
   return (
     <GuideKiosk
       placeLabel={place.label}
       placeLabelEn={place.labelEn}
       refreshSec={config.guideRefreshSec}
       registerQr={registerQr}
+      registerQrEn={registerQrEn}
       idleAskSec={idleAskSec}
       idleAnswerSec={config.idleAnswerSec}
     />

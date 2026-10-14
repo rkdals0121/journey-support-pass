@@ -46,6 +46,13 @@ const ORDER = ["guide", "consent", "move", "facility", "staff", "flight", "revie
 type StepKind = (typeof ORDER)[number];
 
 const SEARCH_DELAY_MS = 250;
+// 편 찾기 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않으면 「찾는 중…」이 끝없이 남고 「다시 찾기」도 나오지 않는다.
+const SEARCH_TIMEOUT_MS = 10_000;
+// 「등록하기」 한 번을 기다리는 가장 긴 시간. 답이 오지 않으면 「등록 중…」에 멈춘 채 다시 누를 수도 없다.
+// 서버는 등록을 만들고 답만 늦을 수도 있어서 찾기보다 넉넉히 기다린다.
+const SUBMIT_TIMEOUT_MS = 20_000;
+// 안내데스크 직원의 로그인이 풀려 서버가 401 로 답하면 로그인 화면으로 보낸다.
+const STAFF_LOGIN = "/staff/login";
 const sameFlight = (a: FlightOption | null, b: FlightOption) =>
   a !== null && a.flightDate === b.flightDate && a.flightNo === b.flightNo;
 
@@ -119,10 +126,16 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       return;
     }
     let cancelled = false;
+    // 답이 오지 않는 찾기는 끊는다. 끊긴 것은 catch 로 가서 연결 오류가 되고 「다시 찾기」가 나온다.
+    // 글자를 더 넣거나 화면을 떠나 이 찾기가 쓸모없어져도 끊는다. 그때는 cancelled 라 오류로 알리지 않는다.
+    const ctrl = new AbortController();
     setSearching(true);
     const timer = setTimeout(async () => {
+      const limit = setTimeout(() => ctrl.abort(), SEARCH_TIMEOUT_MS);
       try {
-        const res = await fetch(cityPick ? `/api/flights/search?city=${encodeURIComponent(cityPick.city)}` : `/api/flights/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(cityPick ? `/api/flights/search?city=${encodeURIComponent(cityPick.city)}` : `/api/flights/search?q=${encodeURIComponent(q)}`, {
+          signal: ctrl.signal,
+        });
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (cancelled) return;
@@ -131,12 +144,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       } catch {
         if (!cancelled) setError(offline);
       } finally {
+        clearTimeout(limit);
         if (!cancelled) setSearching(false);
       }
     }, SEARCH_DELAY_MS);
     return () => {
       cancelled = true;
       clearTimeout(timer);
+      ctrl.abort();
     };
   }, [query, cityPick, flight, offline, retry]);
 
@@ -220,6 +235,18 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
 
   // 「등록하기」를 아주 빠르게 두 번 눌러도 한 번만 보낸다. busy 는 화면이 다시 그려진 뒤에야 바뀌어 같은 순간의 두 번째 누름을 막지 못한다.
   const sending = useRef(false);
+  // 이 화면이 아직 떠 있는지와 보내는 중인 등록 요청. 「등록 중…」 사이에 「처음으로」나 자동 종료로 화면이 사라지면 요청을 끊고,
+  // 늦게 온 답도 쓰지 않는다. 쓰면 떠난 여객의 패스가 다음 사람 앞에 열린다. 끊긴 것을 오류로 알리지도 않는다.
+  // (개발 모드의 StrictMode 는 붙였다 떼었다 다시 붙이므로, 붙을 때마다 alive 를 다시 켠다.)
+  const alive = useRef(true);
+  const submitCtrl = useRef<AbortController | null>(null);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      submitCtrl.current?.abort();
+    };
+  }, []);
   async function submit() {
     if (!flight || sending.current) return;
     sending.current = true;
@@ -233,6 +260,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       setError(message);
       setFailSeq((n) => n + 1);
     };
+    // 답이 오지 않으면 끊는다. 끊긴 것은 catch 로 가서 연결 오류가 되고 다시 누를 수 있다.
+    // 서버가 등록은 만들고 답만 늦었을 수도 있다. 그때 다시 누르면 등록이 하나 더 생기지만, 앞의 것은 출발 뒤 지워진다.
+    const ctrl = new AbortController();
+    submitCtrl.current = ctrl;
+    const limit = setTimeout(() => ctrl.abort(), SUBMIT_TIMEOUT_MS);
     try {
       const res = await fetch(mode === "assisted" ? "/api/desk/register" : "/api/registrations", {
         method: "POST",
@@ -247,8 +279,13 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
           editCount,
           startAdapted: startAdapted.current ?? isAdapted(choices),
         }),
+        signal: ctrl.signal,
       });
+      if (!alive.current) return;
+      // 안내데스크에서 직원 로그인이 풀렸으면 로그인 화면으로 보낸다. "등록하지 못했습니다"만으로는 다시 눌러도 계속 실패한다.
+      if (mode === "assisted" && res.status === 401) return window.location.replace(STAFF_LOGIN);
       const data = await res.json();
+      if (!alive.current) return;
       // 서버의 오류 문구는 한국어다. 영어 화면에서는 서버가 함께 주는 오류 종류(code)에 맞는 영어 안내를 보여준다.
       // 예를 들어 이미 출발한 편이면 "다시 해 주세요"만으로는 같은 오류를 되풀이하므로, 편을 다시 고르라고 알려야 한다.
       // 종류를 모르는 오류는 한 가지 안내로 바꿔 보여준다.
@@ -269,7 +306,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       }
       onDone({ token: data.token, passNo: data.passNo, lang, choices });
     } catch {
-      fail(t.offline);
+      // 화면이 사라지며 끊은 것이면 아무것도 하지 않는다. 시간이 넘어 끊은 것은 연결 오류로 알린다.
+      if (alive.current) fail(t.offline);
+    } finally {
+      clearTimeout(limit);
+      if (submitCtrl.current === ctrl) submitCtrl.current = null;
     }
   }
 
@@ -416,8 +457,18 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       {hintOf[kind] && <p className="lead">{hintOf[kind]}</p>}
 
       {kind === "guide" && (
-        <div className="lang-pick" role="radiogroup" aria-label={t.language} onKeyDown={radioKeys}>
-          <span className="lang-pick-label">{t.language} · Language</span>
+        // 한국어 화면에도 영어 사용자가 언어 단추를 찾을 수 있게 "Language"를 덧붙인다. 영어 화면에서는 같은 말이 두 번 되므로 붙이지 않는다.
+        // 덧붙인 영어에는 lang 을 달아 화면 읽기 프로그램이 영어로 읽게 하고, 묶음의 이름도 이 글로 삼아 두 말이 함께 들리게 한다.
+        <div className="lang-pick" role="radiogroup" aria-labelledby="lang-pick-label" onKeyDown={radioKeys}>
+          <span className="lang-pick-label" id="lang-pick-label">
+            {lang === "en" ? (
+              t.language
+            ) : (
+              <>
+                {t.language} · <span lang="en">Language</span>
+              </>
+            )}
+          </span>
           {(["ko", "en"] as const).map((l) => (
             <button key={l} role="radio" aria-checked={lang === l} className={lang === l ? "on" : ""} onClick={() => setLang(l)} lang={l}>
               {l === "ko" ? "한국어" : "English"}
@@ -538,8 +589,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
               <ErrorNote>{t.flightNotFound}</ErrorNote>
             )}
 
-            {/* 도시에서 고른 편을 찾다가 연결이 끊기면 다시 찾을 길을 준다. */}
-            {cityPick && !flight && !searching && options === null && error && (
+            {/* 편을 찾다가 연결이 끊기거나 답이 너무 늦어 끊었으면 다시 찾을 길을 준다. 편명을 넣어 찾을 때도 같다.
+                없으면 키오스크에서는 글자를 지웠다 다시 넣어야 하고, 도시로 찾을 때는 도시를 다시 골라야 한다. */}
+            {(cityPick !== null || query.trim().length >= 2) && !flight && !searching && !cityOpen && options === null && error && (
               <button
                 className="btn"
                 onClick={() => {

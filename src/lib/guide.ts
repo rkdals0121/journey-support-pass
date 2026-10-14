@@ -11,6 +11,7 @@ import {
 } from "./airport";
 import type { Journey } from "./journey";
 import { config } from "./config";
+import { kstDate } from "./flights/normalize";
 import { boardingCloseAt, kstTime, type PollState } from "./timing";
 
 /** 안내 화면에 보여줄 항공편. 화면이 그대로 그릴 수 있게 시각은 글자로 만들어 보낸다. */
@@ -25,9 +26,18 @@ export interface FlightView {
   /** 탑승구가 바뀌었으면 바뀌기 전 번호. */
   prevGate: number | null;
   schedTime: string | null;
-  /** 지연되었을 때만. 바뀐 출발 시각. */
+  /**
+   * 출발 시각이 바뀌었을 때만(늦어졌든 앞당겨졌든). 바뀐 출발 시각.
+   * 남은 시간과 마감 시각은 바뀐 시각으로 세므로, 앞당겨진 편도 예정 시각만 보여 주면 화면의 시각과 남은 시간이 어긋난다.
+   */
   estTime: string | null;
+  /** 늦어졌을 때만 참. 앞당겨진 편은 estTime 만 있고 delayed 는 거짓이다. */
   delayed: boolean;
+  /**
+   * 실제로 떠나는 날이 이 내용을 만든 때의 오늘인지 내일인지. 등록 화면(toFlightDto)과 같은 기준이다.
+   * 등록 화면이 "내일 14:30"으로 보여 준 편이 패스와 안내 화면에서 시각만 보여 오늘 편으로 읽히지 않게 한다.
+   */
+  day: "today" | "tomorrow";
   cancelled: boolean;
   /** 공공데이터의 상태 문구 그대로 (탑승중, 마감예정, 탑승마감, 지연 …). */
   status: string;
@@ -49,7 +59,12 @@ export interface FlightView {
   urgent: boolean;
 }
 
-export function toFlightView(j: Journey): FlightView {
+/** now 는 여정(j)의 남은 시간을 계산한 그 시각을 넘긴다. 오늘·내일을 그 시각으로 정한다. 넘기지 않으면 지금 시각을 쓴다. */
+export function toFlightView(j: Journey, now: Date = new Date()): FlightView {
+  // 화면에는 분까지만 보이므로 분 단위 글자로 견준다. 초만 다른 시각을 바뀐 시각으로 보여 주지 않는다.
+  const schedTime = j.schedAt ? kstTime(j.schedAt) : null;
+  const estTime = j.estAt ? kstTime(j.estAt) : null;
+  const departAt = j.estAt ?? j.schedAt;
   const close: FlightView["close"] = j.cancelled
     ? "cancelled"
     : j.boardingClosed
@@ -67,9 +82,12 @@ export function toFlightView(j: Journey): FlightView {
     area: j.terminal,
     gate: j.gate,
     prevGate: j.prevGate,
-    schedTime: j.schedAt ? kstTime(j.schedAt) : null,
-    estTime: j.delayed && j.estAt ? kstTime(j.estAt) : null,
+    schedTime,
+    // 항공편 판은 예정 시각에 줄을 긋고 그 옆에 바뀐 시각을 쓴다. 예정 시각을 모르면 바뀐 시각도 싣지 않는다.
+    estTime: schedTime && estTime && estTime !== schedTime ? estTime : null,
     delayed: j.delayed,
+    // 등록 화면(toFlightDto)처럼 실제로 떠나는 날로 정한다. 모레로 넘어간 편도 "내일"로 둔다.
+    day: departAt && kstDate(departAt) > kstDate(now) ? "tomorrow" : "today",
     cancelled: j.cancelled,
     status: j.status,
     close,
@@ -158,7 +176,7 @@ export function buildGuide(j: Journey, passNo: string, place: Place | null, poll
     passNo,
     lang: j.lang,
     choices: j.choices,
-    flight: toFlightView(j),
+    flight: toFlightView(j, now),
     place: place
       ? { id: place.id, label: place.label, labelEn: place.labelEn, level: place.level, landside: place.landside }
       : null,

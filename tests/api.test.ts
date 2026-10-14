@@ -275,7 +275,9 @@ describe("등록", () => {
   });
 
   it("직원이 대신 넣는 등록은 안내데스크만 할 수 있다", async () => {
-    for (const s of [null, staff, mid, common, kiosk]) {
+    // 로그인이 풀린 안내데스크는 401 을 보고 다시 로그인하러 간다. 로그인했지만 안내데스크가 아니면 403.
+    expect(await registerHandler(db, body(), null, "dev", now, true)).toEqual({ status: 401, body: { error: "로그인이 필요합니다" } });
+    for (const s of [staff, mid, common, kiosk]) {
       const res = await registerHandler(db, body(), s, "dev", now, true);
       expect(res.status).toBe(403);
     }

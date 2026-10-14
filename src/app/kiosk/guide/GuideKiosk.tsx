@@ -8,7 +8,7 @@ import { textOf, type Lang } from "@/lib/i18n";
 import { extractToken, PASS_NO_LENGTH } from "@/lib/pass-format";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { FlowShell } from "../../components/FlowShell";
-import { FlightBoard, closeText, destOf, paceText, routeLines, RouteSteps, RouteSummary, targetTitle, type RouteTarget } from "../../components/GuideParts";
+import { FlightBoard, closeText, departureText, destOf, paceText, routeLines, RouteSteps, RouteSummary, targetTitle, type RouteTarget } from "../../components/GuideParts";
 import { IdleGuard } from "../../components/IdleGuard";
 import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
@@ -25,6 +25,8 @@ interface Props {
   refreshSec: number;
   /** 휴대전화로 찍어 바로 등록할 수 있는 QR 그림(svg). 아직 등록하지 않은 여객에게 처음 화면에서 보여 준다. */
   registerQr: string;
+  /** 같은 QR 의 영어판. 영어로 바꾼 처음 화면에서는 이것을 보여 주어, 찍으면 영어 등록 화면이 바로 열린다. */
+  registerQrEn: string;
   idleAskSec: number;
   idleAnswerSec: number;
 }
@@ -38,12 +40,14 @@ const ERROR_SHOW_MS = 6000;
 const SAME_PASS_GUARD_MS = 8000;
 // 다시 받기(그리고 QR·번호 확인) 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않는 요청을 끝없이 붙잡지 않는다.
 const REFRESH_TIMEOUT_MS = 15_000;
+// 키오스크 설치(로그인)가 풀려 서버가 401 로 답하면 설치 화면으로 보낸다. 이 기기로는 더 QR 을 확인할 수 없다.
+const KIOSK_SETUP = "/kiosk";
 
 /**
  * 안내 키오스크. 여객이 QR 을 보여 주거나 번호를 누르면, 그 여객이 고른 대로 화면이 바뀌고 길과 시설을 안내한다.
  * 한 페이지 안에서 처음 화면 → 안내 → 끝내기 → 처음 화면으로 돈다. 끝내면 앞사람의 내용은 화면에서 지운다.
  */
-export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec, registerQr }: Props) {
+export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec, registerQr, registerQrEn }: Props) {
   const [view, setView] = useState<View>({ kind: "scan" });
   const [token, setToken] = useState<string | null>(null);
   const [guide, setGuide] = useState<GuideDto | null>(null);
@@ -52,6 +56,17 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callActive, setCallActive] = useState(false);
+  // 지금 여객의 차례. 처음 화면으로 돌아갈 때마다 하나 올린다.
+  const sessionSeq = useRef(0);
+  // 「직원 부르기」를 누른 차례. 앞사람이 부르고 간 호출은 처음 화면으로 돌아간 뒤에도 열려 있다(직원은 그 자리로 온다).
+  // 그 호출이 다음 여객의 자동 종료까지 막으면, 다음 여객이 그냥 떠났을 때 그 사람의 항공편과 고른 시설이 공용 화면에 남는다.
+  // 그래서 지금 여객이 직접 누른 호출일 때만 자동 종료를 끈다.
+  const [callSeq, setCallSeq] = useState<number | null>(null);
+  const onCallActive = useCallback((active: boolean) => {
+    setCallActive(active);
+    if (!active) setCallSeq(null);
+  }, []);
+  const ownCall = callActive && callSeq === sessionSeq.current;
 
   const lang: Lang = guide ? guide.lang : startLang;
   const prefs = guide ? prefsOf(guide.choices) : NO_PREFS;
@@ -106,6 +121,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     openCtrl.current = null;
     busyRef.current = false;
     setBusy(false);
+    // 다음 여객의 차례로 넘긴다. 앞사람의 호출은 열린 채로 두되, 이제는 자동 종료를 막지 않는다.
+    sessionSeq.current++;
+    setCallSeq(null);
     setView({ kind: "scan" });
     setToken(null);
     setGuide(null);
@@ -136,6 +154,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           signal: ctrl.signal,
         });
         if (mine !== openSeq.current) return;
+        if (res.status === 401) return window.location.replace(KIOSK_SETUP);
         const data = await res.json();
         if (mine !== openSeq.current) return;
         if (!res.ok) {
@@ -272,14 +291,14 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={setCallActive} say={voiceOn ? speak : undefined} />
+        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={onCallActive} onPress={() => setCallSeq(sessionSeq.current)} say={voiceOn ? speak : undefined} />
       </div>
     </div>
   );
   const idle = (
     <IdleGuard
       t={t}
-      enabled={view.kind !== "scan" && view.kind !== "thanks" && !(view.kind === "number" && digits === "") && !callActive}
+      enabled={view.kind !== "scan" && view.kind !== "thanks" && !(view.kind === "number" && digits === "") && !ownCall}
       askSec={idleAskSec}
       answerSec={idleAnswerSec}
       onTimeout={reset}
@@ -372,7 +391,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                   <span>{t.noPassBody}</span>
                 </div>
                 <figure className="register-qr">
-                  <div dangerouslySetInnerHTML={{ __html: registerQr }} role="img" aria-label={t.noPassQr} />
+                  <div dangerouslySetInnerHTML={{ __html: startLang === "en" ? registerQrEn : registerQr }} role="img" aria-label={t.noPassQr} />
                   <figcaption>{t.noPassQr}</figcaption>
                 </figure>
               </div>
@@ -515,7 +534,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     t.guideHello,
     `${flight.flightNo}, ${destOf(flight, lang)}`,
     `${t.gate} ${flight.gate ?? t.gateTbd}`,
-    flight.schedTime ? `${t.departure} ${flight.estTime ?? flight.schedTime}` : "",
+    // 화면의 항공편 판과 같은 말로 읽는다(내일 떠나는 편이면 "내일"을 붙인다).
+    departureText(flight, t),
     closeText(flight, t),
     flight.prevGate !== null && flight.gate !== null ? t.gateChanged(flight.prevGate, flight.gate) : "",
     guide.gateRoute ? `${t.toGateShort}, ${t.routeSummary(guide.gateRoute.minutes, guide.gateRoute.meters)}. ${paceText(guide.pace, t)}` : noteText,
@@ -581,7 +601,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         )}
         {others.length > 0 && (
           <>
-            <h2>{chosen.length > 0 ? t.otherPlaces : otherTerminal ? t.nearHere : t.myPlaces}</h2>
+            {/* 고른 시설이 없으면 이 목록은 이 자리에서 종류마다 가장 가까운 곳이다. 영어의 myPlaces 는 "Places you chose"라
+                고르지 않은 여객에게 틀린 말이 되므로, 고른 것이 없을 때는 "가까운 시설"이라고 밝힌다. */}
+            <h2>{chosen.length > 0 ? t.otherPlaces : t.nearHere}</h2>
             <div className="tiles tiles-small">{others.map(tile)}</div>
           </>
         )}

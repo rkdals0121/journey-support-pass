@@ -437,17 +437,17 @@ describe("직원 부르기: 오래된 호출", () => {
 });
 
 describe("직원 부르기: 직원 화면의 목록", () => {
-  it("끝나지 않은 것을 오래 기다린 순으로 먼저, 끝난 것을 그 뒤에 둔다", async () => {
+  it("받지 않은 것을 오래 기다린 순으로 맨 위에, 받았지만 끝나지 않은 것, 끝난 것을 그 뒤에 둔다", async () => {
     const a = await createCall(db, "cc-108", null, "guide", t0);
     const b = await createCall(db, "cc-125", null, "guide", after(1));
     const c = await createCall(db, "t2-west", null, "guide", after(2));
     const d = await createCall(db, "t1-west", null, "guide", after(3));
     await finishCall(db, a!.id, "cc-mid", after(4)); // 가장 먼저 눌렀지만 끝났다
-    await acceptCall(db, c!.id, "t2-wam", after(5)); // 받았지만 끝나지 않았다
+    await acceptCall(db, c!.id, "t2-wam", after(5)); // 받았지만 끝나지 않았다. d 보다 먼저 눌렀어도 d 아래에 둔다
 
     const list = await listCalls(db, after(6));
-    expect(list.map((x) => x.id)).toEqual([b!.id, c!.id, d!.id, a!.id]);
-    expect(list.map((x) => x.state)).toEqual(["waiting", "accepted", "waiting", "done"]);
+    expect(list.map((x) => x.id)).toEqual([b!.id, d!.id, c!.id, a!.id]);
+    expect(list.map((x) => x.state)).toEqual(["waiting", "waiting", "accepted", "done"]);
   });
 
   it("끝난 호출도 누른 순으로 둔다", async () => {
