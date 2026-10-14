@@ -84,6 +84,8 @@ export function DeviceCheck() {
     const size = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
+      // 화면이 아직 그려지지 않았으면(뒤에 숨은 탭) 크기가 0 으로 나온다. 보일 때 다시 잰다.
+      if (w === 0 || h === 0) return;
       const ratio = window.devicePixelRatio || 1;
       const touch = navigator.maxTouchPoints > 0;
       const what = w >= 900 ? "태블릿·노트북 크기" : w >= 600 ? "작은 태블릿 크기" : "휴대전화 크기";
@@ -94,6 +96,7 @@ export function DeviceCheck() {
     };
     size();
     window.addEventListener("resize", size);
+    document.addEventListener("visibilitychange", size);
 
     const ua = navigator.userAgent;
     if (IN_APP.test(ua)) {
@@ -146,6 +149,7 @@ export function DeviceCheck() {
 
     return () => {
       window.removeEventListener("resize", size);
+      document.removeEventListener("visibilitychange", size);
       synth?.removeEventListener?.("voiceschanged", readVoices);
       clearTimeout(late);
       synth?.cancel();
