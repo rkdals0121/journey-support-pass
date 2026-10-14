@@ -27,7 +27,16 @@ function tempProfile(prefix: string): string {
   tempProfiles.push(dir);
   return dir;
 }
+// 가짜 카메라에 넣은 그림 파일. 끝나면 함께 지운다.
+const tempFiles: string[] = [];
 process.on("exit", () => {
+  for (const file of tempFiles) {
+    try {
+      fs.rmSync(file, { force: true });
+    } catch {
+      // 브라우저가 아직 잡고 있으면 남겨 둔다.
+    }
+  }
   for (const dir of tempProfiles) {
     try {
       fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
@@ -295,6 +304,7 @@ async function cameraFile(browser: Browser, token: string, far: boolean): Promis
   );
   const file = path.join(os.tmpdir(), `jsp-cam-${far ? "far" : "near"}-${Date.now()}.mjpeg`);
   fs.writeFileSync(file, await p.screenshot({ type: "jpeg", quality: far ? 86 : 92 }));
+  tempFiles.push(file);
   await p.close();
   return file;
 }
