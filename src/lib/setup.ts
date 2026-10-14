@@ -112,6 +112,9 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
 
   let zones: number | undefined;
   if (opts.codes) {
+    // 짧은 코드는 맞힐 때까지 넣어 보기 쉽다. 여섯 자리보다 짧은 코드는 받지 않는다.
+    const short = Object.entries(opts.codes).filter(([, c]) => typeof c !== "string" || c.trim().length < 6);
+    if (short.length > 0) return { ok: false, error: `여섯 자리보다 짧은 접속 코드: ${short.map(([id]) => id).join(", ")}` };
     if (opts.requireAllCodes) {
       const missing = readSeedZones().filter((z) => z.active && !opts.codes?.[z.id]);
       if (missing.length > 0) {

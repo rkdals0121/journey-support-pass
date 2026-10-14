@@ -33,6 +33,7 @@ export const config = {
   numberLockMaxFails: 10,
   registerMaxPerIp: 20, // 같은 접속 주소에서 registerWindowMin 분 동안 받을 등록 수
   registerWindowMin: 10,
+  registerMaxAll: 300, // 모든 접속 주소를 합해 registerWindowMin 분 동안 받을 휴대전화 등록 수
 
   callRefreshSec: 5, // 직원 화면이 호출 목록을 다시 읽는 간격
   guideRefreshSec: 30, // 안내 화면이 탑승구와 남은 시간을 다시 읽는 간격

@@ -1,5 +1,5 @@
 import { placeOf, PLACES } from "../airport";
-import { isLocked, logAccess, login, type Session } from "../auth";
+import { claimAttempt, forgetAttempt, logAccess, login, type Session } from "../auth";
 import { cancelCall, createCall, getCallAt } from "../calls";
 import { isAdapted } from "../catalog";
 import type { Db } from "../db";
@@ -54,19 +54,18 @@ export async function resolveHandler(
   if (typeof body.scanned === "string" && body.scanned.trim()) {
     found = await lookupPass(db, body.scanned, now);
   } else {
-    if (await isLocked(db, device, "number_fail", now)) {
-      return fail(429, "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요");
-    }
     const passNo = cleanPassNo(body.passNo);
     if (!passNo) return fail(400, "고유 일련 번호 여섯 자리를 넣어 주세요");
+    // 먼저 "틀림"으로 적고 센다. 한꺼번에 많이 보내 잠금을 피하지 못하게 한다(claimAttempt).
+    const attempt = await claimAttempt(db, device, "number_fail", now, session.zoneId);
+    if (attempt.locked) return fail(429, "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요");
     const res = await resolvePassNo(db, passNo);
-    if (res.kind !== "active") {
-      await logAccess(db, { at: now, zoneId: session.zoneId, deviceKey: device, action: "number_fail" });
-      return fail(404, NOT_A_PASS);
-    }
+    // 없는 번호면 적어 둔 "틀림"이 그대로 남는다.
+    if (res.kind !== "active") return fail(404, NOT_A_PASS);
+    await forgetAttempt(db, attempt.id);
     const journey = await getJourney(db, res.registrationId, now);
     // 출발했지만 아직 지워지지 않은 패스의 번호도 없는 번호와 똑같이 답한다. 번호로는 끝난 패스가 있었는지 알려 주지 않는다.
-    // 여객의 잘못이 아니므로 틀린 횟수로는 세지 않는다.
+    // 여객의 잘못이 아니므로 틀린 횟수로는 세지 않는다(위에서 이미 지웠다).
     if (!journey || isJourneyOver(journey, now)) return fail(404, NOT_A_PASS);
     found = { kind: "ok", journey, passNo: res.pass.passNo, token: res.pass.token };
   }

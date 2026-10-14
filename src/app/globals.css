@@ -801,6 +801,7 @@ html[data-picture] .choice-icon svg {
   /* 자리가 모자라면 글자가 세로로 쪼개지지 않고 잘려 나간다. 버튼에 언어 이름이 있어 뜻은 통한다. */
   overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--muted);
   font-size: 0.9375rem;
   font-weight: 600;

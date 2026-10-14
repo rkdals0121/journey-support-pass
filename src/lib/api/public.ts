@@ -26,7 +26,13 @@ export async function allowRegistration(db: Db, clientKey: string, now: Date): P
      where action = 'register' and zone_id is null and split_part(device_key, ':', 1) = $1 and at > $2`,
     [ipPart(clientKey), since],
   );
-  return (row?.n ?? 0) < config.registerMaxPerIp;
+  if ((row?.n ?? 0) >= config.registerMaxPerIp) return false;
+  // 주소를 바꿔 가며 등록을 쏟아붓는 것을 막는 전체 한도. 시범 운영의 실제 등록 수보다 훨씬 넉넉하다.
+  const [all] = await db.query<{ n: number }>(
+    `select count(*)::int as n from access_logs where action = 'register' and zone_id is null and at > $1`,
+    [since],
+  );
+  return (all?.n ?? 0) < config.registerMaxAll;
 }
 
 export async function searchFlightsHandler(db: Db, q: string, now: Date, city = ""): Promise<ApiResult> {

@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { deviceKey, hashCode, isLocked, logAccess, login, readSession, signSession, switchZone, verifyCode } from "@/lib/auth";
+import { claimAttempt, deviceKey, hashCode, isLocked, logAccess, login, network, readSession, signSession, switchZone, verifyCode } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { config } from "@/lib/config";
 import { applyCodeOverrides, expandGates, getZone, listWorkZones, readSeedZones, seedZones, zoneForGate } from "@/lib/zones";
@@ -283,6 +283,24 @@ describe("로그인", () => {
     expect((await login(db, "201132", "dev-b", t2)).ok).toBe(true);
     // 로그인 한 번마다 켜진 구역 수만큼 코드를 대조해서 오래 걸린다.
   }, 400_000);
+
+  it("한꺼번에 많이 보내도 잠금 한도를 넘는 시도는 확인하지 않는다 (먼저 적고 센다)", async () => {
+    const t0 = kst("2026-10-05 16:00");
+    // 같은 기기에서 동시에 30번 보낸다. 적은 뒤에 세므로 한도(5) 안의 것만 통과한다.
+    const results = await Promise.all(Array.from({ length: 30 }, () => claimAttempt(db, "burst-dev", "login_fail", t0)));
+    expect(results.filter((r) => !r.locked).length).toBeLessThanOrEqual(config.lockMaxFails);
+    expect(results.filter((r) => r.locked).length).toBeGreaterThanOrEqual(30 - config.lockMaxFails);
+  });
+
+  it("IPv6 는 앞 64비트로 묶어 센다. 주소 끝만 바꿔서는 한도를 피하지 못한다", () => {
+    expect(network("2001:db8:aa:bb:1:2:3:4")).toBe(network("2001:db8:aa:bb:ffff::9"));
+    expect(network("2001:db8:aa:bb::1")).not.toBe(network("2001:db8:aa:cc::1"));
+    expect(network("::ffff:203.0.113.7")).toBe("203.0.113.7");
+    expect(network("203.0.113.7")).toBe("203.0.113.7");
+    expect(network("2001:db8::1")).toBe("2001:db8:0:0::/64");
+    // 기기 키의 앞부분(주소 묶음)이 같다.
+    expect(deviceKey("2001:db8:aa:bb::1", "x").split(":")[0]).toBe(deviceKey("2001:db8:aa:bb::2", "y").split(":")[0]);
+  });
 
   it("로그인은 5회, 키오스크의 고유 일련 번호는 10회 틀려야 잠긴다. 둘은 따로 센다", async () => {
     expect(config.lockMaxFails).toBe(5);

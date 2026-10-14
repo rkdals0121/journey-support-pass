@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, scrypt, scryptSync, timingSafeEqual } from "node:crypto";
 import { config } from "./config";
 import type { Db } from "./db";
 
@@ -24,6 +24,21 @@ export function hashCode(code: string): string {
   return `${salt.toString("hex")}:${scryptSync(code, salt, 32).toString("hex")}`;
 }
 
+/**
+ * verifyCode 와 같지만 서버를 붙잡아 두지 않는다. 로그인은 구역마다 한 번씩 대조하므로 동기 방식이면
+ * 로그인 요청이 몰릴 때 다른 화면의 요청까지 멈춘다.
+ */
+export function verifyCodeAsync(code: string, stored: string): Promise<boolean> {
+  const [saltHex, hashHex] = stored.split(":");
+  if (!saltHex || !hashHex) return Promise.resolve(false);
+  const expected = Buffer.from(hashHex, "hex");
+  return new Promise((resolve) => {
+    scrypt(code, Buffer.from(saltHex, "hex"), expected.length, (err, actual) => {
+      resolve(!err && actual.length === expected.length && timingSafeEqual(actual, expected));
+    });
+  });
+}
+
 export function verifyCode(code: string, stored: string): boolean {
   const [saltHex, hashHex] = stored.split(":");
   if (!saltHex || !hashHex) return false;
@@ -39,7 +54,24 @@ const sha = (s: string) => createHash("sha256").update(s).digest("hex").slice(0,
  * 기기 해시만 쓰면 브라우저 표시(User-Agent)를 바꿔 가며 잠금을 피할 수 있으므로 접속 주소 부분을 따로 둔다.
  */
 export function deviceKey(ip: string, userAgent: string): string {
-  return `${sha(ip)}:${sha(`${ip}|${userAgent}`)}`;
+  return `${sha(network(ip))}:${sha(`${ip}|${userAgent}`)}`;
+}
+
+/**
+ * 잠금과 등록 한도를 셀 때 쓰는 "같은 곳" 단위. IPv4 는 주소 그대로, IPv6 는 앞 64비트(/64)로 묶는다.
+ * 집이나 클라우드에서 받는 IPv6 는 보통 /64 하나를 통째로 쓸 수 있어, 주소를 바꿔 가며 한도를 피할 수 있기 때문이다.
+ */
+export function network(ip: string): string {
+  const v = ip.trim().toLowerCase();
+  if (!v.includes(":")) return v;
+  // IPv4 를 IPv6 꼴로 적은 것(::ffff:1.2.3.4)은 IPv4 로 본다.
+  const v4 = v.match(/(\d+\.\d+\.\d+\.\d+)$/);
+  if (v4) return v4[1];
+  const [head, tail] = v.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail !== undefined && tail !== "" ? tail.split(":") : [];
+  const groups = tail === undefined ? left : [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return `${groups.slice(0, 4).map((g) => (g || "0").replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
 
 /** 기기 키에서 접속 주소 부분. */
@@ -95,6 +127,41 @@ export async function logAccess(
 }
 
 /**
+ * 시도를 먼저 "틀림"으로 적어 두고, 그 기록까지 세어 한도를 넘었는지 본다. 맞으면 적은 것을 지운다(forgetAttempt).
+ * 확인한 뒤에 적으면, 한꺼번에 수백 개를 보낼 때 모두가 "아직 안 틀렸다"를 보고 지나가 잠금이 소용없게 된다.
+ */
+export async function claimAttempt(
+  db: Db,
+  device: string,
+  failAction: "login_fail" | "number_fail",
+  now: Date,
+  zoneId?: string,
+): Promise<{ id: string; locked: boolean }> {
+  const [row] = await db.query<{ id: string }>(
+    "insert into access_logs (at, zone_id, device_key, action) values ($1, $2, $3, $4) returning id::text as id",
+    [now, zoneId ?? null, device, failAction],
+  );
+  const since = new Date(now.getTime() - config.lockMinutes * 60_000);
+  const [count] = await db.query<{ by_device: number; by_ip: number }>(
+    `select count(*) filter (where device_key = $1)::int as by_device, count(*)::int as by_ip
+     from access_logs
+     where split_part(device_key, ':', 1) = $2 and action = $3 and at > $4`,
+    [device, ipPart(device), failAction, since],
+  );
+  const maxFails = failAction === "number_fail" ? config.numberLockMaxFails : config.lockMaxFails;
+  // 방금 적은 것까지 센 수다. 그래서 "넘으면" 잠근다(전에는 적기 전의 수가 "같거나 넘으면" 잠갔다. 같은 기준이다).
+  const locked = (count?.by_device ?? 0) > maxFails || (count?.by_ip ?? 0) > config.lockIpMaxFails;
+  // 잠긴 동안의 시도는 실패로 남기지 않는다. 남기면 잠금이 끝없이 늘어난다(확인은 하지 않으므로 안전하다).
+  if (locked) await forgetAttempt(db, row.id);
+  return { id: row.id, locked };
+}
+
+/** claimAttempt 로 적어 둔 시도가 맞았거나 여객의 잘못이 아니었으면 지운다. */
+export async function forgetAttempt(db: Db, id: string): Promise<void> {
+  await db.query("delete from access_logs where id = $1::bigint", [id]);
+}
+
+/**
  * 최근 lockMinutes 안에 같은 기기의 실패가 lockMaxFails 건 이상이거나,
  * 같은 접속 주소의 실패가 lockIpMaxFails 건 이상이면 잠근다.
  * 공항 안에서는 여러 직원이 한 접속 주소를 함께 쓰므로 주소 쪽 기준은 넉넉하게 둔다.
@@ -131,7 +198,8 @@ export async function login(
   now: Date,
   kiosk: { placeId: string } | null = null,
 ): Promise<LoginResult> {
-  if (await isLocked(db, device, "login_fail", now)) return { ok: false, reason: "locked" };
+  const attempt = await claimAttempt(db, device, "login_fail", now);
+  if (attempt.locked) return { ok: false, reason: "locked" };
 
   const zones = await db.query<{
     id: string;
@@ -144,12 +212,11 @@ export async function login(
   // 일치 여부와 무관하게 모든 구역을 대조해 걸린 시간으로 구역 수를 짐작하지 못하게 한다.
   let matched: (typeof zones)[number] | null = null;
   for (const z of zones) {
-    if (verifyCode(code, z.code_hash) && !matched && z.is_kiosk === (kiosk !== null)) matched = z;
+    if ((await verifyCodeAsync(code, z.code_hash)) && !matched && z.is_kiosk === (kiosk !== null)) matched = z;
   }
-  if (!matched) {
-    await logAccess(db, { at: now, deviceKey: device, action: "login_fail" });
-    return { ok: false, reason: "invalid" };
-  }
+  // 틀렸으면 먼저 적어 둔 "틀림"이 그대로 남는다.
+  if (!matched) return { ok: false, reason: "invalid" };
+  await forgetAttempt(db, attempt.id);
   const session: Session = {
     zoneId: matched.id,
     isDesk: matched.is_desk,
