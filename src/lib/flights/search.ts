@@ -56,18 +56,29 @@ function toChoice(r: Row): FlightChoice {
   };
 }
 
-/** 오늘과 내일(한국 날짜)의 해당 편. 이미 떠난 편은 빼고 예정 시각 순으로. */
+/**
+ * 찾는 편의 날짜(한국 날짜, flight_date) 범위. 어제부터 내일까지.
+ * 화면은 오늘과 내일 떠나는 편을 보여 주지만 어제 날짜 편도 넣는다. 어제 밤 23:50 편이 01:00 으로 늦어지면
+ * 그 편의 날짜는 여전히 어제여서, 빼면 아직 떠나지 않은 편을 자정이 지나 찾지도 등록하지도 못한다.
+ * 이미 떠난 어제 편은 함께 거는 조건(출발 시각이 지금보다 뒤, 상태에 '출발' 없음)이 거른다.
+ */
+function dateRange(now: Date): [string, string] {
+  const today = kstDate(now);
+  return [addDays(today, -1), addDays(today, 1)];
+}
+
+/** 오늘과 내일(한국 날짜) 떠나는 해당 편. 이미 떠난 편은 빼고 예정 시각 순으로. */
 export async function findFlights(db: Db, input: string, now: Date): Promise<FlightChoice[]> {
   const flightNo = normalizeFlightNo(input);
   if (!/^[A-Z0-9]{3,8}$/.test(flightNo)) return [];
-  const today = kstDate(now);
+  const [from, to] = dateRange(now);
   const rows = await db.query<Row>(
     `select ${COLUMNS} from flights
-     where flight_no = $1 and flight_date in ($2, $3)
+     where flight_no = $1 and flight_date between $2 and $3
        and coalesce(est_at, sched_at) > $4
        and position('출발' in status) = 0
      order by sched_at`,
-    [flightNo, today, addDays(today, 1), now],
+    [flightNo, from, to, now],
   );
   return rows.map(toChoice);
 }
@@ -86,8 +97,8 @@ const DEST_LIMIT = 200;
  *  - 편명의 숫자만: "501" → KE501, OZ501 …
  */
 export async function suggestFlights(db: Db, input: string, now: Date): Promise<FlightChoice[]> {
-  const today = kstDate(now);
-  const open = `flight_date in ($2, $3) and coalesce(est_at, sched_at) > $4 and position('출발' in status) = 0`;
+  const [from, to] = dateRange(now);
+  const open = `flight_date between $2 and $3 and coalesce(est_at, sched_at) > $4 and position('출발' in status) = 0`;
 
   const name = input.trim().replace(/\s+/g, " ");
   if (/[가-힣]/.test(name)) {
@@ -97,7 +108,7 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
        where position($1 in dest_name) > 0 and ${open}
        order by sched_at, flight_no
        limit ${DEST_LIMIT}`,
-      [name, today, addDays(today, 1), now],
+      [name, from, to, now],
     );
     return rows.map(toChoice);
   }
@@ -114,7 +125,7 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
        where left(ltrim(substr(flight_no, 3), '0'), $5) = $1 and ${open}
        order by (ltrim(substr(flight_no, 3), '0') = $1) desc, sched_at, flight_no
        limit ${DEST_LIMIT}`,
-      [digits, today, addDays(today, 1), now, digits.length],
+      [digits, from, to, now, digits.length],
     );
     return rows.map(toChoice);
   }
@@ -123,12 +134,12 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
   const codes = /^[A-Z]{3,16}$/.test(prefix) ? [...new Set([prefix.length === 3 ? prefix : "", ...codesByCity(prefix)].filter(Boolean))] : [];
   const rows = await db.query<Row>(
     `select ${COLUMNS} from flights
-     where left(flight_no, $5) = $1 and flight_date in ($2, $3)
+     where left(flight_no, $5) = $1 and flight_date between $2 and $3
        and coalesce(est_at, sched_at) > $4
        and position('출발' in status) = 0
      order by (flight_no = $1) desc, sched_at, flight_no
      limit ${SUGGEST_LIMIT}`,
-    [prefix, today, addDays(today, 1), now, prefix.length],
+    [prefix, from, to, now, prefix.length],
   );
   if (rows.length > 0 || codes.length === 0) return rows.map(toChoice);
 
@@ -137,7 +148,7 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
      where dest_code = any($1) and ${open}
      order by sched_at, flight_no
      limit ${DEST_LIMIT}`,
-    [codes, today, addDays(today, 1), now],
+    [codes, from, to, now],
   );
   return byDest.map(toChoice);
 }
@@ -149,14 +160,14 @@ export async function suggestFlights(db: Db, input: string, now: Date): Promise<
 export async function flightsToCity(db: Db, city: string, now: Date): Promise<FlightChoice[]> {
   const name = city.trim();
   if (!name || name.length > 40) return [];
-  const today = kstDate(now);
+  const [from, to] = dateRange(now);
   const rows = await db.query<Row>(
     `select ${COLUMNS} from flights
-     where trim(split_part(dest_name, '/', 1)) = $1 and flight_date in ($2, $3)
+     where trim(split_part(dest_name, '/', 1)) = $1 and flight_date between $2 and $3
        and coalesce(est_at, sched_at) > $4 and position('출발' in status) = 0
      order by sched_at, flight_no
      limit ${DEST_LIMIT}`,
-    [name, today, addDays(today, 1), now],
+    [name, from, to, now],
   );
   return rows.map(toChoice);
 }
@@ -172,13 +183,13 @@ export interface Destination {
 
 /** 오늘과 내일 떠날 편이 있는 도착 도시. 편명을 모르는 여객이 도시를 눌러 고르게 하는 데 쓴다. */
 export async function listDestinations(db: Db, now: Date): Promise<Destination[]> {
-  const today = kstDate(now);
+  const [from, to] = dateRange(now);
   const rows = await db.query<{ dest_name: string; dest_code: string; n: number }>(
     `select dest_name, dest_code, count(*)::int as n from flights
-     where flight_date in ($1, $2) and coalesce(est_at, sched_at) > $3 and position('출발' in status) = 0
+     where flight_date between $1 and $2 and coalesce(est_at, sched_at) > $3 and position('출발' in status) = 0
        and dest_name <> ''
      group by dest_name, dest_code`,
-    [today, addDays(today, 1), now],
+    [from, to, now],
   );
   const byCity = new Map<string, { count: number; top: number; code: string }>();
   for (const r of rows) {

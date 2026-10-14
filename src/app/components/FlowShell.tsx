@@ -257,7 +257,15 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
                 {t.settingsDone}
               </button>
               {changed && (
-                <button className="btn btn-ghost" onClick={resetViewSettings}>
+                // 되돌리면 이 버튼이 사라진다. 초점을 먼저 「완료」로 옮겨 둔다. 그대로 두면 초점이 창 밖(문서 맨 위)으로 떨어져
+                // 화면 읽기 프로그램이 창 뒤의 화면을 읽기 시작한다.
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    closeRef.current?.focus();
+                    resetViewSettings();
+                  }}
+                >
                   {t.settingsReset}
                 </button>
               )}

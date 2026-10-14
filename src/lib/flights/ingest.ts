@@ -1,3 +1,4 @@
+import { config } from "../config";
 import type { Db } from "../db";
 import type { FlightRow } from "./normalize";
 
@@ -84,7 +85,26 @@ export async function recordPoll(db: Db, p: PollRecord): Promise<void> {
   );
 }
 
-export async function lastSuccessfulPoll(db: Db): Promise<Date | null> {
-  const [row] = await db.query<{ at: Date | null }>("select max(polled_at) as at from flight_polls where ok");
+/**
+ * 모의 운항을 넣을 때(설치, 시연용 패스) 남기는 수집 기록의 error 값. 실제 수집이 아니라는 표시다.
+ * 이 표시가 없으면 실제 수집이 멈춘 동안 시연용 패스를 만들 때마다 "방금 수집함"으로 보여
+ * 실제 편의 옛 탑승구와 시각이 "운항 정보가 늦어지고 있습니다" 경고 없이 나간다.
+ */
+export const SEED_POLL = "seed";
+
+/**
+ * 마지막으로 수집에 성공한 시각. 모의 운항을 넣은 기록(SEED_POLL)은 운항 정보 키가 없고(실제 수집을 하지 않는 곳)
+ * 실제 수집 성공도 한 번도 없을 때만 쓴다. 키 없이 모의 운항만 쓰는 개발·점검 환경에서 "운항 정보 없음"이 뜨지 않게 하기 위해서다.
+ * 키가 있는데 수집이 한 번도 성공하지 못했으면(아직 쓸 수 없는 새 키, 잘못 넣은 키) 넣은 기록으로 가리지 않는다.
+ * 가리면 실제 편의 옛 탑승구와 시각이 "운항 정보가 늦어지고 있습니다" 경고 없이 나간다.
+ */
+export async function lastSuccessfulPoll(db: Db, useSeed = !config.icnApiKey): Promise<Date | null> {
+  const [row] = await db.query<{ at: Date | null }>(
+    `select coalesce(
+       (select max(polled_at) from flight_polls where ok and error is distinct from $1),
+       case when $2::boolean then (select max(polled_at) from flight_polls where ok and error = $1) end
+     ) as at`,
+    [SEED_POLL, useSeed],
+  );
   return row?.at ?? null;
 }

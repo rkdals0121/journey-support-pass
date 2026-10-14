@@ -132,6 +132,12 @@ const ko = {
   submit: "등록하기",
   submitting: "등록하는 중…",
   failed: "등록하지 못했습니다. 다시 해 주세요.",
+  // 등록이 왜 안 됐는지 알려 주는 말. 한국어 화면은 서버가 보낸 한국어 문장을 그대로 보여 주고,
+  // 영어 화면은 서버가 함께 보낸 code 로 이 문구를 고른다. "다시 해 주세요"만 보여 주면 떠난 편을 계속 다시 누르게 된다.
+  regErrDeparted: "이미 출발한 편입니다. 편명을 다시 확인해 주세요.",
+  regErrDate: "오늘과 내일 출발하는 편만 등록할 수 있습니다.",
+  regErrFlight: "편명을 다시 확인해 주세요.",
+  regErrRate: "잠시 후 다시 해 주세요.",
 
   // ── 패스 ──
   passTitle: "내 패스",
@@ -192,7 +198,10 @@ const ko = {
   scanOr: "QR이 없거나 안 읽히면",
   scanNumber: "고유 일련 번호 누르기",
   numberTitle: "고유 일련 번호 여섯 자리를 눌러 주세요",
-  numberHint: "QR 아래에 적힌 숫자 여섯 자리입니다.",
+  // 휴대전화 화면은 번호가 QR 아래에, 스티커는 QR 옆에 찍힌다. 어느 쪽을 들고 와도 맞도록 둘 다 말한다.
+  numberHint: "QR 옆이나 아래에 적힌 숫자 여섯 자리입니다.",
+  numberChecking: "번호를 확인하는 중…",
+  numberLocked: "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요.",
   numberOpen: "안내 보기",
   numberBackToScan: "QR로 하기",
   noPassTitle: "QR과 고유 일련 번호가 없으신가요?",
@@ -235,7 +244,8 @@ const ko = {
   otherPlaces: "다른 시설",
   nearGate: (g: number) => `${g}번 탑승구 옆`,
   here: "지금 계신 곳",
-  arrive: "도착",
+  // 장소 이름을 받아 문장을 만든다. 영어는 "Arrive at Gate 112"처럼 말 순서가 달라 낱말 하나로는 맞출 수 없다.
+  arrive: (place: string) => `${place} 도착`,
   alongTitle: "가는 길에",
   alongItem: (name: string, g: number, m: number) => `${name} · ${g}번 탑승구 옆 (${m}m 지점)`,
   finish: "안내 끝내기",
@@ -317,12 +327,14 @@ const koEasy: Partial<Text> = {
   scanTitle: "QR을 카메라에 보여 주세요",
   scanBody: "스티커나 휴대전화의 QR을 카메라 앞에 대세요.",
   numberTitle: "고유 일련 번호 숫자 여섯 개를 누르세요",
+  numberLocked: "번호를 여러 번 틀렸습니다. 조금 뒤에 다시 눌러 주세요.",
   closeIn: (min: number) => `비행기 타는 문이 닫히기까지 ${min}분`,
   closePast: "비행기 타는 문이 닫힐 시간이 지났습니다 (추정)",
   closeClosed: "비행기 타는 문이 닫혔습니다",
   closeCancelled: "이 비행기는 뜨지 않습니다. 항공사에 물어봐 주세요.",
   closeUnknown: "비행기 정보를 받지 못했습니다. 전광판을 봐 주세요.",
-  boardingNow: "지금 비행기를 타고 있습니다",
+  // "비행기를 타고 있습니다"는 여객이 이미 탔다는 말로 들린다. 탑승이 진행 중이라는 뜻이 되도록 누가 타는지 밝힌다.
+  boardingNow: "지금 사람들이 비행기에 타는 중입니다",
   toGate: (gate: number) => `${gate}번 탑승구(비행기 타는 곳) 가는 길`,
   toGateShort: "비행기 타는 곳 가는 길",
   paceOk: "시간이 충분합니다.",
@@ -341,7 +353,9 @@ const koEasy: Partial<Text> = {
   surveyHint: "하나를 누르세요.",
   walk: (m: number, min: number, g: number | null, to: Step["walkTo"]) => {
     const sign = g ? `‘${g}’ 숫자가 있는 표지를 따라 ` : "";
-    const end = to === "lift" ? "엘리베이터까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : "갑니다";
+    // 다음 줄이 에스컬레이터일 수도 있어서 "엘리베이터까지"라고 못박지 않는다. 앞뒤 줄이 서로 달라 보이면 헷갈린다.
+    const end =
+      to === "lift" ? "엘리베이터나 에스컬레이터 있는 곳까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : "갑니다";
     return `${sign}${m}m ${end} (${min}분쯤)`;
   },
   shuttle: (min: number) => `셔틀트레인(기차)을 타고 갑니다 (${min}분쯤)`,
@@ -468,6 +482,10 @@ const en: Text = {
   submit: "Register",
   submitting: "Registering…",
   failed: "Registration failed. Please try again.",
+  regErrDeparted: "This flight has already departed. Please check your flight number.",
+  regErrDate: "Only flights departing today or tomorrow can be registered.",
+  regErrFlight: "We could not find this flight. Please check your flight number.",
+  regErrRate: "Too many requests right now. Please try again in a few minutes.",
 
   passTitle: "My pass",
   passNew: "You are registered",
@@ -526,7 +544,9 @@ const en: Text = {
   scanOr: "No QR, or it will not scan?",
   scanNumber: "Enter serial number",
   numberTitle: "Enter the six-digit serial number",
-  numberHint: "It is printed under the QR.",
+  numberHint: "It is the six-digit number printed next to or under the QR.",
+  numberChecking: "Checking the number…",
+  numberLocked: "Too many wrong numbers. Please try again in a few minutes.",
   numberOpen: "Show guidance",
   numberBackToScan: "Use QR instead",
   noPassTitle: "No QR or serial number yet?",
@@ -568,7 +588,7 @@ const en: Text = {
   otherPlaces: "Other places",
   nearGate: (g) => `next to Gate ${g}`,
   here: "You are here",
-  arrive: "Arrive",
+  arrive: (place) => `Arrive at ${place}`,
   alongTitle: "On the way",
   alongItem: (name, g, m) => `${name} · next to Gate ${g} (${m} m along)`,
   finish: "Finish",
@@ -623,6 +643,9 @@ const enEasy: Partial<Text> = {
   flightHint: "Enter the letters and numbers on your ticket. Example: KE123. Or enter the city you fly to. Example: Tokyo",
   flightHintKiosk: "Press the letters and numbers on your ticket. Example: KE123",
   reviewTitle: "Is this right?",
+  regErrDeparted: "This plane has already left. Please look at your ticket again.",
+  regErrDate: "You can only choose a plane that leaves today or tomorrow.",
+  regErrFlight: "We cannot find this plane. Please look at your ticket again.",
   closeIn: (min) => `${min} minutes until the plane door closes`,
   closeClosed: "The plane door is closed",
   toGateShort: "Way to your plane",

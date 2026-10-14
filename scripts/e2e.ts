@@ -889,6 +889,9 @@ async function resetFlights(clearLocks = false) {
       const url = typeof input === "string" ? input : input.url;
       const method = (init && init.method) || "GET";
       const p = realFetch(input, init);
+      // 붙잡은 요청을 화면이 중간에 끊으면(시간 제한) 놓기 전에 실패가 난다. 그 실패를 여기서 받아 두어
+      // "처리하지 않은 오류"로 잘못 잡히지 않게 한다. 화면은 놓을 때 같은 실패를 그대로 받는다.
+      p.catch(() => {});
       if (window.__holdUrl && url.includes(window.__holdUrl) && method === window.__holdMethod) {
         return new Promise((res, rej) => window.__held.push(() => p.then(res, rej)));
       }
@@ -974,7 +977,15 @@ async function resetFlights(clearLocks = false) {
   section("기기 점검 화면");
   browser = await launch(CAMERA(nearFile));
   page = await open(browser, PHONE);
+  // 개발 서버는 처음 여는 주소를 그 자리에서 만들어 몇 초씩 걸린다. 미리 한 번 열어 둔다.
+  await fetch(`${BASE}/check`, { method: "HEAD" }).catch(() => {});
   await page.goto(`${BASE}/check`, { waitUntil: "load", timeout: 300_000 });
+  // 개발 서버가 다른 일로 바빠 8초 안에 못 답하면 "닿지 않습니다"가 나온다. 그럴 때만 「다시 확인」을 한 번 더 누른다.
+  await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 닿지 않습니다/.test(document.body.innerText), { timeout: WAIT });
+  if (await has(page, "서버에 닿지 않습니다")) {
+    await clickText(page, "button", "다시 확인");
+    await page.waitForFunction(() => !/인터넷 연결을 확인하는 중/.test(document.body.innerText), { timeout: WAIT });
+  }
   // 개발 서버가 바쁘면 "느립니다"로 나올 수 있다. 어느 쪽이든 걸린 시간을 알려 주면 된다. "닿지 않습니다"만 틀린 것이다.
   await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 닿지 않습니다/.test(document.body.innerText), { timeout: WAIT });
   check("인터넷이 되는지 보고 서버가 답한 시간을 알려 준다", /초 만에 답했습니다|연결은 되지만 느립니다\(\d/.test(await text(page)) && !(await has(page, "서버에 닿지 않습니다")));

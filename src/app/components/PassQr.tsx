@@ -39,10 +39,13 @@ export function usePassQr(token: string | null, ready = ""): string {
  */
 export function PassQr({ token, passNo, label, svg: ready }: { token: string; passNo: string; label: string; svg?: string }) {
   const svg = usePassQr(token, ready);
+  // 번호는 화면 읽기 프로그램이 한 자리씩 읽도록 따로 적는다. 보이는 "123 456"은 "백이십삼"처럼 읽혀 감춘다.
+  // 묶는 div 에 aria-label 을 달면 역할이 없는 칸이라 읽어 주지 않으므로, 읽을 글자를 본문에 둔다.
   return (
-    <div className="pass-qr" aria-label={`${label} ${passNo.split("").join(" ")}`}>
+    <div className="pass-qr">
       <div className="pass-qr-code" role="img" aria-label="QR" dangerouslySetInnerHTML={{ __html: svg }} />
       <span className="pass-qr-label">{label}</span>
+      <span className="sr-only">{passNo.split("").join(" ")}</span>
       <span className="pass-qr-no num" aria-hidden="true">
         {formatPassNo(passNo)}
       </span>

@@ -1,6 +1,7 @@
 import { ipPart } from "./auth";
 import { closeStale } from "./calls";
 import type { Db } from "./db";
+import { SEED_POLL } from "./flights/ingest";
 import { kstDate } from "./flights/normalize";
 
 // 제안서의 "기대 효과와 확인 방법" 세 가지를 세는 곳.
@@ -152,7 +153,7 @@ export interface PollMetric {
   lastAt: Date | null;
 }
 
-/** 운항 정보 수집이 얼마나 잘 돌았는지. */
+/** 운항 정보 수집이 얼마나 잘 돌았는지. 모의 운항을 넣은 기록(SEED_POLL)은 실제 수집이 아니므로 세지 않는다. */
 export async function pollMetrics(db: Db, since: Date): Promise<PollMetric> {
   const [polls] = await db.query<PollMetric>(
     `select count(*)::int as total,
@@ -160,8 +161,8 @@ export async function pollMetrics(db: Db, since: Date): Promise<PollMetric> {
             avg(duration_ms) filter (where ok)::int as "avgDurationMs",
             coalesce(sum(gate_changes), 0)::int as "gateChanges",
             min(polled_at) as "firstAt", max(polled_at) as "lastAt"
-     from flight_polls where polled_at >= $1`,
-    [since],
+     from flight_polls where polled_at >= $1 and error is distinct from $2`,
+    [since, SEED_POLL],
   );
   return polls;
 }

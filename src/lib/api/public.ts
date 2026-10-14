@@ -1,5 +1,5 @@
 import { placeOf } from "../airport";
-import { ipPart, logAccess, type Session } from "../auth";
+import { forgetAttempt, ipPart, logAccess, type Session } from "../auth";
 import { isAdapted } from "../catalog";
 import { config } from "../config";
 import type { Db } from "../db";
@@ -18,21 +18,30 @@ import { fail, ok, toFlightDto, type ApiResult } from "./dto";
  * 등록 남용 방지. 같은 접속 주소에서 정한 시간 안에 받은 등록 수를 DB 에서 센다.
  * 여객 휴대전화에서 온 등록만 센다(구역 없이 남은 기록). 키오스크와 안내데스크의 등록은 세지 않는다.
  * 배포된 서버는 요청마다 다른 서버가 받을 수 있어 메모리에 세면 소용이 없다.
+ *
+ * 먼저 "등록" 기록을 적고, 그 기록까지 세어 한도를 넘었는지 본다(접속 코드의 claimAttempt 와 같은 방식).
+ * 센 뒤에 적으면 한꺼번에 수백 건을 보낼 때 모두가 "아직 0건"을 보고 지나가 한도가 소용없게 된다.
+ * 한도 안이면 적은 기록의 id 를 돌려준다. 받는 쪽은 등록을 마치면 그 기록에 등록을 잇고,
+ * 등록이나 패스 만들기에 실패하면 지운다(forgetAttempt). 한도를 넘었으면 여기서 지우고 null 을 돌려준다.
  */
-export async function allowRegistration(db: Db, clientKey: string, now: Date): Promise<boolean> {
+export async function claimRegistration(db: Db, clientKey: string, now: Date): Promise<string | null> {
+  const [row] = await db.query<{ id: string }>(
+    "insert into access_logs (at, zone_id, device_key, action) values ($1, null, $2, 'register') returning id::text as id",
+    [now, clientKey],
+  );
   const since = new Date(now.getTime() - config.registerWindowMin * 60_000);
-  const [row] = await db.query<{ n: number }>(
-    `select count(*)::int as n from access_logs
-     where action = 'register' and zone_id is null and split_part(device_key, ':', 1) = $1 and at > $2`,
+  const [count] = await db.query<{ by_ip: number; total: number }>(
+    `select count(*) filter (where split_part(device_key, ':', 1) = $1)::int as by_ip, count(*)::int as total
+     from access_logs where action = 'register' and zone_id is null and at > $2`,
     [ipPart(clientKey), since],
   );
-  if ((row?.n ?? 0) >= config.registerMaxPerIp) return false;
-  // 주소를 바꿔 가며 등록을 쏟아붓는 것을 막는 전체 한도. 시범 운영의 실제 등록 수보다 훨씬 넉넉하다.
-  const [all] = await db.query<{ n: number }>(
-    `select count(*)::int as n from access_logs where action = 'register' and zone_id is null and at > $1`,
-    [since],
-  );
-  return (all?.n ?? 0) < config.registerMaxAll;
+  // 방금 적은 것까지 센 수다. 그래서 "넘으면" 막는다(전에는 적기 전의 수가 "같거나 넘으면" 막았다. 같은 기준이다).
+  // 전체 한도는 주소를 바꿔 가며 등록을 쏟아붓는 것을 막는다. 시범 운영의 실제 등록 수보다 훨씬 넉넉하다.
+  if ((count?.by_ip ?? 0) > config.registerMaxPerIp || (count?.total ?? 0) > config.registerMaxAll) {
+    await forgetAttempt(db, row.id);
+    return null;
+  }
+  return row.id;
 }
 
 export async function searchFlightsHandler(db: Db, q: string, now: Date, city = ""): Promise<ApiResult> {
@@ -76,7 +85,9 @@ export async function registerHandler(
   if (assisted && !session?.isDesk) return fail(403, "안내데스크 권한이 필요합니다");
   const route: Route = assisted ? "assisted" : session?.isKiosk ? "kiosk" : "web";
   // 키오스크와 안내데스크는 한 기기로 여러 명을 받으므로 횟수를 막지 않는다. 접속 코드로 확인된 기기다.
-  if (route === "web" && !(await allowRegistration(db, clientKey, now))) return fail(429, "잠시 후 다시 시도해 주세요");
+  // 휴대전화 등록은 먼저 기록을 적어 자리를 잡는다(claim). 받지 못하면 아래에서 그 기록을 지운다.
+  const claim = route === "web" ? await claimRegistration(db, clientKey, now) : null;
+  if (route === "web" && !claim) return fail(429, "잠시 후 다시 시도해 주세요", "rate");
 
   const choices = strings(body.choices);
   const res = await createRegistration(
@@ -93,18 +104,30 @@ export async function registerHandler(
     },
     now,
   );
-  if (!res.ok) return fail(400, res.error);
+  // 받지 못한 등록은 횟수로 세지 않는다. 잘못 넣고 고쳐 다시 보내는 여객이 한도에 걸리지 않게 한다.
+  if (!res.ok) {
+    if (claim) await forgetAttempt(db, claim);
+    return fail(400, res.error, res.code);
+  }
 
   const pass = await issuePass(db, res.registration.id, now);
-  if (!pass.ok) return fail(500, "패스를 만들지 못했습니다. 잠시 후 다시 시도해 주세요");
+  if (!pass.ok) {
+    if (claim) await forgetAttempt(db, claim);
+    return fail(500, "패스를 만들지 못했습니다. 잠시 후 다시 시도해 주세요", "pass");
+  }
 
-  await logAccess(db, {
-    at: now,
-    zoneId: route === "web" ? undefined : session?.zoneId,
-    deviceKey: clientKey,
-    action: "register",
-    registrationId: res.registration.id,
-  });
+  if (claim) {
+    // 휴대전화 등록은 먼저 적어 둔 기록에 이 등록을 잇는다. 기록을 하나 더 남기면 두 번 센다.
+    await db.query("update access_logs set registration_id = $2 where id = $1::bigint", [claim, res.registration.id]);
+  } else {
+    await logAccess(db, {
+      at: now,
+      zoneId: session?.zoneId,
+      deviceKey: clientKey,
+      action: "register",
+      registrationId: res.registration.id,
+    });
+  }
   // 여객이 스스로 한 등록만 완료로 센다. 직원이 대신 넣은 것은 건수(경로)로만 남는다.
   if (route !== "assisted") {
     await logEvent(db, {

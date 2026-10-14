@@ -59,32 +59,42 @@ function toRegistration(r: Row): Registration {
   };
 }
 
-export type CreateResult = { ok: true; registration: Registration } | { ok: false; error: string };
+/**
+ * 등록을 받지 못한 까닭. 영어 화면이 상황에 맞는 영어 문구를 고르는 데 쓴다(한국어 화면은 error 문구를 그대로 보여 준다).
+ * rate(너무 자주 등록)와 pass(패스를 만들지 못함)는 등록을 받는 쪽(registerHandler)이 붙인다.
+ */
+export type RegistrationErrorCode = "departed" | "date" | "flight" | "consent" | "choices" | "rate" | "pass";
+
+export type CreateResult =
+  | { ok: true; registration: Registration }
+  | { ok: false; error: string; code?: RegistrationErrorCode };
 
 /**
  * 등록을 받는다. 이름·연락처·진단명은 받지 않는다. 받는 것은 항공편과 고른 항목뿐이다.
  * 패스는 이어서 issuePass 가 만든다.
  */
 export async function createRegistration(db: Db, input: RegistrationInput, now: Date): Promise<CreateResult> {
-  if (input.consent !== true) return { ok: false, error: "동의가 필요합니다" };
+  if (input.consent !== true) return { ok: false, error: "동의가 필요합니다", code: "consent" };
 
   const choiceError = validateChoices(input.choices);
-  if (choiceError) return { ok: false, error: choiceError };
+  if (choiceError) return { ok: false, error: choiceError, code: "choices" };
 
   if (!["web", "kiosk", "assisted"].includes(input.route)) return { ok: false, error: "등록 경로가 맞지 않습니다" };
 
   const flight = await getFlight(db, input.flightDate, input.flightNo);
-  if (!flight) return { ok: false, error: "편명을 다시 확인해 주세요" };
+  if (!flight) return { ok: false, error: "편명을 다시 확인해 주세요", code: "flight" };
   // 오늘과 내일(한국 날짜) 편만 받는다. 화면의 편명 찾기가 보여주는 범위와 같다.
+  // 어제 날짜 편도 받는다. 어제 밤 편이 자정을 넘겨 늦어지면 날짜는 어제여도 오늘 떠난다.
+  // 이미 떠난 어제 편은 바로 아래의 "이미 출발한 편" 검사가 막는다.
   const today = kstDate(now);
-  if (flight.flightDate !== today && flight.flightDate !== addDays(today, 1)) {
-    return { ok: false, error: "오늘과 내일 출발하는 편만 등록할 수 있습니다" };
+  if (![addDays(today, -1), today, addDays(today, 1)].includes(flight.flightDate)) {
+    return { ok: false, error: "오늘과 내일 출발하는 편만 등록할 수 있습니다", code: "date" };
   }
   // 이미 떠난 편으로는 받지 않는다. 받으면 곧바로 지워져 패스가 쓸모없어진다.
   // 공동운항이면 실제 운항 편의 시각으로 본다.
   const operating = await operatingFlight(db, flight);
   if (isDeparted(operating) || departureAt(operating) <= now) {
-    return { ok: false, error: "이미 출발한 편입니다. 편명을 다시 확인해 주세요" };
+    return { ok: false, error: "이미 출발한 편입니다. 편명을 다시 확인해 주세요", code: "departed" };
   }
 
   // 화면이 보낸 시작 시각이 이상하면 제출 시각으로 둔다(작성 시간 0으로 집계).

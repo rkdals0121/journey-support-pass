@@ -79,6 +79,15 @@ export function ipPart(device: string): string {
   return device.split(":")[0];
 }
 
+/**
+ * 키오스크·안내데스크가 번호를 넣을 때 쓰는 "같은 기기" 단위. 접속 주소는 그대로 두고(주소별 한도),
+ * 기기 부분은 설치(로그인)마다 다르게 한다. 같은 와이파이의 같은 기종 태블릿 두 대는 접속 주소와 브라우저 표시가 같아,
+ * 접속 주소와 브라우저 표시만으로 세면 한 대의 오타로 다른 한 대까지 잠긴다.
+ */
+export function sessionDeviceKey(device: string, session: Session): string {
+  return `${ipPart(device)}:${sha(`${device}|${session.placeId ?? session.zoneId}|${session.exp}`)}`;
+}
+
 function sign(payload: string): string {
   return createHmac("sha256", config.sessionSecret).update(payload).digest("base64url");
 }
@@ -150,7 +159,8 @@ export async function claimAttempt(
   );
   const maxFails = failAction === "number_fail" ? config.numberLockMaxFails : config.lockMaxFails;
   // 방금 적은 것까지 센 수다. 그래서 "넘으면" 잠근다(전에는 적기 전의 수가 "같거나 넘으면" 잠갔다. 같은 기준이다).
-  const locked = (count?.by_device ?? 0) > maxFails || (count?.by_ip ?? 0) > config.lockIpMaxFails;
+  const ipMax = failAction === "number_fail" ? config.numberLockIpMaxFails : config.lockIpMaxFails;
+  const locked = (count?.by_device ?? 0) > maxFails || (count?.by_ip ?? 0) > ipMax;
   // 잠긴 동안의 시도는 실패로 남기지 않는다. 남기면 잠금이 끝없이 늘어난다(확인은 하지 않으므로 안전하다).
   if (locked) await forgetAttempt(db, row.id);
   return { id: row.id, locked };
@@ -180,7 +190,8 @@ export async function isLocked(
     [device, ipPart(device), failAction, since],
   );
   const maxFails = failAction === "number_fail" ? config.numberLockMaxFails : config.lockMaxFails;
-  return (row?.by_device ?? 0) >= maxFails || (row?.by_ip ?? 0) >= config.lockIpMaxFails;
+  const ipMax = failAction === "number_fail" ? config.numberLockIpMaxFails : config.lockIpMaxFails;
+  return (row?.by_device ?? 0) >= maxFails || (row?.by_ip ?? 0) >= ipMax;
 }
 
 export type LoginResult =

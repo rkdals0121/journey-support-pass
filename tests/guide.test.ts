@@ -60,9 +60,21 @@ describe("안내 화면의 항공편", () => {
       status: "",
       close: "open",
       minutesToClose: 140,
+      closeAtMs: kst("2026-10-05 14:20").getTime(),
       boardingNow: false,
       urgent: false,
     });
+  });
+
+  it("추정 마감 시각(ms)은 출발 10분 전이고, 지연되면 바뀐 출발 시각에서 잰다. open 일 때만 싣는다", () => {
+    const closeAt = (over: Partial<Journey>) => toFlightView(journey(over)).closeAtMs;
+    expect(config.boardingCloseMin).toBe(10);
+    expect(closeAt({})).toBe(kst("2026-10-05 14:20").getTime());
+    expect(closeAt({ estAt: kst("2026-10-05 16:10"), delayed: true })).toBe(kst("2026-10-05 16:00").getTime());
+    expect(closeAt({ minutesToClose: -1 })).toBeNull();
+    expect(closeAt({ status: "탑승마감", boardingClosed: true })).toBeNull();
+    expect(closeAt({ status: "결항", cancelled: true, minutesToClose: null })).toBeNull();
+    expect(closeAt({ schedAt: null, minutesToClose: null })).toBeNull();
   });
 
   it(`마감까지 ${config.urgentMin}분 이내이거나 마감이 지났으면 urgent 다`, () => {
@@ -200,10 +212,34 @@ describe("안내 내용: 고른 항목에 따라 달라지는 것", () => {
     expect(g).toMatchObject({ passNo: "042917", lang: "en", choices: ["gd_large", "stf_call"], poll });
   });
 
-  it("이름 칸은 없다. 싣는 칸은 정해진 열 가지뿐이다", () => {
+  it("만든 시각과 임박 기준(분)을 싣는다. 화면이 남은 시간을 다시 셀 때 쓴다", () => {
+    const now = kst("2026-10-05 12:00");
+    const g = buildGuide(journey(), "123456", null, poll, now);
+    expect(g).toMatchObject({ generatedAt: now.getTime(), urgentMin: config.urgentMin });
+    // 시각을 넘기지 않으면 지금 시각으로 적는다.
+    const before = Date.now();
+    const later = buildGuide(journey(), "123456", null, poll).generatedAt;
+    expect(later).toBeGreaterThanOrEqual(before);
+    expect(later).toBeLessThanOrEqual(Date.now());
+  });
+
+  it("이름 칸은 없다. 싣는 칸은 정해진 열두 가지뿐이다", () => {
     const g = buildGuide(journey(), "123456", at("cc-center"), poll);
     expect(Object.keys(g).sort()).toEqual(
-      ["choices", "facilities", "flight", "gateRoute", "lang", "pace", "passNo", "place", "poll", "routeNote"].sort(),
+      [
+        "choices",
+        "facilities",
+        "flight",
+        "gateRoute",
+        "generatedAt",
+        "lang",
+        "pace",
+        "passNo",
+        "place",
+        "poll",
+        "routeNote",
+        "urgentMin",
+      ].sort(),
     );
     expect(hasKey(g, "name")).toBe(false);
     expect(hasKey(g, "registrationId")).toBe(false);

@@ -122,7 +122,7 @@ export function DeskFind() {
         {asking && (
           <ConfirmSheet
             title="이 등록을 지울까요?"
-            body={`패스 ${formatPassNo(g.passNo)} 의 항공편과 고른 항목을 지웁니다. 여객이 지워 달라고 했을 때만 지워 주세요. 되돌릴 수 없습니다.`}
+            body={`고유 일련 번호 ${formatPassNo(g.passNo)}의 항공편과 고른 항목을 지웁니다. 여객이 지워 달라고 했을 때만 지워 주세요. 되돌릴 수 없습니다.`}
             confirmLabel="지우기"
             busy={busy}
             onConfirm={erase}

@@ -33,8 +33,8 @@ interface Props {
   /** 여객 휴대전화(web), 공항 키오스크(kiosk), 안내데스크 직원이 대신 입력(assisted). */
   mode: "web" | "kiosk" | "assisted";
   initialLang: Lang;
-  /** 첫 질문에서 「이전」이나 「처음으로」를 눌렀을 때. */
-  onExit: () => void;
+  /** 첫 질문에서 「이전」이나 「처음으로」를 눌렀을 때. 등록 중에 고른 언어를 함께 준다. */
+  onExit: (lang: Lang) => void;
   onDone: (result: RegisterResult) => void;
   /** 언어나 안내 방식이 바뀔 때마다 알린다. 키오스크가 「직원 부르기」 버튼의 말과 크기를 맞추는 데 쓴다. */
   onPrefs?: (lang: Lang, prefs: Prefs) => void;
@@ -93,6 +93,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const [flight, setFlight] = useState<FlightOption | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.
+  const [failSeq, setFailSeq] = useState(0);
 
   const kind: StepKind = ORDER[step];
   const itemLabel = (i: Item) => (lang === "en" ? i.en : i.label);
@@ -156,8 +158,13 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     });
   };
 
+  // 편명 입력란에 넣었던 글(예: 703, 도쿄). 목록에서 편을 고르면 입력란이 그 편명으로 바뀌는데,
+  // 「다른 편 고르기」를 누르면 이 글로 되돌려 아까의 목록이 다시 나오게 한다(고른 편 하나만 남지 않게).
+  const pickedFrom = useRef("");
+
   const typeFlight = (value: string) => {
     touched();
+    pickedFrom.current = "";
     // 편명(KE123) 말고 도착 도시(도쿄, tokyo)나 편명의 숫자만 넣어도 찾는다. 그래서 한글과 띄어쓰기도 받는다.
     setQuery(value.toUpperCase().replace(/[^A-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ ]/g, "").replace(/^ +/, "").slice(0, 16));
     setOptions(null);
@@ -193,7 +200,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setError(null);
     setStep(target);
   };
-  const back = () => (step === 0 ? onExit() : goTo(step - 1, true));
+  const back = () => (step === 0 ? onExit(lang) : goTo(step - 1, true));
   const next = () => {
     // 첫 질문을 넘기면 "등록을 시작했다"고 센다. 안내 방식을 켰는지와 함께 남겨, 켰을 때와 껐을 때의 완료 비율을 견준다.
     // 직원이 대신 넣는 등록은 세지 않는다.
@@ -211,10 +218,21 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     goTo(step + 1, false);
   };
 
+  // 「등록하기」를 아주 빠르게 두 번 눌러도 한 번만 보낸다. busy 는 화면이 다시 그려진 뒤에야 바뀌어 같은 순간의 두 번째 누름을 막지 못한다.
+  const sending = useRef(false);
   async function submit() {
-    if (!flight || busy) return;
+    if (!flight || sending.current) return;
+    sending.current = true;
     setBusy(true);
     setError(null);
+    // 실패했을 때만 다시 누를 수 있게 푼다. 등록이 되면 패스 화면으로 넘어갈 때까지 「등록 중…」으로 둔다.
+    // 패스 화면을 불러오는 동안 버튼이 다시 살아나면, 안 된 줄 알고 또 눌러 등록이 하나 더 생기기 때문이다.
+    const fail = (message: string) => {
+      sending.current = false;
+      setBusy(false);
+      setError(message);
+      setFailSeq((n) => n + 1);
+    };
     try {
       const res = await fetch(mode === "assisted" ? "/api/desk/register" : "/api/registrations", {
         method: "POST",
@@ -231,16 +249,27 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
         }),
       });
       const data = await res.json();
-      // 서버의 오류 문구는 한국어다. 영어 화면에서는 한 가지 안내로 바꿔 보여준다.
+      // 서버의 오류 문구는 한국어다. 영어 화면에서는 서버가 함께 주는 오류 종류(code)에 맞는 영어 안내를 보여준다.
+      // 예를 들어 이미 출발한 편이면 "다시 해 주세요"만으로는 같은 오류를 되풀이하므로, 편을 다시 고르라고 알려야 한다.
+      // 종류를 모르는 오류는 한 가지 안내로 바꿔 보여준다.
       if (!res.ok) {
-        setError(lang === "en" ? t.failed : (data.error ?? t.failed));
+        const code: unknown = data.code;
+        const en =
+          code === "departed"
+            ? t.regErrDeparted
+            : code === "date"
+              ? t.regErrDate
+              : code === "flight"
+                ? t.regErrFlight
+                : code === "rate" || res.status === 429
+                  ? t.regErrRate
+                  : t.failed;
+        fail(lang === "en" ? en : (data.error ?? t.failed));
         return;
       }
       onDone({ token: data.token, passNo: data.passNo, lang, choices });
     } catch {
-      setError(t.offline);
-    } finally {
-      setBusy(false);
+      fail(t.offline);
     }
   }
 
@@ -302,12 +331,17 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
             : askAirline && airlineNow === null
               ? [t.airlineAsk, ...airlines.map(airlineName), t.allTimes]
               : [t.pickFlight, ...shownOptions.slice(0, READ_MAX).map(flightLine)];
-  const flightKey = kind === "flight" ? flightSpeak.join("|") : "";
+  // 확인 화면에서 등록하지 못하면 화면은 그대로인 채 오류 글만 나타난다. 화면이 바뀔 때만 읽으므로 그 글은 저절로 읽히지 않는다.
+  // 그래서 실패할 때마다 이 값을 바꿔 틀(FlowShell)이 다시 읽게 한다. 따로 읽으면 위쪽 「소리로 듣기」 버튼이 읽는 중인 줄 몰라,
+  // 눌러도 멈추지 않고 처음부터 다시 읽는다. 다시 「등록하기」를 눌러 오류가 지워질 때는 값이 그대로라 읽지 않는다.
+  const speakKey = kind === "flight" ? flightSpeak.join("|") : kind === "review" ? `fail-${failSeq}` : "";
 
   // 소리로 읽어 줄 글. 제목, 설명, 고를 것들.
   const speakText = declined
     ? `${t.declinedTitle}. ${t.declinedBody}`
     : [
+        // 확인 화면에서 등록하지 못했으면 그 까닭을 맨 먼저 읽는다.
+        ...(kind === "review" && error ? [error] : []),
         // 항공편 화면에서 내용이 바뀐 뒤에는 제목과 설명을 되풀이하지 않고 바뀐 내용만 읽는다.
         ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [titleOf[kind], hintOf[kind] ?? ""]),
         ...(groupOfStep ? itemsOf(groupOfStep).map(itemLabel) : []),
@@ -323,7 +357,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
 
   if (declined) {
     return (
-      <FlowShell lang={lang} prefs={prefs} kiosk={kiosk} screenKey="declined" speakText={speakText} onBack={() => setDeclined(false)} onHome={onExit}>
+      <FlowShell lang={lang} prefs={prefs} kiosk={kiosk} screenKey="declined" speakText={speakText} onBack={() => setDeclined(false)} onHome={() => onExit(lang)}>
         <div className="empty" role="status">
           <span className="bubble">
             <Check size={28} aria-hidden="true" />
@@ -370,9 +404,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       kiosk={kiosk}
       screenKey={kind}
       speakText={speakText}
-      speakKey={flightKey}
+      speakKey={speakKey}
       onBack={back}
-      onHome={onExit}
+      onHome={() => onExit(lang)}
       progress={{ n: step + 1, total: ORDER.length, name: t.steps[kind] }}
       // 키오스크의 항공편 화면에서는 편을 고를 때까지 「다음」을 치워 둔다. 화면 글자판과 도시 목록이 버튼에 가려지지 않는다.
       cta={kiosk && kind === "flight" && !flight ? undefined : cta}
@@ -486,7 +520,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                   {t.cityChange}
                 </button>
                 {flight && (
-                  <button className="link-btn" onClick={() => setFlight(null)}>
+                  <button
+                    className="link-btn"
+                    onClick={() => {
+                      setFlight(null);
+                      // 누른 버튼이 사라진다. 초점을 항공편 칸에 두어 키보드와 화면 읽기 프로그램이 제자리를 잃지 않게 한다.
+                      flightZone.current?.focus({ preventScroll: true });
+                    }}
+                  >
                     {t.flightReselect}
                   </button>
                 )}
@@ -504,6 +545,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                 onClick={() => {
                   setError(null);
                   setRetry((n) => n + 1);
+                  // 오류가 지워지면 이 버튼도 사라진다. 초점을 항공편 칸으로 옮겨 둔다.
+                  flightZone.current?.focus({ preventScroll: true });
                 }}
               >
                 {t.searchAgain}
@@ -574,7 +617,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
                       touched();
                       setFlight(o);
                       // 도시에서 고른 경우에는 입력란을 비워 둔다. 「다른 편 고르기」로 목록에 돌아갈 수 있다.
-                      if (!cityPick) setQuery(o.flightNo);
+                      if (!cityPick) {
+                        // 이미 고른 편을 한 번 더 누른 때는 입력란이 벌써 편명이다. 그때는 아까 넣은 글을 그대로 둔다.
+                        if (!flight) pickedFrom.current = query;
+                        setQuery(o.flightNo);
+                      }
                     }}
                   >
                     <span className="flight-opt-no num">{o.flightNo}</span>
@@ -595,7 +642,15 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
             {flight?.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
             {/* 편명으로 찾아 고른 편도 눌러서 바꿀 수 있게 한다. 키오스크는 편을 고르면 글자판이 사라지므로 이 버튼이 있어야 바꿀 수 있다. */}
             {flight && !cityPick && (
-              <button className="link-btn" onClick={() => setFlight(null)}>
+              <button
+                className="link-btn"
+                onClick={() => {
+                  setFlight(null);
+                  if (pickedFrom.current) setQuery(pickedFrom.current);
+                  // 누른 버튼이 사라진다. 초점을 항공편 칸에 두어 키보드와 화면 읽기 프로그램이 제자리를 잃지 않게 한다.
+                  flightZone.current?.focus({ preventScroll: true });
+                }}
+              >
                 {t.flightReselect}
               </button>
             )}

@@ -5,6 +5,7 @@ import {
   acceptCall,
   cancelCall,
   createCall,
+  endReason,
   finishCall,
   getCallAt,
   listCalls,
@@ -113,6 +114,7 @@ describe("직원 부르기: 패스 붙이기", () => {
     const first = await createCall(db, "cc-108", null, "register", t0);
     expect(first).toMatchObject({ registrationId: null, screen: "register" });
 
+    // 등록 중에 부르고 패스를 받은 뒤 다시 누른 같은 여객이다. 누른 시각은 처음 누른 때로 둔다.
     const second = await createCall(db, "cc-108", registration.id, "guide", after(1));
     expect(second).toMatchObject({ id: first!.id, registrationId: registration.id, screen: "guide", createdAt: t0 });
     expect(await rowCount()).toBe(1);
@@ -123,7 +125,7 @@ describe("직원 부르기: 패스 붙이기", () => {
     const { registration } = await registerWithPass(db, t0);
     const first = await createCall(db, "cc-108", registration.id, "guide", t0);
     const again = await createCall(db, "cc-108", null, "register", after(1));
-    expect(again).toMatchObject({ id: first!.id, registrationId: null, screen: "register", createdAt: t0 });
+    expect(again).toMatchObject({ id: first!.id, registrationId: null, screen: "register", createdAt: after(1) });
     expect(await rowCount()).toBe(1);
   });
 
@@ -132,8 +134,21 @@ describe("직원 부르기: 패스 붙이기", () => {
     const b = await registerWithPass(db, t0);
     const first = await createCall(db, "cc-108", a.registration.id, "guide", t0);
     const again = await createCall(db, "cc-108", b.registration.id, "guide", after(5));
-    expect(again).toMatchObject({ id: first!.id, registrationId: b.registration.id, createdAt: t0, state: "waiting" });
+    expect(again).toMatchObject({ id: first!.id, registrationId: b.registration.id, createdAt: after(5), state: "waiting" });
     expect(await rowCount()).toBe(1);
+  });
+
+  it("다음 여객에게 넘어간 호출은 그 여객이 누른 때부터 30분을 센다", async () => {
+    // 앞사람 A 가 12:00 에 부르고 떠났다. 아무도 받지 않았고, 12:27 에 B 가 패스를 찍고 눌렀다.
+    const a = await registerWithPass(db, t0);
+    const b = await registerWithPass(db, t0);
+    const call = await createCall(db, "cc-108", a.registration.id, "guide", t0);
+    await createCall(db, "cc-108", b.registration.id, "guide", after(27));
+    // 12:31. A 가 누른 지는 30분이 넘었지만 B 가 누른 지는 4분이다.
+    expect(await getCallAt(db, call!.id, "cc-108", after(31))).toMatchObject({ state: "waiting", createdAt: after(27) });
+    expect((await listCalls(db, after(31)))[0]).toMatchObject({ id: call!.id, state: "waiting" });
+    // B 가 누른 지 30분이 넘으면 닫힌다.
+    expect((await getCallAt(db, call!.id, "cc-108", after(57, 1)))?.state).toBe("cancelled");
   });
 
   it("직원이 이미 받은 호출은 다른 사람이 다시 눌러도 처음 부른 여객의 것으로 남는다", async () => {
@@ -155,7 +170,7 @@ describe("직원 부르기: 패스 붙이기", () => {
     const { registration } = await registerWithPass(db, t0);
     await createCall(db, "cc-108", registration.id, "guide", t0);
     const again = await createCall(db, "cc-108", registration.id, "register", after(1));
-    expect(again).toMatchObject({ registrationId: registration.id, screen: "guide" });
+    expect(again).toMatchObject({ registrationId: registration.id, screen: "guide", createdAt: t0 });
   });
 
   it("다른 자리의 호출에 붙은 패스는 건드리지 않는다", async () => {
@@ -316,6 +331,24 @@ describe("직원 부르기: 오래된 호출", () => {
     const list = await listCalls(db, after(30, 1));
     expect(list).toHaveLength(1);
     expect(list[0]).toMatchObject({ id: call!.id, state: "cancelled", endedAt: after(30, 1), acceptedAt: null });
+    // DB 에는 cancelled 로 남지만, 직원 화면에는 여객이 거둔 것과 나눠 "응답 없이 닫힘"으로 보인다.
+    expect(endReason(list[0])).toBe("expired");
+  });
+
+  it("끝난 까닭: 여객이 거둔 것, 받은 뒤 거둔 것, 마친 것은 시간이 지나 닫힌 것이 아니다", async () => {
+    const withdrawn = await createCall(db, "cc-108", null, "guide", t0);
+    await cancelCall(db, withdrawn!.id, "cc-108", after(2));
+    const acceptedThenWithdrawn = await createCall(db, "cc-125", null, "guide", t0);
+    await acceptCall(db, acceptedThenWithdrawn!.id, "cc-mid", after(1));
+    await cancelCall(db, acceptedThenWithdrawn!.id, "cc-125", after(40));
+    const done = await createCall(db, "t1-west", null, "guide", t0);
+    await finishCall(db, done!.id, "cc-mid", after(45));
+    const open = await createCall(db, "t2-west", null, "guide", after(10));
+    const reason = async (id: string, place: string) => endReason((await getCallAt(db, id, place))!);
+    expect(await reason(withdrawn!.id, "cc-108")).toBe("cancelled");
+    expect(await reason(acceptedThenWithdrawn!.id, "cc-125")).toBe("cancelled");
+    expect(await reason(done!.id, "t1-west")).toBe("done");
+    expect(await reason(open!.id, "t2-west")).toBeNull();
   });
 
   it("오래된 호출이 남은 자리에서 다시 누르면 앞의 것은 닫히고 새 호출이 생긴다", async () => {

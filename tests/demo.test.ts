@@ -1,15 +1,18 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resolveHandler } from "@/lib/api/kiosk";
 import { guideHandler } from "@/lib/api/public";
 import { validateChoices } from "@/lib/catalog";
 import type { Db } from "@/lib/db";
 import { DEMO, seedDemo } from "@/lib/demo";
+import { lastSuccessfulPoll, recordPoll } from "@/lib/flights/ingest";
 import type { GuideDto } from "@/lib/guide";
+import { pollMetrics } from "@/lib/metrics";
 import { extractToken } from "@/lib/passes";
 import { mockFlights } from "@/lib/setup";
+import { pollState } from "@/lib/timing";
 import { seedZones } from "@/lib/zones";
 import { createTestDb, kst } from "./helpers/db";
-import { hasKey, kioskSession } from "./helpers/fixtures";
+import { addFlights, flightRow, hasKey, kioskSession, registerWithPass } from "./helpers/fixtures";
 
 const now = kst("2026-10-08 13:00");
 const kiosk = kioskSession(now, "cc-train");
@@ -129,5 +132,58 @@ describe("시연용 패스", () => {
     expect(await db.query("select 1 from passes where state = 'active'")).toHaveLength(DEMO.length);
     // 여객이 지워 달라고 한 것과 같은 방식으로 끝낸다.
     expect(await db.query("select 1 from registrations where status = 'expired'")).toHaveLength(0);
+  });
+
+  it("다시 넣으면 시험 삼아 등록한 모의 편(MQ·MZ 포함)의 등록도 지우고, 실제 편의 등록은 그대로 둔다", async () => {
+    const a = await seedDemo(db, now);
+    if (!a.ok) throw new Error(a.error);
+    // 시연 준비 중에 휴대전화로 오사카/간사이 모의 편(모의저비용항공 MQ702)을 골라 등록했다.
+    const [mq] = await db.query<{ flight_date: string }>("select flight_date::text as flight_date from flights where flight_no = 'MQ702'");
+    const tester = await registerWithPass(db, now, { flightNo: "MQ702", flightDate: mq.flight_date, startedAt: now });
+    // 같은 때 실제 편으로 등록한 여객.
+    await addFlights(db, [flightRow("KE123", "2026-10-08 18:00")], now);
+    const real = await registerWithPass(db, now, { flightNo: "KE123", flightDate: "2026-10-08", startedAt: now });
+
+    await seedDemo(db, new Date(now.getTime() + 60_000));
+    const status = async (id: string) =>
+      (await db.query<{ status: string }>("select status from registrations where id = $1", [id]))[0].status;
+    expect(await status(tester.registration.id)).toBe("revoked");
+    expect(await status(real.registration.id)).toBe("active");
+  });
+});
+
+describe("시연용 패스와 운항 정보 기준 시각", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("실제 수집이 멈춘 동안 시연용 패스를 넣어도 '운항 정보가 늦어지고 있습니다'를 가리지 않는다", async () => {
+    await db.exec("truncate table flight_polls restart identity");
+    // 실제 수집은 09:07 이 마지막 성공이고, 그 뒤로는 실패하고 있다.
+    await recordPoll(db, { at: kst("2026-10-08 09:07"), ok: true, rowCount: 2000, durationMs: 9000, gateChanges: 0 });
+    await recordPoll(db, { at: kst("2026-10-08 10:07"), ok: false, rowCount: 0, durationMs: 9000, gateChanges: 0, error: "timeout" });
+    await seedDemo(db, now);
+    expect(await lastSuccessfulPoll(db)).toEqual(kst("2026-10-08 09:07"));
+    expect(pollState(await lastSuccessfulPoll(db), now).stale).toBe(true);
+    // 수집 현황에도 넣은 기록은 수집으로 세지 않는다.
+    expect(await pollMetrics(db, kst("2026-10-08 00:00"))).toMatchObject({ total: 2, failed: 1, lastAt: kst("2026-10-08 10:07") });
+  });
+
+  it("실제 수집이 한 번도 없으면(운항 정보 키 없는 개발 환경) 모의 운항을 넣은 시각을 기준으로 쓴다", async () => {
+    vi.stubEnv("ICN_API_KEY", "");
+    await db.exec("truncate table flight_polls restart identity");
+    await seedDemo(db, now);
+    expect(await lastSuccessfulPoll(db)).toEqual(now);
+    expect(pollState(await lastSuccessfulPoll(db), now).stale).toBe(false);
+  });
+
+  it("운항 정보 키가 있는데 수집이 한 번도 성공하지 못했으면 모의 운항을 넣은 시각으로 가리지 않는다", async () => {
+    // 새로 받은 키가 아직 쓰이지 않거나, 키를 잘못 넣었다. 수집은 계속 실패하고 있다.
+    vi.stubEnv("ICN_API_KEY", "not-yet-active");
+    await db.exec("truncate table flight_polls restart identity");
+    await recordPoll(db, { at: kst("2026-10-08 12:07"), ok: false, rowCount: 0, durationMs: 900, gateChanges: 0, error: "SERVICE KEY IS NOT REGISTERED" });
+    await seedDemo(db, now);
+    expect(await lastSuccessfulPoll(db)).toBeNull();
+    expect(pollState(await lastSuccessfulPoll(db), now).stale).toBe(true);
   });
 });

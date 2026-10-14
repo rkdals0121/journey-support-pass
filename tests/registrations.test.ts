@@ -32,6 +32,7 @@ beforeAll(async () => {
       flightRow("OP2", "2026-10-05 11:30", { estAt: kst("2026-10-05 13:00") }),
       flightRow("CS2", "2026-10-05 11:30", { masterNo: "OP2", gate: null }),
       flightRow("KE900", "2026-10-04 23:30"),
+      flightRow("KE901", "2026-10-04 23:40", { estAt: kst("2026-10-05 01:00"), status: "지연" }),
     ],
     now,
   );
@@ -272,8 +273,30 @@ describe("등록할 수 있는 날짜", () => {
     expect(await errorOf("2026-10-07", kst("2026-10-06 00:00"))).toBeNull();
   });
 
-  it("어제 날짜의 편도 받지 않는다", async () => {
-    expect(await errorOf("2026-10-04", now, "KE900")).toBe(NOT_YET);
+  it("어제 날짜 편은 아직 떠나지 않았을 때만 받는다 (어제 밤 편이 자정을 넘겨 늦어진 경우)", async () => {
+    const DEPARTED = "이미 출발한 편입니다. 편명을 다시 확인해 주세요";
+    // 어제 23:30 에 제시각에 떠난 편.
+    expect(await errorOf("2026-10-04", now, "KE900")).toBe(DEPARTED);
     expect(await errorOf("2026-10-04", kst("2026-10-04 23:00"), "KE900")).toBeNull();
+    // 어제 23:40 예정, 01:00 으로 늦어진 편. 자정이 지나도 떠나기 전까지는 받는다.
+    expect(await errorOf("2026-10-04", kst("2026-10-05 00:30"), "KE901")).toBeNull();
+    expect(await errorOf("2026-10-04", kst("2026-10-05 01:00"), "KE901")).toBe(DEPARTED);
+    // 그제 날짜 편은 받지 않는다.
+    expect(await errorOf("2026-10-04", kst("2026-10-06 00:30"), "KE901")).toBe(NOT_YET);
+  });
+
+  it("영어 화면이 문구를 고를 수 있게 받지 못한 까닭(code)을 함께 돌려준다", async () => {
+    const codeOf = async (over: Parameters<typeof regInput>[0], at: Date = now) => {
+      const res = await createRegistration(db, regInput(over), at);
+      return res.ok ? null : (res.code ?? "");
+    };
+    expect(await codeOf({ consent: false })).toBe("consent");
+    expect(await codeOf({ choices: ["nope"] })).toBe("choices");
+    expect(await codeOf({ flightNo: "ZZ999" })).toBe("flight");
+    expect(await codeOf({ flightDate: "2026-10-07" })).toBe("date");
+    expect(await codeOf({ flightNo: "KE888" })).toBe("departed");
+    expect(await codeOf({ flightNo: "CS1" })).toBe("departed");
+    // 여객이 고칠 수 없는 값(경로)은 까닭을 붙이지 않는다. 영어 화면은 일반 실패 문구를 보여 준다.
+    expect(await codeOf({ route: "paper" as never })).toBe("");
   });
 });

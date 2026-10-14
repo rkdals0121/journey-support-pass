@@ -1,4 +1,5 @@
 import { CircleSlash, SearchX } from "lucide-react";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import QRCode from "qrcode";
@@ -8,12 +9,19 @@ import { getDb } from "@/lib/db";
 import { lastSuccessfulPoll } from "@/lib/flights/ingest";
 import { buildGuide } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
-import { passUrl } from "@/lib/pass-format";
+import { passUrl, TOKEN_RE } from "@/lib/pass-format";
 import { pollState } from "@/lib/timing";
 import { Brand } from "../../components/Sunflower";
 import { PassView } from "./PassView";
 
 export const dynamic = "force-dynamic";
+
+// 이 화면을 홈 화면에 추가하면 첫 화면이 아니라 이 패스가 열리게, 패스마다 따로 만든 매니페스트를 건다(./manifest/route.ts).
+// QR 값의 모양만 본다. 모양이 틀린 주소는 사이트 전체의 매니페스트가 그대로 쓰인다.
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const token = (await params).token.toUpperCase();
+  return TOKEN_RE.test(token) ? { manifest: `/p/${token}/manifest` } : {};
+}
 
 // 패스 QR 이 가리키는 주소. 이 주소가 곧 패스다.
 // 여객이 등록을 마치면 여기로 오고, 휴대전화 기본 카메라로 QR 을 찍어도 여기로 온다.
@@ -34,6 +42,8 @@ export default async function PassPage({
     const ended = found.kind === "ended";
     const ko = textOf("ko");
     const en = textOf("en");
+    // 패스가 끝나면 여객이 어느 말로 등록했는지 알 수 없으므로 한국어와 영어를 함께 보여 준다.
+    // 다시 등록하는 단추도 말마다 따로 둔다. 영어 단추는 영어 등록 화면을 열고, 읽어 주는 소리도 그 말로 나온다.
     return (
       <main className="page">
         <Brand />
@@ -42,6 +52,9 @@ export default async function PassPage({
             {ended ? <CircleSlash size={28} aria-hidden="true" /> : <SearchX size={28} aria-hidden="true" />}
           </span>
           <h1>{ended ? ko.passEnded : ko.passUnknown}</h1>
+          <p lang="en" className="muted">
+            {ended ? en.passEnded : en.passUnknown}
+          </p>
           <p>{ended ? ko.passEndedBody : ko.passUnknownBody}</p>
           <p lang="en" className="muted">
             {ended ? en.passEndedBody : en.passUnknownBody}
@@ -50,11 +63,14 @@ export default async function PassPage({
         <Link className="btn btn-primary" href="/register">
           {ko.again}
         </Link>
+        <Link className="btn" href="/register?lang=en" hrefLang="en" lang="en">
+          {en.again}
+        </Link>
       </main>
     );
   }
 
-  const guide = buildGuide(found.journey, found.passNo, null, pollState(await lastSuccessfulPoll(db), now));
+  const guide = buildGuide(found.journey, found.passNo, null, pollState(await lastSuccessfulPoll(db), now), now);
   // QR 은 서버에서 미리 그려 보낸다. 느린 휴대전화에서도 화면을 열자마자 QR 이 보인다.
   // 주소는 여객이 지금 연 그 주소를 따른다.
   const h = await headers();

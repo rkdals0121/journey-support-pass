@@ -1,6 +1,6 @@
 import { placeOf } from "../airport";
 import { login, logAccess, switchZone, type Session } from "../auth";
-import { acceptCall, finishCall, listCalls, type Call } from "../calls";
+import { acceptCall, endReason, finishCall, listCalls, type Call, type CallEndReason } from "../calls";
 import { shortOf } from "../catalog";
 import type { Db } from "../db";
 import { toFlightView, type FlightView } from "../guide";
@@ -72,6 +72,8 @@ export async function switchZoneHandler(
 export interface CallDto {
   id: string;
   state: Call["state"];
+  /** 끝난 까닭. 도움 마침(done), 여객이 거둠(cancelled), 아무도 받지 않아 시간이 지나 닫힘(expired). 끝나지 않았으면 null. */
+  endReason: CallEndReason | null;
   /** 어느 키오스크에서 불렀는가. */
   place: string;
   /** 내 구역의 키오스크에서 온 호출인가. */
@@ -105,6 +107,7 @@ export async function callsHandler(db: Db, session: Session | null, now: Date): 
     list.push({
       id: c.id,
       state: c.state,
+      endReason: endReason(c),
       place: placeOf(c.placeId)?.label ?? c.placeId,
       mine: c.zoneId === me.zoneId,
       screen: c.screen,

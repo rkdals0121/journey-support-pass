@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { zoneName } from "@/lib/api/dto";
 import { resolveHandler } from "@/lib/api/kiosk";
 import {
-  allowRegistration,
+  claimRegistration,
   destinationsHandler,
   eraseHandler,
   eventHandler,
@@ -20,8 +20,8 @@ import {
   zonesHandler,
   type CallDto,
 } from "@/lib/api/staff";
-import { deviceKey, readSession } from "@/lib/auth";
-import { createCall } from "@/lib/calls";
+import { deviceKey, forgetAttempt, readSession } from "@/lib/auth";
+import { cancelCall, createCall } from "@/lib/calls";
 import { config } from "@/lib/config";
 import type { Db } from "@/lib/db";
 import { recordPoll } from "@/lib/flights/ingest";
@@ -299,17 +299,22 @@ describe("등록", () => {
   });
 
   it("동의하지 않거나 값이 맞지 않으면 400 이고 아무것도 남기지 않는다", async () => {
-    const bad = [
-      body({ consent: false }),
-      body({ consent: "true" }),
-      body({ choices: ["nope"] }),
-      body({ choices: ["stf_call", "stf_self"] }),
-      body({ flightNo: "ZZ999" }),
-      body({ flightNo: 123 }),
-      body({ flightDate: undefined }),
-      {},
+    // 영어 화면이 상황에 맞는 문구를 고를 수 있게 까닭(code)도 함께 온다.
+    const bad: [Record<string, unknown>, string][] = [
+      [body({ consent: false }), "consent"],
+      [body({ consent: "true" }), "consent"],
+      [body({ choices: ["nope"] }), "choices"],
+      [body({ choices: ["stf_call", "stf_self"] }), "choices"],
+      [body({ flightNo: "ZZ999" }), "flight"],
+      [body({ flightNo: 123 }), "flight"],
+      [body({ flightDate: undefined }), "flight"],
+      [{}, "consent"],
     ];
-    for (const b of bad) expect((await registerHandler(db, b, null, web, now)).status).toBe(400);
+    for (const [b, code] of bad) {
+      const res = await registerHandler(db, b, null, web, now);
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe(code);
+    }
     expect(await regRows()).toHaveLength(0);
     expect(await db.query("select 1 from passes")).toHaveLength(0);
     expect(await logCount("register")).toBe(0);
@@ -322,16 +327,47 @@ describe("등록", () => {
       const res = await registerHandler(db, body({ flightNo }), null, web, now);
       expect(res.status).toBe(400);
       expect(res.body.error).toContain("이미 출발한 편");
+      expect(res.body.code).toBe("departed");
     }
   });
 
   it("오늘과 내일 편이 아니면 등록할 수 없다", async () => {
-    await addFlights(db, [flightRow("KE123", "2026-10-07 14:30")], now);
-    const res = await registerHandler(db, body({ flightDate: "2026-10-07" }), null, web, now);
-    expect(res.status).toBe(400);
-    expect(res.body.error).toBe("오늘과 내일 출발하는 편만 등록할 수 있습니다");
+    await addFlights(db, [flightRow("KE123", "2026-10-07 14:30"), flightRow("KE123", "2026-10-03 23:50")], now);
+    for (const flightDate of ["2026-10-07", "2026-10-03"]) {
+      const res = await registerHandler(db, body({ flightDate }), null, web, now);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "오늘과 내일 출발하는 편만 등록할 수 있습니다", code: "date" });
+    }
     expect(await regRows()).toHaveLength(0);
     expect((await registerHandler(db, body({ flightDate: "2026-10-06" }), null, web, now)).status).toBe(200);
+  });
+
+  it("어제 날짜 편도 아직 떠나지 않았으면(자정을 넘겨 늦어짐) 찾고 등록한다. 떠났으면 받지 않는다", async () => {
+    const night = kst("2026-10-05 00:20");
+    await addFlights(
+      db,
+      [
+        // 어제 23:40 예정, 01:10 으로 늦어짐. 아직 떠나지 않았다.
+        flightRow("KE701", "2026-10-04 23:40", { estAt: kst("2026-10-05 01:10"), status: "지연" }),
+        // 어제 23:50 예정, 00:10 으로 늦어져 이미 떠났다.
+        flightRow("KE702", "2026-10-04 23:50", { estAt: kst("2026-10-05 00:10") }),
+      ],
+      night,
+    );
+    const found = (await searchFlightsHandler(db, "KE70", night)).body.flights as Record<string, unknown>[];
+    // 실제로 떠나는 날(오늘)과 바뀐 시각으로 보여 준다.
+    expect(found).toEqual([expect.objectContaining({ flightNo: "KE701", flightDate: "2026-10-04", day: "today", time: "01:10" })]);
+    const res = await registerHandler(db, body({ flightNo: "KE701", flightDate: "2026-10-04" }), null, web, night);
+    expect(res.status).toBe(200);
+    const gone = await registerHandler(db, body({ flightNo: "KE702", flightDate: "2026-10-04" }), null, web, night);
+    expect(gone.status).toBe(400);
+    expect(gone.body.code).toBe("departed");
+  });
+
+  it("오늘 밤 편이 자정을 넘겨 늦어지면 '내일'로 보여 준다", async () => {
+    await addFlights(db, [flightRow("KE703", "2026-10-05 23:40", { estAt: kst("2026-10-06 00:15"), status: "지연" })], now);
+    const [f] = (await searchFlightsHandler(db, "KE703", now)).body.flights as Record<string, unknown>[];
+    expect(f).toMatchObject({ flightDate: "2026-10-05", day: "tomorrow", time: "00:15" });
   });
 
   it("고른 항목에 글자가 아닌 값이 섞여 오면 글자만 남겨 받는다", async () => {
@@ -364,27 +400,88 @@ describe("등록", () => {
 
 describe("등록 횟수 제한", () => {
   const key = (ua: string) => deviceKey("203.0.113.7", ua);
+  /** 지금 받을 수 있는지만 본다. 자리를 잡아 본 기록은 바로 지워 다음 셈에 섞이지 않게 한다. */
+  const allowed = async (k: string, at: Date) => {
+    const claim = await claimRegistration(db, k, at);
+    if (claim) await forgetAttempt(db, claim);
+    return claim !== null;
+  };
 
   it(`같은 접속 주소에서 ${config.registerWindowMin}분에 ${config.registerMaxPerIp}건을 넘기면 막는다. 브라우저 표시를 바꿔도 같다`, async () => {
     for (let i = 0; i < config.registerMaxPerIp; i++) {
       expect((await registerHandler(db, body(), null, key(`ua-${i}`), now)).status).toBe(200);
     }
-    expect((await registerHandler(db, body(), null, key("ua-new"), now)).status).toBe(429);
-    // 거부된 등록은 저장되지 않는다.
+    const refused = await registerHandler(db, body(), null, key("ua-new"), now);
+    expect(refused).toEqual({ status: 429, body: { error: "잠시 후 다시 시도해 주세요", code: "rate" } });
+    // 거부된 등록은 저장되지 않고, 거부된 시도는 횟수로 남지 않는다.
     expect(await regRows()).toHaveLength(config.registerMaxPerIp);
     expect(await db.query("select 1 from passes")).toHaveLength(config.registerMaxPerIp);
+    expect(await logCount("register")).toBe(config.registerMaxPerIp);
 
     // 다른 접속 주소는 영향이 없고, 시간이 지나면 다시 받는다.
-    expect(await allowRegistration(db, deviceKey("198.51.100.9", "ua-0"), now)).toBe(true);
+    expect(await allowed(deviceKey("198.51.100.9", "ua-0"), now)).toBe(true);
     expect((await registerHandler(db, body(), null, deviceKey("198.51.100.9", "ua-0"), now)).status).toBe(200);
     const later = new Date(now.getTime() + config.registerWindowMin * 60_000);
-    expect(await allowRegistration(db, key("ua-new"), later)).toBe(true);
+    expect(await allowed(key("ua-new"), later)).toBe(true);
     expect((await registerHandler(db, body(), null, key("ua-new"), later)).status).toBe(200);
+  });
+
+  it("한도 안의 등록이 한꺼번에 몰려와도 모두 받는다", async () => {
+    // 먼저 적고 세면 몰려온 기록이 서로의 셈에 들어간다. 그래도 한도 안이면 하나도 막지 않아야 한다.
+    const n = config.registerMaxPerIp - 5;
+    const results = await Promise.all(
+      Array.from({ length: n }, (_, i) => registerHandler(db, body(), null, key(`under-${i}`), now)),
+    );
+    expect(results.map((r) => r.status)).toEqual(Array(n).fill(200));
+    expect(await regRows()).toHaveLength(n);
+    expect(await logCount("register")).toBe(n);
+  });
+
+  it("한꺼번에 몰려와도 한도를 넘겨 받지 않는다 (먼저 적고 센다)", async () => {
+    // 세고 나서 적으면 몰려온 요청이 모두 "아직 0건"을 보고 지나가, 여기서 한도보다 많이 받는다.
+    const results = await Promise.all(
+      Array.from({ length: config.registerMaxPerIp + 10 }, (_, i) => registerHandler(db, body(), null, key(`burst-${i}`), now)),
+    );
+    const accepted = results.filter((r) => r.status === 200).length;
+    expect(accepted).toBeLessThanOrEqual(config.registerMaxPerIp);
+    expect(results.every((r) => r.status === 200 || r.status === 429)).toBe(true);
+    expect(await regRows()).toHaveLength(accepted);
+    expect(await logCount("register")).toBeLessThanOrEqual(config.registerMaxPerIp);
+    // 거부된 시도의 기록은 지워져, 받은 등록만 횟수로 남는다. 모두 등록에 이어져 있다.
+    const logs = await db.query<{ registration_id: string | null }>(
+      "select registration_id from access_logs where action = 'register'",
+    );
+    expect(logs).toHaveLength(accepted);
+    for (const l of logs) expect(l.registration_id).not.toBeNull();
+    // 한도가 남아 있으면 그 뒤의 등록은 받는다.
+    if (accepted < config.registerMaxPerIp) {
+      expect((await registerHandler(db, body(), null, key("after"), now)).status).toBe(200);
+    }
+  });
+
+  it(`모든 주소를 합해 ${config.registerMaxAll}건을 넘기면 다른 주소의 휴대전화 등록도 막는다`, async () => {
+    await db.query(
+      `insert into access_logs (at, zone_id, device_key, action)
+       select $1, null, '10.0.' || g || ':ua', 'register' from generate_series(1, $2::int) g`,
+      [now, config.registerMaxAll],
+    );
+    expect(await allowed(deviceKey("198.51.100.9", "ua"), now)).toBe(false);
+    expect((await registerHandler(db, body(), null, deviceKey("198.51.100.9", "ua"), now)).status).toBe(429);
+    // 거부된 시도는 남지 않는다.
+    expect(await logCount("register")).toBe(config.registerMaxAll);
+  });
+
+  it("받지 못한 등록(값이 틀림)은 횟수로 세지 않는다", async () => {
+    for (let i = 0; i < config.registerMaxPerIp; i++) {
+      expect((await registerHandler(db, body({ consent: false }), null, key(`ua-${i}`), now)).status).toBe(400);
+    }
+    expect(await logCount("register")).toBe(0);
+    expect((await registerHandler(db, body(), null, key("ua-ok"), now)).status).toBe(200);
   });
 
   it("키오스크와 안내데스크의 대신 입력은 횟수를 막지 않는다", async () => {
     for (let i = 0; i < config.registerMaxPerIp; i++) await registerHandler(db, body(), null, key(`ua-${i}`), now);
-    expect(await allowRegistration(db, key("kiosk"), now)).toBe(false);
+    expect(await allowed(key("kiosk"), now)).toBe(false);
 
     expect((await registerHandler(db, body(), kiosk, key("kiosk"), now)).status).toBe(200);
     expect((await registerHandler(db, body(), desk, key("desk"), now, true)).status).toBe(200);
@@ -398,7 +495,7 @@ describe("등록 횟수 제한", () => {
     for (let i = 0; i < config.registerMaxPerIp; i++) await registerHandler(db, body(), kiosk, key("kiosk"), now);
     for (let i = 0; i < 3; i++) await registerHandler(db, body(), desk, key("desk"), now, true);
     expect(await logCount("register")).toBe(config.registerMaxPerIp + 3);
-    expect(await allowRegistration(db, key("phone"), now)).toBe(true);
+    expect(await allowed(key("phone"), now)).toBe(true);
 
     // 휴대전화 등록은 한도까지 그대로 받는다.
     for (let i = 0; i < config.registerMaxPerIp; i++) {
@@ -528,9 +625,10 @@ describe("안내 내용", () => {
     const { pass } = await registerWithPass(db, now);
     const poll = async () => ((await guideHandler(db, pass.token, null, now)).body.guide as GuideDto).poll;
     expect(await poll()).toEqual({ label: "운항 정보 없음", stale: true });
-    // 수집 간격에 15분을 더한 시간보다 오래된 수집만 있으면 멈춘 것으로 본다.
-    await recordPoll(db, { at: kst("2026-10-05 10:40"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
-    expect(await poll()).toEqual({ label: "운항 정보 10:40 기준", stale: true });
+    // 수집이 멈춘 것으로 볼 시간(config.staleMin, 수집 간격의 두 배에 15분)보다 오래된 수집만 있으면 멈춘 것으로 본다.
+    expect(config.staleMin).toBe(135);
+    await recordPoll(db, { at: kst("2026-10-05 09:44"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
+    expect(await poll()).toEqual({ label: "운항 정보 09:44 기준", stale: true });
     await recordPoll(db, { at: kst("2026-10-05 11:40"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
     expect(await poll()).toEqual({ label: "운항 정보 11:40 기준", stale: false });
     // 실패한 수집은 기준 시각이 되지 않는다.
@@ -732,6 +830,7 @@ describe("직원 화면: 호출 목록", () => {
       {
         id: call!.id,
         state: "waiting",
+        endReason: null,
         place: "탑승동 3층 108번 탑승구 앞",
         mine: true,
         screen: "register",
@@ -820,6 +919,23 @@ describe("직원 화면: 호출 목록", () => {
     expect((await list(mid, t(20))).find((c) => c.id === a!.id)?.waitedMin).toBe(2);
     expect((await list(mid, t(20))).find((c) => c.id === b!.id)?.waitedMin).toBe(19);
     expect((await list(mid, t(32))).map((c) => c.id)).not.toContain(a!.id);
+  });
+
+  it("끝난 까닭을 나눠 보낸다: 도움 마침, 여객이 거둠, 아무도 받지 않아 시간이 지나 닫힘", async () => {
+    const t = (min: number) => new Date(now.getTime() + min * 60_000);
+    const done = await createCall(db, "cc-108", null, "guide", t(0));
+    await callActionHandler(db, mid, done!.id, { action: "done" }, t(1));
+    const withdrawn = await createCall(db, "cc-125", null, "guide", t(0));
+    await cancelCall(db, withdrawn!.id, "cc-125", t(2));
+    // 30분 넘게 아무도 받지 않았다. 목록을 불러올 때 닫힌다.
+    const missed = await createCall(db, "t1-info", null, "guide", t(0));
+    const calls = await list(mid, t(30.5));
+    const reasons = Object.fromEntries(calls.map((c) => [c.id, [c.state, c.endReason]]));
+    expect(reasons).toEqual({
+      [done!.id]: ["done", "done"],
+      [withdrawn!.id]: ["cancelled", "cancelled"],
+      [missed!.id]: ["cancelled", "expired"],
+    });
   });
 });
 

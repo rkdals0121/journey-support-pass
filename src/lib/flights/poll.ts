@@ -25,9 +25,11 @@ export interface PollResult {
 }
 
 /**
- * 한 번 수집한다. 오늘부터 모레까지(한국 날짜) 출발편을 남긴다. 실패해도 수집 기록은 남긴다.
+ * 한 번 수집한다. 어제부터 모레까지(한국 날짜) 출발편을 남긴다. 실패해도 수집 기록은 남긴다.
  * 화면은 오늘과 내일 편만 보여 준다. 모레 편을 미리 받아 두는 것은 자정이 지나 "내일"이 바뀌었을 때
  * 다음 수집(매시 7분)까지 새 "내일" 편이 하나도 없는 틈을 없애기 위해서다.
+ * 어제 편도 계속 고쳐 쓴다. 어제 밤 23:50 편이 01:00 으로 늦어지면 그 편의 날짜는 여전히 어제다.
+ * 자정에 어제 편을 버리면 그 편의 탑승구와 시각이 멈춰, 여객은 옛 탑승구를 보고 패스는 너무 일찍 끝나 지워진다.
  */
 export async function runPoll(
   db: Db,
@@ -40,7 +42,7 @@ export async function runPoll(
   try {
     const { rows: raw, pages } = await fetcher(apiKey, now);
     const today = kstDate(now);
-    const keep = new Set([today, addDays(today, 1), addDays(today, 2)]);
+    const keep = new Set([addDays(today, -1), today, addDays(today, 1), addDays(today, 2)]);
     const rows = raw
       .map(normalizeRow)
       .filter((r): r is FlightRow => r !== null && keep.has(r.flightDate));

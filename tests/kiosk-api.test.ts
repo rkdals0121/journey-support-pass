@@ -9,7 +9,7 @@ import {
 } from "@/lib/api/kiosk";
 import { eraseHandler, eventHandler, guideHandler, registerHandler, searchFlightsHandler } from "@/lib/api/public";
 import { callActionHandler, callsHandler, loginHandler, summaryHandler, zonesHandler, type CallDto } from "@/lib/api/staff";
-import { deviceKey, hashCode, readSession } from "@/lib/auth";
+import { deviceKey, hashCode, ipPart, readSession, sessionDeviceKey } from "@/lib/auth";
 import { PLACES } from "@/lib/airport";
 import { config } from "@/lib/config";
 import type { Db } from "@/lib/db";
@@ -294,7 +294,9 @@ describe("패스 열기: 번호를 넣어서", () => {
     expect(res.status).toBe(404);
     expect(Object.keys(res.body)).toEqual(["error"]);
     const logs = await db.query("select zone_id, device_key, action, registration_id from access_logs");
-    expect(logs).toEqual([{ zone_id: "kiosk", device_key: dev, action: "number_fail", registration_id: null }]);
+    // 기기는 설치마다 따로 센다. 접속 주소 부분은 그대로라 주소별 한도도 함께 센다.
+    expect(logs).toEqual([{ zone_id: "kiosk", device_key: sessionDeviceKey(dev, kiosk), action: "number_fail", registration_id: null }]);
+    expect(ipPart(logs[0].device_key as string)).toBe(ipPart(dev));
     expect(await events()).toHaveLength(0);
   });
 
@@ -319,6 +321,30 @@ describe("패스 열기: 번호를 넣어서", () => {
     expect((await resolveHandler(db, other, { passNo: pass.passNo }, deviceKey("10.0.0.6", "kiosk"), now)).status).toBe(200);
     const later = new Date(now.getTime() + (config.lockMinutes + 1) * 60_000);
     expect((await resolveHandler(db, kiosk, { passNo: pass.passNo }, dev, later)).status).toBe(200);
+  });
+
+  it("같은 와이파이의 같은 기종 태블릿 두 대(따로 설치)는 틀린 횟수를 따로 센다", async () => {
+    const { pass } = await registerWithPass(db, now);
+    // 접속 주소와 브라우저 표시가 같아도 설치한 때가 다르면 다른 기기다.
+    const twin = kioskSession(kst("2026-10-05 08:00"), "cc-train");
+    for (let i = 0; i < config.numberLockMaxFails; i++) await resolveHandler(db, kiosk, { passNo: wrongNo(pass.passNo) }, dev, now);
+    expect((await resolveHandler(db, kiosk, { passNo: pass.passNo }, dev, now)).status).toBe(429);
+    expect((await resolveHandler(db, twin, { passNo: pass.passNo }, dev, now)).status).toBe(200);
+  });
+
+  it(`한 접속 주소의 여러 키오스크가 합쳐 ${config.numberLockIpMaxFails}번 틀리면 그 주소의 번호 입력을 잠근다. 그 전에는 잠그지 않는다`, async () => {
+    // 공항 키오스크들은 한 주소로 나가는 일이 많다. 로그인 한도(20)로 세면 여러 대의 오타가 합쳐져 너무 빨리 잠긴다.
+    expect(config.numberLockIpMaxFails).toBe(40);
+    const { pass } = await registerWithPass(db, now);
+    const install = (k: number) => kioskSession(new Date(now.getTime() - (k + 1) * 60_000), "cc-train");
+    // 다섯 대가 일곱~여덟 번씩, 모두 39번 틀린다. 각 기기는 한도(10) 아래다.
+    let n = 0;
+    for (let k = 0; k < 5; k++) {
+      for (let i = 0; i < 8 && n < config.numberLockIpMaxFails - 1; i++, n++) await resolveHandler(db, install(k), { passNo: wrongNo(pass.passNo) }, dev, now);
+    }
+    expect((await resolveHandler(db, install(9), { passNo: pass.passNo }, dev, now)).status).toBe(200);
+    await resolveHandler(db, install(5), { passNo: wrongNo(pass.passNo) }, dev, now);
+    expect((await resolveHandler(db, install(9), { passNo: pass.passNo }, dev, now)).status).toBe(429);
   });
 
   it(`${config.numberLockMaxFails - 1}회까지는 잠기지 않는다`, async () => {

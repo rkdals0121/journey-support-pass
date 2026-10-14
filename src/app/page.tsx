@@ -25,7 +25,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </h1>
         <p>{t.heroBody}</p>
       </div>
-      <PassArt />
+      <PassArt label={t.passNo} />
 
       <ol className="steps-list">
         <li>

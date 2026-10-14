@@ -91,6 +91,16 @@ export function targetTitle(target: RouteTarget, t: Text): string {
   return target.type === "gate" ? t.toGate(target.gate) : t.facility[target.kind];
 }
 
+/** 길 끝에 붙는 장소 이름. "탑승구 112", "장애인 화장실"처럼 t.arrive 에 넣는다. */
+function endName(target: RouteTarget, t: Text): string {
+  return target.type === "gate" ? `${t.gate} ${target.gate}` : t.facility[target.kind];
+}
+
+/** 마침표 뒤에서 문장을 새로 시작할 때 첫 글자를 대문자로. 영어 "next to Gate…"가 소문자로 시작하지 않게 한다. 한글은 그대로다. */
+function sentence(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function stepText(s: Step, t: Text): string {
   if (s.kind === "walk") return t.walk(s.meters, s.minutes, s.towardGate, s.walkTo);
   if (s.kind === "shuttle") return t.shuttle(s.minutes);
@@ -101,8 +111,8 @@ function stepText(s: Step, t: Text): string {
 export function routeLines(route: Route, target: RouteTarget, t: Text): string[] {
   const end =
     target.type === "gate"
-      ? `${t.gate} ${target.gate} ${t.arrive}`
-      : `${t.facility[target.kind]} ${t.arrive}. ${t.nearGate(target.nearGate)}, ${t.level(target.level)}`;
+      ? t.arrive(endName(target, t))
+      : `${t.arrive(endName(target, t))}. ${sentence(t.nearGate(target.nearGate))}, ${t.level(target.level)}`;
   return [
     ...route.steps.flatMap((s) => [
       stepText(s, t),
@@ -157,9 +167,7 @@ export function RouteSteps({ route, target, from, t }: { route: Route; target: R
           {target.type === "gate" ? <Flag size={24} aria-hidden="true" /> : <FacilityIcon kind={target.kind} size={24} />}
         </span>
         <div>
-          <strong>
-            {target.type === "gate" ? `${t.gate} ${target.gate}` : t.facility[target.kind]} {t.arrive}
-          </strong>
+          <strong>{t.arrive(endName(target, t))}</strong>
           {target.type === "facility" && (
             <span>
               {t.nearGate(target.nearGate)} · {t.level(target.level)}

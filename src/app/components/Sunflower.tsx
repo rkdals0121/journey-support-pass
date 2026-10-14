@@ -39,8 +39,11 @@ const QR_ART = [
   "1110010110101",
 ];
 
-/** 첫 화면에 놓는 패스 그림. QR 과 고유 일련 번호가 있다. */
-export function PassArt() {
+/**
+ * 첫 화면에 놓는 패스 그림. QR 과 고유 일련 번호가 있다.
+ * 번호 이름표(label)는 실제 패스와 같은 문구(t.passNo)를 받는다. 그림이라도 다른 이름으로 부르면 여객이 헷갈린다.
+ */
+export function PassArt({ label }: { label: string }) {
   return (
     <div className="pass-art" aria-hidden="true">
       <div className="pass-art-card">
@@ -54,7 +57,7 @@ export function PassArt() {
         </svg>
         <div className="pass-art-meta">
           <Sunflower />
-          <small>PASS NO.</small>
+          <small>{label}</small>
           <b>042 715</b>
         </div>
       </div>

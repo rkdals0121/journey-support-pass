@@ -56,7 +56,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const lang: Lang = guide ? guide.lang : startLang;
   const prefs = guide ? prefsOf(guide.choices) : NO_PREFS;
   const t = textOf(lang, prefs.easy);
-  const { speak } = useSpeech(lang);
+  const { speak, stop } = useSpeech(lang);
   // 직원 부르기의 상태도 소리로 읽는다. 등록 때 소리를 고르지 않았어도 키오스크에서 소리를 켰으면 읽는다.
   const voiceOn = useViewSettings().voice ?? prefs.voice;
   const here = lang === "en" ? placeLabelEn : placeLabel;
@@ -76,6 +76,14 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     const timer = setTimeout(() => setError(null), ERROR_SHOW_MS);
     return () => clearTimeout(timer);
   }, [error]);
+
+  // 소리 안내를 켠 여객에게는 오류 문구도 읽어 준다. 화면을 보지 못하면 번호가 왜 지워졌는지, QR 이 왜 열리지 않는지 모른다.
+  // 새 오류가 뜰 때 한 번만 읽는다. 소리를 나중에 켰다고 지난 오류를 다시 읽지는 않게 소리 설정은 ref 로 본다.
+  const voiceRef = useRef(voiceOn);
+  voiceRef.current = voiceOn;
+  useEffect(() => {
+    if (error && voiceRef.current) speak(error);
+  }, [error, speak]);
 
   const tokenRef = useRef<string | null>(null);
   tokenRef.current = token;
@@ -112,14 +120,17 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         const data = await res.json();
         if (!res.ok) {
           // 서버의 문구는 한국어다. 영어 화면에서는 상태에 맞는 영어 문구로 바꾼다.
+          // 번호를 여러 번 틀려 잠긴 것(429)은 연결 문제가 아니다. "연결할 수 없습니다"라고 하면 엉뚱하게 와이파이를 살핀다.
           setError(
             res.status === 410
               ? tt.passEnded
-              : startLang === "en"
-                ? res.status === 404
-                  ? tt.passUnknown
-                  : tt.offline
-                : (data.error ?? tt.offline),
+              : res.status === 429
+                ? tt.numberLocked
+                : startLang === "en"
+                  ? res.status === 404
+                    ? tt.passUnknown
+                    : tt.offline
+                  : (data.error ?? tt.offline),
           );
           setDigits("");
           return;
@@ -242,6 +253,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       askSec={idleAskSec}
       answerSec={idleAnswerSec}
       onTimeout={reset}
+      say={voiceOn ? speak : undefined}
+      hush={voiceOn ? stop : undefined}
     />
   );
 
@@ -281,7 +294,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                   <ErrorNote>{lastError}</ErrorNote>
                 </div>
               ) : busy ? (
-                <p className="hint center">{t.camRead}</p>
+                // 여객이 누른 번호를 확인하는 중이다. QR 을 읽었다고 하면 카메라를 못 쓴 여객이 헷갈린다.
+                <p className="hint center">{t.numberChecking}</p>
               ) : null}
             </div>
             <NumPad

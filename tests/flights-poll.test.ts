@@ -17,10 +17,11 @@ const raw = (flightId: string, sched: string, gate = "112") => ({
 describe("수집 한 회", () => {
   const now = kst("2026-10-05 12:00");
 
-  it("오늘부터 모레까지 출발편만 남긴다 (자정이 지나도 '내일' 편이 비지 않게 모레 편을 미리 받는다)", async () => {
+  it("어제부터 모레까지 출발편만 남긴다 (자정이 지나도 '내일' 편이 비지 않게 모레 편을 미리 받는다)", async () => {
     const db = await createTestDb();
     const fetcher = async () => ({
       rows: [
+        raw("KE0", "202610031430"), // 그제
         raw("KE1", "202610041430"), // 어제
         raw("KE2", "202610051430"),
         raw("KE3", "202610060030"),
@@ -31,10 +32,28 @@ describe("수집 한 회", () => {
       pages: 1,
     });
     const res = await runPoll(db, "key", now, fetcher);
-    expect(res).toMatchObject({ ok: true, rowCount: 3 });
+    expect(res).toMatchObject({ ok: true, rowCount: 4 });
     const rows = await db.query<{ flight_no: string }>("select flight_no from flights order by flight_no");
-    expect(rows.map((r) => r.flight_no)).toEqual(["KE2", "KE3", "KE4"]);
+    expect(rows.map((r) => r.flight_no)).toEqual(["KE1", "KE2", "KE3", "KE4"]);
     expect(await lastSuccessfulPoll(db)).toEqual(now);
+  });
+
+  it("자정을 넘겨 늦어진 어제 편도 계속 고쳐 쓴다 (탑승구와 시각이 멈추지 않는다)", async () => {
+    const db = await createTestDb();
+    // 어제 23:50 예정 편. 23:07 수집 때는 112번, 제시각이었다.
+    await runPoll(db, "key", kst("2026-10-04 23:07"), async () => ({ rows: [raw("KE123", "202610042350")], pages: 1 }));
+    // 23:30 에 01:00 으로 늦어지고 115번으로 바뀌었다. 자정 뒤 첫 수집이 이를 받아야 한다.
+    const delayed = { ...raw("KE123", "202610042350", "115"), estimatedDateTime: "202610050100" };
+    const res = await runPoll(db, "key", kst("2026-10-05 00:07"), async () => ({
+      rows: [delayed, raw("KE2", "202610051430")],
+      pages: 1,
+    }));
+    expect(res).toMatchObject({ ok: true, rowCount: 2 });
+    const [row] = await db.query<{ gate: number; prev_gate: number; est_at: Date }>(
+      "select gate, prev_gate, est_at from flights where flight_date = '2026-10-04' and flight_no = 'KE123'",
+    );
+    expect(row).toMatchObject({ gate: 115, prev_gate: 112 });
+    expect(row.est_at).toEqual(kst("2026-10-05 01:00"));
   });
 
   it("호출이 실패하면 실패로 기록하고 기존 운항 정보는 그대로 둔다", async () => {

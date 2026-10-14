@@ -71,11 +71,12 @@ describe("운항 정보 신선도", () => {
     expect(pollState(kst("2026-10-05 14:45"), now)).toEqual({ label: "운항 정보 14:45 기준", stale: false });
   });
 
-  it("수집 간격에 15분을 더한 시간을 넘기면 수집이 멈춘 것으로 본다", () => {
-    expect(config.staleMin).toBe(config.pollMin + 15);
+  it("수집 간격의 두 배에 15분을 더한 시간을 넘기면 수집이 멈춘 것으로 본다", () => {
+    // 무료 요금제 예약은 그 시간대 안의 아무 때나 돌아 정상 간격이 두 배 가까이 될 수 있다.
+    expect(config.staleMin).toBe(config.pollMin * 2 + 15);
     expect(pollState(ago(15, 1000), now).stale).toBe(false);
     expect(pollState(ago(config.staleMin), now).stale).toBe(false);
-    expect(pollState(ago(config.staleMin, 1000), now)).toEqual({ label: "운항 정보 13:34 기준", stale: true });
+    expect(pollState(ago(config.staleMin, 1000), now)).toEqual({ label: "운항 정보 12:34 기준", stale: true });
   });
 
   it("오래됐는지는 stale 하나로만 알린다", () => {

@@ -11,7 +11,7 @@ import {
 } from "./airport";
 import type { Journey } from "./journey";
 import { config } from "./config";
-import { kstTime, type PollState } from "./timing";
+import { boardingCloseAt, kstTime, type PollState } from "./timing";
 
 /** 안내 화면에 보여줄 항공편. 화면이 그대로 그릴 수 있게 시각은 글자로 만들어 보낸다. */
 export interface FlightView {
@@ -39,6 +39,11 @@ export interface FlightView {
    */
   close: "open" | "past" | "closed" | "cancelled" | "unknown";
   minutesToClose: number | null;
+  /**
+   * 추정 탑승 마감 시각(ms). minutesToClose 와 같은 기준이며 open 일 때만 싣는다.
+   * 휴대전화가 남겨 둔 화면을 인터넷 없이 열어도, 화면이 지금 시각으로 남은 시간을 다시 셀 수 있게 한다.
+   */
+  closeAtMs: number | null;
   boardingNow: boolean;
   /** 마감이 가깝거나 지났다. 항공편 판을 빨갛게 보여준다. */
   urgent: boolean;
@@ -69,6 +74,7 @@ export function toFlightView(j: Journey): FlightView {
     status: j.status,
     close,
     minutesToClose: close === "open" ? j.minutesToClose : null,
+    closeAtMs: close === "open" && j.schedAt ? boardingCloseAt({ schedAt: j.schedAt, estAt: j.estAt, status: j.status }).getTime() : null,
     boardingNow: j.boardingNow,
     urgent: close === "past" || close === "closed" || (close === "open" && (j.minutesToClose ?? 0) <= config.urgentMin),
   };
@@ -101,6 +107,10 @@ export interface GuideDto {
   pace: Pace | null;
   facilities: GuideFacility[];
   poll: PollState;
+  /** 서버가 이 내용을 만든 시각(ms). 화면이 오래된 내용인지 알아보고 "HH:MM 기준"을 붙일 때 쓴다. */
+  generatedAt: number;
+  /** 마감까지 이 분 이내면 임박(config.urgentMin). 화면이 남은 시간을 다시 셀 때 urgent 도 같은 기준으로 다시 정한다. */
+  urgentMin: number;
 }
 
 // 마감까지 이만큼(분)은 남아야 여유 있다고 본다.
@@ -114,8 +124,11 @@ function paceOf(j: Journey, route: Route | null): Pace | null {
   return slack < 0 ? "late" : slack < COMFORT_MIN ? "hurry" : "ok";
 }
 
-/** 여객이 고른 항목과 키오스크 위치로 안내 화면의 내용을 만든다. place 가 없으면 길과 시설은 비운다. */
-export function buildGuide(j: Journey, passNo: string, place: Place | null, poll: PollState): GuideDto {
+/**
+ * 여객이 고른 항목과 키오스크 위치로 안내 화면의 내용을 만든다. place 가 없으면 길과 시설은 비운다.
+ * now 는 여정(j)의 남은 시간을 계산한 그 시각을 넘긴다. 넘기지 않으면 지금 시각을 쓴다.
+ */
+export function buildGuide(j: Journey, passNo: string, place: Place | null, poll: PollState, now: Date = new Date()): GuideDto {
   const opts = routeOptionsOf(j.choices);
 
   let gateRoute: Route | null = null;
@@ -153,5 +166,7 @@ export function buildGuide(j: Journey, passNo: string, place: Place | null, poll
     pace: paceOf(j, gateRoute),
     facilities,
     poll,
+    generatedAt: now.getTime(),
+    urgentMin: config.urgentMin,
   };
 }

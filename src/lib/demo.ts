@@ -1,6 +1,6 @@
 import { config } from "./config";
 import type { Db } from "./db";
-import { ingestFlights, recordPoll } from "./flights/ingest";
+import { ingestFlights, recordPoll, SEED_POLL } from "./flights/ingest";
 import { issuePass, passUrl } from "./passes";
 import { eraseRegistration } from "./purge";
 import { createRegistration, type Lang } from "./registrations";
@@ -43,16 +43,22 @@ export interface DemoPass {
 export async function seedDemo(db: Db, now: Date): Promise<{ ok: true; passes: DemoPass[] } | { ok: false; error: string }> {
   if (config.dataMode !== "mock") return { ok: false, error: "시연용 패스는 DATA_MODE=mock 에서만 만들 수 있습니다" };
 
+  // 모의 항공편에 걸린 등록은 그 편의 행(항공사가 "모의"로 시작)으로 고른다. 편명 앞 글자로만 고르면
+  // 새로 늘어난 편(MQ·MZ)을 빠뜨려, 그 등록이 다시 넣은 편에 붙어 남거나 편 없는 등록으로 남는다.
+  // 편 행이 이미 지워진 등록만 편명 앞 글자로 고른다(같은 편명의 실제 편에 걸린 등록은 건드리지 않는다).
   const old = await db.query<{ id: string }>(
-    `select id from registrations
-     where is_mock and status in ('pending', 'active') and (flight_no like 'MK%' or flight_no like 'MC%')`,
+    `select r.id from registrations r
+     left join flights f on f.flight_date = r.flight_date and f.flight_no = r.flight_no
+     where r.is_mock and r.status in ('pending', 'active')
+       and (f.airline like '모의%' or (f.flight_no is null and left(r.flight_no, 2) in ('MK', 'MC', 'MQ', 'MZ')))`,
   );
   for (const r of old) await eraseRegistration(db, r.id, now, "revoked");
 
   await db.query("delete from flights where airline like '모의%'");
   const flights = mockFlights(now, STRETCH);
   await ingestFlights(db, flights, now);
-  await recordPoll(db, { at: now, ok: true, rowCount: flights.length, durationMs: 0, gateChanges: 0 });
+  // 실제 수집이 아니라는 표시(SEED_POLL)를 남긴다. 실제 수집이 멈춘 동안 시연용 패스를 만들어도 경고가 가려지지 않게 한다.
+  await recordPoll(db, { at: now, ok: true, rowCount: flights.length, durationMs: 0, gateChanges: 0, error: SEED_POLL });
 
   const passes: DemoPass[] = [];
   for (const d of DEMO) {

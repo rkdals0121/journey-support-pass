@@ -47,13 +47,23 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callActive, setCallActive] = useState(false);
+  // 스티커를 이미 뽑은 패스(token). 아래 자동 인쇄와 「스티커 다시 뽑기」 버튼이 본다.
+  const [printedFor, setPrintedFor] = useState<string | null>(null);
   const t = textOf(lang, prefs.easy);
-  const { speak } = useSpeech(lang);
+  const { speak, stop } = useSpeech(lang);
   // 직원 부르기의 상태도 소리로 읽는다. 처음 화면의 「소리로 안내 듣기」나 「설정」으로 켰어도 읽는다.
   const voiceOn = useViewSettings().voice ?? prefs.voice;
 
   // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
   useEffect(() => resetViewSettings(), []);
+
+  // 소리 안내를 켠 여객에게는 오류 문구(QR 을 다시 뽑지 못한 까닭)도 읽어 준다. 화면을 보지 못하면 왜 안 되는지 모른다.
+  // 새 오류가 뜰 때 한 번만 읽는다. 소리를 나중에 켰다고 지난 오류를 다시 읽지는 않게 소리 설정은 ref 로 본다.
+  const voiceRef = useRef(voiceOn);
+  voiceRef.current = voiceOn;
+  useEffect(() => {
+    if (error && voiceRef.current) speak(error);
+  }, [error, speak]);
 
   const reset = useCallback(() => {
     setView("start");
@@ -61,6 +71,9 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     setPrefs(NO_PREFS);
     setIssued(null);
     setError(null);
+    // 뽑았다는 표시도 지운다. 같은 여객이 나중에 스티커를 잃어 다시 뽑으러 오면, 이번 방문에서는 아직 한 장도 안 나왔으니
+    // 자동 인쇄가 다시 돌고 버튼도 「스티커 뽑기」로 보여야 한다. 처음 화면으로 가므로 떠나는 여객에게 또 뽑히지는 않는다.
+    setPrintedFor(null);
     // 앞사람이 「설정」에서 바꾼 글자 크기와 소리도 지운다.
     resetViewSettings();
   }, []);
@@ -71,9 +84,9 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   }, []);
 
   // 스티커 프린터가 달린 키오스크는 등록을 마치면 바로 뽑는다. 설치할 때 켜 둔 경우에만.
-  const printed = useRef<string | null>(null);
+  // 뽑은 패스는 상태(printedFor)로 기억한다. 그래야 자동으로 한 장 나온 뒤 버튼이 「스티커 다시 뽑기」로 바뀌어, 같은 스티커를 또 뽑지 않는다.
   useEffect(() => {
-    if (view !== "done" || !issued || printed.current === issued.token) return;
+    if (view !== "done" || !issued || printedFor === issued.token) return;
     let auto = false;
     try {
       auto = localStorage.getItem(AUTOPRINT_KEY) === "1";
@@ -81,11 +94,15 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
       auto = false;
     }
     if (!auto) return;
-    printed.current = issued.token;
-    // QR 그림이 그려질 틈을 준 뒤에 인쇄한다.
-    const timer = setTimeout(() => window.print(), 700);
+    // QR 그림이 그려질 틈을 준 뒤에 인쇄한다. 뽑았다는 표시는 실제로 뽑을 때 한다.
+    // 미리 해 두면 그 표시로 이 effect 가 다시 돌고, 정리하면서 아직 돌지 않은 인쇄를 지워 버린다.
+    const token = issued.token;
+    const timer = setTimeout(() => {
+      setPrintedFor(token);
+      window.print();
+    }, 700);
     return () => clearTimeout(timer);
-  }, [view, issued]);
+  }, [view, issued, printedFor]);
 
   const busyRef = useRef(false);
   const onScan = useCallback(
@@ -132,7 +149,15 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     </div>
   );
   const idle = assisted ? null : (
-    <IdleGuard t={t} enabled={view !== "start" && !callActive} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={reset} />
+    <IdleGuard
+      t={t}
+      enabled={view !== "start" && !callActive}
+      askSec={idleAskSec}
+      answerSec={idleAnswerSec}
+      onTimeout={reset}
+      say={voiceOn ? speak : undefined}
+      hush={voiceOn ? stop : undefined}
+    />
   );
   const here = lang === "en" ? placeLabelEn : placeLabel;
 
@@ -161,9 +186,16 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         onHome={reset}
         cta={
           <>
-            <button className="btn btn-primary" onClick={() => window.print()}>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                // 자동 인쇄를 기다리는 중에 눌렀으면 그 인쇄는 거둬진다(표시가 바뀌어 effect 가 정리된다). 두 장이 나오지 않는다.
+                setPrintedFor(issued.token);
+                window.print();
+              }}
+            >
               <Printer size={22} aria-hidden="true" />
-              {printed.current === issued.token ? t.kioskPrintAgain : t.kioskPrint}
+              {printedFor === issued.token ? t.kioskPrintAgain : t.kioskPrint}
             </button>
             <button className="btn" onClick={reset}>
               {t.kioskFinish}

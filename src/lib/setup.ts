@@ -1,6 +1,6 @@
 import { hashCode } from "./auth";
 import { migrate, type Db } from "./db";
-import { ingestFlights, recordPoll } from "./flights/ingest";
+import { ingestFlights, recordPoll, SEED_POLL } from "./flights/ingest";
 import { kstDate, type FlightRow } from "./flights/normalize";
 import { readSeedZones, seedZones } from "./zones";
 
@@ -25,7 +25,7 @@ const MOCK_DEST_CODE: Record<string, string> = {
   프랑크푸르트: "FRA",
 };
 
-/** 지금 시각 기준으로 곧 출발하는 모의 운항. 실제 편명과 겹치지 않게 MK·MC 로 시작한다. */
+/** 지금 시각 기준으로 곧 출발하는 모의 운항. 실제 편명과 겹치지 않게 MK·MC·MQ·MZ 로 시작한다. 항공사 이름은 모두 "모의"로 시작한다. */
 export function mockFlights(now: Date, stretch = 1): FlightRow[] {
   // 초 단위를 버려 화면의 남은 시간이 깔끔하게 보이게 한다.
   const base = Math.floor(now.getTime() / MIN) * MIN;
@@ -142,7 +142,8 @@ export async function runSetup(db: Db, opts: SetupOptions, now: Date): Promise<S
     await db.query("delete from flights where airline like '모의%'");
     const rows = mockFlights(now);
     await ingestFlights(db, rows, now);
-    await recordPoll(db, { at: now, ok: true, rowCount: rows.length, durationMs: 0, gateChanges: 0 });
+    // 실제 수집이 아니라는 표시(SEED_POLL)를 남긴다. 실제 수집이 멈춘 것을 가리지 않게 한다.
+    await recordPoll(db, { at: now, ok: true, rowCount: rows.length, durationMs: 0, gateChanges: 0, error: SEED_POLL });
     flights = rows.map((r) => r.flightNo);
   }
 

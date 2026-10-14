@@ -1,5 +1,5 @@
 import { placeOf, PLACES } from "../airport";
-import { claimAttempt, forgetAttempt, login, type Session } from "../auth";
+import { claimAttempt, forgetAttempt, login, sessionDeviceKey, type Session } from "../auth";
 import { cancelCall, createCall, getCallAt } from "../calls";
 import { isAdapted } from "../catalog";
 import type { Db } from "../db";
@@ -57,7 +57,8 @@ export async function resolveHandler(
     const passNo = cleanPassNo(body.passNo);
     if (!passNo) return fail(400, "고유 일련 번호 여섯 자리를 넣어 주세요");
     // 먼저 "틀림"으로 적고 센다. 한꺼번에 많이 보내 잠금을 피하지 못하게 한다(claimAttempt).
-    const attempt = await claimAttempt(db, device, "number_fail", now, session.zoneId);
+    // 기기는 설치(로그인)마다 따로 센다. 같은 기종 태블릿 두 대가 서로를 잠그지 않게 한다(sessionDeviceKey).
+    const attempt = await claimAttempt(db, sessionDeviceKey(device, session), "number_fail", now, session.zoneId);
     if (attempt.locked) return fail(429, "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요");
     const res = await resolvePassNo(db, passNo);
     // 없는 번호면 적어 둔 "틀림"이 그대로 남는다.

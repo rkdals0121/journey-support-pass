@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { deviceKey } from "@/lib/auth";
 import { acceptCall, cancelCall, createCall, finishCall } from "@/lib/calls";
 import type { Db } from "@/lib/db";
-import { recordPoll } from "@/lib/flights/ingest";
+import { recordPoll, SEED_POLL } from "@/lib/flights/ingest";
 import { allowEvent, logEvent, pollMetrics, summarize, todaySummary, type EventKind } from "@/lib/metrics";
 import { eraseRegistration } from "@/lib/purge";
 import { createTestDb, kst } from "./helpers/db";
@@ -304,6 +304,8 @@ describe("운항 정보 수집 집계", () => {
     await recordPoll(db, { at: at("11:00"), ok: true, rowCount: 2000, durationMs: 16000, gateChanges: 1 });
     await recordPoll(db, { at: at("12:00"), ok: false, rowCount: 0, durationMs: 60000, gateChanges: 0, error: "x" });
     await recordPoll(db, { at: kst("2026-10-04 12:00"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 9 });
+    // 모의 운항을 넣은 기록(설치, 시연용 패스)은 실제 수집이 아니므로 세지 않는다.
+    await recordPoll(db, { at: at("12:30"), ok: true, rowCount: 40, durationMs: 0, gateChanges: 0, error: SEED_POLL });
 
     expect(await pollMetrics(db, kst("2026-10-05 00:00"))).toEqual({
       total: 3,

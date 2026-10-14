@@ -13,7 +13,8 @@ export function WebRegister({ lang }: { lang: Lang }) {
     <RegisterFlow
       mode="web"
       initialLang={lang}
-      onExit={() => window.location.assign(lang === "en" ? "/?lang=en" : "/")}
+      // 주소에 있던 언어가 아니라 등록 중에 고른 언어로 처음 화면에 돌아간다. 한국어로 시작해 English 를 고른 여객이 한국어 화면을 보지 않게 한다.
+      onExit={(l) => window.location.assign(l === "en" ? "/?lang=en" : "/")}
       // 뒤로 가기로 등록 화면에 되돌아오지 않게 주소를 바꿔치기한다.
       onDone={(r) => window.location.replace(`/p/${r.token}?new=1`)}
     />

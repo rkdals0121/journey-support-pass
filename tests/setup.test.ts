@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { login } from "@/lib/auth";
 import { migrate, openPglite, type Db } from "@/lib/db";
 import { findFlights, getFlight } from "@/lib/flights/search";
-import { lastSuccessfulPoll } from "@/lib/flights/ingest";
+import { lastSuccessfulPoll, SEED_POLL } from "@/lib/flights/ingest";
 import { mockFlights, runSetup } from "@/lib/setup";
 import { readSeedZones } from "@/lib/zones";
 import { kst } from "./helpers/db";
@@ -66,8 +66,12 @@ describe("초기 설정", () => {
     expect(res.mockFlights).toContain("MK127");
     expect(await findFlights(db, "MK101", now)).toHaveLength(1);
     expect(await getFlight(db, "2026-10-05", "MK127")).toMatchObject({ terminal: "CONCOURSE", gate: 127 });
-    // 모의 운항을 넣은 시각이 운항 정보 기준 시각이 된다.
-    expect(await lastSuccessfulPoll(db)).toEqual(now);
+    // 운항 정보 키가 없고 실제 수집도 아직 없으면 모의 운항을 넣은 시각이 운항 정보 기준 시각이 된다.
+    // 넣은 기록에는 실제 수집이 아니라는 표시가 붙어, 실제 수집이 생기면 그쪽이 기준이 된다.
+    expect(await lastSuccessfulPoll(db, true)).toEqual(now);
+    // 키가 있으면 넣은 기록으로 실제 수집의 실패를 가리지 않는다.
+    expect(await lastSuccessfulPoll(db, false)).toBeNull();
+    expect(await db.query("select error from flight_polls")).toEqual([{ error: SEED_POLL }]);
 
     // 넘겨준 코드로 로그인되고, 저장소에 공개된 코드로는 안 된다.
     expect((await login(db, allCodes["cc-end"], "d1", now)).ok).toBe(true);

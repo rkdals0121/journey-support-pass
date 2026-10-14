@@ -255,7 +255,13 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
                   <b className="num">{c.time}</b> {c.place}
                 </span>
                 <span className="muted">
-                  {c.state === "done" ? `도움 마침${c.acceptedBy ? ` · ${c.acceptedBy}` : ""}` : "여객이 거둠"} · {c.waitedMin}분
+                  {/* 아무도 받지 않아 시간이 지나 닫힌 호출은 놓친 호출이다. "여객이 거둠"과 나눠 보여 준다. */}
+                  {c.state === "done"
+                    ? `도움 마침${c.acceptedBy ? ` · ${c.acceptedBy}` : ""}`
+                    : c.endReason === "expired"
+                      ? "응답 없이 닫힘"
+                      : "여객이 거둠"}{" "}
+                  · {c.waitedMin}분
                 </span>
               </li>
             ))}

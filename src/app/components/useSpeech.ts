@@ -13,6 +13,10 @@ export function useSpeech(lang: Lang) {
   const [speaking, setSpeaking] = useState(false);
   const langRef = useRef(lang);
   langRef.current = lang;
+  // 지금 읽고 있는 글. 새 글을 읽으려고 앞 글을 끊으면, 끊긴 앞 글의 "끝났다"는 알림이 새 글을 읽는 도중에 늦게 온다.
+  // 그 알림으로 「읽는 중」을 끄면 버튼이 「멈추기」가 아니라 「듣기」로 바뀌어, 눌러도 멈추지 않고 처음부터 다시 읽는다.
+  // 그래서 지금 읽는 글의 알림만 받는다.
+  const cur = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
@@ -23,6 +27,7 @@ export function useSpeech(lang: Lang) {
 
   const stop = useCallback(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    cur.current = null;
     window.speechSynthesis.cancel();
     setSpeaking(false);
   }, []);
@@ -38,8 +43,14 @@ export function useSpeech(lang: Lang) {
     const voice = synth.getVoices().find((v) => v.lang.replace("_", "-").startsWith(code.slice(0, 2)));
     if (voice) u.voice = voice;
     u.rate = 0.95;
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
+    cur.current = u;
+    const done = () => {
+      if (cur.current !== u) return;
+      cur.current = null;
+      setSpeaking(false);
+    };
+    u.onend = done;
+    u.onerror = done;
     setSpeaking(true);
     synth.speak(u);
   }, []);
