@@ -17,7 +17,7 @@ const raw = (flightId: string, sched: string, gate = "112") => ({
 describe("수집 한 회", () => {
   const now = kst("2026-10-05 12:00");
 
-  it("오늘과 내일 출발편만 남긴다", async () => {
+  it("오늘부터 모레까지 출발편만 남긴다 (자정이 지나도 '내일' 편이 비지 않게 모레 편을 미리 받는다)", async () => {
     const db = await createTestDb();
     const fetcher = async () => ({
       rows: [
@@ -25,14 +25,15 @@ describe("수집 한 회", () => {
         raw("KE2", "202610051430"),
         raw("KE3", "202610060030"),
         raw("KE4", "202610071430"), // 모레
+        raw("KE5", "202610081430"), // 글피
         { flightId: "", scheduleDateTime: "202610051430" },
       ],
       pages: 1,
     });
     const res = await runPoll(db, "key", now, fetcher);
-    expect(res).toMatchObject({ ok: true, rowCount: 2 });
+    expect(res).toMatchObject({ ok: true, rowCount: 3 });
     const rows = await db.query<{ flight_no: string }>("select flight_no from flights order by flight_no");
-    expect(rows.map((r) => r.flight_no)).toEqual(["KE2", "KE3"]);
+    expect(rows.map((r) => r.flight_no)).toEqual(["KE2", "KE3", "KE4"]);
     expect(await lastSuccessfulPoll(db)).toEqual(now);
   });
 

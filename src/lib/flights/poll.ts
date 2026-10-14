@@ -24,7 +24,11 @@ export interface PollResult {
   stats?: PollStats;
 }
 
-/** 한 번 수집한다. 오늘과 내일(한국 날짜) 출발편만 남긴다. 실패해도 수집 기록은 남긴다. */
+/**
+ * 한 번 수집한다. 오늘부터 모레까지(한국 날짜) 출발편을 남긴다. 실패해도 수집 기록은 남긴다.
+ * 화면은 오늘과 내일 편만 보여 준다. 모레 편을 미리 받아 두는 것은 자정이 지나 "내일"이 바뀌었을 때
+ * 다음 수집(매시 7분)까지 새 "내일" 편이 하나도 없는 틈을 없애기 위해서다.
+ */
 export async function runPoll(
   db: Db,
   apiKey: string,
@@ -36,7 +40,7 @@ export async function runPoll(
   try {
     const { rows: raw, pages } = await fetcher(apiKey, now);
     const today = kstDate(now);
-    const keep = new Set([today, addDays(today, 1)]);
+    const keep = new Set([today, addDays(today, 1), addDays(today, 2)]);
     const rows = raw
       .map(normalizeRow)
       .filter((r): r is FlightRow => r !== null && keep.has(r.flightDate));

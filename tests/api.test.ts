@@ -94,6 +94,14 @@ const regRows = () =>
   );
 
 describe("편명 검색", () => {
+  it("모레 편은 미리 받아 두어도 검색·도시 목록에 나오지 않는다", async () => {
+    await addFlights(db, [flightRow("ZZ777", "2026-10-07 09:00", { destCode: "ULN", destName: "울란바토르" })], now);
+    expect((await searchFlightsHandler(db, "ZZ777", now)).body.flights).toEqual([]);
+    expect((await searchFlightsHandler(db, "", now, "울란바토르")).body.flights).toEqual([]);
+    const list = (await destinationsHandler(db, now)).body.destinations as { city: string }[];
+    expect(list.some((d) => d.city === "울란바토르")).toBe(false);
+  });
+
   it("탑승구를 돌려주지 않는다. 오늘인지 내일인지와 시각만 준다", async () => {
     const res = await searchFlightsHandler(db, "ke123", now);
     expect(res.status).toBe(200);
