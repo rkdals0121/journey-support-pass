@@ -153,9 +153,15 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     if (view.kind === "number" && digits.length === PASS_NO_LENGTH) void open({ passNo: digits });
   }, [digits, view.kind, open]);
 
+  // 다시 받기에 두 번 연달아 실패하면(약 1분) 연결이 끊긴 것으로 보고 화면에 알린다.
+  // 그동안 탑승구가 바뀌었어도 이 화면은 모르기 때문이다. 다시 받으면 알림을 거둔다.
+  const [fails, setFails] = useState(0);
+  const offlineNow = fails >= 2;
+
   // 안내를 보는 동안 탑승구와 남은 시간을 다시 받는다. 탑승구가 바뀌면 길도 바뀐다.
   useEffect(() => {
     if (!token || (view.kind !== "home" && view.kind !== "route")) return;
+    setFails(0);
     const timer = setInterval(async () => {
       try {
         const res = await fetch("/api/guide", {
@@ -164,10 +170,12 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           body: JSON.stringify({ token }),
         });
         if (res.status === 410 || res.status === 404) return reset();
-        if (!res.ok) return;
+        if (!res.ok) return setFails((n) => n + 1);
         setGuide((await res.json()).guide);
+        setFails(0);
       } catch {
-        // 한 번 못 받은 것은 넘어간다.
+        // 한 번 못 받은 것은 넘어가고, 거듭 못 받으면 알린다.
+        setFails((n) => n + 1);
       }
     }, refreshSec * 1000);
     return () => clearInterval(timer);
@@ -475,7 +483,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       >
         <p className="kicker">{t.guideHello}</p>
         <FlightBoard flight={flight} t={t} lang={lang} />
-        {guide.poll.stale && <Banner role="status">{t.stale}</Banner>}
+        {offlineNow ? <Banner role="status">{t.kioskOffline}</Banner> : guide.poll.stale && <Banner role="status">{t.stale}</Banner>}
 
         {guide.gateRoute && flight.gate !== null ? (
           <button className={`gate-go pace-${guide.pace ?? "ok"}`} onClick={() => setView({ kind: "route", target: { type: "gate", gate: flight.gate as number } })}>
