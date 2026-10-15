@@ -47,6 +47,9 @@ interface Props {
  *  - 여객이 고른 안내 방식(큰 글씨, 그림, 소리)은 고른 그 화면부터 바로 적용된다.
  *  - 「설정」에서 글자와 그림의 크기, 소리, 그림 크게 보기를 그 자리에서 바꿀 수 있다.
  */
+// 이 페이지에서 화면 틀을 한 번이라도 그렸는지. 처음 연 화면에서만 초점을 옮기지 않는다.
+let shellShown = false;
+
 export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, onBack, onHome, progress, cta, ctaAfterContent, children }: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang);
@@ -127,9 +130,13 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
   // 화면이 바뀌면 맨 위로 올리고 제목에 초점을 둔다. 화면 읽기 프로그램이 새 화면을 바로 읽는다.
   const first = useRef(true);
   useEffect(() => {
-    if (first.current) {
+    // 페이지를 처음 열었을 때만 초점을 옮기지 않는다. 키오스크처럼 다른 종류의 화면으로 바뀌며 이 틀이 새로 만들어진 때는
+    // 옮긴다(전에는 그때도 건너뛰어 초점이 사라졌다).
+    if (first.current && !shellShown) {
       first.current = false;
+      shellShown = true;
     } else {
+      first.current = false;
       const heading = bodyRef.current?.querySelector("h1");
       if (heading) {
         heading.setAttribute("tabindex", "-1");

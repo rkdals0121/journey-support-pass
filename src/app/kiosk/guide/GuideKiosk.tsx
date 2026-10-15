@@ -387,6 +387,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           >
             <h1>{t.numberTitle}</h1>
             <p className="lead">{t.numberHint}</p>
+            <p className="sr-only" role="status">{`${digits.length} / ${PASS_NO_LENGTH}`}</p>
             <div className="code-boxes" role="group" aria-label={t.passNo}>
               {Array.from({ length: PASS_NO_LENGTH }, (_, i) => (
                 <span key={i} className={`num ${digits[i] ? "filled" : ""} ${i === 2 ? "gap" : ""}`}>
@@ -637,9 +638,12 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         kiosk
         screenKey="home"
         speakText={speakHome}
+        // 탑승구가 바뀌거나, 늦어질 것 같거나, 인터넷이 끊기면 소리 안내를 켠 여객에게 다시 읽어 준다.
+        speakKey={`${flight.gate ?? ""}-${guide.pace ?? ""}-${offlineNow}`}
         onHome={reset}
       >
-        <p className="kicker">{t.guideHello}</p>
+        {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
+        <h1 className="kicker">{t.guideHello}</h1>
         <FlightBoard flight={flight} t={t} lang={lang} />
         {offlineNow ? <Banner role="status">{t.kioskOffline}</Banner> : guide.poll.stale && <Banner role="status">{t.stale}</Banner>}
 

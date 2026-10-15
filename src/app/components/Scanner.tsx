@@ -266,7 +266,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
   return (
     <div className="scan">
       <div className={`scanner ${mirror ? "mirror" : ""} ${paused ? "paused" : ""}`}>
-        <video ref={videoRef} playsInline muted aria-label="QR" />
+        <video ref={videoRef} playsInline muted aria-hidden="true" />
         <canvas ref={canvasRef} hidden />
         <span className="scanner-frame" aria-hidden="true" />
         {cameras.length > 1 && (

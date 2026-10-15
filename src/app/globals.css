@@ -206,6 +206,14 @@ button {
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+/* 안내 첫 화면은 kicker 를 제목(h1)으로 쓴다. 키오스크의 제목 크기 규칙이 덮지 않게 같은 모양으로 둔다. */
+html[data-kiosk] .flow-body h1.kicker,
+h1.kicker {
+  margin: 0 0 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
 
 /* ── 시범 운영 띠 ── */
 .mock-banner {

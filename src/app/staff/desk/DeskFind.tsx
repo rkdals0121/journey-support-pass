@@ -31,6 +31,8 @@ export function DeskFind() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // 방금 지운 패스. 지운 뒤 잠시 그 QR 을 다시 읽지 않는다(위 onScan).
+  const justErased = useRef<{ token: string; at: number } | null>(null);
   const [asking, setAsking] = useState(false);
   const busyRef = useRef(false);
   // QR 그림을 다시 받아 그린 횟수. 스티커와 화면의 QR 은 그림 조각(qrcode)을 처음 그릴 때 한 번만 받아서, 약한 와이파이에서 한 번
@@ -81,7 +83,11 @@ export function DeskFind() {
 
   const onScan = useCallback(
     (text: string) => {
-      if (!extractToken(text)) return setError("QR은 읽었지만 Journey Support Pass의 QR이 아닙니다.");
+      const scanned = extractToken(text);
+      if (!scanned) return setError("QR은 읽었지만 Journey Support Pass의 QR이 아닙니다.");
+      // 방금 지운 QR 이 아직 카메라 앞에 있으면 다시 찾지 않는다. 찾으면 "등록을 지웠습니다" 알림이 "사용이 끝난 패스" 오류로 바뀐다.
+      const gone = justErased.current;
+      if (gone && gone.token === scanned && Date.now() - gone.at < 10_000) return;
       void open({ scanned: text });
     },
     [open],
@@ -106,6 +112,7 @@ export function DeskFind() {
       // 로그인이 풀렸으면 "지우지 못했습니다"만 띄우지 않고 로그인 화면으로 보낸다. 다시 해 봐도 되지 않는다.
       if (res.status === 401) return window.location.replace("/staff/login");
       if (!res.ok) throw new Error();
+      justErased.current = { token: found.token.toUpperCase(), at: Date.now() };
       setFound(null);
       setNotice("등록을 지웠습니다. 그 QR과 고유 일련 번호는 더 쓸 수 없습니다.");
     } catch {
@@ -125,7 +132,15 @@ export function DeskFind() {
       <div className="panel desk-found">
         <div className="desk-found-head">
           <strong>찾은 패스</strong>
-          <button className="icon-btn" onClick={() => setFound(null)} aria-label="닫기">
+          <button
+            className="icon-btn"
+            onClick={() => {
+              // 지우기에 실패한 알림도 함께 지운다. 남기면 다음 여객을 찾는 화면 위에 "지우지 못했습니다"가 그대로 보인다.
+              setFound(null);
+              setError(null);
+            }}
+            aria-label="닫기"
+          >
             <X size={22} aria-hidden="true" />
           </button>
         </div>

@@ -186,7 +186,17 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   // 처음 화면에는 자동 종료가 없다. 앞사람이 여기서 소리·글자 크기·언어를 바꾸고 떠나면 다음 사람에게 그대로 남아,
   // 다음 사람의 항공편과 고유 일련 번호가 소리로 읽힌다. 아무도 건드리지 않은 채 자동 종료와 같은 시간이 지나면 묻지 않고 되돌린다
   // (화면에 개인 정보가 없어 물을 것이 없다). 직원 호출이 진행 중이면 부른 여객이 기다리는 중일 수 있어 두지 않는다.
-  const leftover = viewSettings.scale !== null || viewSettings.picture !== null || viewSettings.voice !== null || lang !== "ko";
+  // 첫 질문에서 고른 안내 방식(큰 글씨, 소리, 쉬운 말, 그림, 직원 부르기)도 남은 것으로 본다. 「이전」으로 처음 화면에 돌아와 떠나면 그대로 남는다.
+  const leftover =
+    viewSettings.scale !== null ||
+    viewSettings.picture !== null ||
+    viewSettings.voice !== null ||
+    lang !== "ko" ||
+    prefs.large ||
+    prefs.voice ||
+    prefs.picture ||
+    prefs.easy ||
+    prefs.wantsStaff;
   const quietIdle = view === "start" && leftover && !callActive;
   useEffect(() => {
     if (!quietIdle) return;

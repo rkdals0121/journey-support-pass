@@ -17,11 +17,15 @@ function LoginForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    // 답이 오지 않는 로그인은 10초에 끊는다. 끊지 않으면 「확인하는 중…」에 멈춰 새로 고침해야 한다.
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), 10_000);
     try {
       const res = await fetch("/api/staff/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
+        signal: ctrl.signal,
       });
       const data = await res.json();
       if (!res.ok) {
@@ -38,6 +42,7 @@ function LoginForm() {
     } catch {
       setError("연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
+      clearTimeout(limit);
       setBusy(false);
     }
   }
