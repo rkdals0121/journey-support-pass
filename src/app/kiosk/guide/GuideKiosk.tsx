@@ -387,7 +387,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           >
             <h1>{t.numberTitle}</h1>
             <p className="lead">{t.numberHint}</p>
-            <p className="sr-only" role="status">{`${digits.length} / ${PASS_NO_LENGTH}`}</p>
+            <p className="sr-only" role="status">
+              {lang === "en" ? `${digits.length} of ${PASS_NO_LENGTH} digits` : `${PASS_NO_LENGTH}자리 중 ${digits.length}자리`}
+            </p>
             <div className="code-boxes" role="group" aria-label={t.passNo}>
               {Array.from({ length: PASS_NO_LENGTH }, (_, i) => (
                 <span key={i} className={`num ${digits[i] ? "filled" : ""} ${i === 2 ? "gap" : ""}`}>
