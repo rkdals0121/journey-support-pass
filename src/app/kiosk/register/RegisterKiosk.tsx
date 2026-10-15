@@ -295,7 +295,11 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         setIssued({ token: data.token, passNo: data.guide.passNo });
         // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 스티커 화면의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을
         // 쓰던 사람이면 그 사람의 호출로 둔다. 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
-        if (callerLeft(at)) setCallSeq(null);
+        if (callerLeft(at)) {
+          setCallSeq(null);
+        // 빈 화면에서 부르고 떠난 사람이 바꿔 둔 소리·글자 크기도 지운다. 남기면 이 여객의 안내와 번호가 소리로 읽힌다.
+          resetViewSettings();
+        }
         emptyCall.current = null;
         setView("done");
       } catch {
@@ -477,7 +481,12 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
               setError(null);
               // 빈 화면에서 부른 사람이 떠나 있었으면(앞사람이 부르고 떠난 자리) 그 호출은 이제 시작하는 등록의 자동 종료를 막지 않는다.
               // 계속 화면을 쓰던 사람이면 그 사람의 호출로 둔다. 호출을 놓은 여객이 등록하는 중에 다시 누르면 다시 그 여객의 호출이 된다.
-              if (callerLeft(Date.now())) setCallSeq(null);
+              if (callerLeft(Date.now())) {
+                setCallSeq(null);
+                // 빈 화면에서 부르고 떠난 사람이 바꿔 둔 소리·글자 크기와 언어도 지운다.
+                resetViewSettings();
+                setLang("ko");
+              }
               emptyCall.current = null;
               setView("flow");
             }}

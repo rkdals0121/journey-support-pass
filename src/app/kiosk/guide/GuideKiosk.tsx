@@ -213,7 +213,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 안내의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을 쓰던
         // 사람이면 그 사람의 호출로 둔다. 어느 쪽이든 이제 안내가 열렸으니 빈 화면의 호출은 여기서 끝난다.
         // 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
-        if (callerLeft(at)) setCallSeq(null);
+        if (callerLeft(at)) {
+          setCallSeq(null);
+        // 빈 화면에서 부르고 떠난 사람이 바꿔 둔 소리·글자 크기도 지운다. 남기면 이 여객의 안내와 번호가 소리로 읽힌다.
+          resetViewSettings();
+        }
         emptyCall.current = null;
         setView({ kind: "home" });
       } catch {
@@ -380,6 +384,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
             screenKey="number"
             speakText={`${t.numberTitle}. ${t.numberHint}`}
             onBack={() => {
+              // 확인 중이던 번호는 끊고 늦게 온 답도 버린다. 남기면 그 사람이 떠난 뒤 그 사람의 안내가 다음 사람 앞에 열린다.
+              openSeq.current++;
+              openCtrl.current?.abort();
+              busyRef.current = false;
+              setBusy(false);
               setDigits("");
               setView({ kind: "scan" });
             }}
