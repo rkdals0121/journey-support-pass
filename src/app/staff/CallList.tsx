@@ -89,12 +89,10 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
   // 소리를 낼 준비. 아이폰은 사람이 화면을 누를 때 소리 장치를 깨워 두어야 나중에 소리가 난다.
   useEffect(() => {
     const unlock = () => void wakeAudio();
-    window.addEventListener("pointerdown", unlock);
-    window.addEventListener("keydown", unlock);
-    return () => {
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
+    // 아이폰은 손가락을 뗄 때(touchend)나 누름(click)이어야 소리 장치를 깨울 수 있다. 누르기 시작(pointerdown)만으로는 안 깨어난다.
+    const events = ["pointerdown", "touchend", "click", "keydown"] as const;
+    events.forEach((e) => window.addEventListener(e, unlock));
+    return () => events.forEach((e) => window.removeEventListener(e, unlock));
   }, []);
 
   async function refresh() {

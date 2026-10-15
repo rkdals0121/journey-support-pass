@@ -38,7 +38,9 @@ const JSQR_RETRY_MS = 10000;
 const FRAME_MAX = 960;
 // 가운데를 잘라 읽을 때 짧은 변에서 쓰는 비율. 화면의 겨누는 네모보다 조금 넓다.
 const CENTER_PART = 0.72;
-const CAMERA_KEY = "jsp:camera";
+// 고른 카메라는 쓰임새(화면 쪽 / 뒤쪽)마다 따로 기억한다. 한데 두면 같은 태블릿의 안내데스크 화면에서 뒤쪽 카메라를 고른 뒤
+// 키오스크 화면도 뒤쪽 카메라로 열린다.
+const cameraKey = (prefer: string) => `jsp:camera:${prefer}`;
 
 // 앱 설치 없이 브라우저 카메라로 읽는다.
 // 기기에 QR 판독 기능(BarcodeDetector)이 있으면 먼저 쓰고, 못 읽으면 같은 장면을 jsQR 로 다시 읽는다.
@@ -63,12 +65,12 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
   // 지난번에 고른 카메라를 기억한다. 키오스크에 카메라가 둘이면 설치할 때 한 번만 고르면 된다.
   useEffect(() => {
     try {
-      setChosen(localStorage.getItem(CAMERA_KEY));
+      setChosen(localStorage.getItem(cameraKey(prefer)));
     } catch {
       // 저장소를 못 쓰는 브라우저에서는 매번 기본 카메라로 시작한다.
     }
     setReady(true);
-  }, []);
+  }, [prefer]);
 
   useEffect(() => {
     if (!ready) return;
@@ -122,8 +124,12 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
         try {
           stream = await open(chosen ? { deviceId: { exact: chosen }, ...size } : { facingMode: prefer, ...size });
         } catch {
-          // 기억해 둔 카메라가 없어졌거나 조건이 맞지 않으면 아무 카메라나 연다.
-          stream = await open(size);
+          // 기억해 둔 카메라가 없어졌거나 조건이 맞지 않으면 먼저 쓰임새에 맞는 쪽(화면 쪽 / 뒤쪽)을, 그것도 안 되면 아무 카메라나 연다.
+          try {
+            stream = await open({ facingMode: prefer, ...size });
+          } catch {
+            stream = await open(size);
+          }
         }
       } catch {
         setCameraError(true);
@@ -254,7 +260,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
     const current = (video?.srcObject as MediaStream | null)?.getVideoTracks()[0]?.getSettings().deviceId ?? chosen;
     const next = cameras[(cameras.indexOf(current ?? "") + 1) % cameras.length];
     try {
-      localStorage.setItem(CAMERA_KEY, next);
+      localStorage.setItem(cameraKey(prefer), next);
     } catch {
       // 기억하지 못해도 이번에는 바꾼다.
     }

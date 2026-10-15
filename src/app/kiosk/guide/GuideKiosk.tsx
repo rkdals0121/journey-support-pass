@@ -80,7 +80,13 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   useEffect(() => {
     const touch = () => {
       const now = Date.now();
-      if (emptyCall.current && now - lastTouch.current >= idleAskSec * 1000) emptyCall.current.left = true;
+      if (emptyCall.current && !emptyCall.current.left && now - lastTouch.current >= idleAskSec * 1000) {
+        emptyCall.current.left = true;
+        // 부른 사람이 떠난 뒤의 첫 누름이다(다음 사람). 그 사람이 무엇을 고르기 전에, 떠난 사람이 바꿔 둔 소리·글자 크기·언어를 지운다.
+        // 안내를 열 때 지우면 다음 사람이 그사이 고른 언어와 소리까지 지워진다.
+        resetViewSettings();
+        setStartLang("ko");
+      }
       lastTouch.current = now;
     };
     // 화면의 단추보다 먼저 듣는다(capture). 안내를 여는 누름(여섯째 숫자)이 단추에 닿기 전에 그 앞의 빈 시간을 잰다.
@@ -213,11 +219,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 안내의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을 쓰던
         // 사람이면 그 사람의 호출로 둔다. 어느 쪽이든 이제 안내가 열렸으니 빈 화면의 호출은 여기서 끝난다.
         // 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
-        if (callerLeft(at)) {
-          setCallSeq(null);
-        // 빈 화면에서 부르고 떠난 사람이 바꿔 둔 소리·글자 크기도 지운다. 남기면 이 여객의 안내와 번호가 소리로 읽힌다.
-          resetViewSettings();
-        }
+        if (callerLeft(at)) setCallSeq(null);
         emptyCall.current = null;
         setView({ kind: "home" });
       } catch {
@@ -436,7 +438,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         <FlowShell lang={lang} prefs={prefs} kiosk screenKey="scan" speakText={`${t.scanTitle}. ${t.scanBody}`}>
           <div className="kiosk-head">
             <Brand />
-            <button className="lang-switch" onClick={() => setStartLang(startLang === "en" ? "ko" : "en")} lang={startLang === "en" ? "ko" : "en"}>
+            <button className="lang-switch" onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))} lang={startLang === "en" ? "ko" : "en"}>
               {t.otherLang}
             </button>
           </div>

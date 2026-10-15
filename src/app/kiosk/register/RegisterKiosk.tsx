@@ -86,7 +86,13 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   useEffect(() => {
     const touch = () => {
       const now = Date.now();
-      if (emptyCall.current && now - lastTouch.current >= idleAskSec * 1000) emptyCall.current.left = true;
+      if (emptyCall.current && !emptyCall.current.left && now - lastTouch.current >= idleAskSec * 1000) {
+        emptyCall.current.left = true;
+        // 부른 사람이 떠난 뒤의 첫 누름이다(다음 사람). 그 사람이 무엇을 고르기 전에, 떠난 사람이 바꿔 둔 소리·글자 크기·언어를 지운다.
+        // 안내를 열 때 지우면 다음 사람이 그사이 고른 언어와 소리까지 지워진다.
+        resetViewSettings();
+        setLang("ko");
+      }
       lastTouch.current = now;
     };
     // 화면의 단추보다 먼저 듣는다(capture). 「등록 시작」을 누른 손이 단추에 닿기 전에 그 앞의 빈 시간을 잰다.
@@ -295,11 +301,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         setIssued({ token: data.token, passNo: data.guide.passNo });
         // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 스티커 화면의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을
         // 쓰던 사람이면 그 사람의 호출로 둔다. 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
-        if (callerLeft(at)) {
-          setCallSeq(null);
-        // 빈 화면에서 부르고 떠난 사람이 바꿔 둔 소리·글자 크기도 지운다. 남기면 이 여객의 안내와 번호가 소리로 읽힌다.
-          resetViewSettings();
-        }
+        if (callerLeft(at)) setCallSeq(null);
         emptyCall.current = null;
         setView("done");
       } catch {
@@ -465,7 +467,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
               안내데스크로
             </a>
           ) : (
-            <button className="lang-switch" onClick={() => setLang(lang === "en" ? "ko" : "en")} lang={lang === "en" ? "ko" : "en"}>
+            <button className="lang-switch" onClick={() => setLang((l) => (l === "en" ? "ko" : "en"))} lang={lang === "en" ? "ko" : "en"}>
               {t.otherLang}
             </button>
           )}
@@ -481,12 +483,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
               setError(null);
               // 빈 화면에서 부른 사람이 떠나 있었으면(앞사람이 부르고 떠난 자리) 그 호출은 이제 시작하는 등록의 자동 종료를 막지 않는다.
               // 계속 화면을 쓰던 사람이면 그 사람의 호출로 둔다. 호출을 놓은 여객이 등록하는 중에 다시 누르면 다시 그 여객의 호출이 된다.
-              if (callerLeft(Date.now())) {
-                setCallSeq(null);
-                // 빈 화면에서 부르고 떠난 사람이 바꿔 둔 소리·글자 크기와 언어도 지운다.
-                resetViewSettings();
-                setLang("ko");
-              }
+              if (callerLeft(Date.now())) setCallSeq(null);
               emptyCall.current = null;
               setView("flow");
             }}
