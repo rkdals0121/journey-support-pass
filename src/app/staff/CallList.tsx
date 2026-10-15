@@ -71,7 +71,8 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
       const waiting = (body.calls as CallDto[]).filter((c) => c.state === "waiting");
       // 호출 번호와 누른 시각을 함께 본다. 아무도 받지 않은 키오스크 호출을 다음 여객이 다시 누르면 같은 호출이
       // 새 여객의 것으로 바뀌고 누른 시각만 새로 적힌다(같은 번호). 번호만 보면 새로 기다리는 사람이 생겨도 울리지 않는다.
-      const keyOf = (c: CallDto) => `${c.id}|${c.time}`;
+      // (분 단위인 time 이 아니라 초까지 있는 createdAt 을 본다. 같은 분 안에 다시 눌러도 알린다.)
+      const keyOf = (c: CallDto) => `${c.id}|${c.createdAt}`;
       const fresh = known.current ? waiting.filter((c) => !known.current!.has(keyOf(c))) : [];
       if (fresh.some((c) => c.mine || scopeRef.current === "all")) notify();
       known.current = new Set(waiting.map(keyOf));

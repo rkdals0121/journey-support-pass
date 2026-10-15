@@ -1956,9 +1956,10 @@ html[data-picture] .route > li::before {
     grid-template-columns: auto 1fr;
   }
   /* 가로 키오스크는 높이가 모자란다. QR 이 글자 크기를 따라 커지면 밑의 번호와 QR 아래쪽이 「스티커 뽑기」 줄에 가렸다.
-     위 띠·직원 부르기 줄·번호·아래 단추 줄 높이를 빼고 남는 만큼만 키운다(너무 작아 읽히지 않게 10rem 보다는 크게). */
+     위 띠·직원 부르기 줄·번호·아래 단추 줄 높이를 빼고 남는 만큼만 키운다(너무 작아 읽히지 않게 10rem 과 화면 높이의 20% 가운데 작은 것보다는 크게.
+     최소 크기를 rem 으로만 두면 가장 큰 글씨에서 최소 크기가 남는 높이보다 커진다). */
   html[data-kiosk] .done-layout .pass-qr-code {
-    width: max(10rem, min(17.5rem, 72vw, calc(100dvh - var(--bar-real, var(--bar-h)) - var(--call-h, 0rem) - 17rem)));
+    width: max(min(10rem, 20vh), min(17.5rem, 72vw, calc(100dvh - var(--bar-real, var(--bar-h)) - var(--call-h, 0rem) - 17rem)));
   }
 }
 

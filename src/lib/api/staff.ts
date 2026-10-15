@@ -81,6 +81,8 @@ export interface CallDto {
   /** 등록하다가 불렀는지, 안내를 보다가 불렀는지. */
   screen: Call["screen"];
   time: string; // 누른 시각 14:35
+  /** 누른 시각(ISO). 아무도 받지 않은 호출을 다음 여객이 다시 누르면 새로 적힌다. 직원 화면이 새로 기다리는 사람을 알아보는 데 쓴다. */
+  createdAt: string;
   waitedMin: number; // 누른 뒤 지난 시간. 끝난 호출은 끝날 때까지 걸린 시간
   /** 받은 구역 이름. 아직 아무도 받지 않았으면 null. */
   acceptedBy: string | null;
@@ -113,6 +115,7 @@ export async function callsHandler(db: Db, session: Session | null, now: Date): 
       mine: c.zoneId === me.zoneId,
       screen: c.screen,
       time: kstTime(c.createdAt),
+      createdAt: c.createdAt.toISOString(),
       waitedMin: Math.max(0, Math.floor((end.getTime() - c.createdAt.getTime()) / 60_000)),
       acceptedBy: c.acceptedZone ? labelOf(c.acceptedZone) : null,
       acceptedByMe: c.acceptedZone === me.zoneId,

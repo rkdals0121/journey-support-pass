@@ -840,6 +840,7 @@ describe("직원 화면: 호출 목록", () => {
         mine: true,
         screen: "register",
         time: "12:00",
+        createdAt: now.toISOString(),
         waitedMin: 3,
         acceptedBy: null,
         acceptedByMe: false,

@@ -9,7 +9,7 @@ import { staleNow } from "@/lib/timing";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { FlowShell } from "../../components/FlowShell";
-import { closeText, destOf, FlightBoard } from "../../components/GuideParts";
+import { closeText, departureText, destOf, FlightBoard } from "../../components/GuideParts";
 import { NeedIcon } from "../../components/NeedIcon";
 import { PassQr } from "../../components/PassQr";
 
@@ -233,8 +233,13 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
     `${t.passNo} ${guide.passNo.split("").join(" ")}`,
     t.passHow,
     `${flight.flightNo}, ${destOf(flight, lang)}, ${t.gate} ${flight.gate ?? t.gateTbd}`,
+    // 키오스크의 소리 안내처럼 출발 시각(늦어졌으면 그 말까지)과 탑승 중인 것도 읽는다.
+    departureText(flight, t),
+    flight.boardingNow && flight.close === "open" ? t.boardingNow : "",
     closeText(flight, t),
-  ].join(". ");
+  ]
+    .filter(Boolean)
+    .join(". ");
 
   return (
     <FlowShell lang={lang} prefs={prefs} kiosk={false} screenKey="pass" speakText={speakText} onHome={home}>

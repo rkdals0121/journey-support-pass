@@ -628,7 +628,7 @@ const en: Text = {
     rest: "Rest area",
     lounge: "Assistance lounge",
     calm: "Quiet room",
-    wheelchair: "Wheelchair loan",
+    wheelchair: "Wheelchair loan desk",
   },
   area: { T1: "Terminal 1", CONCOURSE: "Concourse", T2: "Terminal 2" },
   walk: (m, min, g, to) => {

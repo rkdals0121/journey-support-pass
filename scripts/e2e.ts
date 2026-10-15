@@ -1187,7 +1187,7 @@ async function resetFlights(clearLocks = false) {
   const scale0 = await page.evaluate(() => document.documentElement.style.getPropertyValue("--scale"));
   for (const vp of [KIOSK_WIDE, { ...KIOSK_WIDE, width: 1366, height: 768 }]) {
     await page.setViewport(vp);
-    for (const scale of ["1", "1.25"]) {
+    for (const scale of ["1", "1.25", "1.5"]) {
       await page.evaluate((s) => document.documentElement.style.setProperty("--scale", s), scale);
       await new Promise((r) => setTimeout(r, 150));
       const r = await qrClear();
@@ -1196,7 +1196,7 @@ async function resetFlights(clearLocks = false) {
   }
   await page.evaluate((s) => document.documentElement.style.setProperty("--scale", s), scale0);
   await page.setViewport(KIOSK_WIDE);
-  check("가로 키오스크에서 큰 글씨여도 QR 과 번호가 「스티커 뽑기」 줄에 가리지 않는다", qrFit.length === 0, qrFit.join(" / "));
+  check("가로 키오스크에서 큰 글씨·아주 큰 글씨여도 QR 과 번호가 「스티커 뽑기」 줄에 가리지 않는다", qrFit.length === 0, qrFit.join(" / "));
   // 스티커: 인쇄할 때는 QR 과 번호만 나온다.
   await page.emulateMediaType("print");
   const printed = await page.evaluate(() =>
