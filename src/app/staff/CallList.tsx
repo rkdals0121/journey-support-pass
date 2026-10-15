@@ -26,6 +26,13 @@ const LOAD_TIMEOUT_MS = 10_000;
  */
 export function CallList({ refreshSec }: { refreshSec: number }) {
   const [data, setData] = useState<Data | null>(null);
+  // 누른 단추가 사라지면(받기 → 단추가 바뀜, 마침 → 카드가 내려감) 초점이 화면 밖으로 빠진다.
+  // 그때만 제목으로 옮겨 키보드·화면 읽기 프로그램으로 쓰는 직원이 자리를 잃지 않게 한다.
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const keepFocus = () =>
+    setTimeout(() => {
+      if (!document.activeElement || document.activeElement === document.body) headRef.current?.focus();
+    }, 0);
   const [scope, setScope] = useState<"mine" | "all">("mine");
   // 불러오기 오류(다음 불러오기에서 저절로 사라진다)와 누른 것의 오류(다른 것을 누를 때까지 남는다)를 따로 둔다.
   // 한데 두면 "다른 직원이 먼저 받았습니다"가 바로 뒤의 불러오기에 지워져 한순간만 보인다.
@@ -117,6 +124,7 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
     }
     setBusy(null);
     await load(true);
+    keepFocus();
   }
 
   async function logout() {
@@ -152,7 +160,7 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
             </button>
           </span>
         </div>
-        <h1>
+        <h1 ref={headRef} tabIndex={-1}>
           직원 호출 <b className="num">{shownOpen.length}</b>
         </h1>
         <p>여객이 키오스크에서 「직원 부르기」를 누르면 여기에 뜹니다.</p>
@@ -188,7 +196,13 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
             갑니다.
           </p>
           {scope === "mine" && elsewhere > 0 && (
-            <button className="btn" onClick={() => setScope("all")}>
+            <button
+              className="btn"
+              onClick={() => {
+                setScope("all");
+                keepFocus();
+              }}
+            >
               다른 구역의 호출 {elsewhere}건 보기
             </button>
           )}

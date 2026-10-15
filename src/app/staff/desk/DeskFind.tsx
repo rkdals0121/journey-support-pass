@@ -31,6 +31,16 @@ export function DeskFind() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // 패스를 찾으면 「찾은 패스」로, 닫거나 지우면 번호 칸으로 초점을 옮긴다. 누른 단추가 사라져 초점이 빠지지 않게 한다.
+  const foundRef = useRef<HTMLElement>(null);
+  const hadFound = useRef(false);
+  useEffect(() => {
+    if (found) foundRef.current?.focus();
+    else if (hadFound.current && (!document.activeElement || document.activeElement === document.body)) {
+      document.getElementById("desk-pass-no")?.focus();
+    }
+    hadFound.current = found !== null;
+  }, [found]);
   // 방금 지운 패스. 지운 뒤 잠시 그 QR 을 다시 읽지 않는다(위 onScan).
   const justErased = useRef<{ token: string; at: number } | null>(null);
   const [asking, setAsking] = useState(false);
@@ -131,7 +141,9 @@ export function DeskFind() {
     return (
       <div className="panel desk-found">
         <div className="desk-found-head">
-          <strong>찾은 패스</strong>
+          <strong ref={foundRef} tabIndex={-1}>
+            찾은 패스
+          </strong>
           <button
             className="icon-btn"
             onClick={() => {
