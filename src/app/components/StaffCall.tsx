@@ -101,11 +101,13 @@ export function StaffCall({ t, big, token, screen, session, onActive, onPress, s
     lastState.current = state;
     // 여객이 스스로 거둔 호출은 읽지 않는다. 창이 바로 닫히는데 "부르고 있습니다"라고 읽으면 틀린 말이 된다.
     if (state === "cancelled" || !(state || error)) return;
+    // 제목이 이미 마침표나 물음표로 끝나면 마침표를 또 붙이지 않는다(".."으로 읽히지 않게). 본문이 없으면 제목만 읽는다.
+    const line = [/[.?!]$/.test(title) ? title : `${title}.`, body].filter(Boolean).join(" ");
     if (open) {
-      sayRef.current?.(`${title}. ${body}`);
+      sayRef.current?.(line);
     } else if (changed && (state === "accepted" || state === "done")) {
-      sayRef.current?.(`${title}. ${body}`);
-      setNews(`${title}. ${body}`);
+      sayRef.current?.(line);
+      setNews(line);
     }
   }, [state, error, open, title, body]);
 

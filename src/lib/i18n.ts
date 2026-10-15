@@ -365,7 +365,7 @@ const koEasy: Partial<Text> = {
     const sign = g ? `‘${g}’ 숫자가 있는 표지를 따라 ` : "";
     // 다음 줄이 에스컬레이터일 수도 있어서 "엘리베이터까지"라고 못박지 않는다. 앞뒤 줄이 서로 달라 보이면 헷갈린다.
     const end =
-      to === "lift" ? "엘리베이터나 에스컬레이터 있는 곳까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : "갑니다";
+      to === "lift" ? "엘리베이터나 에스컬레이터가 있는 곳까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : "갑니다";
     return `${sign}${m}m ${end} (${min}분쯤)`;
   },
   shuttle: (min: number) => `셔틀트레인(기차)을 타고 갑니다 (${min}분쯤)`,
@@ -544,7 +544,7 @@ const en: Text = {
     "Put the sticker on the book clip and keep it with your passport. When you need help, show the QR at an airport kiosk or guide robot.",
   kioskPrint: "Print sticker",
   kioskPrintAgain: "Print sticker again",
-  stickerQrFail: "The QR picture could not be loaded. Please wait a moment and press again.",
+  stickerQrFail: "The QR code could not be loaded. Please wait a moment and try again.",
   kioskFinish: "Finish",
   reprintTitle: "Show the QR on your phone",
   reprintBody: "Show the QR you received on your phone to the camera and we will print the same QR as a sticker.",
@@ -557,7 +557,7 @@ const en: Text = {
   numberTitle: "Enter the six-digit serial number",
   numberHint: "It is the six-digit number printed next to or under the QR.",
   numberChecking: "Checking the number…",
-  numberLocked: "Too many wrong numbers. Please try again in a few minutes.",
+  numberLocked: "Too many incorrect numbers. Please try again in a few minutes.",
   numberOpen: "Show guidance",
   numberBackToScan: "Use QR instead",
   noPassTitle: "No QR or serial number yet?",

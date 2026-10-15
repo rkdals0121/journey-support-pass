@@ -982,14 +982,14 @@ async function resetFlights(clearLocks = false) {
   await fetch(`${BASE}/check`, { method: "HEAD" }).catch(() => {});
   await page.goto(`${BASE}/check`, { waitUntil: "load", timeout: 300_000 });
   // 개발 서버가 다른 일로 바빠 8초 안에 못 답하면 "닿지 않습니다"가 나온다. 그럴 때만 「다시 확인」을 한 번 더 누른다.
-  await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 닿지 않습니다/.test(document.body.innerText), { timeout: WAIT });
-  if (await has(page, "서버에 닿지 않습니다")) {
+  await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 연결되지 않습니다/.test(document.body.innerText), { timeout: WAIT });
+  if (await has(page, "서버에 연결되지 않습니다")) {
     await clickText(page, "button", "다시 확인");
     await page.waitForFunction(() => !/인터넷 연결을 확인하는 중/.test(document.body.innerText), { timeout: WAIT });
   }
   // 개발 서버가 바쁘면 "느립니다"로 나올 수 있다. 어느 쪽이든 걸린 시간을 알려 주면 된다. "닿지 않습니다"만 틀린 것이다.
-  await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 닿지 않습니다/.test(document.body.innerText), { timeout: WAIT });
-  check("인터넷이 되는지 보고 서버가 답한 시간을 알려 준다", /초 만에 답했습니다|연결은 되지만 느립니다\(\d/.test(await text(page)) && !(await has(page, "서버에 닿지 않습니다")));
+  await page.waitForFunction(() => /초 만에 답했습니다|연결은 되지만 느립니다|서버에 연결되지 않습니다/.test(document.body.innerText), { timeout: WAIT });
+  check("인터넷이 되는지 보고 서버가 답한 시간을 알려 준다", /초 만에 답했습니다|연결은 되지만 느립니다\(\d/.test(await text(page)) && !(await has(page, "서버에 연결되지 않습니다")));
   check("카메라, 소리, 인터넷, 화면, 인터넷 없이 열기, 화면 꺼짐 막기 여섯 가지를 본다", (await count(page, ".dc-item")) === 6);
   await page.waitForSelector(".dc-qr svg", { timeout: WAIT });
   check("다른 기기로 읽어 볼 점검용 QR 이 있고, 그 QR 은 이 점검 화면 주소다", (await readQr(page, ".dc-qr svg")) === `${BASE}/CHECK`.toUpperCase());

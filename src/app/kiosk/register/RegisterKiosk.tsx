@@ -216,6 +216,9 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   // 뽑은 패스는 상태(printedFor)로 기억한다. 그래야 자동으로 한 장 나온 뒤 버튼이 「스티커 다시 뽑기」로 바뀌어, 같은 스티커를 또 뽑지 않는다.
   useEffect(() => {
     if (view !== "done" || !issued || printedFor === issued.token) return;
+    // 안내데스크에서는 자동으로 뽑지 않는다. 직원이 여객과 내용을 확인한 뒤 누른다.
+    // 같은 기기를 예전에 자동 인쇄 키오스크로 설치했던 적이 있어도(그 설정이 남아 있어도) 뽑지 않게 한다.
+    if (assisted) return;
     let auto = false;
     try {
       auto = localStorage.getItem(AUTOPRINT_KEY) === "1";
@@ -229,7 +232,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     const token = issued.token;
     const timer = setTimeout(() => setPrinting((p) => p ?? token), 700);
     return () => clearTimeout(timer);
-  }, [view, issued, printedFor]);
+  }, [view, issued, printedFor, assisted]);
 
   // 스티커는 QR 그림이 실제로 그려진 뒤에 뽑는다. 그림이 없을 때 뽑으면 QR 칸이 빈 스티커가 나오고, 단추는 「스티커 다시 뽑기」로
   // 바뀌어 여객은 잘못 나온 줄도 모른다. 오래 기다려도 그려지지 않으면(자동 인쇄든 여객이 누른 것이든) 뽑지 않는다.
@@ -430,7 +433,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     // 키오스크의 카메라는 그 앞에 선 여객을 향한다(앞 카메라). 안내데스크에서는 직원이 기기를 들고 여객의 휴대전화를 비추므로
     // 뒤 카메라를 쓰고, 여객에게 하는 말 대신 직원에게 하는 말을 쓴다(같은 데스크의 「패스 찾기」와 같다).
     const reprintTitle = assisted ? "여객의 QR을 찍어 주세요" : t.reprintTitle;
-    const reprintBody = assisted ? "여객이 휴대전화로 받은 QR을 카메라로 비춰 주세요. 같은 QR을 스티커로 뽑습니다." : t.reprintBody;
+    const reprintBody = assisted ? "여객이 휴대전화로 받은 QR을 카메라에 비춰 주세요. 같은 QR을 스티커로 뽑습니다." : t.reprintBody;
     screen = (
       <FlowShell lang={lang} prefs={prefs} kiosk screenKey="reprint" speakText={`${reprintTitle}. ${reprintBody}`} onBack={backToStart} onHome={reset}>
         <div className="scan-layout">
@@ -490,7 +493,8 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
             }}
           >
             <Smartphone size={24} aria-hidden="true" />
-            {t.kioskReprint}
+            {/* 안내데스크에서는 직원이 보는 말로 쓴다. 키오스크의 말은 여객이 하는 말이다("이미 등록했어요"). */}
+            {assisted ? "여객 QR로 스티커 다시 뽑기" : t.kioskReprint}
           </button>
           {!assisted && <ListenStart t={t} />}
         </div>

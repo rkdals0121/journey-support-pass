@@ -80,10 +80,10 @@ export function DeviceCheck() {
       setNet(
         ms < 1500
           ? { state: "ok", text: `연결되어 있습니다. 서버가 ${ms / 1000}초 만에 답했습니다.` }
-          : { state: "warn", text: `연결은 되지만 느립니다(${(ms / 1000).toFixed(1)}초). 와이파이를 바꾸거나 휴대전화 데이터로 바꿔 보세요.` },
+          : { state: "warn", text: `연결은 되지만 느립니다(${(ms / 1000).toFixed(1)}초). 다른 와이파이에 연결하거나 휴대전화 데이터로 바꿔 보세요.` },
       );
     } catch {
-      setNet({ state: "bad", text: "서버에 닿지 않습니다. 와이파이나 데이터 연결을 확인해 주세요." });
+      setNet({ state: "bad", text: "서버에 연결되지 않습니다. 와이파이나 데이터 연결을 확인해 주세요." });
     }
   }
 
@@ -137,7 +137,7 @@ export function DeviceCheck() {
       if (list.length === 0) {
         setVoice({ state: "warn", text: "목소리 목록을 아직 받지 못했습니다. 「소리 들어 보기」를 눌러 직접 들어 보세요." });
       } else if (ko && en) {
-        setVoice({ state: "ok", text: "한국어와 영어 목소리가 있습니다. 「소리 들어 보기」로 실제로 들리는지 확인하세요." });
+        setVoice({ state: "ok", text: "한국어와 영어 목소리가 있습니다. 「소리 들어 보기」로 실제로 들리는지 확인해 주세요." });
       } else {
         const missing = !ko && !en ? "한국어와 영어" : ko ? "영어" : "한국어";
         setVoice({
@@ -238,7 +238,7 @@ export function DeviceCheck() {
             English voice
           </button>
         </div>
-        {heard && <p className="hint">안 들리면 기기의 소리 크기와 무음(매너) 모드를 확인해 주세요. 아이폰·아이패드는 옆의 무음 스위치도 봅니다.</p>}
+        {heard && <p className="hint">안 들리면 기기의 소리 크기와 무음(매너) 모드를 확인해 주세요. 아이폰·아이패드는 옆의 무음 스위치도 확인해 주세요.</p>}
       </Item>
 
       <Item id="screen" icon={MonitorSmartphone} title="화면" row={screen} />
