@@ -211,6 +211,9 @@ export async function listDestinations(db: Db, now: Date): Promise<Destination[]
 
 export async function getFlight(db: Db, flightDate: string, flightNo: string): Promise<FlightChoice | null> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(flightDate)) return null;
+  // 모양은 맞아도 달력에 없는 날짜(2월 30일 등)는 DB 가 오류를 내므로 여기서 거른다.
+  const day = new Date(`${flightDate}T00:00:00Z`);
+  if (Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== flightDate) return null;
   const [row] = await db.query<Row>(
     `select ${COLUMNS} from flights where flight_date = $1 and flight_no = $2`,
     [flightDate, normalizeFlightNo(flightNo)],

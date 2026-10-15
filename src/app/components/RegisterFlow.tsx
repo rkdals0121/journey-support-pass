@@ -35,6 +35,8 @@ interface Props {
   initialLang: Lang;
   /** 첫 질문에서 「이전」이나 「처음으로」를 눌렀을 때. 등록 중에 고른 언어를 함께 준다. */
   onExit: (lang: Lang) => void;
+  /** 첫 질문의 「이전」만 따로 받을 때. 주지 않으면 onExit 와 같다. 키오스크는 같은 여객이 처음 화면으로 돌아가는 것으로 다룬다. */
+  onBackOut?: (lang: Lang) => void;
   onDone: (result: RegisterResult) => void;
   /** 언어나 안내 방식이 바뀔 때마다 알린다. 키오스크가 「직원 부르기」 버튼의 말과 크기를 맞추는 데 쓴다. */
   onPrefs?: (lang: Lang, prefs: Prefs) => void;
@@ -85,7 +87,7 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
 }
 
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. */
-export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Props) {
+export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs }: Props) {
   const kiosk = mode !== "web";
   // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
   // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
@@ -136,8 +138,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
   const offline = t.offline;
   useEffect(() => {
     const q = query.trim();
+    // 편 단계에서만 찾는다. 다른 단계로 가면 찾던 것을 끊고(늦은 오류가 다른 질문에 뜨지 않게), 돌아오면 다시 찾는다
+    // (전에는 이전·다음으로 돌아오면 넣은 글자만 있고 목록도 「다시 찾기」도 없는 빈 화면이 됐다).
     // 도시에서 고른 경우는 글자 수와 상관없이 그 도시로 찾는다(괌처럼 한 글자인 도시도 있다).
-    if (flight || (!cityPick && q.length < 2)) {
+    if (kind !== "flight" || flight || (!cityPick && q.length < 2)) {
       setSearching(false);
       return;
     }
@@ -169,7 +173,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [query, cityPick, flight, offline, retry]);
+  }, [kind, query, cityPick, flight, offline, retry]);
 
   // 이전 질문으로 돌아가 값을 바꾼 횟수를 센다(잘못 넣어 고친 횟수).
   const touched = () => {
@@ -231,7 +235,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     setError(null);
     setStep(target);
   };
-  const back = () => (step === 0 ? onExit(lang) : goTo(step - 1, true));
+  const back = () => (step === 0 ? (onBackOut ?? onExit)(lang) : goTo(step - 1, true));
   const next = () => {
     // 첫 질문을 넘기면 "등록을 시작했다"고 센다. 안내 방식을 켰는지와 함께 남겨, 켰을 때와 껐을 때의 완료 비율을 견준다.
     // 직원이 대신 넣는 등록은 세지 않는다.

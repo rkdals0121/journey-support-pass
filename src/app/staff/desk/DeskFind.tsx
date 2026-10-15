@@ -129,7 +129,7 @@ export function DeskFind() {
             <X size={22} aria-hidden="true" />
           </button>
         </div>
-        <PassQr key={qrTry} token={found.token} passNo={g.passNo} label="고유 일련 번호" />
+        <PassQr key={`qr-${qrTry}`} token={found.token} passNo={g.passNo} label="고유 일련 번호" />
         <p className="call-flight">
           <PlaneTakeoff size={18} aria-hidden="true" />
           <b className="num">{g.flight.flightNo}</b> {g.flight.destName} · 탑승구 <b className="num">{g.flight.gate ?? "미정"}</b>
@@ -150,7 +150,7 @@ export function DeskFind() {
           <Trash2 size={20} aria-hidden="true" />
           등록 지우기
         </button>
-        <Sticker key={qrTry} token={found.token} passNo={g.passNo} />
+        <Sticker key={`sticker-${qrTry}`} token={found.token} passNo={g.passNo} />
         {asking && (
           <ConfirmSheet
             title="이 등록을 지울까요?"

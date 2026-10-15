@@ -93,7 +93,14 @@ export async function registerHandler(
   if (route === "web" && !claim) return fail(429, "잠시 후 다시 시도해 주세요", "rate");
 
   const choices = strings(body.choices);
-  const res = await createRegistration(
+  // 잡아 둔 자리를 돌려준다. 예상하지 못한 오류(이상한 값을 DB 가 거부하는 등)에도 돌려준다.
+  // 남기면 등록이 생기지 않았는데도 10분 동안 한도를 차지한다.
+  const release = async () => {
+    if (claim) await forgetAttempt(db, claim);
+  };
+  let res: Awaited<ReturnType<typeof createRegistration>>;
+  try {
+    res = await createRegistration(
     db,
     {
       flightDate: typeof body.flightDate === "string" ? body.flightDate : "",
@@ -107,15 +114,25 @@ export async function registerHandler(
     },
     now,
   );
+  } catch (e) {
+    await release();
+    throw e;
+  }
   // 받지 못한 등록은 횟수로 세지 않는다. 잘못 넣고 고쳐 다시 보내는 여객이 한도에 걸리지 않게 한다.
   if (!res.ok) {
-    if (claim) await forgetAttempt(db, claim);
+    await release();
     return fail(400, res.error, res.code);
   }
 
-  const pass = await issuePass(db, res.registration.id, now);
+  let pass: Awaited<ReturnType<typeof issuePass>>;
+  try {
+    pass = await issuePass(db, res.registration.id, now);
+  } catch (e) {
+    await release();
+    throw e;
+  }
   if (!pass.ok) {
-    if (claim) await forgetAttempt(db, claim);
+    await release();
     return fail(500, "패스를 만들지 못했습니다. 잠시 후 다시 시도해 주세요", "pass");
   }
 

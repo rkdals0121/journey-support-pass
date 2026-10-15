@@ -117,7 +117,8 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   langRef.current = lang;
   const { speak, stop } = useSpeech(lang);
   // 직원 부르기의 상태도 소리로 읽는다. 처음 화면의 「소리로 안내 듣기」나 「설정」으로 켰어도 읽는다.
-  const voiceOn = useViewSettings().voice ?? prefs.voice;
+  const viewSettings = useViewSettings();
+  const voiceOn = viewSettings.voice ?? prefs.voice;
 
   // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
   useEffect(() => resetViewSettings(), []);
@@ -181,6 +182,20 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     // 앞사람이 「설정」에서 바꾼 글자 크기와 소리도 지운다.
     resetViewSettings();
   }, [dropScan]);
+
+  // 처음 화면에는 자동 종료가 없다. 앞사람이 여기서 소리·글자 크기·언어를 바꾸고 떠나면 다음 사람에게 그대로 남아,
+  // 다음 사람의 항공편과 고유 일련 번호가 소리로 읽힌다. 아무도 건드리지 않은 채 자동 종료와 같은 시간이 지나면 묻지 않고 되돌린다
+  // (화면에 개인 정보가 없어 물을 것이 없다). 직원 호출이 진행 중이면 부른 여객이 기다리는 중일 수 있어 두지 않는다.
+  const leftover = viewSettings.scale !== null || viewSettings.picture !== null || viewSettings.voice !== null || lang !== "ko";
+  const quietIdle = view === "start" && leftover && !callActive;
+  useEffect(() => {
+    if (!quietIdle) return;
+    const limit = (idleAskSec + idleAnswerSec) * 1000;
+    const timer = setInterval(() => {
+      if (Date.now() - lastTouch.current >= limit) reset();
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [quietIdle, idleAskSec, idleAnswerSec, reset]);
 
   const onPrefs = useCallback((l: Lang, p: Prefs) => {
     setLang(l);
@@ -294,6 +309,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
           big={prefs.wantsStaff}
           token={issued?.token ?? null}
           screen="register"
+          session={sessionSeq.current}
           onActive={onCallActive}
           onPress={() => {
             // 지금 여객의 호출로 삼는다. 처음 화면이나 QR 을 찍는 화면에서 눌렀으면 그 사실도 적어 둔다(위 emptyCall).
@@ -332,6 +348,12 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         mode={assisted ? "assisted" : "kiosk"}
         initialLang={lang}
         onExit={reset}
+        // 첫 질문의 「이전」은 같은 여객이 처음 화면으로 돌아가는 것이다. 다음 여객의 차례로 넘기지 않는다(backToStart).
+        // 넘기면 직원을 기다리던 여객이 자동 종료되고, 켜 둔 소리도 꺼진다. 「처음으로」는 그대로 다음 여객으로 넘긴다.
+        onBackOut={(l) => {
+          backToStart();
+          setLang(l);
+        }}
         onPrefs={onPrefs}
         onDone={(r) => {
           if (seq !== sessionSeq.current) return;
@@ -383,7 +405,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
           {t.kioskDoneTitle}
         </p>
         <div className="done-layout">
-          <PassQr key={qrTry} token={issued.token} passNo={issued.passNo} label={t.passNo} />
+          <PassQr key={`qr-${qrTry}`} token={issued.token} passNo={issued.passNo} label={t.passNo} />
           <div>
             <h1>{t.kioskPrint}</h1>
             <p className="lead">{t.kioskDoneBody}</p>
@@ -391,7 +413,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
             {error && <ErrorNote>{error}</ErrorNote>}
           </div>
         </div>
-        <Sticker key={qrTry} token={issued.token} passNo={issued.passNo} />
+        <Sticker key={`sticker-${qrTry}`} token={issued.token} passNo={issued.passNo} />
       </FlowShell>
     );
   } else if (view === "reprint") {

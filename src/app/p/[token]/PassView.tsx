@@ -169,12 +169,17 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
     erasing.current = true;
     setBusy(true);
     setError(null);
+    // 답이 오지 않는 지우기는 15초에 끊는다. 끊지 않으면 두 단추가 흐린 채 멈추고, 그동안 탑승구 새 소식도 화면에 들어오지 않는다.
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), 15_000);
     try {
       const res = await fetch("/api/pass/erase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
+        signal: ctrl.signal,
       });
+      clearTimeout(limit);
       if (!res.ok) throw new Error();
       // 휴대전화에 남겨 둔 이 화면도 지운다. 지운 뒤에 인터넷이 끊긴 채로 열어도 예전 QR 이 나오지 않게 한다.
       // 화면에서 바로 지우고(워커가 이 화면을 맡지 않은 때에도 지워지게), 워커에게도 알려 지우는 사이에 다시 써 넣지 않게 한다.
@@ -183,6 +188,7 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       erasedTokens.add(token);
       setErased(true);
     } catch {
+      clearTimeout(limit);
       erasing.current = false;
       setError(t.offline);
     } finally {

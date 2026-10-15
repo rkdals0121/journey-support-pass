@@ -150,7 +150,8 @@ export async function seedZones(
         z.band,
         expandGates(z.gateRanges),
         JSON.stringify(z.facilities),
-        hash(z.code),
+        // 로그인은 넣은 코드의 앞뒤 빈칸을 지우고 대조한다. 저장할 때도 지워야 빈칸이 섞인 코드가 영영 안 맞는 일이 없다.
+        hash(z.code.trim()),
         z.isDesk,
         z.active,
         z.isCommon === true,

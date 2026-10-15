@@ -19,6 +19,8 @@ interface Props {
   onActive?: (active: boolean) => void;
   /** 버튼을 누를 때마다 알린다. 키오스크가 지금 여객이 부른 호출인지 가려, 앞사람이 남기고 간 호출이 다음 여객의 자동 종료를 막지 않게 한다. */
   onPress?: () => void;
+  /** 키오스크가 다음 여객으로 넘어갈 때마다 바뀌는 값. 바뀌면 앞사람이 보던 창을 닫는다. */
+  session?: number;
   /** 소리 안내를 켠 여객에게 상태가 바뀔 때 읽어 준다. */
   say?: (text: string) => void;
 }
@@ -39,7 +41,7 @@ const KIOSK_SETUP = "/kiosk";
  * 「직원 부르기」. 키오스크의 모든 화면에서 같은 자리(오른쪽 위)에 있다.
  * 누르면 이 키오스크가 속한 구역의 직원 화면에 호출이 뜬다. 직원이 받으면 여기에 "오고 있습니다"로 바뀐다.
  */
-export function StaffCall({ t, big, token, screen, onActive, onPress, say }: Props) {
+export function StaffCall({ t, big, token, screen, session, onActive, onPress, say }: Props) {
   const [callId, setCallId] = useState<string | null>(null);
   const [state, setState] = useState<CallState | null>(null);
   const [open, setOpen] = useState(false);
@@ -65,9 +67,19 @@ export function StaffCall({ t, big, token, screen, onActive, onPress, say }: Pro
     return () => live.forEach((c) => c.abort());
   }, []);
 
+  // 다음 여객으로 넘어가면 앞사람이 보던 창("직원을 부르지 못했습니다" 같은)을 닫는다. 남겨 두면 다음 사람이 처음 화면에서
+  // 영문 모를 실패 알림을 본다. 진행 중인 호출(기다리는 중, 오는 중, 보내는 중)은 그대로 둔다. 직원이 아직 오고 있다.
+  const quiet = useRef({ active: false, busy: false });
+  useEffect(() => {
+    if (quiet.current.active || quiet.current.busy) return;
+    setOpen(false);
+    setError(false);
+  }, [session]);
+
   // 누른 직후 서버의 답을 기다리는 동안에도 "부르고 있습니다"로 보여준다. 눌렀는데 아무 설명 없이 멈춘 것처럼 보이면 안 된다.
   const shown: CallState | null = state ?? (busy && !error ? "waiting" : null);
   const active = state === "waiting" || state === "accepted";
+  quiet.current = { active, busy };
   // 누른 직후 서버의 답을 기다리는 동안도 "부르는 중"으로 친다. 그사이에 키오스크가 처음 화면으로 돌아가지 않는다.
   const calling = active || shown === "waiting";
   useEffect(() => {

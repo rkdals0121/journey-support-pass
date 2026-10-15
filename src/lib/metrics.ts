@@ -94,7 +94,7 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
   // 아무도 받지 않아 시간이 지난 호출은 닫은 뒤에 센다.
   await closeStale(db, now);
   const regs = await db.query<{ route: string; write_sec: number }>(
-    `select route, extract(epoch from (submitted_at - started_at))::int as write_sec
+    `select route, least(extract(epoch from (submitted_at - started_at)), 86400)::int as write_sec
      from registrations where submitted_at >= $1`,
     [since],
   );

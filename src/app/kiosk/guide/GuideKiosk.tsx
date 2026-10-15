@@ -102,7 +102,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const t = textOf(lang, prefs.easy);
   const { speak, stop } = useSpeech(lang);
   // 직원 부르기의 상태도 소리로 읽는다. 등록 때 소리를 고르지 않았어도 키오스크에서 소리를 켰으면 읽는다.
-  const voiceOn = useViewSettings().voice ?? prefs.voice;
+  const viewSettings = useViewSettings();
+  const voiceOn = viewSettings.voice ?? prefs.voice;
   const here = lang === "en" ? placeLabelEn : placeLabel;
 
   // 마지막으로 보여 준 오류 문구. 문구가 사라진 뒤에도 그 자리를 비워 두는 데만 쓴다(번호 화면).
@@ -306,6 +307,22 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     };
   }, [token, viewing, refreshSec, reset]);
 
+  // 처음 화면에는 자동 종료가 없다. 앞사람이 여기서 소리·글자 크기·언어를 바꾸고 떠나면 다음 사람에게 그대로 남아,
+  // 다음 사람의 항공편과 고유 일련 번호가 소리로 읽힌다. 아무도 건드리지 않은 채 자동 종료와 같은 시간이 지나면 묻지 않고 되돌린다
+  // (화면에 개인 정보가 없어 물을 것이 없다). 직원 호출이 진행 중이면 부른 여객이 기다리는 중일 수 있어 두지 않는다.
+  // 번호 화면을 열어 둔 채 떠난 것도 되돌린다. 남겨 두면 카메라가 꺼져 다음 사람이 QR 을 대도 열리지 않는다.
+  const leftover =
+    viewSettings.scale !== null || viewSettings.picture !== null || viewSettings.voice !== null || startLang !== "ko" || view.kind === "number";
+  const quietIdle = !guide && (view.kind === "scan" || (view.kind === "number" && digits === "")) && leftover && !callActive;
+  useEffect(() => {
+    if (!quietIdle) return;
+    const limit = (idleAskSec + idleAnswerSec) * 1000;
+    const timer = setInterval(() => {
+      if (Date.now() - lastTouch.current >= limit) reset();
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [quietIdle, idleAskSec, idleAnswerSec, reset]);
+
   // 고맙다는 화면은 잠깐만 보여주고 처음으로 돌아간다.
   useEffect(() => {
     if (view.kind !== "thanks") return;
@@ -335,7 +352,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={onCallActive} onPress={onCallPress} say={voiceOn ? speak : undefined} />
+        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" session={sessionSeq.current} onActive={onCallActive} onPress={onCallPress} say={voiceOn ? speak : undefined} />
       </div>
     </div>
   );

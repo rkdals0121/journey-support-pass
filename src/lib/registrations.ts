@@ -63,6 +63,10 @@ function toRegistration(r: Row): Registration {
  * 등록을 받지 못한 까닭. 영어 화면이 상황에 맞는 영어 문구를 고르는 데 쓴다(한국어 화면은 error 문구를 그대로 보여 준다).
  * rate(너무 자주 등록)와 pass(패스를 만들지 못함)는 등록을 받는 쪽(registerHandler)이 붙인다.
  */
+// 등록 작성 시간과 고친 횟수로 받아들이는 가장 큰 값. 실제 여객은 이보다 훨씬 작다.
+const MAX_WRITE_MS = 24 * 60 * 60 * 1000;
+const MAX_EDIT_COUNT = 1000;
+
 export type RegistrationErrorCode = "departed" | "date" | "flight" | "consent" | "choices" | "rate" | "pass";
 
 export type CreateResult =
@@ -98,11 +102,16 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
   }
 
   // 화면이 보낸 시작 시각이 이상하면 제출 시각으로 둔다(작성 시간 0으로 집계).
+  // 하루보다 앞선 시각도 이상한 값으로 본다. 1900년 같은 값을 그대로 두면 작성 시간이 집계의 정수 범위를 넘어 오늘 현황이 오류로 멈춘다.
   const startedAt =
-    input.startedAt instanceof Date && !Number.isNaN(input.startedAt.getTime()) && input.startedAt <= now
+    input.startedAt instanceof Date &&
+    !Number.isNaN(input.startedAt.getTime()) &&
+    input.startedAt <= now &&
+    now.getTime() - input.startedAt.getTime() <= MAX_WRITE_MS
       ? input.startedAt
       : now;
-  const editCount = Number.isInteger(input.editCount) && input.editCount >= 0 ? input.editCount : 0;
+  // 고친 횟수도 정수 칸에 들어갈 만큼으로 자른다. 지나치게 큰 값은 저장할 때 오류가 난다.
+  const editCount = Number.isInteger(input.editCount) && input.editCount >= 0 ? Math.min(input.editCount, MAX_EDIT_COUNT) : 0;
 
   const [row] = await db.query<Row>(
     `insert into registrations

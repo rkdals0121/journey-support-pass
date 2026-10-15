@@ -93,7 +93,8 @@ self.addEventListener("fetch", (event) => {
         // 남겨 둔 것이 있으면 3초까지만 기다리고, 그 안에 못 받거나 끊기면 남겨 둔 것을 보여 준다.
         // 늦게라도 받으면 다음에 열 때 쓰도록 남긴다.
         const first = await Promise.race([fresh.catch(() => null), wait(NETWORK_WAIT_MS)]);
-        if (first) return first;
+        // 서버 오류(5xx)면 오류 화면 대신 남겨 둔 화면을 보여 준다. 사용이 끝난 패스(정상 답)는 그대로 보여 준다.
+        if (first && first.status < 500) return first;
         event.waitUntil(fresh.catch(() => {}));
         return saved;
       })(),
@@ -126,7 +127,14 @@ async function savePass(token) {
   const cache = await caches.open(STATIC_CACHE);
   await Promise.all(
     files.map(async (path) => {
-      if (await cache.match(path)) return;
+      // 이미 남겨 둔 파일도 다시 넣어 "가장 최근"으로 만든다. 저장소가 가득 차면 먼저 넣은 것부터 지우므로,
+      // 그대로 두면 이 화면이 처음부터 쓰던 공통 파일이 먼저 지워져 인터넷 없이 열 때 화면이 제대로 돌지 않는다.
+      const hit = await cache.match(path);
+      if (hit) {
+        await cache.delete(path);
+        await cache.put(path, hit);
+        return;
+      }
       try {
         const r = await fetch(path);
         if (r.ok) await putStatic(path, r);

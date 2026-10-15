@@ -145,6 +145,23 @@ describe("등록", () => {
     expect(await editsOf(3)).toBe(3);
   });
 
+  it("하루보다 앞선 시작 시각은 제출 시각으로 두고, 고친 횟수는 1000 으로 자른다 (조작한 값이 집계를 깨지 않게)", async () => {
+    const res = await createRegistration(db, regInput({ startedAt: new Date("1900-01-01T00:00:00Z"), editCount: 3e9 }), now);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const [row] = await db.query<{ started_at: Date; edit_count: number }>("select started_at, edit_count from registrations where id = $1", [
+      res.registration.id,
+    ]);
+    expect(row).toEqual({ started_at: now, edit_count: 1000 });
+  });
+
+  it("달력에 없는 날짜(2월 30일)는 오류 없이 '편명을 다시 확인해 주세요'로 답한다", async () => {
+    expect(await getFlight(db, "2026-02-30", "KE123")).toBeNull();
+    expect(await getFlight(db, "2026-13-45", "KE123")).toBeNull();
+    const res = await createRegistration(db, regInput({ flightDate: "2026-02-30" }), now);
+    expect(res).toMatchObject({ ok: false, code: "flight" });
+  });
+
   it("동의, 선택 항목, 편명, 경로를 검증한다. 거부한 것은 저장하지 않는다", async () => {
     const before = await count();
     const errorOf = async (over: Parameters<typeof regInput>[0]) => {
