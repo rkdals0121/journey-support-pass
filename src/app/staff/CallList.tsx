@@ -69,9 +69,12 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
       // 처음 불러올 때 이미 있던 호출은 알리지 않는다. 그 뒤에 새로 온 것만 알린다.
       // 「내 구역」을 보고 있으면 내 구역 호출만 알린다. 다른 구역 호출로 울리면 화면에는 아무것도 없어 헷갈린다.
       const waiting = (body.calls as CallDto[]).filter((c) => c.state === "waiting");
-      const fresh = known.current ? waiting.filter((c) => !known.current!.has(c.id)) : [];
+      // 호출 번호와 누른 시각을 함께 본다. 아무도 받지 않은 키오스크 호출을 다음 여객이 다시 누르면 같은 호출이
+      // 새 여객의 것으로 바뀌고 누른 시각만 새로 적힌다(같은 번호). 번호만 보면 새로 기다리는 사람이 생겨도 울리지 않는다.
+      const keyOf = (c: CallDto) => `${c.id}|${c.time}`;
+      const fresh = known.current ? waiting.filter((c) => !known.current!.has(keyOf(c))) : [];
       if (fresh.some((c) => c.mine || scopeRef.current === "all")) notify();
-      known.current = new Set(waiting.map((c) => c.id));
+      known.current = new Set(waiting.map(keyOf));
     } catch {
       if (mine === sent.current) setError("연결할 수 없습니다. 잠시 후 다시 불러옵니다.");
     } finally {
@@ -120,8 +123,10 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
     } finally {
       clearTimeout(limit);
     }
-    setBusy(null);
+    // 새 목록이 들어온 뒤에 단추를 다시 살린다. 먼저 살리면 옛 상태(「기다리는 중」)의 단추를 한 번 더 눌러
+    // 방금 한 일이 "이미 받은 호출"이라는 오류로 보인다.
     await load(true);
+    setBusy(null);
     keepFocus();
   }
 

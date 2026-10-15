@@ -6,8 +6,8 @@ import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
 import { flightsToCity, suggestFlights, listDestinations } from "../flights/search";
 import { buildGuide } from "../guide";
-import { getJourney, isJourneyOver, type Journey } from "../journey";
-import { allowEvent, logEvent } from "../metrics";
+import { getJourney, isJourneyOver, lastRealPoll, type Journey } from "../journey";
+import { logEvent, logLimitedEvent } from "../metrics";
 import { extractToken, issuePass, resolveToken } from "../passes";
 import { eraseRegistration } from "../purge";
 import { createRegistration, type Route } from "../registrations";
@@ -175,7 +175,7 @@ export async function lookupPass(db: Db, scanned: string, now: Date): Promise<Pa
   if (res.kind === "unknown") return { kind: "none" };
   if (res.kind === "unusable") return { kind: "ended" };
   const journey = await getJourney(db, res.registrationId, now);
-  if (!journey || isJourneyOver(journey, now)) return { kind: "ended" };
+  if (!journey || isJourneyOver(journey, now, await lastRealPoll(db))) return { kind: "ended" };
   return { kind: "ok", journey, passNo: res.pass.passNo, token };
 }
 
@@ -217,7 +217,6 @@ export async function eventHandler(
   clientKey: string,
   now: Date,
 ): Promise<ApiResult> {
-  if (!(await allowEvent(db, clientKey, now))) return fail(429, "잠시 후 다시 시도해 주세요");
   const base = {
     at: now,
     route: session?.isKiosk ? "kiosk" : "web",
@@ -225,13 +224,17 @@ export async function eventHandler(
     placeId: session?.placeId,
     deviceKey: clientKey,
   };
-  if (body.kind === "reg_start") {
-    await logEvent(db, { ...base, kind: "reg_start" });
+  let event: Parameters<typeof logLimitedEvent>[1];
+  if (body.kind === "reg_start") event = { ...base, kind: "reg_start" };
+  else if (body.kind === "survey" && (body.value === 1 || body.value === 2 || body.value === 3)) {
+    event = { ...base, kind: "survey", value: body.value };
+  } else return fail(400, "기록할 수 없는 값입니다");
+  // 설치 코드로 들어온 키오스크는 한도에서 뺀다(등록 한도와 같다). 공항 키오스크들은 한 접속 주소로 나가는 일이 많아
+  // 바쁜 시간에 함께 한도에 걸리면 등록 시작·만족도가 소리 없이 빠진다.
+  if (session?.isKiosk) {
+    await logEvent(db, event);
     return ok();
   }
-  if (body.kind === "survey" && (body.value === 1 || body.value === 2 || body.value === 3)) {
-    await logEvent(db, { ...base, kind: "survey", value: body.value });
-    return ok();
-  }
-  return fail(400, "기록할 수 없는 값입니다");
+  if (!(await logLimitedEvent(db, event))) return fail(429, "잠시 후 다시 시도해 주세요");
+  return ok();
 }

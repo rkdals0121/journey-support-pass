@@ -215,7 +215,8 @@ describe("항공편 판의 날과 마감 문구", () => {
     expect(departureText(toFlightView(journey(), kst("2026-10-05 12:00")), ko)).toBe("출발 14:30");
     // 바뀐 출발 시각이 있으면 그 시각을 말한다. 오늘 23:40 편이 내일 00:15 로 늦어졌다.
     const delayed = toFlightView(journey({ schedAt: kst("2026-10-05 23:40"), estAt: kst("2026-10-06 00:15"), delayed: true, minutesToClose: 485 }), now);
-    expect(departureText(delayed, ko)).toBe("출발 내일 00:15");
+    expect(departureText(delayed, ko)).toBe("출발 내일 00:15, 늦어졌습니다");
+    expect(departureText(delayed, en)).toBe("Departure tomorrow 00:15, delayed");
     expect(departureText(toFlightView(journey({ schedAt: null, minutesToClose: null })), ko)).toBe("");
     // 쉬운 말에도 같은 낱말이 있다.
     expect(textOf("en", true).departTomorrow).toBe("tomorrow");

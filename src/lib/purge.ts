@@ -1,6 +1,6 @@
 import { config } from "./config";
 import type { Db } from "./db";
-import { isJourneyOver, loadJourneys } from "./journey";
+import { isJourneyOver, lastRealPoll, loadJourneys } from "./journey";
 
 const HOUR = 3_600_000;
 const FLIGHT_RETENTION_DAYS = 3;
@@ -44,8 +44,9 @@ export async function purge(
   now: Date,
 ): Promise<{ purged: number; unlinkedPurged: number; logsDeleted: number }> {
   let purged = 0;
+  const lastPoll = await lastRealPoll(db);
   for (const j of await loadJourneys(db, now)) {
-    if (!isJourneyOver(j, now)) continue;
+    if (!isJourneyOver(j, now, lastPoll)) continue;
     await eraseRegistration(db, j.registrationId, now);
     purged += 1;
   }

@@ -1012,8 +1012,8 @@ async function resetFlights(clearLocks = false) {
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "나에게 맞춘 안내");
   check("QR 을 카메라에 보여 주면 누르지 않아도 안내가 열린다 (기기의 QR 판독 기능이 먹통이어도)", true);
-  // 마감까지 2시간 넘게 남으면 분 대신 "비행기 타는 문이 08:15에 닫힙니다"처럼 시각으로 알린다. 어느 쪽이든 쉬운 말이다.
-  check("쉬운 말을 고른 여객에게는 쉬운 말로 안내한다", /비행기 타는 문이 (닫히기까지|\d{2}:\d{2}에 닫힙니다)/.test(await text(page)) && (await has(page, "자주 가는 곳")));
+  // 마감까지 2시간 넘게 남으면 분 대신 "비행기 타는 문이 08:15에 닫힙니다"처럼 시각으로 알린다(밤에는 "내일 00:01에"). 어느 쪽이든 쉬운 말이다.
+  check("쉬운 말을 고른 여객에게는 쉬운 말로 안내한다", /비행기 타는 문이 (닫히기까지|(내일 )?\d{2}:\d{2}에 닫힙니다)/.test(await text(page)) && (await has(page, "자주 가는 곳")));
   check("그림을 고른 여객에게는 그림을 크게 보여준다", await page.evaluate(() => document.documentElement.hasAttribute("data-picture")));
   check("'직원을 부르고 싶습니다'를 고른 여객에게는 「직원 부르기」가 크게 보인다", (await count(page, ".call-btn.call-big")) === 1);
   const said = (await page.evaluate("window.__said")) as string[];
@@ -1175,6 +1175,28 @@ async function resetFlights(clearLocks = false) {
   check("등록을 마치면 QR 과 번호가 화면에 나오고 스티커를 뽑을 수 있다", /^\d{6}$/.test(kioskNo) && kioskQr.startsWith("HTTP://LOCALHOST:3000/P/") && (await has(page, "스티커 뽑기")));
   check("북클립에 붙여 여권에 끼우라고 안내한다", await has(page, "북클립"));
   await shot(page, "등록키오스크-마침");
+  // 가로 키오스크에서 큰 글씨를 골라도 QR 과 번호가 아래 단추 줄(스티커 뽑기)에 가리지 않는다.
+  const qrClear = async () =>
+    page.evaluate(() => {
+      const cta = document.querySelector(".flow-cta")!.getBoundingClientRect().top;
+      const qr = document.querySelector(".pass-qr-code")!.getBoundingClientRect();
+      const no = document.querySelector(".pass-qr-no")!.getBoundingClientRect();
+      return { ok: qr.bottom <= cta && no.bottom <= cta && qr.width >= 150, cta: Math.round(cta), qr: Math.round(qr.bottom), no: Math.round(no.bottom), w: Math.round(qr.width) };
+    });
+  const qrFit: string[] = [];
+  const scale0 = await page.evaluate(() => document.documentElement.style.getPropertyValue("--scale"));
+  for (const vp of [KIOSK_WIDE, { ...KIOSK_WIDE, width: 1366, height: 768 }]) {
+    await page.setViewport(vp);
+    for (const scale of ["1", "1.25"]) {
+      await page.evaluate((s) => document.documentElement.style.setProperty("--scale", s), scale);
+      await new Promise((r) => setTimeout(r, 150));
+      const r = await qrClear();
+      if (!r.ok) qrFit.push(`${vp.width}x${vp.height}@${scale} ${JSON.stringify(r)}`);
+    }
+  }
+  await page.evaluate((s) => document.documentElement.style.setProperty("--scale", s), scale0);
+  await page.setViewport(KIOSK_WIDE);
+  check("가로 키오스크에서 큰 글씨여도 QR 과 번호가 「스티커 뽑기」 줄에 가리지 않는다", qrFit.length === 0, qrFit.join(" / "));
   // 스티커: 인쇄할 때는 QR 과 번호만 나온다.
   await page.emulateMediaType("print");
   const printed = await page.evaluate(() =>

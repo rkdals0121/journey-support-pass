@@ -3,7 +3,7 @@ import { CALL_EXPIRE_MIN, closeStale } from "./calls";
 import type { Db } from "./db";
 import { SEED_POLL } from "./flights/ingest";
 import { kstDate } from "./flights/normalize";
-import { isJourneyOver, loadJourneys } from "./journey";
+import { isJourneyOver, lastRealPoll, loadJourneys } from "./journey";
 
 // 제안서의 "기대 효과와 확인 방법" 세 가지를 세는 곳.
 //  1) 여객이 자신에게 맞는 안내를 받는다        → 안내 뒤 만족도 한 문항
@@ -33,13 +33,25 @@ export async function logEvent(db: Db, e: EventInput): Promise<void> {
 const EVENT_WINDOW_MIN = 10;
 const EVENT_MAX_PER_IP = 200;
 
-/** 화면이 보내는 건수 기록의 남용 방지. 같은 접속 주소에서 짧은 시간에 너무 많이 오면 받지 않는다. */
-export async function allowEvent(db: Db, deviceKey: string, now: Date): Promise<boolean> {
-  const [row] = await db.query<{ n: number }>(
-    "select count(*)::int as n from events where split_part(device_key, ':', 1) = $1 and at > $2",
-    [ipPart(deviceKey), new Date(now.getTime() - EVENT_WINDOW_MIN * 60_000)],
+/**
+ * 화면이 보내는 건수 기록(등록 시작, 만족도)을 남용을 막으며 적는다. 같은 접속 주소에서 짧은 시간에 너무 많이 오면 받지 않는다.
+ * 먼저 적고 센다(로그인·등록 한도와 같은 방식). 세고 나서 적으면 한꺼번에 보낸 요청이 모두 "아직 한도 아래"로 보고 들어온다.
+ * 서버가 직접 적는 기록(등록 완료, 안내 열람)은 세지 않는다. 세면 바쁜 시간에 키오스크의 등록 시작·만족도만 빠져 비율이 틀어진다.
+ */
+export async function logLimitedEvent(db: Db, e: EventInput & { deviceKey: string }): Promise<boolean> {
+  const [row] = await db.query<{ id: string }>(
+    `insert into events (at, kind, route, adapted, place_id, value, device_key)
+     values ($1, $2, $3, $4, $5, $6, $7) returning id`,
+    [e.at, e.kind, e.route ?? "", e.adapted === true, e.placeId ?? null, e.value ?? null, e.deviceKey],
   );
-  return (row?.n ?? 0) < EVENT_MAX_PER_IP;
+  const [count] = await db.query<{ n: number }>(
+    `select count(*)::int as n from events
+     where split_part(device_key, ':', 1) = $1 and at > $2 and kind in ('reg_start', 'survey')`,
+    [ipPart(e.deviceKey), new Date(e.at.getTime() - EVENT_WINDOW_MIN * 60_000)],
+  );
+  if ((count?.n ?? 0) <= EVENT_MAX_PER_IP) return true;
+  await db.query("delete from events where id = $1", [row.id]);
+  return false;
 }
 
 export interface Completion {
@@ -100,7 +112,8 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
   );
   // 출발해서 여정이 끝난 여객은 삭제 작업(한 시간마다)이 아직 돌지 않았어도 빼고 센다.
   // 패스 화면·키오스크·직원 화면이 끝난 패스를 열지 않는 기준(isJourneyOver)과 같다. 쿼리는 한 번이다.
-  const active = (await loadJourneys(db, now)).filter((j) => !isJourneyOver(j, now)).length;
+  const lastPoll = await lastRealPoll(db);
+  const active = (await loadJourneys(db, now)).filter((j) => !isJourneyOver(j, now, lastPoll)).length;
   const events = await db.query<{ kind: EventKind; adapted: boolean; value: number | null; n: number }>(
     "select kind, adapted, value, count(*)::int as n from events where at >= $1 group by kind, adapted, value",
     [since],

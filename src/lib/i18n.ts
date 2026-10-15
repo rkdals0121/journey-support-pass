@@ -222,7 +222,8 @@ const ko = {
   departure: "출발",
   // 항공편 판과 소리 안내에서 "출발 내일 14:30"처럼 문장 가운데에 넣는 말. tomorrow 는 홀로 쓰는 이름표라 영어에서 대문자로 시작한다.
   departTomorrow: "내일",
-  delayedTo: (t: string) => `${t}으로 늦어졌습니다`,
+  // 시각 뒤 조사(으로/로)가 숫자마다 달라 조사 없이 쓴다.
+  delayedTo: (t: string) => `${t}, 늦어졌습니다`,
   closeIn: (min: number) => `탑승 마감까지 ${min}분`,
   // 마감이 한참 남았으면 남은 분(1410분) 대신 마감 시각을 보여 준다. 마감이 내일이면 "내일"을 붙인다.
   closeAt: (time: string, tomorrow: boolean) => `탑승 마감 ${tomorrow ? "내일 " : ""}${time}`,
@@ -460,7 +461,7 @@ const en: Text = {
   flightHintKiosk: "Enter at least two characters of the flight number on your boarding pass. The digits alone also work.",
   flightPicked: "Flight selected. To change it, enter the flight number again.",
   flightPickedCity: "Flight selected.",
-  whenFirst: "There are several flights. Tap when you leave first.",
+  whenFirst: "There are several flights. First, tap the time of day you leave.",
   airlineAsk: "Which airline?",
   airlineFirst: "Tap your airline.",
   flightLabelKiosk: "Flight number",
@@ -530,7 +531,8 @@ const en: Text = {
   callChip: "Calling staff",
   callChipAccepted: "Staff on the way",
   idleTitle: "Are you still there?",
-  idleBody: (sec) => `Returning to the first screen in ${sec} seconds, so the next person cannot see your information.`,
+  idleBody: (sec) =>
+    `Returning to the first screen in ${sec} ${sec === 1 ? "second" : "seconds"}, so the next person cannot see your information.`,
   idleStay: "Continue",
   idleEnd: "Finish",
 
@@ -575,7 +577,7 @@ const en: Text = {
   gateChanged: (from, to) => `The gate has changed from ${from} to ${to}.`,
   departure: "Departure",
   departTomorrow: "tomorrow",
-  delayedTo: (t) => `Delayed to ${t}`,
+  delayedTo: (t) => `${t}, delayed`,
   closeIn: (min) => `${min} min until boarding closes`,
   closeAt: (time, tomorrow) => `Boarding closes ${tomorrow ? "tomorrow " : ""}at ${time}`,
   estimate: "estimate",
@@ -595,14 +597,16 @@ const en: Text = {
   paceLate: "Boarding closes soon. Please press “Call staff”.",
   noteNoGate: "The gate has not been assigned yet. It will appear here and on the departure boards.",
   noteLandside: "After security and passport control, use a kiosk inside for directions to your gate.",
-  noteOtherTerminal: (area: string) => `This flight departs from ${area}. You cannot walk there from here. Please press “Call staff”.`,
+  noteOtherTerminal: (area: string) =>
+    `This flight departs from ${area === "Concourse" ? "the Concourse" : area}. You cannot walk there from here. Please press “Call staff”.`,
   nearHere: "Places near you",
   noteCancelled: "This flight is cancelled, so directions to the gate are not shown.",
   myPlaces: "Places you chose",
   otherPlaces: "Other places",
   nearGate: (g) => `next to Gate ${g}`,
   here: "You are here",
-  arrive: (place) => `Arrive at ${place}`,
+  // 탑승구는 그대로("Arrive at Gate 25"), 시설은 관사를 붙인다("Arrive at the accessible toilet").
+  arrive: (place) => (/^Gate /.test(place) ? `Arrive at ${place}` : `Arrive at the ${place.charAt(0).toLowerCase()}${place.slice(1)}`),
   alongTitle: "On the way",
   alongItem: (name, g, m) => `${name} · next to Gate ${g} (${m} m along)`,
   finish: "Finish",
@@ -660,7 +664,7 @@ const enEasy: Partial<Text> = {
   regErrDeparted: "This plane has already left. Please look at your ticket again.",
   regErrDate: "You can only choose a plane that leaves today or tomorrow.",
   regErrFlight: "We cannot find this plane. Please look at your ticket again.",
-  closeIn: (min) => `${min} minutes until the plane door closes`,
+  closeIn: (min) => `${min} ${min === 1 ? "minute" : "minutes"} until the plane door closes`,
   closeAt: (time, tomorrow) => `The plane door closes ${tomorrow ? "tomorrow " : ""}at ${time}`,
   closeClosed: "The plane door is closed",
   toGateShort: "Way to your plane",

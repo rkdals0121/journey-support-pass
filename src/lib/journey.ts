@@ -1,6 +1,7 @@
 import { knownCodes } from "./catalog";
 import { config } from "./config";
 import type { Db } from "./db";
+import { lastSuccessfulPoll } from "./flights/ingest";
 import { addDays, kstDate } from "./flights/normalize";
 import { isUuid, type Lang } from "./registrations";
 import { departureAt, isBoardingClosed, isBoardingNow, isCancelled, isDelayed, isDeparted, minutesToClose } from "./timing";
@@ -140,10 +141,23 @@ function cancelledUntil(schedAt: Date): Date {
 }
 
 /**
+ * isJourneyOver 에 넘길 "실제 운항 수집이 마지막으로 성공한 시각". 모의 운항만 쓰는 곳(넣은 기록뿐)은 null 이다.
+ * 모의 운항은 시각이 바뀌지 않으므로 기다릴 까닭이 없다.
+ */
+export async function lastRealPoll(db: Db): Promise<Date | null> {
+  return lastSuccessfulPoll(db, false);
+}
+
+/**
  * 이 여객의 여정이 끝났는가. 삭제 작업이 지울 대상을 고르는 기준이며,
  * 패스를 여는 쪽도 같은 기준으로 끝난 패스를 열지 않는다. 삭제 작업이 늦게 돌아도 떠난 여객의 정보가 화면에 나오지 않는다.
+ *
+ * lastPoll 은 실제 운항 수집이 마지막으로 성공한 시각(lastRealPoll). "출발 30분 뒤"는 그 뒤에 받은 운항 정보로도
+ * 늦어지지 않은 것이 확인됐을 때만 쓴다. 수집은 한 시간마다 아무 분에나 돌아 두 시간 가까이 벌어질 수 있어서,
+ * 그사이 늦어진 편을 옛 출발 시각으로 끝난 것으로 보면 아직 공항에 있는 여객의 등록을 지워 버린다.
+ * 수집이 멈춘 채면 수집 지연 경고 시간(staleMin)만큼만 더 기다린다.
  */
-export function isJourneyOver(j: Journey, now: Date): boolean {
+export function isJourneyOver(j: Journey, now: Date, lastPoll: Date | null): boolean {
   const t = now.getTime();
   if (!j.schedAt) return t >= j.submittedAt.getTime() + ORPHAN_HOURS * HOUR;
 
@@ -151,5 +165,8 @@ export function isJourneyOver(j: Journey, now: Date): boolean {
   const times = { schedAt: j.schedAt, estAt: j.estAt, status: j.status };
   if (j.cancelled) return t >= cancelledUntil(j.schedAt).getTime();
   if (isDeparted(times)) return true;
-  return t >= departureAt(times).getTime() + config.purgeAfterDepartureMin * MIN;
+  const end = departureAt(times).getTime() + config.purgeAfterDepartureMin * MIN;
+  if (t < end) return false;
+  if (!lastPoll || lastPoll.getTime() >= end) return true;
+  return t >= end + config.staleMin * MIN;
 }

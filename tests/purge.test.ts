@@ -167,7 +167,7 @@ describe("삭제 작업이 돌기 전", () => {
     expect((await guideHandler(db, pass.token, null, before)).status).toBe(200);
 
     const after = kst("2026-10-05 15:00");
-    expect(isJourneyOver((await getJourney(db, registration.id, after))!, after)).toBe(true);
+    expect(isJourneyOver((await getJourney(db, registration.id, after))!, after, null)).toBe(true);
     expect(await lookupPass(db, pass.token, after)).toEqual({ kind: "ended" });
     expect((await guideHandler(db, pass.token, null, after)).status).toBe(410);
     expect((await guideHandler(db, pass.token, kiosk, after)).status).toBe(410);
@@ -194,6 +194,56 @@ describe("삭제 작업이 돌기 전", () => {
     await addFlights(db, [flightRow("KE123", "2026-10-05 14:30", { status: "탑승마감" })], t0);
     const { pass } = await registerWithPass(db, t0);
     expect((await lookupPass(db, pass.token, kst("2026-10-05 14:45"))).kind).toBe("ok");
+  });
+});
+
+describe("운항 수집이 늦을 때", () => {
+  // 수집은 한 시간마다 아무 분에나 돈다. 마지막 수집 뒤에 늦어진 편을 옛 출발 시각으로 지우면 안 된다.
+  const poll = (at: Date) => recordPoll(db, { at, ok: true, rowCount: 1, durationMs: 1, gateChanges: 0 });
+
+  it("출발 30분 뒤라도 그 뒤에 받은 운항 정보가 없으면 지우지 않는다", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-05 13:30")], t0);
+    const { registration, pass } = await registerWithPass(db, t0);
+    await poll(kst("2026-10-05 13:05"));
+    const at = kst("2026-10-05 14:02");
+    expect((await purge(db, at)).purged).toBe(0);
+    expect(await statusOf(registration.id)).toBe("active");
+    expect((await lookupPass(db, pass.token, at)).kind).toBe("ok");
+  });
+
+  it("그 뒤에 받은 운항 정보에서도 늦어지지 않았으면 지운다", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-05 13:30")], t0);
+    const { registration } = await registerWithPass(db, t0);
+    await poll(kst("2026-10-05 14:05"));
+    expect((await purge(db, kst("2026-10-05 14:10"))).purged).toBe(1);
+    expect(await statusOf(registration.id)).toBe("expired");
+  });
+
+  it("늦어진 것이 들어오면 새 출발 시각으로 다시 센다", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-05 13:30")], t0);
+    const { registration } = await registerWithPass(db, t0);
+    const late = kst("2026-10-05 14:50");
+    await addFlights(db, [flightRow("KE123", "2026-10-05 13:30", { estAt: kst("2026-10-05 15:00") })], late);
+    await poll(late);
+    expect((await purge(db, kst("2026-10-05 15:20"))).purged).toBe(0);
+    expect(await statusOf(registration.id)).toBe("active");
+  });
+
+  it("수집이 멈추면 수집 지연 경고 시간만큼만 더 기다린다", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-05 13:30")], t0);
+    const { pass } = await registerWithPass(db, t0);
+    await poll(kst("2026-10-05 13:05"));
+    // 출발 30분 뒤(14:00) + 135분 = 16:15
+    expect((await lookupPass(db, pass.token, kst("2026-10-05 16:14"))).kind).toBe("ok");
+    expect(await lookupPass(db, pass.token, kst("2026-10-05 16:15"))).toEqual({ kind: "ended" });
+    expect((await purge(db, kst("2026-10-05 16:15"))).purged).toBe(1);
+  });
+
+  it("모의 운항만 넣은 곳(넣은 기록뿐)은 출발 30분 뒤에 끝난다", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-05 13:30")], t0);
+    const { pass } = await registerWithPass(db, t0);
+    await recordPoll(db, { at: kst("2026-10-05 13:05"), ok: true, rowCount: 1, durationMs: 1, gateChanges: 0, error: "seed" });
+    expect(await lookupPass(db, pass.token, kst("2026-10-05 14:00"))).toEqual({ kind: "ended" });
   });
 });
 

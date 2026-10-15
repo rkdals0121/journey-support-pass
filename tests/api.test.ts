@@ -741,6 +741,8 @@ describe("화면이 보내는 건수 기록", () => {
     );
     expect((await eventHandler(db, { kind: "reg_start" }, null, web, now)).status).toBe(429);
     expect((await eventHandler(db, { kind: "reg_start" }, null, deviceKey("198.51.100.9", "phone"), now)).status).toBe(200);
+    // 설치 코드로 들어온 키오스크는 같은 접속 주소라도 한도에 걸리지 않는다.
+    expect((await eventHandler(db, { kind: "survey", value: 3 }, kiosk, deviceKey("203.0.113.7", "kiosk"), now)).status).toBe(200);
   });
 });
 

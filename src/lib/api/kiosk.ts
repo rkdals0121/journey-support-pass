@@ -5,7 +5,7 @@ import { isAdapted } from "../catalog";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
 import { buildGuide } from "../guide";
-import { getJourney, isJourneyOver } from "../journey";
+import { getJourney, isJourneyOver, lastRealPoll } from "../journey";
 import { logEvent } from "../metrics";
 import { cleanPassNo, resolvePassNo } from "../passes";
 import { pollState } from "../timing";
@@ -71,7 +71,7 @@ export async function resolveHandler(
     const journey = await getJourney(db, res.registrationId, now);
     // 출발했지만 아직 지워지지 않은 패스의 번호도 없는 번호와 똑같이 답한다. 번호로는 끝난 패스가 있었는지 알려 주지 않는다.
     // 여객의 잘못이 아니므로 틀린 횟수로는 세지 않는다(위에서 이미 지웠다).
-    if (!journey || isJourneyOver(journey, now)) return fail(404, NOT_A_PASS);
+    if (!journey || isJourneyOver(journey, now, await lastRealPoll(db))) return fail(404, NOT_A_PASS);
     found = { kind: "ok", journey, passNo: res.pass.passNo, token: res.pass.token };
   }
   if (found.kind === "none") return fail(404, NOT_A_PASS);

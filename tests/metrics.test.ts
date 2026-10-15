@@ -3,7 +3,7 @@ import { deviceKey } from "@/lib/auth";
 import { acceptCall, cancelCall, createCall, endReason, finishCall, getCallAt } from "@/lib/calls";
 import type { Db } from "@/lib/db";
 import { recordPoll, SEED_POLL } from "@/lib/flights/ingest";
-import { allowEvent, logEvent, pollMetrics, summarize, todaySummary, type EventKind } from "@/lib/metrics";
+import { logEvent, logLimitedEvent, pollMetrics, summarize, todaySummary, type EventKind } from "@/lib/metrics";
 import { eraseRegistration } from "@/lib/purge";
 import { createTestDb, kst } from "./helpers/db";
 import { addFlights, flightRow, hasKey, register, registerWithPass, resetData } from "./helpers/fixtures";
@@ -55,18 +55,44 @@ describe("건수 기록", () => {
 
   it("같은 접속 주소에서 10분에 200건을 넘기면 더 받지 않는다. 브라우저 표시를 바꿔도 같다", async () => {
     const key = (ua: string) => deviceKey("203.0.113.7", ua);
+    const total = async () => (await db.query<{ n: number }>("select count(*)::int as n from events"))[0].n;
     await db.query(
       `insert into events (at, kind, device_key)
        select $1::timestamptz, 'reg_start', case when g % 2 = 0 then $2::text else $3::text end
        from generate_series(1, 199) g`,
       [now, key("ua-a"), key("ua-b")],
     );
-    expect(await allowEvent(db, key("ua-c"), now)).toBe(true);
-    await logEvent(db, { at: now, kind: "reg_start", deviceKey: key("ua-a") });
-    expect(await allowEvent(db, key("ua-c"), now)).toBe(false);
+    expect(await logLimitedEvent(db, { at: now, kind: "survey", value: 3, deviceKey: key("ua-c") })).toBe(true);
+    expect(await logLimitedEvent(db, { at: now, kind: "reg_start", deviceKey: key("ua-c") })).toBe(false);
+    // 받지 않은 것은 남기지 않는다.
+    expect(await total()).toBe(200);
     // 다른 접속 주소는 영향이 없고, 10분이 지나면 다시 받는다.
-    expect(await allowEvent(db, deviceKey("198.51.100.9", "ua-a"), now)).toBe(true);
-    expect(await allowEvent(db, key("ua-c"), new Date(now.getTime() + 10 * 60_000))).toBe(true);
+    expect(await logLimitedEvent(db, { at: now, kind: "reg_start", deviceKey: deviceKey("198.51.100.9", "ua-a") })).toBe(true);
+    expect(
+      await logLimitedEvent(db, { at: new Date(now.getTime() + 10 * 60_000), kind: "reg_start", deviceKey: key("ua-c") }),
+    ).toBe(true);
+  });
+
+  it("한꺼번에 보내도 한도를 넘지 않는다", async () => {
+    const key = deviceKey("203.0.113.8", "burst");
+    const res = await Promise.all(
+      Array.from({ length: 260 }, () => logLimitedEvent(db, { at: now, kind: "survey", value: 3, deviceKey: key })),
+    );
+    // 한꺼번에 오면 넉넉하게 막는 쪽으로 틀린다(로그인 한도와 같다). 200건을 넘게 받지만 않으면 된다.
+    const stored = (await db.query<{ n: number }>("select count(*)::int as n from events"))[0].n;
+    expect(res.filter(Boolean).length).toBe(stored);
+    expect(stored).toBeLessThanOrEqual(200);
+  });
+
+  it("서버가 직접 적는 기록(등록 완료, 안내 열람)은 한도로 세지 않는다", async () => {
+    const key = deviceKey("203.0.113.9", "kiosk");
+    await db.query(
+      `insert into events (at, kind, device_key)
+       select $1::timestamptz, case when g % 2 = 0 then 'reg_done' else 'guide_open' end, $2::text
+       from generate_series(1, 300) g`,
+      [now, key],
+    );
+    expect(await logLimitedEvent(db, { at: now, kind: "survey", value: 2, deviceKey: key })).toBe(true);
   });
 });
 

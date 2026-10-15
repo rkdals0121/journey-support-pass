@@ -613,6 +613,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     `${t.gate} ${flight.gate ?? t.gateTbd}`,
     // 화면의 항공편 판과 같은 말로 읽는다(내일 떠나는 편이면 "내일"을 붙인다).
     departureText(flight, t),
+    // 화면의 항공편 판처럼 탑승 중이면 그것부터 알린다.
+    flight.boardingNow && flight.close === "open" ? t.boardingNow : "",
     closeText(flight, t),
     flight.prevGate !== null && flight.gate !== null ? t.gateChanged(flight.prevGate, flight.gate) : "",
     guide.gateRoute ? `${t.toGateShort}, ${t.routeSummary(guide.gateRoute.minutes, guide.gateRoute.meters)}. ${paceText(guide.pace, t)}` : noteText,

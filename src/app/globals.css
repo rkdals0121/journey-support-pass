@@ -632,6 +632,43 @@ html[data-kiosk] .bar-btn {
     right: 1rem;
     transform: translateY(-50%);
   }
+  /* 고르는 줄(이동 방법, 시설, 직원 도움)도 그림·고른 표시·여백은 글자 크기를 따라 커지는데 글 칸만 줄어,
+     큰 글씨에서 "휠체어를 / 이용합니 / 다"처럼 낱말이 꺾였다. 좁은 화면에서는 글 아닌 부분을 화면 너비에 맞춰 줄인다. */
+  html:not([data-kiosk]) .choice {
+    gap: min(0.875rem, 2.5vw);
+    padding-inline: min(1rem, 3vw);
+  }
+  html:not([data-kiosk]) .choice-icon {
+    width: min(2.75rem, 12vw);
+    height: min(2.75rem, 12vw);
+  }
+  html:not([data-kiosk]) .choice-icon svg {
+    width: min(1.5rem, 9vw);
+    height: min(1.5rem, 9vw);
+  }
+  html:not([data-kiosk])[data-picture] .choice-icon {
+    width: min(4rem, 14vw);
+    height: min(4rem, 14vw);
+  }
+  html:not([data-kiosk])[data-picture] .choice-icon svg {
+    width: min(2.5rem, 10vw);
+    height: min(2.5rem, 10vw);
+  }
+  html:not([data-kiosk]) .choice-mark {
+    width: min(1.75rem, 7vw);
+    height: min(1.75rem, 7vw);
+  }
+  /* 설정 창의 글자 크기 단추 넷이 한 줄이면 큰 글씨에서 "Sma/ll"처럼 꺾인다. 두 줄로 둔다. */
+  /* (이 규칙들은 뒤에 오는 기본 규칙을 이기도록 html 을 붙인다.) */
+  html .size-pick {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  html .sheet-backdrop {
+    padding: min(1rem, 3vw);
+  }
+  html .sheet-box {
+    padding-inline: min(1.25rem, 4vw);
+  }
 }
 .flow-progress {
   display: flex;
@@ -1917,6 +1954,11 @@ html[data-picture] .route > li::before {
 @media (min-width: 900px) and (orientation: landscape) {
   .done-layout {
     grid-template-columns: auto 1fr;
+  }
+  /* 가로 키오스크는 높이가 모자란다. QR 이 글자 크기를 따라 커지면 밑의 번호와 QR 아래쪽이 「스티커 뽑기」 줄에 가렸다.
+     위 띠·직원 부르기 줄·번호·아래 단추 줄 높이를 빼고 남는 만큼만 키운다(너무 작아 읽히지 않게 10rem 보다는 크게). */
+  html[data-kiosk] .done-layout .pass-qr-code {
+    width: max(10rem, min(17.5rem, 72vw, calc(100dvh - var(--bar-real, var(--bar-h)) - var(--call-h, 0rem) - 17rem)));
   }
 }
 

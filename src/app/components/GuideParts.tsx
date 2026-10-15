@@ -45,7 +45,9 @@ export function departsTomorrow(f: FlightView): boolean {
 /** 소리 안내에 넣는 출발 시각 한 마디. "출발 내일 14:30". 항공편 판과 같은 날을 말한다. 출발 시각을 모르면 빈 글자. */
 export function departureText(f: FlightView, t: Text): string {
   if (!f.schedTime) return "";
-  return `${t.departure} ${departsTomorrow(f) ? `${t.departTomorrow} ` : ""}${f.estTime ?? f.schedTime}`;
+  const time = f.estTime ?? f.schedTime;
+  // 늦어진 것은 말로도 알린다. 화면의 줄 그은 옛 시각은 화면 읽기 프로그램과 소리 안내로는 전해지지 않는다.
+  return `${t.departure} ${departsTomorrow(f) ? `${t.departTomorrow} ` : ""}${f.delayed && f.estTime ? t.delayedTo(time) : time}`;
 }
 
 /** 탑승 마감까지의 상태를 한 줄로. 공공데이터에 마감 시각이 없어 출발 시각에서 계산한 값에는 "추정"을 붙인다. */
@@ -93,8 +95,12 @@ export function FlightBoard({ flight, t, lang }: { flight: FlightView; t: Text; 
             {t.departure}{" "}
             {flight.estTime ? (
               <>
-                <s className="num">{flight.schedTime}</s> {day}
-                <b className="num">{flight.estTime}</b>
+                {/* 줄 그은 옛 시각은 화면 읽기 프로그램이 알리지 않는다. 읽을 때는 "출발 15:10, 늦어졌습니다"처럼 말로 준다. */}
+                <span aria-hidden="true">
+                  <s className="num">{flight.schedTime}</s> {day}
+                  <b className="num">{flight.estTime}</b>
+                </span>
+                <span className="sr-only">{departureText(flight, t).slice(t.departure.length)}</span>
               </>
             ) : (
               <>

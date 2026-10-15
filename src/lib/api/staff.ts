@@ -4,7 +4,7 @@ import { acceptCall, endReason, finishCall, listCalls, type Call, type CallEndRe
 import { shortOf } from "../catalog";
 import type { Db } from "../db";
 import { toFlightView, type FlightView } from "../guide";
-import { getJourney, isJourneyOver } from "../journey";
+import { getJourney, isJourneyOver, lastRealPoll } from "../journey";
 import { todaySummary } from "../metrics";
 import { eraseRegistration } from "../purge";
 import { kstTime } from "../timing";
@@ -99,10 +99,11 @@ export async function callsHandler(db: Db, session: Session | null, now: Date): 
   const labelOf = (id: string | null) => (id ? zoneName(zones.find((z) => z.id === id)?.label ?? "") : "");
 
   const list: CallDto[] = [];
+  const lastPoll = await lastRealPoll(db);
   for (const c of calls) {
     // 이미 떠난 여객의 항공편과 고른 항목은 삭제 작업이 돌기 전이라도 보여주지 않는다.
     const found = c.registrationId ? await getJourney(db, c.registrationId, now) : null;
-    const journey = found && !isJourneyOver(found, now) ? found : null;
+    const journey = found && !isJourneyOver(found, now, lastPoll) ? found : null;
     const end = c.endedAt ?? now;
     list.push({
       id: c.id,
