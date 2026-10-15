@@ -2,6 +2,7 @@
 
 import { ChevronRight, Frown, Info, Keyboard, Meh, Navigation, QrCode, Smile, Sunrise } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
 import type { GuideDto, GuideFacility } from "@/lib/guide";
 import { textOf, type Lang } from "@/lib/i18n";
@@ -68,6 +69,34 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   }, []);
   const ownCall = callActive && callSeq === sessionSeq.current;
 
+  // QR 을 찍는 화면이나 번호판처럼 안내가 아직 열리지 않은 화면에서 누른 호출은, 부른 사람이 떠나고 다음 여객이 QR 을 찍었을 수 있다.
+  // 그 호출이 다음 여객의 안내까지 자동 종료를 막으면, 그 여객의 항공편과 고른 시설이 공용 화면에 남는다.
+  // 그래서 부른 뒤 아무도 화면을 건드리지 않은 채 idleAskSec 이 지났으면(떠났다고 본다) 열리는 안내의 자동 종료를 막지 않는다(아래 open).
+  // 부른 여객이 그사이 화면을 계속 쓰다가 자기 안내를 열었으면 그대로 그 여객의 호출이다. 직원을 기다리는 동안 「계속 이용하시겠어요?」를 묻지 않는다.
+  // 마지막으로 화면을 건드린 때. IdleGuard 가 보는 것과 같은 누름을 본다. QR 을 찍는 것은 건드린 것이 아니다.
+  const lastTouch = useRef(0);
+  // 빈 화면에서 누른 호출. left 는 그 뒤 아무도 건드리지 않은 채 idleAskSec 이 지난 적이 있는지다.
+  const emptyCall = useRef<{ left: boolean } | null>(null);
+  useEffect(() => {
+    const touch = () => {
+      const now = Date.now();
+      if (emptyCall.current && now - lastTouch.current >= idleAskSec * 1000) emptyCall.current.left = true;
+      lastTouch.current = now;
+    };
+    // 화면의 단추보다 먼저 듣는다(capture). 안내를 여는 누름(여섯째 숫자)이 단추에 닿기 전에 그 앞의 빈 시간을 잰다.
+    const events = ["pointerdown", "keydown", "touchstart", "wheel", "click"] as const;
+    events.forEach((e) => window.addEventListener(e, touch, { capture: true, passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, touch, { capture: true }));
+  }, [idleAskSec]);
+  // 빈 화면에서 부른 사람이 at(안내를 연 누름이나 QR 을 찍은 때)까지 떠나 있었는지.
+  const callerLeft = useCallback(
+    (at: number) => {
+      const c = emptyCall.current;
+      return c !== null && (c.left || at - lastTouch.current >= idleAskSec * 1000);
+    },
+    [idleAskSec],
+  );
+
   const lang: Lang = guide ? guide.lang : startLang;
   const prefs = guide ? prefsOf(guide.choices) : NO_PREFS;
   const t = textOf(lang, prefs.easy);
@@ -124,6 +153,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     // 다음 여객의 차례로 넘긴다. 앞사람의 호출은 열린 채로 두되, 이제는 자동 종료를 막지 않는다.
     sessionSeq.current++;
     setCallSeq(null);
+    emptyCall.current = null;
     setView({ kind: "scan" });
     setToken(null);
     setGuide(null);
@@ -141,6 +171,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       setBusy(true);
       setError(null);
       const tt = textOf(startLang);
+      // QR 을 찍거나 여섯째 숫자를 누른 때. 빈 화면에서 부른 사람이 이때까지 떠나 있었는지 본다(아래, callerLeft).
+      const at = Date.now();
       // 답이 오지 않는 요청은 끊는다. 끊긴 것은 catch 로 가서 연결 오류로 알리고, 다시 찍거나 누를 수 있게 된다.
       const mine = ++openSeq.current;
       const ctrl = new AbortController();
@@ -177,6 +209,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         setToken(data.token);
         setGuide(data.guide);
         setDigits("");
+        // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 안내의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을 쓰던
+        // 사람이면 그 사람의 호출로 둔다. 어느 쪽이든 이제 안내가 열렸으니 빈 화면의 호출은 여기서 끝난다.
+        // 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
+        if (callerLeft(at)) setCallSeq(null);
+        emptyCall.current = null;
         setView({ kind: "home" });
       } catch {
         // 처음 화면으로 돌아가며 끊은 것이면 알리지 않는다. 알리면 다음 여객 앞에 앞사람의 오류가 뜬다.
@@ -195,7 +232,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         }
       }
     },
-    [startLang],
+    [startLang, callerLeft],
   );
 
   const onScan = useCallback(
@@ -288,10 +325,17 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     setView({ kind: "thanks" });
   };
 
+  // 「직원 부르기」를 누르면 지금 여객의 호출로 삼는다. 안내가 아직 열리지 않은 빈 화면에서 눌렀으면 그 사실도 적어 둔다(위 emptyCall).
+  // 안내를 보던 중에 누른 것은 적지 않는다. 그 여객이 직원을 기다리는 동안 자동 종료는 계속 꺼 둔다.
+  const onCallPress = () => {
+    lastTouch.current = Date.now();
+    emptyCall.current = guide ? null : { left: false };
+    setCallSeq(sessionSeq.current);
+  };
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={onCallActive} onPress={() => setCallSeq(sessionSeq.current)} say={voiceOn ? speak : undefined} />
+        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" onActive={onCallActive} onPress={onCallPress} say={voiceOn ? speak : undefined} />
       </div>
     </div>
   );
@@ -530,6 +574,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   // ── 안내 첫 화면: 내 항공편, 탑승구 가는 길, 자주 찾는 시설 ──
   const chosen = guide.facilities.filter((f) => f.chosen);
   const others = guide.facilities.filter((f) => !f.chosen);
+  // 탑승구 층이 아닌 시설(4층 라운지)은 층을 붙인다. 붙이지 않으면 "26번 탑승구 옆"만 보고 같은 층에서 찾는다.
+  const floorOf = (f: GuideFacility) => (f.level !== GATE_LEVEL ? t.level(f.level) : "");
   const speakHome = [
     t.guideHello,
     `${flight.flightNo}, ${destOf(flight, lang)}`,
@@ -539,7 +585,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     closeText(flight, t),
     flight.prevGate !== null && flight.gate !== null ? t.gateChanged(flight.prevGate, flight.gate) : "",
     guide.gateRoute ? `${t.toGateShort}, ${t.routeSummary(guide.gateRoute.minutes, guide.gateRoute.meters)}. ${paceText(guide.pace, t)}` : noteText,
-    chosen.length > 0 ? `${t.myPlaces}: ${chosen.map((f) => `${t.facility[f.kind]}, ${t.routeSummary(f.route.minutes, f.route.meters)}`).join(". ")}` : "",
+    chosen.length > 0
+      ? `${t.myPlaces}: ${chosen.map((f) => [t.facility[f.kind], t.routeSummary(f.route.minutes, f.route.meters), floorOf(f)].filter(Boolean).join(", ")).join(". ")}`
+      : "",
   ]
     .filter(Boolean)
     .join(". ");
@@ -557,6 +605,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         <strong>{t.facility[f.kind]}</strong>
         <span>
           {t.routeSummary(f.route.minutes, f.route.meters)} · {t.nearGate(f.nearGate)}
+          {floorOf(f) && ` · ${floorOf(f)}`}
         </span>
       </span>
       <ChevronRight size={24} aria-hidden="true" />

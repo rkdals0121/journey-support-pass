@@ -187,6 +187,8 @@ const ko = {
   kioskDoneBody: "스티커를 북클립에 붙여 여권에 끼워 두세요. 도움이 필요할 때 공항 안내 키오스크나 안내 로봇에 QR을 대면 됩니다.",
   kioskPrint: "스티커 뽑기",
   kioskPrintAgain: "스티커 다시 뽑기",
+  // 스티커의 QR 그림이 끝내 그려지지 않아 뽑지 않았을 때. QR 칸이 빈 스티커는 안내 키오스크에서 찍을 수 없다.
+  stickerQrFail: "QR 그림을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.",
   kioskFinish: "끝내기",
   reprintTitle: "휴대전화의 QR을 보여 주세요",
   reprintBody: "휴대전화로 등록하고 받은 QR을 카메라에 보여 주시면 같은 QR을 스티커로 뽑아 드립니다.",
@@ -233,7 +235,10 @@ const ko = {
   toGate: (gate: number) => `${gate}번 탑승구 가는 길`,
   toGateShort: "탑승구 가는 길",
   // 키오스크가 그 탑승구나 시설 바로 앞에 있으면 "약 0분 · 0m" 대신 바로 앞이라고 알려 준다.
-  routeSummary: (min: number, m: number) => (m <= 0 ? "바로 앞입니다" : `약 ${Math.max(1, min)}분 · ${m}m`),
+  // 걷는 거리가 0m 여도 엘리베이터를 타야 하면(바로 위층의 라운지) 바로 앞이 아니다. 걸리는 시간만 알려 준다.
+  // 길의 구간은 모두 1분 이상이라, 시간이 0분이면 구간이 하나도 없는 길이다.
+  routeSummary: (min: number, m: number) =>
+    m <= 0 && min <= 0 ? "바로 앞입니다" : m <= 0 ? `약 ${Math.max(1, min)}분` : `약 ${Math.max(1, min)}분 · ${m}m`,
   stepFree: "계단 없는 길",
   sameLevel: "같은 층",
   paceOk: "시간이 넉넉합니다.",
@@ -539,6 +544,7 @@ const en: Text = {
     "Put the sticker on the book clip and keep it with your passport. When you need help, show the QR at an airport kiosk or guide robot.",
   kioskPrint: "Print sticker",
   kioskPrintAgain: "Print sticker again",
+  stickerQrFail: "The QR picture could not be loaded. Please wait a moment and press again.",
   kioskFinish: "Finish",
   reprintTitle: "Show the QR on your phone",
   reprintBody: "Show the QR you received on your phone to the camera and we will print the same QR as a sticker.",
@@ -580,7 +586,8 @@ const en: Text = {
   boardingNow: "Now boarding",
   toGate: (gate) => `Way to Gate ${gate}`,
   toGateShort: "Way to the gate",
-  routeSummary: (min, m) => (m <= 0 ? "Right here" : `About ${Math.max(1, min)} min · ${m} m`),
+  routeSummary: (min, m) =>
+    m <= 0 && min <= 0 ? "Right here" : m <= 0 ? `About ${Math.max(1, min)} min` : `About ${Math.max(1, min)} min · ${m} m`,
   stepFree: "Step-free",
   sameLevel: "Same floor",
   paceOk: "You have plenty of time.",

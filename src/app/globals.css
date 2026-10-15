@@ -603,6 +603,27 @@ html[data-kiosk] .bar-btn {
   html:not([data-kiosk]) .mock-banner {
     font-size: min(0.75rem, 3.6vw);
   }
+  /* 글자를 크게 하면 항공편 줄에서 목적지·시간·항공사 칸이 글자 한두 개 너비만 남아 한 자씩 꺾였다.
+     그 칸이 7rem보다 좁아지면 편명은 첫 줄에 혼자 두고, 목적지·시간·항공사는 둘째 줄로 내린다.
+     고른 표시(동그라미)는 줄바꿈에 끼우지 않고 늘 오른쪽 가운데에 붙여 둔다. 함께 줄을 바꾸게 두면
+     너비에 따라 동그라미만 왼쪽 아래 한 줄을 따로 차지해, 어느 편을 골랐는지 옆에서 바로 보이지 않았다. */
+  html:not([data-kiosk]) .flight-opt {
+    position: relative;
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+    /* 원래 여백 1rem 에 동그라미 너비와 그 앞 간격만큼 더 비워 둔다. 글이 동그라미 밑으로 들어가지 않는다. */
+    padding-right: calc(1rem + 1.75rem + 0.875rem);
+  }
+  html:not([data-kiosk]) .flight-opt-main {
+    flex: 1 1 7rem;
+    min-width: 0;
+  }
+  html:not([data-kiosk]) .flight-opt .choice-mark {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+  }
 }
 .flow-progress {
   display: flex;
@@ -1463,14 +1484,17 @@ html[data-kiosk] .sheet-backdrop {
   overflow: hidden;
   box-shadow: var(--shadow-2);
 }
+/* 좁은 휴대전화에서 글자를 아주 크게 하면 편명·목적지 칸이 글자 하나 너비로 줄어 한 자씩 세로로 쌓였다.
+   그 칸이 8rem보다 좁아질 때만 탑승구 판을 아래 줄로 내린다. 보통 크기의 휴대전화와 키오스크는 칸이 넉넉해 그대로 한 줄이다. */
 .board-main {
   display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
   gap: 1rem;
   padding: 1rem 1rem 1rem 1.25rem;
 }
 .board-flight {
-  flex: 1;
+  flex: 1 1 8rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1508,6 +1532,8 @@ html[data-kiosk] .sheet-backdrop {
   align-items: center;
   justify-content: center;
   min-width: 6.5rem;
+  /* 아래 줄로 내려가도 늘 있던 오른쪽에 붙는다. 한 줄일 때는 왼쪽 칸이 남는 자리를 다 가져가므로 달라지는 것이 없다. */
+  margin-left: auto;
   padding: 0.5rem 0.875rem;
   border-radius: 0.875rem;
   background: var(--sun);
@@ -2126,6 +2152,20 @@ html[data-picture] .route > li::before {
 .dark-screen input,
 .dark-screen select {
   border-color: transparent;
+}
+/* 바로 위 규칙이 초점 때의 초록 테두리까지 지우고, 남는 옅은 초록 둘레는 짙은 바탕에서 거의 안 보인다.
+   키보드나 스위치로 옮겨 다니는 직원이 지금 어느 칸에 있는지 알 수 있게 해바라기색 둘레를 두른다. */
+.dark-screen input[type="text"]:focus,
+.dark-screen input[type="password"]:focus,
+.dark-screen select:focus {
+  border-color: var(--sun);
+  box-shadow: 0 0 0 0.1875rem var(--sun);
+}
+/* 체크 상자는 글자 칸처럼 테두리로 초점을 보여 주지 못하는데, 입력란의 input:focus 규칙이 바깥 선까지 없앤다.
+   키보드로 왔을 때는 선을 되살린다. 초록 선은 짙은 바탕에서 흐려서 해바라기색으로 그린다. */
+.dark-screen .check input:focus-visible {
+  outline: 0.1875rem solid var(--sun);
+  outline-offset: 0.125rem;
 }
 .dark-screen .btn:not(.btn-primary) {
   border-color: #4d6a5b;

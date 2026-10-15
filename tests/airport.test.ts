@@ -248,6 +248,57 @@ describe("층을 옮기는 길", () => {
   });
 });
 
+describe("걷는 거리가 같은 엘리베이터가 둘 이상일 때", () => {
+  // 셔틀트레인 도착층(x = 0)에서 101번 탑승구(x = -465)까지는 가운데(0)에서 올라가도, 서쪽(-240)까지 걸은 뒤 올라가도 465m 다.
+  it("탑승구 층을 걷는 쪽을 고른다. 지하 1층을 걷지 않고 바로 올라간다", () => {
+    const r = routeToGate(at("cc-train"), "CONCOURSE", 101, plain);
+    expect(r?.steps.map((s) => s.kind)).toEqual(["escalator", "walk"]);
+    expect(r?.steps[1]).toMatchObject({ walkTo: "gate", towardGate: 101, meters: 465, dir: -1, fromLevel: 3, toLevel: 3 });
+    expect(r?.meters).toBe(465);
+  });
+
+  it("그래서 쉬어 가야 하는 여객에게 가는 길의 쉴 곳을 알려 준다. 지하 1층에는 쉴 곳이 없다", () => {
+    const r = routeToGate(at("cc-train"), "CONCOURSE", 101, routeOptionsOf(["mov_need_rest"]));
+    expect(r?.steps[1].along).toEqual([
+      { kind: "rest", nearGate: 114, meters: 75 },
+      { kind: "rest", nearGate: 108, meters: 255 },
+      { kind: "rest", nearGate: 103, meters: 405 },
+    ]);
+  });
+
+  it("셔틀트레인 도착층에서는 어느 탑승구로 가든 지하 1층을 걷지 않는다", () => {
+    const [first, last] = RANGES.CONCOURSE;
+    for (let g = first; g <= last; g++) {
+      for (const opts of [plain, stepFree]) {
+        const r = routeToGate(at("cc-train"), "CONCOURSE", g, opts);
+        expect(r?.steps[0].kind, `${g}`).not.toBe("walk");
+        for (const s of r!.steps.filter((s) => s.kind === "walk")) expect(s.fromLevel, `${g}`).toBe(GATE_LEVEL);
+      }
+    }
+  });
+
+  it("제1여객터미널 서편과 동편 키오스크의 셔틀트레인 길이 거울처럼 같다", () => {
+    const west = routeToGate(at("t1-west"), "CONCOURSE", 110, plain);
+    const east = routeToGate(at("t1-east"), "CONCOURSE", 110, plain);
+    expect(west?.steps.map((s) => s.kind)).toEqual(["walk", "escalator", "shuttle", "escalator", "walk"]);
+    expect(west?.steps[0]).toMatchObject({ walkTo: "lift", meters: 341, dir: 1, fromLevel: 3 });
+    expect(east?.steps[0]).toMatchObject({ walkTo: "lift", meters: 341, dir: -1, fromLevel: 3 });
+    // 지하 1층의 승강장까지 걷는 구간이 없다.
+    expect(west?.steps.some((s) => s.walkTo === "train")).toBe(false);
+    expect(west).toMatchObject({ meters: east!.meters, minutes: east!.minutes });
+  });
+
+  it("4층 라운지로 갈 때도 탑승구 층을 걸은 뒤 올라간다", () => {
+    const lounge = FACILITIES.find((f) => f.area === "T1" && f.kind === "lounge")!;
+    // 서편(x = -341)에서 라운지(x = 11)까지: 서쪽(-330)에서 올라가도, 가운데(0)에서 올라가도 352m 다.
+    const r = routeBetween(at("t1-west"), lounge, "facility", stepFree, lounge.nearGate);
+    expect(r?.steps.map((s) => [s.kind, s.fromLevel, s.toLevel, s.meters])).toEqual([
+      ["walk", 3, 3, 341],
+      ["elevator", 3, 4, 0],
+    ]);
+  });
+});
+
 describe("터미널 사이의 길", () => {
   it("제1여객터미널에서 탑승동으로는 셔틀트레인으로 가고, 양쪽에서 한 번씩 층을 옮긴다", () => {
     const r = routeToGate(at("t1-center"), "CONCOURSE", 127, plain);

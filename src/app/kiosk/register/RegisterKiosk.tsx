@@ -40,6 +40,15 @@ const RESOLVE_TIMEOUT_MS = 15_000;
 // 로그인(키오스크 설치)이 풀려 서버가 401 로 답하면 보낼 곳. 안내데스크 화면은 직원 로그인으로, 키오스크는 설치 화면으로.
 const KIOSK_SETUP = "/kiosk";
 const STAFF_LOGIN = "/staff/login";
+// 스티커의 QR 그림을 기다리는 가장 긴 시간. 그림은 따로 받아 오는 조각(qrcode)으로 그려서, 약한 와이파이에서는 등록을 마친
+// 뒤에도 QR 칸이 한참 비어 있을 수 있다. 이만큼 기다려도 없으면(조각을 끝내 받지 못함) 더 붙잡지 않는다.
+// 다시 누르면 그 조각을 새로 받아 다시 그린다(아래 qrTry). 한 번 받지 못한 그림은 저절로 다시 받지 않는다.
+const STICKER_WAIT_MS = 10_000;
+
+/** 인쇄될 스티커(PassQr 의 Sticker)에 QR 그림이 실제로 들어가 있는지. */
+function stickerDrawn(): boolean {
+  return document.querySelector(".sticker-qr svg") !== null;
+}
 
 /**
  * 등록 키오스크. 사전에 등록하지 않은 여객이 공항에서 직접 등록하고 QR 스티커를 받는다.
@@ -64,9 +73,48 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     if (!active) setCallSeq(null);
   }, []);
   const ownCall = callActive && callSeq === sessionSeq.current;
+
+  // 처음 화면이나 QR 을 찍는 화면처럼 여객의 내용이 아직 없을 때 누른 호출은, 부른 사람이 떠나고 다음 여객이 등록을 시작했을 수 있다.
+  // 그 호출이 다음 여객의 등록과 스티커 화면까지 자동 종료를 막으면, 그 여객의 QR 과 고유 일련 번호가 공용 화면에 남는다.
+  // 그래서 부른 뒤 아무도 화면을 건드리지 않은 채 idleAskSec 이 지났으면(떠났다고 본다) 열리는 화면의 자동 종료를 막지 않는다
+  // (아래 「등록 시작」과 onScan). 부른 여객이 그사이 화면을 계속 쓰다가 등록을 시작했으면 그대로 그 여객의 호출이다.
+  // 직원을 기다리는 동안 「계속 이용하시겠어요?」를 묻지 않는다.
+  // 마지막으로 화면을 건드린 때. IdleGuard 가 보는 것과 같은 누름을 본다. QR 을 찍는 것은 건드린 것이 아니다.
+  const lastTouch = useRef(0);
+  // 빈 화면에서 누른 호출. left 는 그 뒤 아무도 건드리지 않은 채 idleAskSec 이 지난 적이 있는지다.
+  const emptyCall = useRef<{ left: boolean } | null>(null);
+  useEffect(() => {
+    const touch = () => {
+      const now = Date.now();
+      if (emptyCall.current && now - lastTouch.current >= idleAskSec * 1000) emptyCall.current.left = true;
+      lastTouch.current = now;
+    };
+    // 화면의 단추보다 먼저 듣는다(capture). 「등록 시작」을 누른 손이 단추에 닿기 전에 그 앞의 빈 시간을 잰다.
+    const events = ["pointerdown", "keydown", "touchstart", "wheel", "click"] as const;
+    events.forEach((e) => window.addEventListener(e, touch, { capture: true, passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, touch, { capture: true }));
+  }, [idleAskSec]);
+  // 빈 화면에서 부른 사람이 at(「등록 시작」을 누르거나 QR 을 찍은 때)까지 떠나 있었는지.
+  const callerLeft = useCallback(
+    (at: number) => {
+      const c = emptyCall.current;
+      return c !== null && (c.left || at - lastTouch.current >= idleAskSec * 1000);
+    },
+    [idleAskSec],
+  );
+
   // 스티커를 이미 뽑은 패스(token). 아래 자동 인쇄와 「스티커 다시 뽑기」 버튼이 본다.
   const [printedFor, setPrintedFor] = useState<string | null>(null);
+  // 뽑으려고 QR 그림을 기다리는 스티커(token).
+  const [printing, setPrinting] = useState<string | null>(null);
+  // QR 그림을 다시 받아 그린 횟수. 스티커와 화면의 QR 은 그림 조각(qrcode)을 처음 그릴 때 한 번만 받아서, 약한 와이파이에서 한 번
+  // 받지 못하면 그 칸은 계속 빈다. 그러면 「스티커 뽑기」를 몇 번 눌러도 매번 기다리다 같은 오류만 뜬다. 그래서 그림이 없을 때
+  // 누르면 이 수를 올려 두 QR 을 새로 그린다(key). 그때 조각도 다시 받는다. 아직 받는 중이었으면 그것을 그대로 기다린다.
+  const [qrTry, setQrTry] = useState(0);
   const t = textOf(lang, prefs.easy);
+  // 스티커를 뽑지 못했다는 말을 그때의 언어로 띄운다. 그림을 기다리는 시계가 언어가 바뀔 때마다 새로 돌지 않게 ref 로 본다.
+  const langRef = useRef(lang);
+  langRef.current = lang;
   const { speak, stop } = useSpeech(lang);
   // 직원 부르기의 상태도 소리로 읽는다. 처음 화면의 「소리로 안내 듣기」나 「설정」으로 켰어도 읽는다.
   const voiceOn = useViewSettings().voice ?? prefs.voice;
@@ -74,7 +122,13 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   // 공용 기기다. 화면을 새로 열 때 앞사람이 「설정」에서 바꾼 것이 남아 있지 않게 한다.
   useEffect(() => resetViewSettings(), []);
 
-  // 소리 안내를 켠 여객에게는 오류 문구(QR 을 다시 뽑지 못한 까닭)도 읽어 준다. 화면을 보지 못하면 왜 안 되는지 모른다.
+  // QR 그림을 그리는 조각(qrcode)을 화면을 열 때 미리 받아 둔다. 등록을 마친 화면에서야 받기 시작하면 약한 와이파이에서는
+  // 스티커의 QR 칸이 한참 비어 있다. 받지 못해도 여기서는 알리지 않는다(QR 을 그릴 때 다시 받는다).
+  useEffect(() => {
+    import("qrcode").catch(() => {});
+  }, []);
+
+  // 소리 안내를 켠 여객에게는 오류 문구(QR 을 다시 뽑지 못한 까닭, 스티커를 뽑지 못한 까닭)도 읽어 준다. 화면을 보지 못하면 왜 안 되는지 모른다.
   // 새 오류가 뜰 때 한 번만 읽는다. 소리를 나중에 켰다고 지난 오류를 다시 읽지는 않게 소리 설정은 ref 로 본다.
   const voiceRef = useRef(voiceOn);
   voiceRef.current = voiceOn;
@@ -87,18 +141,33 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
   const scanSeq = useRef(0);
   const scanCtrl = useRef<AbortController | null>(null);
 
-  const reset = useCallback(() => {
-    // 앞사람의 QR 을 확인하던 요청은 끊고, 늦게 온 답도 버린다. 끊지 않으면 「확인하는 중」이 남아 다음 여객의 QR 을 읽지 않고,
-    // 늦게 온 답을 쓰면 떠난 여객의 스티커 화면(고유 일련 번호와 QR)이 다음 사람 앞에 열린다.
+  // QR 을 확인하던 요청은 끊고, 늦게 온 답도 버린다. 끊지 않으면 「확인하는 중」이 남아 다음 QR 을 읽지 않고,
+  // 늦게 온 답을 쓰면 떠난 여객의 스티커 화면(고유 일련 번호와 QR)이 처음 화면 위에 열린다(자동 인쇄면 스티커까지 뽑힌다).
+  const dropScan = useCallback(() => {
     scanSeq.current++;
     scanCtrl.current?.abort();
     scanCtrl.current = null;
     busyRef.current = false;
     setBusy(false);
+  }, []);
+
+  // 「다시 뽑기」(QR 을 찍는 화면)의 「이전」. 같은 여객이 처음 화면으로 돌아가는 것이라 다음 여객의 차례로 넘기지 않는다(reset 과 다르다).
+  // 넘기면 그 여객이 직원을 부르고 기다리는 중인데도 호출이 그 여객의 것이 아니게 되어, 「등록 시작」을 누르면 자동 종료가 다시 켜진다.
+  // 그 호출이 누구 것인지는 빈 화면의 호출(위 emptyCall)대로 「등록 시작」에서 가린다. 「처음으로」는 그대로 다음 여객의 차례로 넘긴다.
+  const backToStart = useCallback(() => {
+    dropScan();
+    setError(null);
+    setView("start");
+  }, [dropScan]);
+
+  const reset = useCallback(() => {
+    // 앞사람의 QR 을 확인하던 요청은 끊고, 늦게 온 답도 버린다(위 dropScan).
+    dropScan();
     // 다음 여객의 차례로 넘긴다. 등록 중이던 앞사람의 답이 늦게 와도 버리고(아래 onDone), 앞사람의 호출은 열린 채로 두되
     // 이제는 자동 종료를 막지 않는다.
     sessionSeq.current++;
     setCallSeq(null);
+    emptyCall.current = null;
     setView("start");
     setLang("ko");
     setPrefs(NO_PREFS);
@@ -107,9 +176,11 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     // 뽑았다는 표시도 지운다. 같은 여객이 나중에 스티커를 잃어 다시 뽑으러 오면, 이번 방문에서는 아직 한 장도 안 나왔으니
     // 자동 인쇄가 다시 돌고 버튼도 「스티커 뽑기」로 보여야 한다. 처음 화면으로 가므로 떠나는 여객에게 또 뽑히지는 않는다.
     setPrintedFor(null);
+    // QR 그림을 기다리던 인쇄도 거둔다. 남겨 두면 처음 화면에서 앞사람의 스티커 대신 빈 쪽이 뽑힌다.
+    setPrinting(null);
     // 앞사람이 「설정」에서 바꾼 글자 크기와 소리도 지운다.
     resetViewSettings();
-  }, []);
+  }, [dropScan]);
 
   const onPrefs = useCallback((l: Lang, p: Prefs) => {
     setLang(l);
@@ -127,15 +198,36 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
       auto = false;
     }
     if (!auto) return;
-    // QR 그림이 그려질 틈을 준 뒤에 인쇄한다. 뽑았다는 표시는 실제로 뽑을 때 한다.
+    // 화면이 자리 잡을 틈을 준 뒤, QR 그림이 그려지기를 기다려 인쇄한다(아래 printing). 뽑았다는 표시는 실제로 뽑을 때 한다.
     // 미리 해 두면 그 표시로 이 effect 가 다시 돌고, 정리하면서 아직 돌지 않은 인쇄를 지워 버린다.
+    // 그사이 여객이 「스티커 뽑기」를 눌러 기다리는 중이면 그것을 그대로 둔다. 두 장이 나오지 않는다.
     const token = issued.token;
-    const timer = setTimeout(() => {
-      setPrintedFor(token);
-      window.print();
-    }, 700);
+    const timer = setTimeout(() => setPrinting((p) => p ?? token), 700);
     return () => clearTimeout(timer);
   }, [view, issued, printedFor]);
+
+  // 스티커는 QR 그림이 실제로 그려진 뒤에 뽑는다. 그림이 없을 때 뽑으면 QR 칸이 빈 스티커가 나오고, 단추는 「스티커 다시 뽑기」로
+  // 바뀌어 여객은 잘못 나온 줄도 모른다. 오래 기다려도 그려지지 않으면(자동 인쇄든 여객이 누른 것이든) 뽑지 않는다.
+  // 뽑았다는 표시도 하지 않고 단추를 다시 풀어, 잠시 뒤 다시 누르라고 화면에 띄운다(소리를 켰으면 읽어 준다).
+  useEffect(() => {
+    if (!printing) return;
+    const token = printing;
+    const until = Date.now() + STICKER_WAIT_MS;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const check = () => {
+      const drawn = stickerDrawn();
+      if (!drawn && Date.now() < until) {
+        timer = setTimeout(check, 100);
+        return;
+      }
+      setPrinting(null);
+      if (!drawn) return setError(textOf(langRef.current).stickerQrFail);
+      setPrintedFor(token);
+      window.print();
+    };
+    check();
+    return () => clearTimeout(timer);
+  }, [printing]);
 
   const onScan = useCallback(
     async (text: string) => {
@@ -148,6 +240,8 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
       busyRef.current = true;
       setBusy(true);
       setError(null);
+      // QR 을 찍은 때. 빈 화면에서 부른 사람이 이때까지 떠나 있었는지 본다(아래, callerLeft).
+      const at = Date.now();
       // 답이 오지 않는 요청은 끊는다. 끊긴 것은 catch 로 가서 연결 오류로 알리고, 카메라가 다시 읽는다.
       const mine = ++scanSeq.current;
       const ctrl = new AbortController();
@@ -171,6 +265,10 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         setLang(data.guide.lang);
         setPrefs(prefsOf(data.guide.choices));
         setIssued({ token: data.token, passNo: data.guide.passNo });
+        // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 스티커 화면의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을
+        // 쓰던 사람이면 그 사람의 호출로 둔다. 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
+        if (callerLeft(at)) setCallSeq(null);
+        emptyCall.current = null;
         setView("done");
       } catch {
         // 처음 화면으로 돌아가며 끊은 것이면 알리지 않는다. 알리면 다음 여객 앞에 앞사람의 오류가 뜬다.
@@ -185,7 +283,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         }
       }
     },
-    [lang, assisted],
+    [lang, assisted, callerLeft],
   );
 
   const call = assisted ? null : (
@@ -197,7 +295,13 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
           token={issued?.token ?? null}
           screen="register"
           onActive={onCallActive}
-          onPress={() => setCallSeq(sessionSeq.current)}
+          onPress={() => {
+            // 지금 여객의 호출로 삼는다. 처음 화면이나 QR 을 찍는 화면에서 눌렀으면 그 사실도 적어 둔다(위 emptyCall).
+            // 등록하거나 스티커를 보던 중에 누른 것은 적지 않는다. 그 여객이 직원을 기다리는 동안 자동 종료는 계속 꺼 둔다.
+            lastTouch.current = Date.now();
+            emptyCall.current = view === "start" || view === "reprint" ? { left: false } : null;
+            setCallSeq(sessionSeq.current);
+          }}
           say={voiceOn ? speak : undefined}
         />
       </div>
@@ -249,8 +353,18 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
           <>
             <button
               className="btn btn-primary"
+              // QR 그림을 기다리는 동안은 막아 둔다. 그림이 그려지면 곧 뽑힌다.
+              disabled={printing !== null}
+              aria-busy={printing !== null}
               onClick={() => {
+                // QR 그림이 이미 있으면 바로 뽑고, 없으면 그림을 새로 받아 그리게 한 뒤(위 qrTry) 그려질 때까지 기다렸다가 뽑는다(위 printing).
                 // 자동 인쇄를 기다리는 중에 눌렀으면 그 인쇄는 거둬진다(표시가 바뀌어 effect 가 정리된다). 두 장이 나오지 않는다.
+                // 지난번에 뽑지 못했다는 말은 거둔다. 이번에도 못 뽑으면 다시 띄우고 다시 읽는다.
+                setError(null);
+                if (!stickerDrawn()) {
+                  setQrTry((n) => n + 1);
+                  return setPrinting(issued.token);
+                }
                 setPrintedFor(issued.token);
                 window.print();
               }}
@@ -269,13 +383,15 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
           {t.kioskDoneTitle}
         </p>
         <div className="done-layout">
-          <PassQr token={issued.token} passNo={issued.passNo} label={t.passNo} />
+          <PassQr key={qrTry} token={issued.token} passNo={issued.passNo} label={t.passNo} />
           <div>
             <h1>{t.kioskPrint}</h1>
             <p className="lead">{t.kioskDoneBody}</p>
+            {/* 스티커를 뽑지 못했을 때(QR 그림을 끝내 불러오지 못함) 다시 누르라는 말. */}
+            {error && <ErrorNote>{error}</ErrorNote>}
           </div>
         </div>
-        <Sticker token={issued.token} passNo={issued.passNo} />
+        <Sticker key={qrTry} token={issued.token} passNo={issued.passNo} />
       </FlowShell>
     );
   } else if (view === "reprint") {
@@ -284,7 +400,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     const reprintTitle = assisted ? "여객의 QR을 찍어 주세요" : t.reprintTitle;
     const reprintBody = assisted ? "여객이 휴대전화로 받은 QR을 카메라로 비춰 주세요. 같은 QR을 스티커로 뽑습니다." : t.reprintBody;
     screen = (
-      <FlowShell lang={lang} prefs={prefs} kiosk screenKey="reprint" speakText={`${reprintTitle}. ${reprintBody}`} onBack={reset} onHome={reset}>
+      <FlowShell lang={lang} prefs={prefs} kiosk screenKey="reprint" speakText={`${reprintTitle}. ${reprintBody}`} onBack={backToStart} onHome={reset}>
         <div className="scan-layout">
           <div>
             <h1>{reprintTitle}</h1>
@@ -324,6 +440,10 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
             className="btn btn-primary btn-xl"
             onClick={() => {
               setError(null);
+              // 빈 화면에서 부른 사람이 떠나 있었으면(앞사람이 부르고 떠난 자리) 그 호출은 이제 시작하는 등록의 자동 종료를 막지 않는다.
+              // 계속 화면을 쓰던 사람이면 그 사람의 호출로 둔다. 호출을 놓은 여객이 등록하는 중에 다시 누르면 다시 그 여객의 호출이 된다.
+              if (callerLeft(Date.now())) setCallSeq(null);
+              emptyCall.current = null;
               setView("flow");
             }}
           >

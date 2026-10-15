@@ -258,8 +258,14 @@ function within(from: Spot, to: Spot, walkTo: WalkTo, opts: RouteOptions, endGat
     return [walk(area, from.x, to.x, from.level, walkTo, opts, endGate)].filter((s): s is Step => s !== null);
   }
   // 걷는 거리가 가장 짧아지는 엘리베이터(에스컬레이터)를 고른다.
+  // 걷는 거리가 같으면 탑승구 층이 아닌 곳(지하 1층, 4층)을 덜 걷는 쪽을 고른다.
+  // 쉴 곳과 화장실은 탑승구 층에만 있어 다른 층을 걸으면 가는 길에 알려 줄 곳이 없다.
+  // 목록의 앞(서쪽) 엘리베이터를 고르면 서편과 동편 키오스크의 길이 서로 어긋나기도 한다.
+  const walked = (c: number) => Math.abs(from.x - c) + Math.abs(c - to.x);
+  const offGate = (c: number) =>
+    (from.level !== GATE_LEVEL ? Math.abs(from.x - c) : 0) + (to.level !== GATE_LEVEL ? Math.abs(c - to.x) : 0);
   const core = AREAS[area].cores.reduce((best, c) =>
-    Math.abs(from.x - c) + Math.abs(c - to.x) < Math.abs(from.x - best) + Math.abs(best - to.x) ? c : best,
+    walked(c) < walked(best) || (walked(c) === walked(best) && offGate(c) < offGate(best)) ? c : best,
   );
   return [
     walk(area, from.x, core, from.level, "lift", opts),

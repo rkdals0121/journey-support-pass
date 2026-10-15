@@ -39,11 +39,22 @@ export function ConfirmSheet({
       if (e.key === "Escape") onCancelRef.current();
       // 초점이 창 밖으로 나가지 않게 두 버튼 사이에서 돈다.
       if (e.key === "Tab") {
-        const buttons = sheetRef.current?.querySelectorAll("button");
-        if (!buttons || buttons.length === 0) return;
+        const sheet = sheetRef.current;
+        if (!sheet) return;
+        // 처리하는 동안(busy)에는 두 버튼이 다 꺼져 있다. 그때 Tab 을 그냥 두면 창 뒤의 버튼으로 넘어간다.
+        const buttons = sheet.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+        if (buttons.length === 0) {
+          e.preventDefault();
+          return;
+        }
         const first = buttons[0];
         const last = buttons[buttons.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
+        // 창의 제목이나 글을 누르면 초점이 창 밖(문서 전체)으로 빠진다. 그 상태에서 Tab 을 누르면
+        // 창 뒤의 「등록 지우기」·닫기 버튼으로 가서, Enter 한 번에 가려진 버튼이 눌린다. 창 안으로 다시 데려온다.
+        if (!sheet.contains(document.activeElement)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
           last.focus();
         } else if (!e.shiftKey && document.activeElement === last) {

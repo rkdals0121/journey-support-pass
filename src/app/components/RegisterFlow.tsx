@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, BarChart3, Check, FileText, MapPin, MonitorSmartphone, Plane, Search, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
 import { airlineLabel } from "@/lib/airline-en";
 import { destLabel } from "@/lib/dest-en";
@@ -56,6 +56,18 @@ const STAFF_LOGIN = "/staff/login";
 const sameFlight = (a: FlightOption | null, b: FlightOption) =>
   a !== null && a.flightDate === b.flightDate && a.flightNo === b.flightNo;
 
+// 안내데스크 기기가 화면 글자판을 쓸 만큼 넓은지. 화면 글자판은 한 줄에 10칸이라, 이보다 좁으면 칸 하나가 손가락보다 좁아진다.
+// 태블릿과 컴퓨터는 화면 글자판을 그대로 쓰고, 좁은 휴대전화는 기기의 자판을 쓴다.
+const PAD_WIDE = "(min-width: 600px)";
+function subscribePadWide(f: () => void) {
+  const mq = window.matchMedia(PAD_WIDE);
+  mq.addEventListener("change", f);
+  return () => mq.removeEventListener("change", f);
+}
+const isPadWide = () => window.matchMedia(PAD_WIDE).matches;
+// 서버에서 그릴 때는 화면 너비를 모른다. 예전처럼 글자판이 있는 쪽으로 그려 두고, 브라우저에서 곧바로 맞춘다.
+const padWideOnServer = () => true;
+
 /** 하나만 고르는 묶음에서는 화살표 키로 옆 항목으로 옮겨 가며 고른다. 키보드와 화면 읽기 프로그램이 기대하는 동작이다. */
 function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
   const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
@@ -75,6 +87,10 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. */
 export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Props) {
   const kiosk = mode !== "web";
+  // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
+  // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
+  const padWide = useSyncExternalStore(subscribePadWide, isPadWide, padWideOnServer);
+  const onScreenPad = mode === "kiosk" || (mode === "assisted" && padWide);
   const [lang, setLang] = useState<Lang>(initialLang);
   const [choices, setChoices] = useState<string[]>([]);
   const prefs = prefsOf(choices);
@@ -349,7 +365,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
     move: t.moveHint,
     facility: t.facilityHint,
     staff: t.staffHint,
-    flight: cityMode ? undefined : kiosk ? t.flightHintKiosk : t.flightHint,
+    flight: cityMode ? undefined : onScreenPad ? t.flightHintKiosk : t.flightHint,
   };
 
   // 항공편 화면은 한 화면 안에서 내용이 여러 번 바뀐다(도시 고르기, 시간대, 항공사, 편 목록). 바뀔 때마다 그 내용을 읽어 준다.
@@ -515,16 +531,16 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
           <div ref={flightZone} tabIndex={-1} className="flight-zone">
             {!cityMode && (
               <>
-                <label htmlFor="reg-flight">{kiosk ? t.flightLabelKiosk : t.flightLabel}</label>
+                <label htmlFor="reg-flight">{onScreenPad ? t.flightLabelKiosk : t.flightLabel}</label>
                 <div className="input-wrap">
                   <Search size={22} aria-hidden="true" />
                   <input
                     id="reg-flight"
                     type="text"
                     value={query}
-                    placeholder={kiosk ? t.flightPlaceholderKiosk : t.flightPlaceholder}
-                    // 키오스크에서는 화면의 글자판을 쓴다. 기기의 자판이 올라와 화면을 가리지 않게 한다.
-                    inputMode={kiosk ? "none" : "text"}
+                    placeholder={onScreenPad ? t.flightPlaceholderKiosk : t.flightPlaceholder}
+                    // 화면 글자판을 쓰는 곳에서는 기기의 자판이 올라와 화면을 가리지 않게 한다.
+                    inputMode={onScreenPad ? "none" : "text"}
                     autoCapitalize="characters"
                     autoCorrect="off"
                     autoComplete="off"
@@ -709,7 +725,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onDone, onPrefs }: Pro
           </div>
 
           {/* 가로로 놓인 키오스크에서는 글자판이 입력란 옆에 온다. 글자판이 「다음」 버튼 밑으로 내려가지 않는다. */}
-          {kiosk && !flight && !cityOpen && !cityPick && (
+          {onScreenPad && !flight && !cityOpen && !cityPick && (
             <AlnumPad onKey={(k) => typeFlight(query + k)} onErase={() => typeFlight(query.slice(0, -1))} eraseLabel={t.erase} />
           )}
         </div>

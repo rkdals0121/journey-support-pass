@@ -392,6 +392,49 @@ describe("안내 내용: 가까운 시설의 순서", () => {
   });
 });
 
+describe("길 요약 한 줄", () => {
+  // 쉬운 말에는 이 문구가 따로 없어 기본 문구를 그대로 쓴다. 네 가지 모두 같은 규칙을 따르는지 본다.
+  const texts = [textOf("ko"), textOf("ko", true), textOf("en"), textOf("en", true)];
+  const facility = (place: string, kind: string, choices: string[] = []) =>
+    buildGuide(journey({ choices }), "123456", at(place), poll).facilities.find((f) => f.kind === kind)!;
+
+  it("가운데 키오스크에서 바로 위층의 라운지는 걷는 거리가 0m 여도 바로 앞이라고 하지 않는다", () => {
+    for (const place of ["t1-center", "t2-center"]) {
+      for (const choices of [[], ["mov_no_stairs"]]) {
+        const { route, level } = facility(place, "lounge", choices);
+        // 걷는 구간은 둘 다 15m 가 안 되어 적지 않고, 층만 옮긴다.
+        expect(level).toBe(4);
+        expect(route).toMatchObject({ meters: 0, levelChanges: 1 });
+        expect(route.minutes).toBeGreaterThan(0);
+        for (const t of texts) {
+          expect(t.routeSummary(route.minutes, route.meters), `${place} ${choices.join(",")}`).not.toMatch(/바로 앞|Right here/);
+        }
+      }
+    }
+    const { route } = facility("t1-center", "lounge", ["mov_no_stairs"]);
+    expect(textOf("ko").routeSummary(route.minutes, route.meters)).toBe("약 3분");
+    expect(textOf("ko", true).routeSummary(route.minutes, route.meters)).toBe("약 3분");
+    expect(textOf("en").routeSummary(route.minutes, route.meters)).toBe("About 3 min");
+    expect(textOf("en", true).routeSummary(route.minutes, route.meters)).toBe("About 3 min");
+  });
+
+  it("구간이 하나도 없는 길만 바로 앞이다", () => {
+    // 125번 탑승구 앞 키오스크의 쉴 곳은 그 자리에 있다.
+    const { route } = facility("cc-125", "rest");
+    expect(route).toMatchObject({ steps: [], meters: 0, minutes: 0 });
+    expect(textOf("ko").routeSummary(route.minutes, route.meters)).toBe("바로 앞입니다");
+    expect(textOf("ko", true).routeSummary(route.minutes, route.meters)).toBe("바로 앞입니다");
+    expect(textOf("en").routeSummary(route.minutes, route.meters)).toBe("Right here");
+    expect(textOf("en", true).routeSummary(route.minutes, route.meters)).toBe("Right here");
+  });
+
+  it("걷는 구간이 있으면 시간과 거리를 함께 보여 준다", () => {
+    const route = buildGuide(journey(), "123456", at("cc-center"), poll).gateRoute!;
+    expect(textOf("ko").routeSummary(route.minutes, route.meters)).toBe("약 5분 · 315m");
+    expect(textOf("en").routeSummary(route.minutes, route.meters)).toBe("About 5 min · 315 m");
+  });
+});
+
 describe("안내 내용: 걸리는 시간과 남은 시간", () => {
   // 탑승동 중앙에서 127번 탑승구까지 보통 걸음으로 5분이다.
   const pace = (over: Partial<Journey>) => buildGuide(journey(over), "123456", at("cc-center"), poll).pace;
