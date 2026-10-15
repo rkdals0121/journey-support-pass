@@ -158,7 +158,12 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
     if (!settingsOpen) return;
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSettingsOpen(false);
+      if (e.key !== "Escape") return;
+      // 설정 창 위에 다른 창(「계속 이용하시겠어요?」, 직원 부르기)이 떠 있으면 그 창의 Esc 다. 밑에 깔린 설정 창을 닫지 않는다.
+      // 닫으면 초점이 위 창 뒤의 「설정」 단추로 빠져, 키보드로 쓰는 여객이 위 창에서 길을 잃는다.
+      const modals = [...document.querySelectorAll('[aria-modal="true"]')];
+      if (modals.length > 0 && modals[modals.length - 1] !== sheetRef.current) return;
+      setSettingsOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
