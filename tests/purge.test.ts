@@ -125,6 +125,14 @@ describe("출발 후 삭제", () => {
     expect(await statusOf(registration.id)).toBe("expired");
   });
 
+  it("먼 날짜에 미리 등록한 편은 운항 정보가 없어도 그날 다음 날 04:00 까지 지우지 않는다", async () => {
+    const { registration } = await registerWithPass(db, t0, { flightDate: "2026-12-24", flightNo: "OZ106" });
+    await purge(db, kst("2026-12-25 03:59"));
+    expect(await statusOf(registration.id)).toBe("active");
+    await purge(db, kst("2026-12-25 04:00"));
+    expect(await statusOf(registration.id)).toBe("expired");
+  });
+
   it("운항 정보가 사라진 등록은 48시간 뒤에 지운다", async () => {
     await addFlights(db, [flightRow("KE123", "2026-10-05 14:30")], t0);
     const { registration } = await registerWithPass(db, t0);

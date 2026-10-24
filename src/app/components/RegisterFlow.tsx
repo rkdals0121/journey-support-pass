@@ -44,6 +44,8 @@ export interface FlightOption {
   day: "today" | "tomorrow";
   time: string;
   cancelled: boolean;
+  /** 먼 날짜에 미리 등록한 편. 운항 정보가 아직 없어 편명과 날짜만 있다. */
+  later?: boolean;
 }
 
 export interface RegisterResult {
@@ -173,6 +175,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [cityPick, setCityPick] = useState<Destination | null>(null);
   const [bucket, setBucket] = useState<string | null>(null);
   const [airline, setAirline] = useState<string | null>(null);
+  // 먼 날짜 편을 미리 등록하는 칸(휴대전화 등록만). 항공권은 몇 달 전에 예매하므로 예매 직후에 등록할 수 있어야 한다.
+  const [later, setLater] = useState(false);
+  const [laterDate, setLaterDate] = useState("");
+  const [laterNo, setLaterNo] = useState("");
+  const [laterBad, setLaterBad] = useState(false);
   // 찾다가 연결이 끊겼을 때 「다시 찾기」로 한 번 더 찾게 한다.
   const [retry, setRetry] = useState(0);
   const [searching, setSearching] = useState(false);
@@ -193,7 +200,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const groupLabel = (g: Group) => (lang === "en" ? GROUP_EN[g] : GROUP_LABEL[g]);
   // 운항 정보의 도착지 이름은 한국어뿐이다. 영어 화면에서는 공항 코드로 영어 도시 이름을 찾아 쓴다.
   const destOf = (f: FlightOption) => destLabel(lang, f);
-  const whenOf = (f: FlightOption) => `${f.day === "today" ? t.today : t.tomorrow} ${f.time}`;
+  const whenOf = (f: FlightOption) => (f.later ? t.dateLabel(f.flightDate) : `${f.day === "today" ? t.today : t.tomorrow} ${f.time}`);
 
   const onPrefsRef = useRef(onPrefs);
   onPrefsRef.current = onPrefs;
@@ -537,7 +544,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   // 확인 화면에 보여 줄 묶음. 단계마다 그 단계에서 고른 것.
   const reviewSteps = ORDER.filter((k) => k !== "consent" && k !== "review");
   const answersOf = (k: StepKind): string[] => {
-    if (k === "flight") return flight ? [`${flight.flightNo} · ${destOf(flight)} · ${whenOf(flight)}`] : [];
+    // 먼 날짜에 미리 등록한 편은 도착지를 아직 모른다. 빈 칸은 빼고 잇는다.
+    if (k === "flight") return flight ? [[flight.flightNo, destOf(flight), whenOf(flight)].filter(Boolean).join(" · ")] : [];
     if (k === "docs") {
       if (docs.length === 0) return noDocs ? [t.docs.none] : [];
       return [...docs.map((x) => t.docs[x]), proofSent ? t.proofSent(docs.length) : t.proofNotSent];
@@ -815,6 +823,41 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       {kind === "flight" && (
         <div className="flight-layout">
           <div ref={flightZone} tabIndex={-1} className="flight-zone">
+            {later ? (
+              <LaterPanel
+                t={t}
+                date={laterDate}
+                no={laterNo}
+                bad={laterBad}
+                picked={flight?.later ? flight : null}
+                onDate={(v) => {
+                  touched();
+                  setLaterDate(v);
+                  setLaterBad(false);
+                  setFlight(null);
+                }}
+                onNo={(v) => {
+                  touched();
+                  setLaterNo(v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7));
+                  setLaterBad(false);
+                  setFlight(null);
+                }}
+                onUse={() => {
+                  // 모레부터 1년 안의 날짜, 편명 모양(KE123, 7C1105)만 본다. 운항 정보가 아직 없어 그 편이 있는지는 알 수 없다.
+                  const today = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
+                  const plus = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+                  const ok = /^[A-Z0-9]{2}\d{1,4}[A-Z]?$/.test(laterNo) && laterDate >= plus(2) && laterDate <= plus(365);
+                  if (!ok) return setLaterBad(true);
+                  setFlight({ airline: "", flightDate: laterDate, flightNo: laterNo, destName: "", destCode: "", day: "tomorrow", time: "", cancelled: false, later: true });
+                }}
+                onClose={() => {
+                  setLater(false);
+                  setFlight(null);
+                  flightZone.current?.focus({ preventScroll: true });
+                }}
+              />
+            ) : (
+              <>
             {!cityMode && (
               <>
                 <label htmlFor="reg-flight">{onScreenPad ? t.flightLabelKiosk : t.flightLabel}</label>
@@ -1008,10 +1051,24 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                 {t.flightReselect}
               </button>
             )}
+            {/* 오늘·내일 편이 아니면 날짜를 골라 미리 등록한다(휴대전화 등록만). */}
+            {mode === "web" && !flight && !cityOpen && !cityPick && (
+              <button
+                className="btn btn-ghost later-open"
+                onClick={() => {
+                  setLater(true);
+                  setFlight(null);
+                }}
+              >
+                {t.laterOpen}
+              </button>
+            )}
+              </>
+            )}
           </div>
 
           {/* 가로로 놓인 키오스크에서는 글자판이 입력란 옆에 온다. 글자판이 「다음」 버튼 밑으로 내려가지 않는다. */}
-          {onScreenPad && !flight && !cityOpen && !cityPick && (
+          {onScreenPad && !later && !flight && !cityOpen && !cityPick && (
             <AlnumPad onKey={(k) => typeFlight(query + k)} onErase={() => typeFlight(query.slice(0, -1))} eraseLabel={t.erase} />
           )}
         </div>
@@ -1038,6 +1095,62 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
 
       {error && <ErrorNote>{error}</ErrorNote>}
     </FlowShell>
+  );
+}
+
+/** 먼 날짜 편을 미리 등록하는 칸. 날짜와 편명만 받는다. */
+function LaterPanel({
+  t,
+  date,
+  no,
+  bad,
+  picked,
+  onDate,
+  onNo,
+  onUse,
+  onClose,
+}: {
+  t: ReturnType<typeof textOf>;
+  date: string;
+  no: string;
+  bad: boolean;
+  picked: FlightOption | null;
+  onDate: (v: string) => void;
+  onNo: (v: string) => void;
+  onUse: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="later">
+      <h2>{t.laterTitle}</h2>
+      <p className="hint">{t.laterHint}</p>
+      <label htmlFor="later-date">{t.laterDate}</label>
+      <input id="later-date" type="date" value={date} onChange={(e) => onDate(e.target.value)} />
+      <label htmlFor="later-no">{t.laterNo}</label>
+      <input
+        id="later-no"
+        type="text"
+        value={no}
+        autoCapitalize="characters"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+        onChange={(e) => onNo(e.target.value)}
+      />
+      {bad && <ErrorNote>{t.laterBad}</ErrorNote>}
+      {picked ? (
+        <p className="later-picked" role="status">
+          <Check size={20} aria-hidden="true" /> {t.laterPicked(picked.flightNo, t.dateLabel(picked.flightDate))}
+        </p>
+      ) : (
+        <button className="btn" onClick={onUse} disabled={!date || no.length < 3}>
+          {t.laterUse}
+        </button>
+      )}
+      <button className="link-btn" onClick={onClose}>
+        {t.laterClose}
+      </button>
+    </div>
   );
 }
 

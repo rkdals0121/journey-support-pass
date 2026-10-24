@@ -335,15 +335,21 @@ describe("등록", () => {
     }
   });
 
-  it("오늘과 내일 편이 아니면 등록할 수 없다", async () => {
+  it("그제 이전이나 1년 넘게 남은 편은 등록할 수 없다. 먼 날짜 편은 미리 등록할 수 있다", async () => {
     await addFlights(db, [flightRow("KE123", "2026-10-07 14:30"), flightRow("KE123", "2026-10-03 23:50")], now);
-    for (const flightDate of ["2026-10-07", "2026-10-03"]) {
+    for (const flightDate of ["2027-10-06", "2026-10-03"]) {
       const res = await registerHandler(db, body({ flightDate }), null, web, now);
       expect(res.status).toBe(400);
-      expect(res.body).toEqual({ error: "오늘과 내일 출발하는 편만 등록할 수 있습니다", code: "date" });
+      expect(res.body).toMatchObject({ code: "date" });
     }
     expect(await regRows()).toHaveLength(0);
     expect((await registerHandler(db, body({ flightDate: "2026-10-06" }), null, web, now)).status).toBe(200);
+    expect((await registerHandler(db, body({ flightDate: "2026-10-07" }), null, web, now)).status).toBe(200);
+    // 먼 날짜 편: 운항 정보가 아직 없어 날짜만 보이고, 출발 이틀 전쯤 정보가 들어온다고 알린다.
+    const far = await registerHandler(db, body({ flightDate: "2026-12-24", flightNo: "OZ106" }), null, web, now);
+    expect(far.status).toBe(200);
+    const g = ((await guideHandler(db, (far.body as { token: string }).token, null, now)).body as { guide: GuideDto }).guide;
+    expect(g.flight).toMatchObject({ flightNo: "OZ106", flightDate: "2026-12-24", awaiting: true, close: "unknown", gate: null });
   });
 
   it("어제 날짜 편도 아직 떠나지 않았으면(자정을 넘겨 늦어짐) 찾고 등록한다. 떠났으면 받지 않는다", async () => {

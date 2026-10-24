@@ -179,8 +179,8 @@ describe("등록", () => {
     expect(await errorOf({ choices: "gd_large" as never })).not.toBeNull();
     expect(await errorOf({ flightNo: "ZZ999" })).toBe("편명을 다시 확인해 주세요");
     expect(await errorOf({ flightNo: "" })).toBe("편명을 다시 확인해 주세요");
-    expect(await errorOf({ flightDate: "2026-10-08" })).toBe("편명을 다시 확인해 주세요");
-    expect(await errorOf({ flightDate: "2026-10-07" })).toBe("오늘과 내일 출발하는 편만 등록할 수 있습니다");
+    expect(await errorOf({ flightNo: "KE12" })).toBe("편명을 다시 확인해 주세요");
+    expect(await errorOf({ flightDate: "2027-12-01" })).toContain("1년 안에");
     expect(await errorOf({ flightDate: "10/05" })).toBe("편명을 다시 확인해 주세요");
     expect(await errorOf({ route: "paper" as never })).toBe("등록 경로가 맞지 않습니다");
     expect(await errorOf({ route: "" as never })).toBe("등록 경로가 맞지 않습니다");
@@ -275,21 +275,33 @@ describe("등록할 수 있는 날짜", () => {
     const res = await createRegistration(db, regInput({ flightDate, flightNo }), at);
     return res.ok ? null : res.error;
   };
-  const NOT_YET = "오늘과 내일 출발하는 편만 등록할 수 있습니다";
+  const NOT_YET = "출발 날짜를 다시 확인해 주세요. 어제부터 1년 안에 출발하는 편만 등록할 수 있습니다";
 
-  it("오늘과 내일(한국 날짜) 편만 받는다. 모레 편은 운항 정보에 있어도 받지 않는다", async () => {
+  it("항공권은 몇 달 전에 예매하므로 1년 안의 편을 받는다. 운항 정보가 있는 편(모레까지)은 그 정보로 확인한다", async () => {
     const before = await count();
     expect(await errorOf("2026-10-05")).toBeNull();
     expect(await errorOf("2026-10-06")).toBeNull();
-    expect(await errorOf("2026-10-07")).toBe(NOT_YET);
-    expect(await count()).toBe(before + 2);
+    expect(await errorOf("2026-10-07")).toBeNull();
+    // 운항 정보가 아직 없는 먼 날짜: 편명의 모양만 보고 받는다.
+    expect(await errorOf("2026-12-24", now, "OZ106")).toBeNull();
+    expect(await errorOf("2027-10-05", now, "7C1105")).toBeNull();
+    expect(await count()).toBe(before + 5);
+    // 1년 넘게 남은 날짜, 그제 이전 날짜는 받지 않는다.
+    expect(await errorOf("2027-10-06")).toBe(NOT_YET);
+    expect(await errorOf("2026-10-03")).toBe(NOT_YET);
   });
 
-  it("한국 시각으로 자정이 지나면 그날부터 하루 뒤 편까지 받는다", async () => {
-    expect(await errorOf("2026-10-06", kst("2026-10-04 23:59"))).toBe(NOT_YET);
-    expect(await errorOf("2026-10-06", kst("2026-10-05 00:00"))).toBeNull();
-    expect(await errorOf("2026-10-07", kst("2026-10-05 23:59"))).toBe(NOT_YET);
-    expect(await errorOf("2026-10-07", kst("2026-10-06 00:00"))).toBeNull();
+  it("운항 정보가 있는 범위(모레까지)에서 없는 편, 먼 날짜라도 편명 모양이 틀린 것은 받지 않는다", async () => {
+    expect(await errorOf("2026-10-06", now, "ZZ999")).toBe("편명을 다시 확인해 주세요");
+    expect(await errorOf("2026-10-07", now, "ZZ999")).toBe("편명을 다시 확인해 주세요");
+    expect(await errorOf("2026-12-24", now, "K")).toBe("편명을 다시 확인해 주세요");
+    expect(await errorOf("2026-12-24", now, "KOREAN")).toBe("편명을 다시 확인해 주세요");
+    expect(await errorOf("2026-02-30", now, "KE123")).toBe("편명을 다시 확인해 주세요");
+  });
+
+  it("먼 날짜 편은 편명과 날짜만 남기고, 운항 정보가 들어오면 그대로 이어진다", async () => {
+    const res = await createRegistration(db, regInput({ flightDate: "2026-12-24", flightNo: "oz106" }), now);
+    expect(res.ok && res.registration).toMatchObject({ flightDate: "2026-12-24", flightNo: "OZ106" });
   });
 
   it("어제 날짜 편은 아직 떠나지 않았을 때만 받는다 (어제 밤 편이 자정을 넘겨 늦어진 경우)", async () => {
@@ -312,7 +324,7 @@ describe("등록할 수 있는 날짜", () => {
     expect(await codeOf({ consent: false })).toBe("consent");
     expect(await codeOf({ choices: ["nope"] })).toBe("choices");
     expect(await codeOf({ flightNo: "ZZ999" })).toBe("flight");
-    expect(await codeOf({ flightDate: "2026-10-07" })).toBe("date");
+    expect(await codeOf({ flightDate: "2027-12-01" })).toBe("date");
     expect(await codeOf({ flightNo: "KE888" })).toBe("departed");
     expect(await codeOf({ flightNo: "CS1" })).toBe("departed");
     // 여객이 고칠 수 없는 값(경로)은 까닭을 붙이지 않는다. 영어 화면은 일반 실패 문구를 보여 준다.

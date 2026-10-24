@@ -16,6 +16,7 @@ const poll: PollState = { label: "운항 정보 11:55 기준", stale: false, sta
 function journey(over: Partial<Journey> = {}): Journey {
   return {
     registrationId: "00000000-0000-4000-8000-000000000001",
+    flightDate: "2026-10-05",
     choices: [],
     lang: "ko",
     submittedAt: kst("2026-10-05 12:00"),
@@ -73,6 +74,8 @@ describe("안내 화면의 항공편", () => {
       closeAtMs: kst("2026-10-05 14:20").getTime(),
       boardingNow: false,
       urgent: false,
+      flightDate: "2026-10-05",
+      awaiting: false,
     });
   });
 
