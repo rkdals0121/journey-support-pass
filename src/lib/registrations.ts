@@ -74,6 +74,14 @@ function toRegistration(r: Row): Registration {
 const MAX_WRITE_MS = 24 * 60 * 60 * 1000;
 const MAX_EDIT_COUNT = 1000;
 
+/** 미리 등록할 수 있는 가장 먼 날(오늘부터 날 수). 항공사는 보통 1년 안의 편을 판다. */
+export const BOOKING_AHEAD_DAYS = 365;
+/** 운항 정보(공공데이터)를 받아 두는 범위 밖의 첫날. 이날부터는 운항 정보 없이 편명과 날짜로 받는다. */
+const PRE_FLIGHT_DAYS = 3;
+/** 편명의 모양. 항공사 코드 두 글자(영문·숫자) + 숫자 1~4 자리(+ 영문 한 자). KE123, 7C1105, OZ106. */
+export const FLIGHT_NO_RE = /^[A-Z0-9]{2}\d{1,4}[A-Z]?$/;
+const DATE_ERROR = "출발 날짜를 다시 확인해 주세요. 어제부터 1년 안에 출발하는 편만 등록할 수 있습니다";
+
 export type RegistrationErrorCode = "departed" | "date" | "flight" | "consent" | "choices" | "rate" | "pass";
 
 export type CreateResult =
@@ -92,20 +100,27 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
 
   if (!["web", "kiosk", "assisted"].includes(input.route)) return { ok: false, error: "등록 경로가 맞지 않습니다" };
 
-  const flight = await getFlight(db, input.flightDate, input.flightNo);
-  if (!flight) return { ok: false, error: "편명을 다시 확인해 주세요", code: "flight" };
-  // 오늘과 내일(한국 날짜) 편만 받는다. 화면의 편명 찾기가 보여주는 범위와 같다.
+  // 받는 날짜: 어제부터 1년 뒤까지(한국 날짜). 항공권은 몇 달 전에 예매하므로 예매 직후에 등록할 수 있어야 한다.
   // 어제 날짜 편도 받는다. 어제 밤 편이 자정을 넘겨 늦어지면 날짜는 어제여도 오늘 떠난다.
-  // 이미 떠난 어제 편은 바로 아래의 "이미 출발한 편" 검사가 막는다.
+  // 이미 떠난 어제 편은 아래의 "이미 출발한 편" 검사가 막는다.
   const today = kstDate(now);
-  if (![addDays(today, -1), today, addDays(today, 1)].includes(flight.flightDate)) {
-    return { ok: false, error: "오늘과 내일 출발하는 편만 등록할 수 있습니다", code: "date" };
+  const flightNo = typeof input.flightNo === "string" ? input.flightNo.trim().toUpperCase() : "";
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(input.flightDate) && new Date(`${input.flightDate}T00:00:00Z`).toISOString().slice(0, 10) === input.flightDate;
+  if (validDate && (input.flightDate < addDays(today, -1) || input.flightDate > addDays(today, BOOKING_AHEAD_DAYS))) {
+    return { ok: false, error: DATE_ERROR, code: "date" };
   }
-  // 이미 떠난 편으로는 받지 않는다. 받으면 곧바로 지워져 패스가 쓸모없어진다.
-  // 공동운항이면 실제 운항 편의 시각으로 본다.
-  const operating = await operatingFlight(db, flight);
-  if (isDeparted(operating) || departureAt(operating) <= now) {
-    return { ok: false, error: "이미 출발한 편입니다. 편명을 다시 확인해 주세요", code: "departed" };
+  const flight = validDate ? await getFlight(db, input.flightDate, flightNo) : null;
+  if (flight) {
+    // 이미 떠난 편으로는 받지 않는다. 받으면 곧바로 지워져 패스가 쓸모없어진다.
+    // 공동운항이면 실제 운항 편의 시각으로 본다.
+    const operating = await operatingFlight(db, flight);
+    if (isDeparted(operating) || departureAt(operating) <= now) {
+      return { ok: false, error: "이미 출발한 편입니다. 편명을 다시 확인해 주세요", code: "departed" };
+    }
+  } else if (!validDate || input.flightDate < addDays(today, PRE_FLIGHT_DAYS) || !FLIGHT_NO_RE.test(flightNo)) {
+    // 운항 정보는 모레 편까지만 받아 둔다(공공데이터). 그 안의 날짜인데 없는 편이면 편명이 틀린 것이다.
+    // 그보다 먼 날짜는 운항 정보가 아직 없으므로 편명의 모양만 보고 받는다. 출발 이틀 전쯤 운항 정보가 들어오면 저절로 이어진다.
+    return { ok: false, error: "편명을 다시 확인해 주세요", code: "flight" };
   }
 
   // 화면이 보낸 시작 시각이 이상하면 제출 시각으로 둔다(작성 시간 0으로 집계).
@@ -130,8 +145,8 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
      values ($1, $2, $3, $4, $5, $6, $7, $6, $8, $9, $10, $11)
      returning ${COLUMNS}`,
     [
-      flight.flightDate,
-      flight.flightNo,
+      input.flightDate,
+      flight?.flightNo ?? flightNo,
       input.choices,
       input.lang === "en" ? "en" : "ko",
       input.route,

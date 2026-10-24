@@ -585,6 +585,27 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "타실 항공편을 알려 주세요");
   check("이름을 묻는 칸이 없다", (await count(page, "input")) === 1 && !(await has(page, "이름")));
   check("항공편을 고르기 전에는 다음으로 갈 수 없다", (await isDisabled(page, "다음")) === true);
+  // 항공권은 몇 달 전에 예매한다. 오늘·내일 편이 아니면 날짜와 편명으로 미리 등록한다.
+  await clickText(page, "button", "출발 날짜를 골라 미리 등록하기");
+  await waitText(page, "미리 등록하기");
+  const farDate = new Date(Date.now() + 9 * 3600_000 + 60 * 86_400_000).toISOString().slice(0, 10);
+  await page.evaluate((d) => {
+    const el = document.querySelector("#later-date") as HTMLInputElement;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, d);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }, farDate);
+  await fill(page, "#later-no", "kor");
+  await clickText(page, "button", "이 편으로 하기");
+  await waitText(page, "편명은 항공사 두 글자와 숫자입니다");
+  check("미리 등록: 편명 모양이 틀리면 알려 준다", true);
+  await fill(page, "#later-no", "oz106");
+  await clickText(page, "button", "이 편으로 하기");
+  await waitText(page, "운항 정보는 출발 이틀 전쯤부터");
+  check("미리 등록: 두 달 뒤 날짜와 편명을 넣으면 그 편으로 고르고, 운항 정보는 출발 이틀 전쯤 들어온다고 알린다", (await has(page, "OZ106")) && (await isDisabled(page, "다음")) === false);
+  await shot(page, "휴대전화-미리등록");
+  await clickText(page, ".link-btn", "오늘·내일 편에서 찾기");
+  await page.waitForSelector("#reg-flight", { timeout: WAIT });
+  check("미리 등록을 닫으면 오늘·내일 편 찾기로 돌아오고 고른 편은 비운다", (await isDisabled(page, "다음")) === true);
   await fill(page, "#reg-flight", "zz99");
   await waitText(page, "찾지 못했습니다");
   check("없는 편명은 찾지 못했다고 알려 준다", true);
@@ -726,6 +747,15 @@ async function resetFlights(clearLocks = false) {
   check("영어로 등록한 패스는 영어로 열린다. 도착지는 공항 코드(BKK)로 나온다", (await has(page, "BKK")) && (await has(page, "Stairs and escalators")));
   await shot(page, "휴대전화-영어패스");
 
+  // 먼 날짜에 미리 등록한 패스: 운항 정보가 아직 없어 날짜만 나온다.
+  const farDay = new Date(Date.now() + 9 * 3600_000 + 60 * 86_400_000).toISOString().slice(0, 10);
+  const farReg = await post("/api/registrations", { flightDate: farDay, flightNo: "OZ106", choices: ["gd_large"], lang: "ko", consent: true, startedAt: new Date(Date.now() - 60_000).toISOString(), editCount: 0 });
+  check("두 달 뒤 편도 미리 등록된다", farReg.status === 200, String(farReg.status));
+  await page.goto(`${BASE}/p/${farReg.body.token}`, { waitUntil: "load", timeout: 300_000 });
+  await waitText(page, "운항 정보는 출발 이틀 전쯤부터 들어옵니다");
+  check("미리 등록한 패스는 출발 날짜를 보여 주고, 탑승구와 시각은 출발 이틀 전쯤 나온다고 알린다", await has(page, `${Number(farDay.slice(5, 7))}월 ${Number(farDay.slice(8, 10))}일`));
+  await shot(page, "휴대전화-미리등록-패스");
+
   // ───────── 3. 키오스크 설치 ─────────
   section("키오스크 설치");
   await page.setViewport(KIOSK_WIDE);
@@ -812,8 +842,16 @@ async function resetFlights(clearLocks = false) {
   await waitGone(page, "화면 설정");
   await shot(page, "안내키오스크-안내-큰글씨-휠체어");
 
-  await page.click(".gate-go");
-  await waitText(page, "127번 탑승구 가는 길");
+  // 단추가 다른 것(묻는 창, 직원 부르기 줄)에 가려 있지 않은지 본다. 가려 있으면 여객이 눌러도 아무 일이 없다.
+  const gateCover = await page.evaluate(() => {
+    const b = document.querySelector(".gate-go")!;
+    b.scrollIntoView({ block: "center" });
+    const r = b.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return hit && b.contains(hit) ? "" : (hit?.className?.toString() ?? "없음");
+  });
+  check("「탑승구 가는 길」 단추가 다른 것에 가려 있지 않다", gateCover === "", gateCover);
+  await clickText(page, ".gate-go", "가는 길");
   // 처음 화면의 단추에도 같은 글이 있으므로, 길 안내 목록이 실제로 나올 때까지 기다린다.
   await page.waitForSelector(".route > li", { timeout: WAIT });
   const steps = await page.$$eval(".route > li", (es) => es.map((e) => (e as HTMLElement).innerText.replace(/\n/g, " ")));
@@ -1517,7 +1555,11 @@ async function resetFlights(clearLocks = false) {
   const staffText = await staffPage.evaluate(() => document.body.innerText);
   check("이동지원 요청이 직원 화면에 바로 뜬다. 청한 곳, 항공편, 필요한 지원만 나온다", staffText.includes("안내데스크") && staffText.includes("계단 어려움") && !staffText.includes("BP1:"));
   await shot(staffPage, "직원-이동지원");
-  await clickText(staffPage, "button", "제가 맡겠습니다");
+  // 앞선 점검에서 남은 요청이 있을 수 있다. 이 편의 가장 새 요청(목록의 맨 아래)을 맡는다.
+  await staffPage.evaluate((no) => {
+    const cards = [...document.querySelectorAll(".calls > li")].filter((li) => (li as HTMLElement).innerText.includes(no) && li.querySelector("button"));
+    (cards[cards.length - 1].querySelector("button") as HTMLElement).click();
+  }, entryFlight.flightNo);
   await staffPage.waitForFunction(() => document.body.innerText.includes("이동 시작"), { timeout: WAIT });
   await staffBrowser.close();
   await waitText(page, "직원이 배정되었습니다");

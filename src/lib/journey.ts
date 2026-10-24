@@ -9,6 +9,8 @@ import { departureAt, isBoardingClosed, isBoardingNow, isCancelled, isDelayed, i
 /** 패스를 쓰고 있는 여객 한 명의 등록과 그 항공편. 이름은 없다. */
 export interface Journey {
   registrationId: string;
+  /** 여객이 등록한 출발 날짜(예정, 한국 날짜). 운항 정보가 아직 없는 먼 날짜 편에도 있다. */
+  flightDate: string | null;
   choices: string[];
   lang: Lang;
   submittedAt: Date;
@@ -36,6 +38,7 @@ export interface Journey {
 
 interface JourneyRow {
   id: string;
+  flight_date: string | null;
   proof_status: string;
   checked_in_at: Date | null;
   needs: string[];
@@ -65,7 +68,7 @@ interface JourneyRow {
 // f 는 여객이 고른 편, m 은 공동운항일 때의 실제 운항 편이다.
 // 탑승구·시각·상태는 m 이 있으면 m 의 값을 쓴다.
 const JOURNEY_SQL = `
-  select r.id, r.needs, r.lang, r.submitted_at, r.flight_no, r.proof_status, p.checked_in_at,
+  select r.id, r.flight_date::text as flight_date, r.needs, r.lang, r.submitted_at, r.flight_no, r.proof_status, p.checked_in_at,
     f.dest_name as f_dest_name, f.dest_code as f_dest_code, f.terminal as f_terminal,
     f.gate as f_gate, f.prev_gate as f_prev_gate, f.gate_changed_at as f_gate_changed_at,
     f.sched_at as f_sched_at, f.est_at as f_est_at, f.status as f_status,
@@ -104,6 +107,7 @@ function toJourney(r: JourneyRow, now: Date): Journey {
   const cancelled = times ? isCancelled(times) : false;
   return {
     registrationId: r.id,
+    flightDate: r.flight_date,
     choices: knownCodes(r.needs),
     lang: r.lang === "en" ? "en" : "ko",
     submittedAt: r.submitted_at,
@@ -168,7 +172,12 @@ export async function lastRealPoll(db: Db): Promise<Date | null> {
  */
 export function isJourneyOver(j: Journey, now: Date, lastPoll: Date | null): boolean {
   const t = now.getTime();
-  if (!j.schedAt) return t >= j.submittedAt.getTime() + ORPHAN_HOURS * HOUR;
+  // 운항 정보가 없다: 먼 날짜에 미리 등록해 아직 운항 정보가 들어오지 않았거나, 운항 정보가 사라졌다.
+  // 등록한 날짜의 다음 날 04:00 까지 기다리고(그 사이 운항 정보가 들어오면 위의 규칙을 따른다), 등록 뒤 48시간도 지나야 지운다.
+  if (!j.schedAt) {
+    const byDate = j.flightDate ? new Date(`${addDays(j.flightDate, 1)}T04:00:00+09:00`).getTime() : 0;
+    return t >= Math.max(byDate, j.submittedAt.getTime() + ORPHAN_HOURS * HOUR);
+  }
 
   if (t >= j.schedAt.getTime() + config.purgeSafetyHours * HOUR) return true;
   const times = { schedAt: j.schedAt, estAt: j.estAt, status: j.status };

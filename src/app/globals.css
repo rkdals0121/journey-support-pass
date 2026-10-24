@@ -3304,3 +3304,41 @@ html[data-picture] .route > li::before {
 .assist-box .btn {
   margin-top: 0.5rem;
 }
+/* 먼 날짜 편 미리 등록 */
+.later {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 0.125rem dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.later h2 {
+  margin: 0;
+}
+.later label {
+  margin-top: 0.25rem;
+  font-weight: 700;
+}
+.later input {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.875rem;
+  border: 0.125rem solid var(--line-strong);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.125rem;
+}
+.later-picked {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  color: var(--green-press);
+  font-weight: 700;
+}
+.later-open {
+  margin-top: 0.75rem;
+}

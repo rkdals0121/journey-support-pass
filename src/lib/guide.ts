@@ -57,6 +57,10 @@ export interface FlightView {
   boardingNow: boolean;
   /** 마감이 가깝거나 지났다. 항공편 판을 빨갛게 보여준다. */
   urgent: boolean;
+  /** 여객이 등록한 출발 날짜(예정, 2026-12-24). */
+  flightDate: string | null;
+  /** 먼 날짜에 미리 등록해 운항 정보(시각, 탑승구)가 아직 들어오지 않았다. 출발 이틀 전쯤 들어온다. */
+  awaiting: boolean;
 }
 
 /** now 는 여정(j)의 남은 시간을 계산한 그 시각을 넘긴다. 오늘·내일을 그 시각으로 정한다. 넘기지 않으면 지금 시각을 쓴다. */
@@ -95,6 +99,8 @@ export function toFlightView(j: Journey, now: Date = new Date()): FlightView {
     closeAtMs: close === "open" && j.schedAt ? boardingCloseAt({ schedAt: j.schedAt, estAt: j.estAt, status: j.status }).getTime() : null,
     boardingNow: j.boardingNow,
     urgent: close === "past" || close === "closed" || (close === "open" && (j.minutesToClose ?? 0) <= config.urgentMin),
+    flightDate: j.flightDate,
+    awaiting: !j.schedAt && j.flightDate !== null && j.flightDate > kstDate(now),
   };
 }
 
