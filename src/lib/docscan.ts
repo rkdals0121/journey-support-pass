@@ -5,8 +5,12 @@
 // 할 수 없는 것: 위조 여부, 서류의 주인이 등록하는 사람인지. 시연에서 "서류 종류와 나이 확인까지"라고 밝힌다.
 // 이 파일은 브라우저에서도 읽는다. 서버 전용 코드를 가져오지 말 것.
 
-/** 증빙서류를 고르는 데 쓰는 대상. */
-export type Target = "elderly" | "infant" | "disabled" | "pregnant";
+/**
+ * 확인하려는 것. 공항 입구 안내로봇은 대상(노약자·영유아 동반·장애·임산부)을 고르고,
+ * 휴대전화 등록은 체크리스트대로 서류(가족관계증명서·의사 소견서 등)를 고른다.
+ *  family: 가족관계증명서(또는 여권)에 고령자나 영유아가 있는지   doctor: 의사 소견서·진단서
+ */
+export type Target = "elderly" | "infant" | "disabled" | "pregnant" | "family" | "doctor";
 
 // 인천공항 교통약자 우대출구의 나이 기준으로 알려진 값. 기업탐방에서 확인해 바꾼다.
 export const ELDERLY_AGE = 70; // 이 나이 이상이면 고령자
@@ -18,7 +22,7 @@ export interface Ymd {
   d: number;
 }
 
-export type ScanKind = "passport" | "welfare" | "maternity" | "family";
+export type ScanKind = "passport" | "welfare" | "maternity" | "family" | "medical";
 
 export interface Scan {
   kind: ScanKind;
@@ -115,6 +119,7 @@ export function classify(text: string, today: Date): Scan | null {
   if (/가족관계증명서/.test(s)) return { kind: "family", births: koreanDates(text) };
   if (/(산모수첩|모자보건수첩|임산부|임신확인)/.test(s)) return { kind: "maternity", births: [] };
   if (/장애인/.test(s) && /(복지카드|등록증|복지)/.test(s)) return { kind: "welfare", births: [] };
+  if (/(소견서|진단서)/.test(s)) return { kind: "medical", births: [] };
   return null;
 }
 
@@ -135,5 +140,10 @@ export function judge(target: Target, scan: Scan | null, today: Date): Verdict {
     case "infant":
       if (scan.kind !== "passport" && scan.kind !== "family") return { ok: false, reason: "wrong_doc" };
       return ages.some((a) => a >= 0 && a < INFANT_AGE) ? { ok: true } : { ok: false, reason: "age" };
+    case "family":
+      if (scan.kind !== "passport" && scan.kind !== "family") return { ok: false, reason: "wrong_doc" };
+      return ages.some((a) => a >= ELDERLY_AGE || (a >= 0 && a < INFANT_AGE)) ? { ok: true } : { ok: false, reason: "age" };
+    case "doctor":
+      return scan.kind === "medical" ? { ok: true } : { ok: false, reason: "wrong_doc" };
   }
 }

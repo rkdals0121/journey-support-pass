@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { closeText, departsTomorrow, departureText } from "@/app/components/GuideParts";
-import { FACILITY_KINDS, placeOf, type Place } from "@/lib/airport";
+import { FACILITY_KINDS, OPTIONAL_KINDS, placeOf, type Place } from "@/lib/airport";
 import { config } from "@/lib/config";
 import type { Db } from "@/lib/db";
 import { buildGuide, toFlightView } from "@/lib/guide";
@@ -37,9 +37,14 @@ function journey(over: Partial<Journey> = {}): Journey {
     boardingClosed: false,
     proofVerified: false,
     checkedIn: false,
+    boarding: null,
+    extra: { party: null, strollers: null, note: "" },
     ...over,
   };
 }
+
+// 고르지 않아도 늘 보이는 시설. 약국·식당·유모차 대여소·점자 안내판은 고른 여객에게만 보인다.
+const BASE_KINDS = FACILITY_KINDS.filter((k) => !OPTIONAL_KINDS.includes(k));
 
 const at = (id: string): Place => {
   const p = placeOf(id);
@@ -254,14 +259,14 @@ describe("안내 내용: 길을 보여주지 못하는 까닭", () => {
     for (const j of [journey({ gate: null }), journey({ terminal: "" }), journey({ terminal: "T9" })]) {
       const g = buildGuide(j, "123456", at("cc-center"), poll);
       expect(g).toMatchObject({ gateRoute: null, routeNote: "no_gate", pace: null });
-      expect(g.facilities).toHaveLength(FACILITY_KINDS.length);
+      expect(g.facilities).toHaveLength(BASE_KINDS.length);
     }
   });
 
   it("걸어서 갈 수 없는 터미널이면 other_terminal. 지금 있는 곳의 시설은 보여준다", () => {
     const g = buildGuide(journey(), "123456", at("t2-center"), poll);
     expect(g).toMatchObject({ gateRoute: null, routeNote: "other_terminal", pace: null });
-    expect(g.facilities).toHaveLength(FACILITY_KINDS.length);
+    expect(g.facilities).toHaveLength(BASE_KINDS.length);
     for (const f of g.facilities) expect(f.nearGate).toBeGreaterThanOrEqual(208);
     // 탑승동에서 제1여객터미널로도 걸어갈 수 없다.
     expect(buildGuide(journey({ terminal: "T1", gate: 20 }), "123456", at("cc-center"), poll).routeNote).toBe("other_terminal");
@@ -272,7 +277,7 @@ describe("안내 내용: 길을 보여주지 못하는 까닭", () => {
     const g = buildGuide(j, "123456", at("cc-center"), poll);
     expect(g).toMatchObject({ gateRoute: null, routeNote: "cancelled", pace: null });
     expect(g.flight.close).toBe("cancelled");
-    expect(g.facilities).toHaveLength(FACILITY_KINDS.length);
+    expect(g.facilities).toHaveLength(BASE_KINDS.length);
   });
 
   it("까닭이 겹치면 no_place, cancelled, landside, no_gate 순으로 고른다", () => {
@@ -322,11 +327,12 @@ describe("안내 내용: 고른 항목에 따라 달라지는 것", () => {
     expect(later).toBeLessThanOrEqual(Date.now());
   });
 
-  it("이름 칸은 없다. 싣는 칸은 정해진 열네 가지뿐이다", () => {
+  it("이름 칸은 없다. 싣는 칸은 정해진 열다섯 가지뿐이다", () => {
     const g = buildGuide(journey(), "123456", at("cc-center"), poll);
     expect(Object.keys(g).sort()).toEqual(
       [
         "choices",
+        "extra",
         "facilities",
         "flight",
         "gateRoute",
@@ -352,15 +358,15 @@ describe("안내 내용: 가까운 시설의 순서", () => {
     buildGuide(journey({ choices }), "123456", at("cc-center"), poll).facilities.map((f) => [f.kind, f.chosen]);
 
   it("고른 것이 없으면 정해진 순서 그대로이고 모두 고르지 않은 것으로 표시한다", () => {
-    expect(kinds([])).toEqual(FACILITY_KINDS.map((k) => [k, false]));
+    expect(kinds([])).toEqual(BASE_KINDS.map((k) => [k, false]));
   });
 
   it("고른 시설을 먼저, 나머지를 그 뒤에 둔다", () => {
-    expect(kinds(["fac_lounge"])).toEqual([
-      ["lounge", true],
+    expect(kinds(["std_seat_help"])).toEqual([
+      ["rest", true],
       ["restroom", false],
       ["nursing", false],
-      ["rest", false],
+      ["lounge", false],
       ["calm", false],
       ["wheelchair", false],
     ]);
@@ -374,8 +380,8 @@ describe("안내 내용: 가까운 시설의 순서", () => {
     ]);
   });
 
-  it("휠체어가 필요하다고 하면 빌리는 곳이 맨 앞, 그다음이 고른 시설, 나머지 순이다", () => {
-    expect(kinds(["mov_wheelchair_need", "fac_calm", "fac_rest"])).toEqual([
+  it("휠체어를 빌린다고 하면 빌리는 곳이 맨 앞, 그다음이 고른 시설, 나머지 순이다", () => {
+    expect(kinds(["mov_wheelchair_need", "fac_calm", "mov_no_standing"])).toEqual([
       ["wheelchair", true],
       ["rest", true],
       ["calm", true],
@@ -387,7 +393,22 @@ describe("안내 내용: 가까운 시설의 순서", () => {
   });
 
   it("자기 휠체어를 이용하는 여객에게는 빌리는 곳을 앞에 두지 않는다", () => {
-    expect(kinds(["mov_wheelchair_own"])).toEqual(FACILITY_KINDS.map((k) => [k, false]));
+    expect(kinds(["mov_wheelchair_own"])).toEqual(BASE_KINDS.map((k) => [k, false]));
+  });
+
+  it("약국·식당·유모차 대여소·점자 안내판은 고른 여객에게만, 고른 시설로 보여 준다", () => {
+    expect(kinds(["stp_pharmacy", "stp_food"]).slice(0, 2)).toEqual([
+      ["pharmacy", true],
+      ["food", true],
+    ]);
+    expect(kinds(["chd_stroller_need"])[0]).toEqual(["stroller", true]);
+    expect(kinds(["see_braille"])[0]).toEqual(["braille", true]);
+    expect(kinds(["stp_pharmacy"]).map(([k]) => k)).not.toContain("food");
+  });
+
+  it("함께 가는 분의 수와 더 하고 싶은 말씀을 싣는다", () => {
+    const extra = { party: 3, strollers: 1, note: "아이가 소리에 예민해요" };
+    expect(buildGuide(journey({ extra }), "123456", null, poll).extra).toEqual(extra);
   });
 
   it("시설마다 그 자리에서 가는 길이 함께 온다", () => {
@@ -609,12 +630,12 @@ describe("등록에서 읽어 온 여정", () => {
 
   it("예전 구조의 코드가 남아 있어도 아는 항목만 돌려준다", async () => {
     await addFlights(db, [flightRow("KE123", "2026-10-05 14:30")], t0);
-    const { registration } = await registerWithPass(db, t0, { choices: ["fac_rest"] });
+    const { registration } = await registerWithPass(db, t0, { choices: ["fac_calm"] });
     await db.query("update registrations set needs = $2 where id = $1", [
       registration.id,
-      ["com_slow", "fac_rest", "cat_senior", "gd_easy"],
+      ["com_slow", "fac_rest", "stf_self", "cat_senior", "gd_easy", "fac_calm"],
     ]);
-    expect((await getJourney(db, registration.id, t0))?.choices).toEqual(["gd_easy", "fac_rest"]);
+    expect((await getJourney(db, registration.id, t0))?.choices).toEqual(["gd_easy", "fac_calm"]);
   });
 
   it("운항 정보가 사라지면 시각과 남은 시간이 비고, 안내는 unknown 으로 나온다", async () => {

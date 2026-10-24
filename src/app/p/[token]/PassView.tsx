@@ -1,8 +1,8 @@
 "use client";
 
-import { BadgeCheck, Circle, CircleCheck, Download, PlaneTakeoff, ScanLine, Ticket, Trash2 } from "lucide-react";
+import { BadgeCheck, Circle, CircleCheck, PlaneTakeoff, ScanLine, Ticket, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { GROUPS, itemsOf, prefsOf } from "@/lib/catalog";
+import { prefsOf } from "@/lib/catalog";
 import type { FlightView, GuideDto } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
 import { staleNow } from "@/lib/timing";
@@ -11,8 +11,8 @@ import { AssistBox } from "../../components/AssistBox";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { FlowShell } from "../../components/FlowShell";
 import { closeText, departureText, destOf, FlightBoard } from "../../components/GuideParts";
-import { NeedIcon } from "../../components/NeedIcon";
-import { PassQr } from "../../components/PassQr";
+import { SavedNeeds } from "../../components/SavedNeeds";
+import { formatPassNo } from "@/lib/pass-format";
 
 const REFRESH_MS = 60_000;
 // 탑승 마감까지 남은 시간을 이 간격으로 다시 센다.
@@ -66,8 +66,9 @@ function ReadyRow({ done, title, body, children }: { done: boolean; title: strin
 
 /**
  * 여객 휴대전화의 등록 화면. 준비 상황(등록, 증빙 확인, 체크인), 탑승권, 내 항공편, 고른 도움이 있고 직접 지울 수 있다.
- * 제안서 구조: 체크인하면 전자토큰이 탑승권에 저장된다. 시제품은 「모의 체크인」 단추로 흉내 내고, 그 뒤에 탑승권(QR)을 보여 준다.
- * QR 은 탑승권에 담긴 전자토큰을 뜻한다. 우대출구와 안내 키오스크가 이것을 읽는다.
+ * 제안서 구조: 사전 등록한 정보는 받아 두었다가, 여객이 실제로 체크인하면 그 정보로 전자토큰이 자동으로 발급되어 탑승권에 저장된다.
+ * 여객이 따로 QR 을 쓰는 일은 없다(피드백 2). 시제품은 「모의 체크인」 단추로 체크인을 흉내 내고, 그 뒤에 모의 탑승권을 보여 준다.
+ * 탑승권의 바코드는 항공사 탑승권을 흉내 낸 것이다. 우대출구와 안내 키오스크가 이 탑승권으로 등록을 찾는다.
  */
 export function PassView({ token, initial, qr, isNew }: { token: string; initial: GuideDto; qr: string; isNew: boolean }) {
   const [guide, setGuide] = useState(initial);
@@ -233,7 +234,9 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       });
       if (res.status === 410 || res.status === 404) return window.location.reload();
       if (!res.ok) throw new Error();
+      // 체크인하면 탑승권이 생긴다. 탑승권 바코드는 서버가 그려 보내므로 화면을 다시 받는다.
       setGuide((g) => ({ ...g, checkedIn: true }));
+      window.location.reload();
     } catch {
       setError(t.offline);
     } finally {
@@ -243,7 +246,6 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
   }
 
   const home = () => window.location.assign(lang === "en" ? "/?lang=en" : "/");
-  const picked = GROUPS.flatMap((g) => itemsOf(g)).filter((i) => guide.choices.includes(i.code));
 
   if (erased) {
     return (
@@ -342,8 +344,17 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
               {guide.proofVerified && <BadgeCheck size={20} aria-hidden="true" />}
               {guide.proofVerified ? t.boardingBadgeOk : t.boardingBadgeNone}
             </div>
+            {/* 탑승권 바코드. 서비스 전용 QR 이 아니라 항공사 탑승권을 흉내 낸 것이다. 아래 번호는 바코드가 안 읽힐 때 키오스크에 누른다. */}
             <div className="ticket">
-              <PassQr token={token} passNo={guide.passNo} label={t.passNo} svg={qr} />
+              <div className="pass-qr">
+                <span className="pass-qr-label">{t.boardingBarcode}</span>
+                <div className="pass-qr-code" role="img" aria-label={t.boardingBarcode} dangerouslySetInnerHTML={{ __html: qr }} />
+                <span className="pass-qr-label">{t.passNo}</span>
+                <span className="sr-only">{guide.passNo.split("").join(" ")}</span>
+                <span className="pass-qr-no num" aria-hidden="true">
+                  {formatPassNo(guide.passNo)}
+                </span>
+              </div>
             </div>
           </div>
           {guide.proofVerified && (
@@ -370,7 +381,7 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       )}
       <div className="info-row quiet">
         <span className="bubble">
-          <Download size={22} aria-hidden="true" />
+          <Ticket size={22} aria-hidden="true" />
         </span>
         <div>
           <span>{t.passSave}</span>
@@ -385,18 +396,8 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       {stale && <Banner role="status">{t.stale}</Banner>}
 
       <h2>{t.passChoices}</h2>
-      {picked.length === 0 ? (
-        <p className="muted">{t.passNoChoices}</p>
-      ) : (
-        <ul className="picked">
-          {picked.map((i) => (
-            <li key={i.code}>
-              <NeedIcon code={i.code} size={20} />
-              {lang === "en" ? i.en : i.label}
-            </li>
-          ))}
-        </ul>
-      )}
+      <SavedNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
+      <p className="fine">{t.doneLater}</p>
 
       {error && <ErrorNote>{error}</ErrorNote>}
       <button className="btn btn-ghost btn-danger-text" onClick={() => setAsking(true)}>

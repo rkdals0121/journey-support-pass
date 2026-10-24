@@ -2,7 +2,7 @@
 
 import { PlaneTakeoff, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GROUPS, itemsOf } from "@/lib/catalog";
+import { GROUPS, itemsOf, SOLO } from "@/lib/catalog";
 import type { GuideDto } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
 import { extractToken, formatPassNo, PASS_NO_LENGTH } from "@/lib/pass-format";
@@ -129,7 +129,10 @@ export function DeskFind() {
 
   if (found) {
     const g = found.guide;
-    const picked = GROUPS.flatMap((x) => itemsOf(x)).filter((i) => g.choices.includes(i.code));
+    // 1쪽의 불편 이름과 「없어요」는 빼고 가지 안의 답만 보인다.
+    const picked = GROUPS.filter((x) => x !== "trouble")
+      .flatMap((x) => itemsOf(x))
+      .filter((i) => g.choices.includes(i.code) && !SOLO.includes(i.code));
     return (
       <div className="panel desk-found">
         <div className="desk-found-head">

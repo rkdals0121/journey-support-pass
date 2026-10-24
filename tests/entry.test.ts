@@ -108,7 +108,7 @@ describe("이동지원 요청", () => {
     await assistRequestHandler(db, entry, { token }, now);
     const [item] = await list();
     expect(await list()).toHaveLength(1);
-    expect(item).toMatchObject({ state: "received", pass: { needs: ["계단 어려움", "직원 호출 원함"], proofVerified: true, flight: { flightNo: "KE123" } } });
+    expect(item).toMatchObject({ state: "received", pass: { needs: ["계단 어려움", "필요 시 호출"], proofVerified: true, flight: { flightNo: "KE123" } } });
     expect(JSON.stringify(item)).not.toMatch(/registrationId|token/);
 
     expect((await assistActionHandler(db, staff, item.id, { action: "assign" }, now)).status).toBe(200);

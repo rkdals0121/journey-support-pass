@@ -8,7 +8,7 @@ const FLIGHT_RETENTION_DAYS = 3;
 /**
  * 한 등록에서 여객이 입력한 것을 모두 지운다.
  *
- * 지우는 것: 항공편, 고른 항목, 고른 언어, 증빙 확인 값. 패스·직원 호출·조회 기록과 등록 사이의 연결.
+ * 지우는 것: 항공편, 고른 항목, 함께 가는 분의 수·유모차 수·더 하고 싶은 말씀, 고른 언어, 증빙 확인 값. 패스·직원 호출·조회 기록과 등록 사이의 연결.
  * 남기는 것: 등록 경로, 등록 시각 (등록 행). 호출한 키오스크와 시각 (호출 행). 누구의 것인지 알 수 없는 상태로 남는다.
  * 패스는 일회용이므로 끝내고 다시 쓰지 않는다. 출발해서 지워지면 expired, 여객이 지워 달라고 하면 revoked.
  */
@@ -39,7 +39,7 @@ export async function eraseRegistration(
   await db.query("update access_logs set registration_id = null where registration_id = $1", [id]);
   await db.query(
     `update registrations set name = null, flight_date = null, flight_no = null, needs = '{}', categories = '{}',
-       lang = 'ko', receipt_no = null, proof_status = 'none', status = $3, purged_at = $2
+       party_size = null, stroller_count = null, note = null, lang = 'ko', receipt_no = null, proof_status = 'none', status = $3, purged_at = $2
      where id = $1`,
     [id, now, finalStatus],
   );

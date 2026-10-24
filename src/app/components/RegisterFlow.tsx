@@ -1,16 +1,38 @@
 "use client";
 
-import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, MonitorSmartphone, Plane, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, Minus, MonitorSmartphone, Plane, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
+import {
+  BRANCHES,
+  branchesOf,
+  groupsOfBranch,
+  GROUP_EN,
+  GROUP_LABEL,
+  isAdapted,
+  itemsOf,
+  NO_EXTRA,
+  NOTE_MAX,
+  PARTY_MAX,
+  prefsOf,
+  SINGLE,
+  STROLLER_MAX,
+  toggleChoice,
+  type Branch,
+  type Extra,
+  type Group,
+  type Item,
+  type Prefs,
+} from "@/lib/catalog";
 import { airlineLabel } from "@/lib/airline-en";
 import { destLabel } from "@/lib/dest-en";
+import type { GuideDto } from "@/lib/guide";
 import { textOf, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "./Alert";
 import { bucketKey, bucketsOf, CityPicker, type Destination } from "./FlightFinder";
 import { FlowShell } from "./FlowShell";
 import { DocScan } from "./DocScan";
 import { AlnumPad, Choice } from "./Inputs";
+import { ListenStart } from "./ListenStart";
 import type { Target } from "@/lib/docscan";
 
 export interface FlightOption {
@@ -32,31 +54,56 @@ export interface RegisterResult {
 }
 
 interface Props {
-  /** 여객 휴대전화(web), 공항 키오스크(kiosk), 안내데스크 직원이 대신 입력(assisted). */
-  mode: "web" | "kiosk" | "assisted";
+  /**
+   * 여객 휴대전화(web), 공항 키오스크(kiosk), 안내데스크 직원이 대신 입력(assisted),
+   * 안내 키오스크에서 미리 등록한 내용을 고치기(edit). edit 는 항공편·동의·서류를 묻지 않는다.
+   */
+  mode: "web" | "kiosk" | "assisted" | "edit";
   initialLang: Lang;
   /** 첫 질문에서 「이전」이나 「처음으로」를 눌렀을 때. 등록 중에 고른 언어를 함께 준다. */
   onExit: (lang: Lang) => void;
   /** 첫 질문의 「이전」만 따로 받을 때. 주지 않으면 onExit 와 같다. 키오스크는 같은 여객이 처음 화면으로 돌아가는 것으로 다룬다. */
   onBackOut?: (lang: Lang) => void;
-  onDone: (result: RegisterResult) => void;
+  onDone?: (result: RegisterResult) => void;
   /** 언어나 안내 방식이 바뀔 때마다 알린다. 키오스크가 「직원 부르기」 버튼의 말과 크기를 맞추는 데 쓴다. */
   onPrefs?: (lang: Lang, prefs: Prefs) => void;
   /** 들어온 접점. booking 이면 항공권 예매 완료 창의 링크로 들어왔다. 건수를 따로 세는 데만 쓴다. */
   via?: "booking" | "";
+  /** edit: 고칠 등록. 키오스크가 탑승권으로 연 등록의 값과 지금 고른 것. */
+  edit?: { token: string; choices: string[]; extra: Extra; onSaved: (guide: GuideDto) => void };
 }
 
-// 묻는 순서. 한 화면에 질문 하나.
-// 안내받는 방식을 맨 먼저 묻는다. 큰 글씨를 고른 여객이 바로 다음 질문부터, 동의 글까지 큰 글씨로 보게 하기 위해서다.
-// 필요한 도움(이동, 시설, 직원 도움)을 먼저 묻고 대상과 증빙을 나중에 묻는다(제안서: 불편과 필요한 지원 → 증빙서류).
-// 대상과 증빙은 휴대전화 등록에만 있다. 현장(키오스크, 안내데스크)에서는 지금처럼 체크인 카운터에서 확인받는다.
-// 대상을 고르지 않았으면 증빙 화면은 건너뛴다(단계 수는 그대로 두어 진행 표시가 중간에 바뀌지 않게 한다).
-type StepKind = "guide" | "consent" | "move" | "facility" | "staff" | "target" | "proof" | "flight" | "review";
-const WEB_ORDER: StepKind[] = ["guide", "consent", "move", "facility", "staff", "target", "proof", "flight", "review"];
-const SITE_ORDER: StepKind[] = ["guide", "consent", "move", "facility", "staff", "flight", "review"];
+// 묻는 순서(팀 문서 「공항 이용 도움 체크리스트 (가지뻗기)」). 한 화면에 질문 하나.
+//  1쪽 「어떤 점이 불편하세요?」 → 동의 → 2쪽 고른 불편의 가지만 하나씩 → 3쪽 세 가지(함께 가는 분, 도움 방식, 들를 곳)
+//  → 항공편 → 마지막(서류, 더 하고 싶은 말씀) → 확인.
+// 동의는 첫 질문 바로 뒤에 둔다. 첫 질문에서 무엇이 불편한지만 고르고, 자세한 답(건강과 관련될 수 있는 정보)은 동의한 뒤에 받는다.
+// 서류는 휴대전화 등록에만 있다. 현장(키오스크, 안내데스크)에서는 지금처럼 체크인 카운터에서 확인받는다.
+// 가지 수는 첫 질문에서 정해진다. 첫 질문을 넘긴 뒤에는 단계 수가 바뀌지 않는다.
+type StepKind = "trouble" | "consent" | Branch | "companion" | "help" | "stops" | "flight" | "docs" | "note" | "review";
 
-// 증빙서류를 고르는 데 쓰는 대상(Target). 서버에 보내지 않는다(대상 유형은 민감정보라 공항이 갖지 않는 구조).
-const TARGETS: Target[] = ["elderly", "infant", "disabled", "pregnant"];
+function orderOf(mode: Props["mode"], choices: string[]): StepKind[] {
+  const middle: StepKind[] = [...branchesOf(choices), "companion", "help", "stops"];
+  if (mode === "edit") return ["trouble", ...middle, "note", "review"];
+  if (mode === "web") return ["trouble", "consent", ...middle, "flight", "docs", "note", "review"];
+  return ["trouble", "consent", ...middle, "flight", "note", "review"];
+}
+
+const isBranch = (k: StepKind): k is Branch => BRANCHES.some((b) => b.branch === k);
+
+/** 이 단계에서 고르는 묶음. */
+function groupsOfStep(k: StepKind): Group[] {
+  if (k === "trouble" || k === "companion" || k === "help" || k === "stops") return [k];
+  return isBranch(k) ? groupsOfBranch(k) : [];
+}
+
+// 마지막 쪽의 서류. 고른 서류는 서버에 보내지 않는다(대상 유형은 민감정보라 공항이 갖지 않는 구조). 냈다는 사실만 보낸다.
+type DocKey = "welfare" | "family" | "maternity" | "doctor";
+const DOCS: { key: DocKey; target: Target }[] = [
+  { key: "welfare", target: "disabled" },
+  { key: "family", target: "family" },
+  { key: "maternity", target: "pregnant" },
+  { key: "doctor", target: "doctor" },
+];
 
 const SEARCH_DELAY_MS = 250;
 // 편 찾기 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않으면 「찾는 중…」이 끝없이 남고 「다시 찾기」도 나오지 않는다.
@@ -66,6 +113,8 @@ const SEARCH_TIMEOUT_MS = 10_000;
 const SUBMIT_TIMEOUT_MS = 20_000;
 // 안내데스크 직원의 로그인이 풀려 서버가 401 로 답하면 로그인 화면으로 보낸다.
 const STAFF_LOGIN = "/staff/login";
+// 키오스크 설치가 풀려 서버가 401 로 답하면 설치 화면으로 보낸다.
+const KIOSK_SETUP = "/kiosk";
 const sameFlight = (a: FlightOption | null, b: FlightOption) =>
   a !== null && a.flightDate === b.flightDate && a.flightNo === b.flightNo;
 
@@ -97,15 +146,16 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
   next.click();
 }
 
-/** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. */
-export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "" }: Props) {
+/** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. 안내 키오스크는 같은 질문으로 등록을 고친다. */
+export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", edit }: Props) {
   const kiosk = mode !== "web";
   // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
   // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
   const padWide = useSyncExternalStore(subscribePadWide, isPadWide, padWideOnServer);
   const onScreenPad = mode === "kiosk" || (mode === "assisted" && padWide);
   const [lang, setLang] = useState<Lang>(initialLang);
-  const [choices, setChoices] = useState<string[]>([]);
+  const [choices, setChoices] = useState<string[]>(edit?.choices ?? []);
+  const [extra, setExtra] = useState<Extra>(edit?.extra ?? NO_EXTRA);
   const prefs = prefsOf(choices);
   const t = textOf(lang, prefs.easy);
 
@@ -131,15 +181,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [error, setError] = useState<string | null>(null);
   // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.
   const [failSeq, setFailSeq] = useState(0);
-  // 고른 대상과 대상마다 증빙이 인식되었는지. 서류는 이 기기 안에서 읽고(DocScan) 서버에는 "확인됨"만 간다.
-  const [targets, setTargets] = useState<Target[]>([]);
-  const [proofOk, setProofOk] = useState<Partial<Record<Target, boolean>>>({});
-  const proofSent = targets.length > 0 && targets.every((x) => proofOk[x]);
+  // 고른 서류와 서류마다 인식되었는지. 서류는 이 기기 안에서 읽고(DocScan) 서버에는 "확인됨"만 간다.
+  const [docs, setDocs] = useState<DocKey[]>([]);
+  const [noDocs, setNoDocs] = useState(false);
+  const [proofOk, setProofOk] = useState<Partial<Record<DocKey, boolean>>>({});
+  const proofSent = docs.length > 0 && docs.every((x) => proofOk[x]);
 
-  const ORDER = mode === "web" ? WEB_ORDER : SITE_ORDER;
-  // 대상을 고르지 않았으면 증빙 화면을 지나친다.
-  const skipped = (i: number) => ORDER[i] === "proof" && targets.length === 0;
-  const kind: StepKind = ORDER[step];
+  const ORDER = orderOf(mode, choices);
+  const kind: StepKind = ORDER[Math.min(step, ORDER.length - 1)];
   const itemLabel = (i: Item) => (lang === "en" ? i.en : i.label);
   const groupLabel = (g: Group) => (lang === "en" ? GROUP_EN[g] : GROUP_LABEL[g]);
   // 운항 정보의 도착지 이름은 한국어뿐이다. 영어 화면에서는 공항 코드로 영어 도시 이름을 찾아 쓴다.
@@ -202,13 +251,13 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   };
 
   // 직전 값을 받아 바꾼다. 두 항목을 빠르게 연달아 눌러도 하나가 빠지지 않는다.
-  const toggle = (code: string, group: Group, single: boolean) => {
+  // 함께 고를 수 없는 것(「지금은 없어요」, 전동차 셋 가운데 하나 등)은 풀고, 첫 질문에서 푼 불편의 가지 답도 지운다.
+  const toggle = (code: string) => {
     touched();
-    setChoices((list) => {
-      if (list.includes(code)) return list.filter((c) => c !== code);
-      const rest = single ? list.filter((c) => !itemsOf(group).some((i) => i.code === c)) : list;
-      return [...rest, code];
-    });
+    setChoices((list) => toggleChoice(list, code));
+    // 혼자 간다고 하면 모두 1명, 함께 간다고 하면 적어도 2명으로 맞춘다. 여객이 고친 수는 그대로 둔다.
+    if (code === "cmp_alone") setExtra((x) => ({ ...x, party: 1 }));
+    if (code === "cmp_with" || code === "cmp_more") setExtra((x) => ({ ...x, party: Math.max(2, x.party ?? 2) }));
   };
 
   // 편명 입력란에 넣었던 글(예: 703, 도쿄). 목록에서 편을 고르면 입력란이 그 편명으로 바뀌는데,
@@ -253,18 +302,24 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     setError(null);
     setStep(target);
   };
-  const toggleTarget = (x: Target) => {
+  const toggleDoc = (x: DocKey) => {
     touched();
-    setTargets((list) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x]));
+    setNoDocs(false);
+    setDocs((list) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x]));
   };
-  const setProof = (x: Target, ok: boolean) => setProofOk((m) => (m[x] === ok ? m : { ...m, [x]: ok }));
-  const back = () => (step === 0 ? (onBackOut ?? onExit)(lang) : goTo(skipped(step - 1) ? step - 2 : step - 1, true));
+  const pickNoDocs = () => {
+    touched();
+    setNoDocs((v) => !v);
+    setDocs([]);
+  };
+  const setProof = (x: DocKey, ok: boolean) => setProofOk((m) => (m[x] === ok ? m : { ...m, [x]: ok }));
+  const back = () => (step === 0 ? (onBackOut ?? onExit)(lang) : goTo(step - 1, true));
   const next = () => {
-    // 첫 질문을 넘기면 "등록을 시작했다"고 센다. 안내 방식을 켰는지와 함께 남겨, 켰을 때와 껐을 때의 완료 비율을 견준다.
-    // 직원이 대신 넣는 등록은 세지 않는다.
+    // 첫 질문을 넘기면 "등록을 시작했다"고 센다. 맞춤 화면을 켰는지와 함께 남겨, 켰을 때와 껐을 때의 완료 비율을 견준다.
+    // 직원이 대신 넣는 등록과 키오스크에서 고치는 것은 세지 않는다.
     if (step === 0 && startAdapted.current === null) {
       startAdapted.current = isAdapted(choices);
-      if (mode !== "assisted") {
+      if (mode !== "assisted" && mode !== "edit") {
         fetch("/api/events", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -273,7 +328,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         }).catch(() => {});
       }
     }
-    goTo(skipped(step + 1) ? step + 2 : step + 1, false);
+    goTo(step + 1, false);
   };
 
   // 「등록하기」를 아주 빠르게 두 번 눌러도 한 번만 보낸다. busy 는 화면이 다시 그려진 뒤에야 바뀌어 같은 순간의 두 번째 누름을 막지 못한다.
@@ -291,7 +346,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     };
   }, []);
   async function submit() {
-    if (!flight || sending.current) return;
+    if ((!flight && !edit) || sending.current) return;
     sending.current = true;
     setBusy(true);
     setError(null);
@@ -309,6 +364,22 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     submitCtrl.current = ctrl;
     const limit = setTimeout(() => ctrl.abort(), SUBMIT_TIMEOUT_MS);
     try {
+      if (edit) {
+        const res = await fetch("/api/kiosk/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: edit.token, choices, party: extra.party, strollers: extra.strollers, note: extra.note }),
+          signal: ctrl.signal,
+        });
+        if (!alive.current) return;
+        if (res.status === 401) return window.location.replace(KIOSK_SETUP);
+        const data = await res.json();
+        if (!alive.current) return;
+        if (!res.ok) return fail(lang === "en" ? t.editFailed : (data.error ?? t.editFailed));
+        edit.onSaved(data.guide);
+        return;
+      }
+      if (!flight) return;
       const res = await fetch(mode === "assisted" ? "/api/desk/register" : "/api/registrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -316,6 +387,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           flightDate: flight.flightDate,
           flightNo: flight.flightNo,
           choices,
+          party: extra.party,
+          strollers: extra.strollers,
+          note: extra.note,
           lang,
           consent: true,
           startedAt: startedAt.current,
@@ -350,7 +424,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         fail(lang === "en" ? en : (data.error ?? t.failed));
         return;
       }
-      onDone({ token: data.token, passNo: data.passNo, lang, choices });
+      onDone?.({ token: data.token, passNo: data.passNo, lang, choices });
     } catch {
       // 화면이 사라지며 끊은 것이면 아무것도 하지 않는다. 시간이 넘어 끊은 것은 연결 오류로 알린다.
       if (alive.current) fail(t.offline);
@@ -380,27 +454,60 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const cityMode = cityOpen || cityPick !== null;
 
   const pickedIn = (g: Group) => itemsOf(g).filter((i) => choices.includes(i.code));
-  const groupOfStep: Group | null = kind === "guide" || kind === "move" || kind === "facility" || kind === "staff" ? kind : null;
-  const titleOf: Record<StepKind, string> = {
-    guide: t.guideTitle,
-    consent: t.consentTitle,
-    move: t.moveTitle,
-    facility: t.facilityTitle,
-    staff: t.staffTitle,
-    target: t.targetTitle,
-    proof: t.proofTitle,
-    flight: t.flightTitle,
-    review: t.reviewTitle,
+  const stepGroups = groupsOfStep(kind);
+  const stepName = (k: StepKind) => t.steps[k];
+  const titleOf = (k: StepKind): string =>
+    k === "trouble"
+      ? t.troubleTitle
+      : k === "consent"
+        ? t.consentTitle
+        : isBranch(k)
+          ? t.branchTitle(stepName(k))
+          : k === "companion"
+            ? t.companionTitle
+            : k === "help"
+              ? t.helpTitle
+              : k === "stops"
+                ? t.stopsTitle
+                : k === "flight"
+                  ? t.flightTitle
+                  : k === "docs"
+                    ? t.docsTitle
+                    : k === "note"
+                      ? t.noteTitle
+                      : edit
+                        ? t.editReviewTitle
+                        : t.reviewTitle;
+  // 제목 위의 작은 글. 체크리스트의 쪽 이름이다.
+  const kickerOf: Partial<Record<StepKind, string>> = {
+    trouble: t.troubleKicker,
+    companion: t.moreKicker,
+    help: t.moreKicker,
+    stops: t.moreKicker,
+    docs: t.lastKicker,
+    note: t.lastKicker,
   };
-  const hintOf: Partial<Record<StepKind, string>> = {
-    guide: t.guideHint,
-    move: t.moveHint,
-    facility: t.facilityHint,
-    staff: t.staffHint,
-    target: t.targetHint,
-    proof: t.proofHint,
-    flight: cityMode ? undefined : onScreenPad ? t.flightHintKiosk : t.flightHint,
-  };
+  const kicker = isBranch(kind) ? t.branchKicker : kickerOf[kind];
+  const hint: string | undefined =
+    kind === "trouble"
+      ? t.troubleHint
+      : isBranch(kind)
+        ? t.branchHint
+        : kind === "help"
+          ? t.helpHint
+          : kind === "stops"
+            ? t.stopsHint
+            : kind === "docs"
+              ? t.docsHint
+              : kind === "note"
+                ? t.noteHint
+                : kind === "flight"
+                  ? cityMode
+                    ? undefined
+                    : onScreenPad
+                      ? t.flightHintKiosk
+                      : t.flightHint
+                  : undefined;
 
   // 항공편 화면은 한 화면 안에서 내용이 여러 번 바뀐다(도시 고르기, 시간대, 항공사, 편 목록). 바뀔 때마다 그 내용을 읽어 준다.
   const flightLine = (o: FlightOption) => `${o.flightNo.split("").join(" ")}, ${destOf(o)}, ${whenOf(o)}${o.airline ? `, ${airlineLabel(lang, o)}` : ""}`;
@@ -427,6 +534,27 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   // 눌러도 멈추지 않고 처음부터 다시 읽는다. 다시 「등록하기」를 눌러 오류가 지워질 때는 값이 그대로라 읽지 않는다.
   const speakKey = kind === "flight" ? flightSpeak.join("|") : kind === "review" ? `fail-${failSeq}` : "";
 
+  // 확인 화면에 보여 줄 묶음. 단계마다 그 단계에서 고른 것.
+  const reviewSteps = ORDER.filter((k) => k !== "consent" && k !== "review");
+  const answersOf = (k: StepKind): string[] => {
+    if (k === "flight") return flight ? [`${flight.flightNo} · ${destOf(flight)} · ${whenOf(flight)}`] : [];
+    if (k === "docs") {
+      if (docs.length === 0) return noDocs ? [t.docs.none] : [];
+      return [...docs.map((x) => t.docs[x]), proofSent ? t.proofSent(docs.length) : t.proofNotSent];
+    }
+    if (k === "note") return extra.note ? [extra.note] : [];
+    const items = groupsOfStep(k).flatMap((g) => pickedIn(g).map(itemLabel));
+    if (k === "trouble") return [lang === "en" ? "English" : "한국어", ...items];
+    if (k === "companion") {
+      return [
+        ...items,
+        ...(extra.party !== null ? [t.partyOf(extra.party)] : []),
+        ...(extra.strollers ? [t.strollersOf(extra.strollers)] : []),
+      ];
+    }
+    return items;
+  };
+
   // 소리로 읽어 줄 글. 제목, 설명, 고를 것들.
   const speakText = declined
     ? `${t.declinedTitle}. ${t.declinedBody}`
@@ -434,16 +562,17 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         // 확인 화면에서 등록하지 못했으면 그 까닭을 맨 먼저 읽는다.
         ...(kind === "review" && error ? [error] : []),
         // 항공편 화면에서 내용이 바뀐 뒤에는 제목과 설명을 되풀이하지 않고 바뀐 내용만 읽는다.
-        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [titleOf[kind], hintOf[kind] ?? ""]),
-        ...(groupOfStep ? itemsOf(groupOfStep).map(itemLabel) : []),
-        ...(kind === "target" ? [...TARGETS.map((x) => t.targets[x]), t.targetNote] : []),
-        ...(kind === "proof" ? [...targets.map((x) => t.proofDocs[x]), t.proofKeep, t.proofNoneNote] : []),
+        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [kicker ?? "", titleOf(kind), hint ?? ""]),
+        ...(kind === "trouble" ? [t.troubleRead] : []),
+        ...stepGroups.flatMap((g) => [...(g === "buggy" ? [t.buggyAsk] : []), ...itemsOf(g).map(itemLabel)]),
+        ...(kind === "trouble" ? [t.troubleProxy, t.troubleLater] : []),
+        ...(kind === "companion" ? [t.partyLabel] : []),
+        ...(kind === "docs" ? [...DOCS.map((d) => t.docs[d.key]), t.docs.none, t.docsUpload, t.docsKeep] : []),
+        ...(kind === "note" ? [t.noteExample] : []),
         ...(kind === "consent"
           ? [t.whatTitle, t.whatBody, t.useTitle, t.useBody, t.whenTitle, t.whenBody, t.keepTitle, t.keepBody, t.consentNote]
           : []),
-        ...(kind === "review" && flight
-          ? [`${flight.flightNo}, ${destOf(flight)}, ${whenOf(flight)}`, ...GROUPS.flatMap((g) => pickedIn(g).map(itemLabel))]
-          : []),
+        ...(kind === "review" ? reviewSteps.flatMap((k) => answersOf(k)) : []),
       ]
         .filter(Boolean)
         .join(". ");
@@ -467,12 +596,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
 
   const canNext = kind === "flight" ? flight !== null : true;
   const emptyStep =
-    (groupOfStep !== null && groupOfStep !== "guide" && pickedIn(groupOfStep).length === 0) || (kind === "target" && targets.length === 0);
+    (stepGroups.length > 0 && stepGroups.every((g) => pickedIn(g).length === 0)) ||
+    (kind === "docs" && docs.length === 0 && !noDocs) ||
+    (kind === "note" && extra.note.trim() === "");
 
   const cta =
     kind === "review" ? (
       <button className="btn btn-primary" onClick={submit} disabled={busy}>
-        {busy ? t.submitting : t.submit}
+        {edit ? (busy ? t.editSaving : t.editSave) : busy ? t.submitting : t.submit}
       </button>
     ) : kind === "consent" ? (
       <>
@@ -486,10 +617,29 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       </>
     ) : (
       <button className="btn btn-primary" onClick={next} disabled={!canNext}>
-        {kind === "proof" && !proofSent ? t.proofSkip : emptyStep ? t.skip : t.next}
+        {kind === "docs" && docs.length > 0 && !proofSent ? t.proofSkip : emptyStep ? t.skip : t.next}
         <ArrowRight size={22} aria-hidden="true" />
       </button>
     );
+
+  const groupChoices = (g: Group) => {
+    const single = SINGLE.includes(g);
+    return (
+      <div key={g} role={single ? "radiogroup" : "group"} aria-label={groupLabel(g)} className="choices" onKeyDown={single ? radioKeys : undefined}>
+        {itemsOf(g).map((i) => (
+          <Choice
+            key={i.code}
+            code={i.code}
+            label={itemLabel(i)}
+            note={i.code === "mov_wheelchair_need" ? t.wheelchairNote : undefined}
+            single={single}
+            checked={choices.includes(i.code)}
+            onToggle={() => toggle(i.code)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <FlowShell
@@ -501,97 +651,153 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       speakKey={speakKey}
       onBack={back}
       onHome={() => onExit(lang)}
-      progress={{ n: step + 1, total: ORDER.length, name: t.steps[kind] }}
+      progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
       // 키오스크의 항공편 화면에서는 편을 고를 때까지 「다음」을 치워 둔다. 화면 글자판과 도시 목록이 버튼에 가려지지 않는다.
       cta={kiosk && kind === "flight" && !flight ? undefined : cta}
       ctaAfterContent={kind === "consent"}
     >
-      <h1>{titleOf[kind]}</h1>
-      {hintOf[kind] && <p className="lead">{hintOf[kind]}</p>}
+      {kicker && <p className="kicker">{kicker}</p>}
+      <h1>{titleOf(kind)}</h1>
+      {hint && <p className="lead">{hint}</p>}
 
-      {kind === "guide" && (
-        // 한국어 화면에도 영어 사용자가 언어 단추를 찾을 수 있게 "Language"를 덧붙인다. 영어 화면에서는 같은 말이 두 번 되므로 붙이지 않는다.
-        // 덧붙인 영어에는 lang 을 달아 화면 읽기 프로그램이 영어로 읽게 하고, 묶음의 이름도 이 글로 삼아 두 말이 함께 들리게 한다.
-        <div className="lang-pick" role="radiogroup" aria-labelledby="lang-pick-label" onKeyDown={radioKeys}>
-          <span className="lang-pick-label" id="lang-pick-label">
-            {lang === "en" ? (
-              t.language
-            ) : (
-              <>
-                {t.language} · <span lang="en">Language</span>
-              </>
-            )}
-          </span>
-          {(["ko", "en"] as const).map((l) => (
-            <button key={l} role="radio" aria-checked={lang === l} className={lang === l ? "on" : ""} onClick={() => setLang(l)} lang={l}>
-              {l === "ko" ? "한국어" : "English"}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {groupOfStep && (
-        <div
-          role={groupOfStep === "staff" ? "radiogroup" : "group"}
-          aria-label={groupLabel(groupOfStep)}
-          className="choices"
-          onKeyDown={groupOfStep === "staff" ? radioKeys : undefined}
-        >
-          {itemsOf(groupOfStep).map((i) => (
-            <Choice
-              key={i.code}
-              code={i.code}
-              label={itemLabel(i)}
-              note={i.code === "mov_wheelchair_need" ? t.wheelchairNote : undefined}
-              single={groupOfStep === "staff"}
-              checked={choices.includes(i.code)}
-              onToggle={() => toggle(i.code, groupOfStep, groupOfStep === "staff")}
-            />
-          ))}
-        </div>
-      )}
-
-      {kind === "target" && (
+      {kind === "trouble" && (
         <>
-          <div role="group" aria-label={t.steps.target} className="choices">
-            {TARGETS.map((x) => (
-              <Choice key={x} code={`tg_${x}`} label={t.targets[x]} checked={targets.includes(x)} onToggle={() => toggleTarget(x)} />
-            ))}
-          </div>
-          <p className="fine">
-            <ShieldCheck size={16} aria-hidden="true" /> {t.targetNote}
-          </p>
-        </>
-      )}
-
-      {kind === "proof" && (
-        <>
-          <div className="info-row quiet">
-            <span className="bubble">
-              <ShieldCheck size={22} aria-hidden="true" />
+          {/* 한국어 화면에도 영어 사용자가 언어 단추를 찾을 수 있게 "Language"를 덧붙인다. 영어 화면에서는 같은 말이 두 번 되므로 붙이지 않는다.
+              덧붙인 영어에는 lang 을 달아 화면 읽기 프로그램이 영어로 읽게 하고, 묶음의 이름도 이 글로 삼아 두 말이 함께 들리게 한다. */}
+          <div className="lang-pick" role="radiogroup" aria-labelledby="lang-pick-label" onKeyDown={radioKeys}>
+            <span className="lang-pick-label" id="lang-pick-label">
+              {lang === "en" ? (
+                t.language
+              ) : (
+                <>
+                  {t.language} · <span lang="en">Language</span>
+                </>
+              )}
             </span>
-            <div>
-              <span>{t.proofKeep}</span>
-            </div>
-          </div>
-          <ul className="proof-list">
-            {targets.map((x) => (
-              <li key={x} className={proofOk[x] ? "proof-item on" : "proof-item"}>
-                <div className="proof-head">
-                  <span className="bubble">{proofOk[x] ? <FileCheck2 size={22} aria-hidden="true" /> : <FileText size={22} aria-hidden="true" />}</span>
-                  <div>
-                    <strong>{t.proofDocs[x]}</strong>
-                    <span className="muted">{t.targets[x]}</span>
-                  </div>
-                </div>
-                {/* 서류 사진은 이 기기 안에서 읽는다. 어디에도 올리지 않는다. */}
-                <DocScan target={x} t={t} mode={kiosk ? "kiosk" : "phone"} confirmed={proofOk[x] === true} onResult={(ok) => setProof(x, ok)} />
-              </li>
+            {(["ko", "en"] as const).map((l) => (
+              <button key={l} role="radio" aria-checked={lang === l} className={lang === l ? "on" : ""} onClick={() => setLang(l)} lang={l}>
+                {l === "ko" ? "한국어" : "English"}
+              </button>
             ))}
-          </ul>
-          <p className="fine">{t.proofDemo}</p>
-          {!proofSent && <p className="fine">{t.proofNoneNote}</p>}
+          </div>
+          {/* 체크리스트: 「읽어드릴까요? 말하거나 가리켜 답하셔도 돼요.」 */}
+          <div className="read-offer">
+            <p className="fine">{t.troubleRead}</p>
+            <ListenStart t={t} />
+          </div>
         </>
+      )}
+
+      {kind === "walk" ? (
+        <>
+          {groupChoices("walk")}
+          <h2>{t.buggyAsk}</h2>
+          {groupChoices("buggy")}
+        </>
+      ) : (
+        stepGroups.map(groupChoices)
+      )}
+
+      {kind === "trouble" && (
+        <>
+          <p className="fine">{t.troubleProxy}</p>
+          <p className="fine">{t.troubleLater}</p>
+        </>
+      )}
+
+      {kind === "companion" && (
+        <div className="steppers">
+          <Stepper
+            label={t.partyLabel}
+            unit={t.partyUnit}
+            value={extra.party}
+            min={1}
+            max={PARTY_MAX}
+            t={t}
+            onChange={(v) => {
+              touched();
+              setExtra((x) => ({ ...x, party: v }));
+            }}
+          />
+          <Stepper
+            label={t.strollerLabel}
+            unit={t.strollerUnit}
+            value={extra.strollers}
+            min={0}
+            max={STROLLER_MAX}
+            t={t}
+            onChange={(v) => {
+              touched();
+              setExtra((x) => ({ ...x, strollers: v }));
+            }}
+          />
+        </div>
+      )}
+
+      {kind === "docs" && (
+        <>
+          <div role="group" aria-label={t.steps.docs} className="choices">
+            {DOCS.map((d) => (
+              <Choice key={d.key} code={`dc_${d.key}`} label={t.docs[d.key]} checked={docs.includes(d.key)} onToggle={() => toggleDoc(d.key)} />
+            ))}
+            <Choice code="dc_none" label={t.docs.none} checked={noDocs} onToggle={pickNoDocs} />
+          </div>
+          {docs.length > 0 && (
+            <>
+              <div className="info-row quiet">
+                <span className="bubble">
+                  <ShieldCheck size={22} aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>{t.docsUpload}</strong>
+                  <span>{t.docsKeep}</span>
+                </div>
+              </div>
+              <ul className="proof-list">
+                {DOCS.filter((d) => docs.includes(d.key)).map((d) => (
+                  <li key={d.key} className={proofOk[d.key] ? "proof-item on" : "proof-item"}>
+                    <div className="proof-head">
+                      <span className="bubble">{proofOk[d.key] ? <FileCheck2 size={22} aria-hidden="true" /> : <FileText size={22} aria-hidden="true" />}</span>
+                      <div>
+                        <strong>{t.docs[d.key]}</strong>
+                      </div>
+                    </div>
+                    {/* 서류 사진은 이 기기 안에서 읽는다. 어디에도 올리지 않는다. */}
+                    <DocScan target={d.target} t={t} mode={kiosk ? "kiosk" : "phone"} confirmed={proofOk[d.key] === true} onResult={(ok) => setProof(d.key, ok)} />
+                  </li>
+                ))}
+              </ul>
+              <p className="fine">{t.proofDemo}</p>
+              {!proofSent && <p className="fine">{t.proofNoneNote}</p>}
+            </>
+          )}
+        </>
+      )}
+
+      {kind === "note" && (
+        <div className="note-field">
+          <label htmlFor="reg-note" className="sr-only">
+            {t.noteLabel}
+          </label>
+          <textarea
+            id="reg-note"
+            rows={4}
+            maxLength={NOTE_MAX}
+            value={extra.note}
+            aria-describedby="reg-note-example reg-note-count"
+            onChange={(e) => {
+              touched();
+              const note = e.target.value.slice(0, NOTE_MAX);
+              setExtra((x) => ({ ...x, note }));
+            }}
+          />
+          <p className="fine" id="reg-note-example">
+            {t.noteExample}
+          </p>
+          <p className="fine num" id="reg-note-count" aria-live="polite">
+            {t.noteCount(extra.note.length, NOTE_MAX)}
+          </p>
+        </div>
       )}
 
       {kind === "consent" && (
@@ -659,7 +865,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                     setFlight(null);
                     setOptions(null);
                     setBucket(null);
-    setAirline(null);
+                    setAirline(null);
                     setCityPick(null);
                     setCityOpen(true);
                   }}
@@ -811,55 +1017,24 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         </div>
       )}
 
-      {kind === "review" && flight && (
+      {kind === "review" && (
         <div className="panel">
           <dl className="review">
-            <dt>
-              {t.steps.flight}
-              <button className="review-edit" onClick={() => goTo(ORDER.indexOf("flight"), true)}>
-                {t.edit}
-              </button>
-            </dt>
-            <dd>
-              <Plane size={18} aria-hidden="true" /> <b className="num">{flight.flightNo}</b>
-              {/* 줄이 넘어가도 가운뎃점이 줄 맨 앞에 오지 않게 한 덩어리로 둔다. */}
-              <span>
-                {destOf(flight)} · {whenOf(flight)}
-              </span>
-            </dd>
-            {GROUPS.map((g) => (
+            {reviewSteps.map((k) => (
               <ReviewGroup
-                key={g}
-                title={t.steps[g]}
+                key={k}
+                title={stepName(k)}
+                icon={k === "flight" ? <Plane size={18} aria-hidden="true" /> : undefined}
                 edit={t.edit}
-                onEdit={() => goTo(ORDER.indexOf(g), true)}
-                items={[...(g === "guide" ? [lang === "en" ? "English" : "한국어"] : []), ...pickedIn(g).map(itemLabel)]}
-                empty={t.notPicked}
+                onEdit={() => goTo(ORDER.indexOf(k), true)}
+                items={answersOf(k)}
+                empty={k === "note" ? t.noteNone : t.notPicked}
               />
             ))}
-            {mode === "web" && (
-              <>
-                <ReviewGroup
-                  title={t.steps.target}
-                  edit={t.edit}
-                  onEdit={() => goTo(ORDER.indexOf("target"), true)}
-                  items={targets.map((x) => t.targets[x])}
-                  empty={t.notPicked}
-                />
-                {targets.length > 0 && (
-                  <ReviewGroup
-                    title={t.steps.proof}
-                    edit={t.edit}
-                    onEdit={() => goTo(ORDER.indexOf("proof"), true)}
-                    items={[proofSent ? t.proofSent(targets.length) : t.proofNotSent]}
-                    empty={t.proofNotSent}
-                  />
-                )}
-              </>
-            )}
           </dl>
         </div>
       )}
+      {kind === "review" && !edit && <p className="fine">{t.doneLater}</p>}
 
       {error && <ErrorNote>{error}</ErrorNote>}
     </FlowShell>
@@ -878,7 +1053,57 @@ function InfoRow({ icon, title, body }: { icon: React.ReactNode; title: string; 
   );
 }
 
-function ReviewGroup({ title, edit, onEdit, items, empty }: { title: string; edit: string; onEdit: () => void; items: string[]; empty: string }) {
+/** 사람 수와 유모차 수. 모르는 값(null)은 「–」로 보이고, 가장 작은 수에서 한 번 더 줄이면 모르는 값으로 돌아간다. */
+function Stepper({
+  label,
+  unit,
+  value,
+  min,
+  max,
+  t,
+  onChange,
+}: {
+  label: string;
+  unit: string;
+  value: number | null;
+  min: number;
+  max: number;
+  t: { less: string; more: string };
+  onChange: (v: number | null) => void;
+}) {
+  const shown = value ?? (min === 0 ? 0 : null);
+  return (
+    <div className="stepper" role="group" aria-label={label}>
+      <span className="stepper-label">{label}</span>
+      <button type="button" className="stepper-btn" aria-label={`${label} ${t.less}`} disabled={value === null} onClick={() => onChange(value === null || value <= min ? null : value - 1)}>
+        <Minus size={22} aria-hidden="true" />
+      </button>
+      <output className="stepper-value num" aria-live="polite">
+        {shown ?? "–"}
+        {unit && <small> {unit}</small>}
+      </output>
+      <button type="button" className="stepper-btn" aria-label={`${label} ${t.more}`} disabled={value !== null && value >= max} onClick={() => onChange(value === null ? Math.max(min, 1) : value + 1)}>
+        <Plus size={22} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+function ReviewGroup({
+  title,
+  icon,
+  edit,
+  onEdit,
+  items,
+  empty,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  edit: string;
+  onEdit: () => void;
+  items: string[];
+  empty: string;
+}) {
   return (
     <>
       <dt>
@@ -887,7 +1112,17 @@ function ReviewGroup({ title, edit, onEdit, items, empty }: { title: string; edi
           {edit}
         </button>
       </dt>
-      {items.length === 0 ? <dd className="muted">{empty}</dd> : items.map((i) => <dd key={i}>{i}</dd>)}
+      {items.length === 0 ? (
+        <dd className="muted">{empty}</dd>
+      ) : (
+        items.map((i) => (
+          <dd key={i}>
+            {icon}
+            {icon ? " " : ""}
+            {i}
+          </dd>
+        ))
+      )}
     </>
   );
 }

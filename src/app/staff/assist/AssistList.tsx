@@ -108,6 +108,8 @@ export function AssistList({ refreshSec }: { refreshSec: number }) {
                       </li>
                     ))}
                   </ul>
+                  {a.pass.party !== null && a.pass.party > 1 && <p className="small">함께 가는 분 포함 모두 {a.pass.party}명</p>}
+                  {a.pass.note && <p className="call-note">여객의 말: {a.pass.note}</p>}
                 </>
               ) : (
                 <p className="muted">여객 정보가 지워졌습니다(출발했거나 여객이 지움).</p>

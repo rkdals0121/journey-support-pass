@@ -1,8 +1,9 @@
-import { knownCodes } from "./catalog";
+import { knownCodes, type Extra } from "./catalog";
 import { config } from "./config";
 import type { Db } from "./db";
 import { lastSuccessfulPoll } from "./flights/ingest";
 import { addDays, kstDate } from "./flights/normalize";
+import { boardingPassText } from "./pass-format";
 import { isUuid, type Lang } from "./registrations";
 import { departureAt, isBoardingClosed, isBoardingNow, isCancelled, isDelayed, isDeparted, minutesToClose } from "./timing";
 
@@ -10,6 +11,8 @@ import { departureAt, isBoardingClosed, isBoardingNow, isCancelled, isDelayed, i
 export interface Journey {
   registrationId: string;
   choices: string[];
+  /** 함께 가는 분의 수, 유모차 수, 「더 하고 싶은 말씀」. */
+  extra: Extra;
   lang: Lang;
   submittedAt: Date;
   flightNo: string; // 여객이 고른 편명
@@ -32,13 +35,20 @@ export interface Journey {
   proofVerified: boolean;
   /** 체크인하면서 전자토큰을 탑승권에 저장했는가(시제품은 모의 체크인). */
   checkedIn: boolean;
+  /** 체크인한 탑승권의 바코드 값(모의 탑승권 BP1). 체크인 전이면 null. */
+  boarding: string | null;
 }
 
 interface JourneyRow {
   id: string;
   proof_status: string;
   checked_in_at: Date | null;
+  boarding_ref: string | null;
+  flight_date: string | null;
   needs: string[];
+  party_size: number | null;
+  stroller_count: number | null;
+  note: string | null;
   lang: string;
   submitted_at: Date;
   flight_no: string | null;
@@ -65,7 +75,7 @@ interface JourneyRow {
 // f 는 여객이 고른 편, m 은 공동운항일 때의 실제 운항 편이다.
 // 탑승구·시각·상태는 m 이 있으면 m 의 값을 쓴다.
 const JOURNEY_SQL = `
-  select r.id, r.needs, r.lang, r.submitted_at, r.flight_no, r.proof_status, p.checked_in_at,
+  select r.id, r.needs, r.party_size, r.stroller_count, r.note, r.lang, r.submitted_at, r.flight_no, r.proof_status, p.checked_in_at, p.boarding_ref, r.flight_date::text as flight_date,
     f.dest_name as f_dest_name, f.dest_code as f_dest_code, f.terminal as f_terminal,
     f.gate as f_gate, f.prev_gate as f_prev_gate, f.gate_changed_at as f_gate_changed_at,
     f.sched_at as f_sched_at, f.est_at as f_est_at, f.status as f_status,
@@ -105,6 +115,7 @@ function toJourney(r: JourneyRow, now: Date): Journey {
   return {
     registrationId: r.id,
     choices: knownCodes(r.needs),
+    extra: { party: r.party_size, strollers: r.stroller_count, note: r.note ?? "" },
     lang: r.lang === "en" ? "en" : "ko",
     submittedAt: r.submitted_at,
     flightNo: r.flight_no ?? "",
@@ -125,6 +136,10 @@ function toJourney(r: JourneyRow, now: Date): Journey {
     boardingClosed: times ? isBoardingClosed(times) : false,
     proofVerified: r.proof_status === "verified",
     checkedIn: r.checked_in_at !== null,
+    boarding:
+      r.checked_in_at !== null && r.boarding_ref && r.flight_date && r.flight_no
+        ? boardingPassText({ flightDate: r.flight_date, flightNo: r.flight_no, ref: r.boarding_ref })
+        : null,
   };
 }
 

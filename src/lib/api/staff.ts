@@ -2,7 +2,7 @@ import { placeOf } from "../airport";
 import { advanceAssist, listAssist, type AssistAction, type AssistState } from "../assist";
 import { login, logAccess, switchZone, type Session } from "../auth";
 import { acceptCall, endReason, finishCall, listCalls, type Call, type CallEndReason } from "../calls";
-import { shortOf } from "../catalog";
+import { mobilityNeeds, supportNeeds } from "../catalog";
 import type { Db } from "../db";
 import { toFlightView, type FlightView } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll } from "../journey";
@@ -89,8 +89,8 @@ export interface CallDto {
   /** 받은 구역 이름. 아직 아무도 받지 않았으면 null. */
   acceptedBy: string | null;
   acceptedByMe: boolean;
-  /** 여객이 패스를 찍고 불렀을 때만. 여객이 고른 항목과 항공편. */
-  pass: { choices: string[]; lang: "ko" | "en"; flight: FlightView } | null;
+  /** 여객이 패스를 찍고 불렀을 때만. 여객이 고른 항목, 함께 가는 분의 수, 더 하고 싶은 말씀, 항공편. */
+  pass: { choices: string[]; lang: "ko" | "en"; party: number | null; note: string; flight: FlightView } | null;
 }
 
 export async function callsHandler(db: Db, session: Session | null, now: Date): Promise<ApiResult> {
@@ -122,7 +122,13 @@ export async function callsHandler(db: Db, session: Session | null, now: Date): 
       acceptedBy: c.acceptedZone ? labelOf(c.acceptedZone) : null,
       acceptedByMe: c.acceptedZone === me.zoneId,
       pass: journey
-        ? { choices: journey.choices.map(shortOf), lang: journey.lang, flight: toFlightView(journey) }
+        ? {
+            choices: supportNeeds(journey.choices),
+            lang: journey.lang,
+            party: journey.extra.party,
+            note: journey.extra.note,
+            flight: toFlightView(journey),
+          }
         : null,
     });
   }
@@ -191,7 +197,7 @@ export async function exitCheckHandler(
     eligible,
     proofVerified: j.proofVerified,
     checkedIn: j.checkedIn,
-    needs: j.choices.filter((c) => c.startsWith("mov_") || c.startsWith("stf_")).map(shortOf),
+    needs: mobilityNeeds(j.choices),
     flight: toFlightView(j, now),
   };
   return ok({ result });
@@ -210,7 +216,7 @@ export interface AssistItemDto {
   assignedBy: string | null;
   assignedByMe: boolean;
   /** 여객이 떠났거나 지웠으면 null. */
-  pass: { needs: string[]; lang: "ko" | "en"; proofVerified: boolean; flight: FlightView } | null;
+  pass: { needs: string[]; lang: "ko" | "en"; proofVerified: boolean; party: number | null; note: string; flight: FlightView } | null;
 }
 
 /** 이동지원 요청 목록. 어느 구역 직원이든 본다(전동차는 터미널 전체를 다닌다). */
@@ -237,9 +243,11 @@ export async function assistListHandler(db: Db, session: Session | null, now: Da
       assignedByMe: a.assignedZone === me.zoneId,
       pass: j
         ? {
-            needs: j.choices.filter((c) => c.startsWith("mov_") || c.startsWith("stf_")).map(shortOf),
+            needs: mobilityNeeds(j.choices),
             lang: j.lang,
             proofVerified: j.proofVerified,
+            party: j.extra.party,
+            note: j.extra.note,
             flight: toFlightView(j, now),
           }
         : null,

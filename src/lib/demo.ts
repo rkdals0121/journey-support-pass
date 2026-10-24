@@ -12,17 +12,46 @@ export const DEMO: { scene: string; flightNo: string; lang?: Lang; choices: stri
   {
     scene: "큰 글씨 · 휠체어 이용 (제안서 예시)",
     flightNo: "MK127",
-    choices: ["gd_large", "mov_wheelchair_own", "fac_restroom", "stf_self"],
+    choices: ["tr_walk", "tr_see", "mov_wheelchair_own", "bug_later", "gd_large", "cmp_alone", "stf_call", "fac_restroom"],
   },
-  { scene: "소리 안내 · 쉬어 가기", flightNo: "MK111", choices: ["gd_voice", "mov_need_rest", "fac_rest", "stf_call"] },
-  { scene: "쉬운 말 · 그림 · 심리안정실", flightNo: "MK112", choices: ["gd_easy", "gd_picture", "fac_calm", "stf_call"] },
-  { scene: "영어 · 계단 어려움 · 라운지", flightNo: "MK102", lang: "en", choices: ["mov_no_stairs", "fac_lounge", "stf_self"] },
-  { scene: "휠체어 필요 · 직원 호출 (공동운항)", flightNo: "MC830", choices: ["mov_wheelchair_need", "stf_call"] },
-  { scene: "수유실 · 쉴 곳 (제2여객터미널)", flightNo: "MK221", choices: ["fac_nursing", "fac_rest", "stf_self"] },
-  { scene: "큰 글씨 · 서 있기 어려움 (지연 편)", flightNo: "MK250", choices: ["gd_large", "mov_no_standing"] },
-  { scene: "탑승구 미정", flightNo: "MK900", choices: ["mov_no_stairs", "fac_restroom"] },
-  { scene: "그림 · 계단 어려움 (제1여객터미널)", flightNo: "MK501", choices: ["gd_picture", "mov_no_stairs", "fac_rest"] },
-  { scene: "고른 것 없음 (기본 화면)", flightNo: "MK112", choices: [] },
+  {
+    scene: "소리 안내 · 흰지팡이 · 로봇 동행",
+    flightNo: "MK111",
+    choices: ["tr_see", "gd_voice", "see_cane", "robot_hold", "cmp_alone", "stf_robot", "fac_restroom"],
+  },
+  {
+    scene: "쉬운 말 · 그림 · 조용히 쉴 곳",
+    flightNo: "MK112",
+    choices: ["tr_understand", "gd_easy", "gd_picture", "und_slow", "cmp_with", "stf_call", "fac_calm"],
+  },
+  {
+    scene: "영어 · 계단 어려움 · 약국",
+    flightNo: "MK102",
+    lang: "en",
+    choices: ["tr_walk", "mov_no_stairs", "bug_no", "cmp_alone", "stf_call", "stp_pharmacy"],
+  },
+  {
+    scene: "휠체어 대여 · 전동차 · 직원 방문 (공동운항)",
+    flightNo: "MC830",
+    choices: ["tr_walk", "mov_wheelchair_need", "bug_ride", "cmp_with", "stf_visit", "stf_escort"],
+  },
+  {
+    scene: "아이와 함께 · 유모차 · 수유실 (제2여객터미널)",
+    flightNo: "MK221",
+    choices: ["tr_child", "chd_feed", "chd_diaper", "chd_stroller_own", "cmp_with", "stf_call", "fac_nursing", "stp_food"],
+  },
+  {
+    scene: "큰 글씨 · 앉을 곳 (지연 편)",
+    flightNo: "MK250",
+    choices: ["tr_stand", "tr_see", "mov_no_standing", "gd_large", "cmp_alone", "stf_call"],
+  },
+  { scene: "탑승구 미정", flightNo: "MK900", choices: ["tr_walk", "mov_no_stairs", "fac_restroom"] },
+  {
+    scene: "글로 안내 · 수어 (제1여객터미널)",
+    flightNo: "MK501",
+    choices: ["tr_hear", "hear_text", "hear_sign", "cmp_alone", "stf_visit", "fac_restroom"],
+  },
+  { scene: "고른 것 없음 (기본 화면)", flightNo: "MK112", choices: ["tr_none", "stp_none"] },
 ];
 
 // 모의 운항의 출발 시각을 이만큼 늘린다. 가장 이른 편이 약 1시간 뒤, 가장 늦은 편이 약 16시간 뒤에 떠난다.

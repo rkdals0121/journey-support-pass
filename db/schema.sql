@@ -78,6 +78,11 @@ alter table registrations drop constraint if exists registrations_proof_check;
 alter table registrations add constraint registrations_proof_check check (proof_status in ('none','verified'));
 -- 등록에 들어온 접점. booking: 항공권 예매 완료 창(또는 예약 확인 문자)의 링크. 빈 글자: 그 밖.
 alter table registrations add column if not exists via text not null default '';
+-- 체크리스트 3쪽과 마지막 쪽에서 받는 것. 함께 가는 분을 포함한 모두의 수, 유모차 수, 「더 하고 싶은 말씀」(200자까지).
+-- 이름·연락처는 아니지만 말씀에는 건강과 관련된 내용이 들어갈 수 있어 출발 후 다른 항목과 함께 지운다(purge.ts).
+alter table registrations add column if not exists party_size int;
+alter table registrations add column if not exists stroller_count int;
+alter table registrations add column if not exists note text;
 
 create table if not exists passes (
   id uuid primary key default gen_random_uuid(),

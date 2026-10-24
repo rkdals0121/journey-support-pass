@@ -1,6 +1,6 @@
 import { placeOf } from "../airport";
 import { forgetAttempt, ipPart, logAccess, type Session } from "../auth";
-import { isAdapted } from "../catalog";
+import { cleanExtra, isAdapted } from "../catalog";
 import { config } from "../config";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
@@ -8,7 +8,8 @@ import { flightsToCity, suggestFlights, listDestinations } from "../flights/sear
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll, type Journey } from "../journey";
 import { logEvent, logLimitedEvent } from "../metrics";
-import { checkIn, extractToken, issuePass, resolveToken } from "../passes";
+import { parseBoardingPass } from "../pass-format";
+import { checkIn, extractToken, issuePass, resolveBoardingRef, resolveToken } from "../passes";
 import { eraseRegistration } from "../purge";
 import { createRegistration, type Route } from "../registrations";
 import { pollState } from "../timing";
@@ -69,6 +70,10 @@ export interface RegisterBody {
   proof?: unknown;
   /** 들어온 접점. "booking" 이면 항공권 예매 완료 창의 링크. */
   via?: unknown;
+  /** 함께 가는 분의 수, 유모차 수, 더 하고 싶은 말씀. */
+  party?: unknown;
+  strollers?: unknown;
+  note?: unknown;
 }
 
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -117,6 +122,7 @@ export async function registerHandler(
       editCount: typeof body.editCount === "number" ? body.editCount : 0,
       proof: body.proof === true,
       via: body.via === "booking" ? "booking" : "",
+      extra: cleanExtra(body),
     },
     now,
   );
@@ -176,10 +182,20 @@ export type PassLookup =
   | { kind: "none" }
   | { kind: "ended" };
 
-/** QR 값으로 여객의 등록을 연다. 떠난 여객의 패스는 지워지기 전이라도 열지 않는다. */
+/**
+ * 찍은 값으로 여객의 등록을 연다. 떠난 여객의 패스는 지워지기 전이라도 열지 않는다.
+ * 받는 것: 탑승권 바코드(체크인 때 전자토큰이 저장된 탑승권), 그리고 패스 값(여객 휴대전화의 주소, 예전 스티커).
+ */
 export async function lookupPass(db: Db, scanned: string, now: Date): Promise<PassLookup> {
-  const token = extractToken(scanned);
-  if (!token) return { kind: "none" };
+  let token = extractToken(scanned);
+  if (!token) {
+    const bp = parseBoardingPass(scanned);
+    if (!bp) return { kind: "none" };
+    const bound = await resolveBoardingRef(db, bp.ref);
+    // 체크인하지 않았거나 이미 끝난 등록의 탑승권은 등록되지 않은 탑승권과 같다.
+    if (bound.kind !== "active") return { kind: "none" };
+    token = bound.pass.token;
+  }
   const res = await resolveToken(db, token);
   if (res.kind === "unknown") return { kind: "none" };
   if (res.kind === "unusable") return { kind: "ended" };

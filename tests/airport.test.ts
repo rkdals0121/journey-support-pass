@@ -18,7 +18,7 @@ import {
   type RouteOptions,
   type Spot,
 } from "@/lib/airport";
-import { itemsOf } from "@/lib/catalog";
+import { itemOf, itemsOf } from "@/lib/catalog";
 import { DEMO } from "@/lib/demo";
 import { readSeedZones } from "@/lib/zones";
 
@@ -151,9 +151,18 @@ describe("시설", () => {
     for (const f of FACILITIES) expect(f.level, `${f.kind} ${f.nearGate}`).toBe(f.kind === "lounge" ? 4 : GATE_LEVEL);
   });
 
-  it("등록에서 고르는 찾는 시설 항목마다 시설 종류가 하나씩 있다", () => {
-    expect(Object.keys(FACILITY_OF_CODE).sort()).toEqual(itemsOf("facility").map((i) => i.code).sort());
+  it("들를 곳(체크리스트 3쪽)마다 시설 종류가 있고, 시설을 가리키는 항목은 모두 아는 항목이다", () => {
+    for (const i of itemsOf("stops")) if (i.code !== "stp_none") expect(FACILITY_OF_CODE[i.code], i.code).toBeDefined();
+    for (const code of Object.keys(FACILITY_OF_CODE)) expect(itemOf(code), code).not.toBeNull();
     for (const kind of Object.values(FACILITY_OF_CODE)) expect(FACILITY_KINDS).toContain(kind);
+  });
+
+  it("약국·식당·유모차 대여소·점자 안내판도 터미널마다 있다", () => {
+    for (const area of ["T1", "CONCOURSE", "T2"] as const) {
+      for (const kind of ["stroller", "pharmacy", "food", "braille"] as const) {
+        expect(FACILITIES.some((f) => f.area === area && f.kind === kind), `${area} ${kind}`).toBe(true);
+      }
+    }
   });
 });
 
@@ -506,10 +515,16 @@ describe("고른 항목에서 길 계산 조건 만들기", () => {
   });
 
   it("찾는 시설을 고르면 가는 길에 있는 그 시설을 알려 준다", () => {
-    expect(routeOptionsOf(["fac_rest"]).alongKinds).toEqual(["rest"]);
+    expect(routeOptionsOf(["std_seat_help"]).alongKinds).toEqual(["rest"]);
     expect(routeOptionsOf(["fac_restroom"]).alongKinds).toEqual(["restroom"]);
     expect(routeOptionsOf(["fac_nursing"]).alongKinds).toEqual(["nursing"]);
-    expect(routeOptionsOf(["fac_nursing", "fac_restroom", "fac_rest"]).alongKinds).toEqual(["rest", "restroom", "nursing"]);
+    expect(routeOptionsOf(["chd_diaper"]).alongKinds).toEqual(["nursing"]);
+    expect(routeOptionsOf(["fac_nursing", "fac_restroom", "std_seat_help"]).alongKinds).toEqual(["rest", "restroom", "nursing"]);
+  });
+
+  it("휠체어·유모차는 엘리베이터만 쓰고, 천천히 간다고 하면 느린 걸음으로 잰다", () => {
+    for (const c of ["chd_stroller_own", "chd_stroller_need"]) expect(routeOptionsOf([c]).stepFree, c).toBe(true);
+    expect(routeOptionsOf(["mov_slow"])).toMatchObject({ stepFree: false, slow: true });
   });
 
   it("휠체어를 이용하는 여객에게는 고르지 않아도 장애인 화장실을 알려 준다", () => {

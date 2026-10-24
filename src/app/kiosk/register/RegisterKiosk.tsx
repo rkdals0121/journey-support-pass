@@ -32,7 +32,7 @@ interface Issued {
   passNo: string;
 }
 
-const NO_PREFS: Prefs = { large: false, voice: false, picture: false, easy: false, wantsStaff: false };
+const NO_PREFS: Prefs = { large: false, voice: false, picture: false, easy: false, slow: false, wantsStaff: false };
 export const AUTOPRINT_KEY = "jsp:kiosk:autoprint";
 // QR 확인 한 번을 기다리는 가장 긴 시간(안내 키오스크와 같다). 약한 와이파이에서 답이 오지 않는 요청 하나에
 // 붙잡히면 카메라가 멈춘 채로 남아, 다음 여객도 스티커를 다시 뽑지 못한다.

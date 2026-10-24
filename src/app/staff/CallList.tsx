@@ -250,6 +250,8 @@ export function CallList({ refreshSec }: { refreshSec: number }) {
                 ) : (
                   <p className="muted small">여객이 고른 항목이 없습니다.{c.pass.lang === "en" ? " 영어를 씁니다." : ""}</p>
                 )}
+                {c.pass.party !== null && c.pass.party > 1 && <p className="small">함께 가는 분 포함 모두 {c.pass.party}명</p>}
+                {c.pass.note && <p className="call-note">여객의 말: {c.pass.note}</p>}
                 <p className="call-flight">
                   <PlaneTakeoff size={18} aria-hidden="true" />
                   <b className="num">{c.pass.flight.flightNo}</b> {c.pass.flight.destName} · 탑승구{" "}

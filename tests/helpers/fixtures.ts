@@ -31,7 +31,8 @@ export async function addFlights(db: Db, rows: FlightRow[], now: Date): Promise<
 }
 
 /** 검사에서 기본으로 쓰는 선택. 안내 방식 하나, 이동 하나, 직원 도움 하나. */
-export const CHOICES = ["gd_large", "mov_no_stairs", "stf_call"];
+// 표(catalog)의 순서대로 둔다. 등록을 다시 읽으면 이 순서로 나온다.
+export const CHOICES = ["tr_walk", "mov_no_stairs", "gd_large", "stf_call"];
 
 export function regInput(over: Partial<RegistrationInput> = {}): RegistrationInput {
   return {

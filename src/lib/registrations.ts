@@ -1,4 +1,4 @@
-import { validateChoices } from "./catalog";
+import { cleanExtra, NO_EXTRA, validateChoices, type Extra } from "./catalog";
 import { config } from "./config";
 import type { Db } from "./db";
 import { addDays, kstDate } from "./flights/normalize";
@@ -13,8 +13,10 @@ export type Lang = "ko" | "en";
 export interface RegistrationInput {
   flightDate: string;
   flightNo: string;
-  /** 여객이 고른 항목 코드 (안내받는 방식, 이동, 찾는 시설, 직원 도움). */
+  /** 여객이 고른 항목 코드 (체크리스트의 불편, 가지 안의 답, 함께 가는 분, 도움 방식, 들를 곳). */
   choices: string[];
+  /** 함께 가는 분의 수, 유모차 수, 더 하고 싶은 말씀. 없으면 비워 둔다. */
+  extra?: Extra;
   lang: Lang;
   route: Route;
   consent: boolean;
@@ -124,10 +126,12 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
   // 서버에는 "확인됨"만 온다. 안내데스크의 대신 등록에는 증빙 단계가 없다(체크인 카운터에서 확인받는다).
   const proof = input.route !== "assisted" && input.proof === true ? "verified" : "none";
   const via = input.route === "web" && input.via === "booking" ? "booking" : "";
+  const extra = cleanExtra(input.extra ?? NO_EXTRA);
   const [row] = await db.query<Row>(
     `insert into registrations
-       (flight_date, flight_no, needs, lang, route, consent_at, started_at, submitted_at, edit_count, is_mock, proof_status, via)
-     values ($1, $2, $3, $4, $5, $6, $7, $6, $8, $9, $10, $11)
+       (flight_date, flight_no, needs, lang, route, consent_at, started_at, submitted_at, edit_count, is_mock, proof_status, via,
+        party_size, stroller_count, note)
+     values ($1, $2, $3, $4, $5, $6, $7, $6, $8, $9, $10, $11, $12, $13, $14)
      returning ${COLUMNS}`,
     [
       flight.flightDate,
@@ -141,9 +145,30 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
       config.dataMode === "mock",
       proof,
       via,
+      extra.party,
+      extra.strollers,
+      extra.note || null,
     ],
   );
   return { ok: true, registration: toRegistration(row) };
+}
+
+/**
+ * 공항 안내 키오스크에서 여객이 미리 등록한 내용을 고친다(피드백: 키오스크에서 수정 가능해야 함).
+ * 항공편은 탑승권으로 정해졌으므로 고치지 않는다. 고른 항목과 함께 받은 숫자·말씀만 바꾸고 고친 횟수를 올린다.
+ */
+export async function updateNeeds(db: Db, id: string, choices: string[], extra: Extra): Promise<{ ok: true } | { ok: false; error: string }> {
+  const choiceError = validateChoices(choices);
+  if (choiceError) return { ok: false, error: choiceError };
+  if (!isUuid(id)) return { ok: false, error: "등록을 찾을 수 없습니다" };
+  const clean = cleanExtra(extra);
+  const rows = await db.query<{ id: string }>(
+    `update registrations set needs = $2, party_size = $3, stroller_count = $4, note = $5,
+       edit_count = least(edit_count + 1, ${MAX_EDIT_COUNT})
+     where id = $1 and status = 'active' returning id`,
+    [id, choices, clean.party, clean.strollers, clean.note || null],
+  );
+  return rows[0] ? { ok: true } : { ok: false, error: "등록을 찾을 수 없습니다" };
 }
 
 export async function getRegistration(db: Db, id: string): Promise<Registration | null> {

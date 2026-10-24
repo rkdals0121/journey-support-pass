@@ -8,18 +8,44 @@
 // 이 파일은 브라우저에서도 읽는다. 서버 전용 코드를 가져오지 말 것.
 
 export type Area = "T1" | "CONCOURSE" | "T2";
-export type FacilityKind = "restroom" | "nursing" | "rest" | "lounge" | "calm" | "wheelchair";
+export type FacilityKind =
+  | "restroom"
+  | "nursing"
+  | "rest"
+  | "lounge"
+  | "calm"
+  | "wheelchair"
+  | "stroller"
+  | "pharmacy"
+  | "food"
+  | "braille";
 
-/** 등록할 때 고르는 "찾는 시설" 항목과 시설 종류의 짝. */
+/**
+ * 등록할 때 고른 항목과 그 여객에게 먼저 보여 줄 시설 종류의 짝(체크리스트의 "이 답이 바꾸는 것").
+ * 들를 곳(3쪽)과 가지 안의 답(2쪽)이 함께 들어 있다. 여러 항목이 같은 시설을 가리킬 수 있다.
+ */
 export const FACILITY_OF_CODE: Record<string, FacilityKind> = {
   fac_restroom: "restroom",
   fac_nursing: "nursing",
-  fac_rest: "rest",
-  fac_lounge: "lounge",
   fac_calm: "calm",
+  stp_stroller: "stroller",
+  stp_pharmacy: "pharmacy",
+  stp_food: "food",
+  mov_wheelchair_need: "wheelchair",
+  mov_no_standing: "rest",
+  std_seat_help: "rest",
+  see_braille: "braille",
+  chd_feed: "nursing",
+  chd_formula: "nursing",
+  chd_diaper: "nursing",
+  chd_rest: "nursing",
+  chd_stroller_need: "stroller",
 };
 
-export const FACILITY_KINDS: FacilityKind[] = ["restroom", "nursing", "rest", "lounge", "calm", "wheelchair"];
+export const FACILITY_KINDS: FacilityKind[] = ["restroom", "nursing", "rest", "lounge", "calm", "wheelchair", "stroller", "pharmacy", "food", "braille"];
+
+/** 고른 여객에게만 보여 주는 시설. 고르지 않은 여객의 안내 화면에 칸이 너무 많아지지 않게 한다. */
+export const OPTIONAL_KINDS: FacilityKind[] = ["stroller", "pharmacy", "food", "braille"];
 
 /** 탑승구가 있는 층. */
 export const GATE_LEVEL = 3;
@@ -82,6 +108,10 @@ export const FACILITIES: Facility[] = [
   ...fac("T1", "lounge", [26], 4),
   ...fac("T1", "calm", [24]),
   ...fac("T1", "wheelchair", [11, 25, 39]),
+  ...fac("T1", "stroller", [12, 38]),
+  ...fac("T1", "pharmacy", [20, 34]),
+  ...fac("T1", "food", [18, 27, 36]),
+  ...fac("T1", "braille", [25]),
 
   ...fac("CONCOURSE", "restroom", [104, 110, 116, 123, 129]),
   ...fac("CONCOURSE", "nursing", [112, 121]),
@@ -89,6 +119,10 @@ export const FACILITIES: Facility[] = [
   ...fac("CONCOURSE", "lounge", [117], 4),
   ...fac("CONCOURSE", "calm", [115]),
   ...fac("CONCOURSE", "wheelchair", [106, 116, 127]),
+  ...fac("CONCOURSE", "stroller", [116]),
+  ...fac("CONCOURSE", "pharmacy", [113]),
+  ...fac("CONCOURSE", "food", [111, 120, 128]),
+  ...fac("CONCOURSE", "braille", [116]),
 
   ...fac("T2", "restroom", [214, 228, 242, 250, 258, 272, 286]),
   ...fac("T2", "nursing", [232, 251, 268]),
@@ -96,6 +130,10 @@ export const FACILITIES: Facility[] = [
   ...fac("T2", "lounge", [249], 4),
   ...fac("T2", "calm", [252]),
   ...fac("T2", "wheelchair", [222, 250, 277]),
+  ...fac("T2", "stroller", [230, 266]),
+  ...fac("T2", "pharmacy", [244, 262]),
+  ...fac("T2", "food", [226, 248, 270]),
+  ...fac("T2", "braille", [250]),
 ];
 
 /** 키오스크가 놓인 자리. */
@@ -338,12 +376,23 @@ export function nearestFacilities(from: Place, opts: RouteOptions): NearFacility
 export function routeOptionsOf(choices: string[]): RouteOptions {
   const has = (c: string) => choices.includes(c);
   const alongKinds: FacilityKind[] = [];
-  if (has("mov_need_rest") || has("mov_no_standing") || has("fac_rest")) alongKinds.push("rest");
+  // 쉬어 가야 하거나 앉을 곳을 찾는 여객에게는 가는 길의 쉴 곳을 알려 준다(체크리스트: 휴식 지점 표시).
+  if (has("mov_need_rest") || has("mov_no_standing") || has("std_seat_help")) alongKinds.push("rest");
   if (has("fac_restroom") || has("mov_wheelchair_own")) alongKinds.push("restroom");
-  if (has("fac_nursing")) alongKinds.push("nursing");
+  // 아이와 함께 가는 여객에게는 가는 길의 유아 휴게실을 알려 준다(체크리스트: 경로에 유아 휴게실 표시).
+  if (has("fac_nursing") || ["chd_feed", "chd_formula", "chd_diaper", "chd_rest"].some(has)) alongKinds.push("nursing");
+  // 휠체어와 유모차는 엘리베이터로만 다닌다(체크리스트: 경로를 엘리베이터만으로 다시 계산, 엘리베이터 정원 반영).
+  const wheels = has("mov_wheelchair_own") || has("mov_wheelchair_need") || has("chd_stroller_own") || has("chd_stroller_need");
   return {
-    stepFree: has("mov_wheelchair_own") || has("mov_wheelchair_need") || has("mov_no_stairs"),
-    slow: has("mov_wheelchair_own") || has("mov_wheelchair_need") || has("mov_need_rest") || has("mov_no_standing") || has("mov_no_stairs"),
+    stepFree: wheels || has("mov_no_stairs"),
+    // 느린 걸음으로 시간을 잰다(체크리스트: 소요시간 여유).
+    slow:
+      has("mov_wheelchair_own") ||
+      has("mov_wheelchair_need") ||
+      has("mov_need_rest") ||
+      has("mov_slow") ||
+      has("mov_no_standing") ||
+      has("mov_no_stairs"),
     alongKinds,
   };
 }

@@ -375,9 +375,9 @@ describe("등록", () => {
   });
 
   it("고른 항목에 글자가 아닌 값이 섞여 오면 글자만 남겨 받는다", async () => {
-    const res = await registerHandler(db, body({ choices: ["gd_large", 7, null, "fac_rest"] }), null, web, now);
+    const res = await registerHandler(db, body({ choices: ["gd_large", 7, null, "fac_restroom"] }), null, web, now);
     expect(res.status).toBe(200);
-    expect((await regRows())[0].needs).toEqual(["gd_large", "fac_rest"]);
+    expect((await regRows())[0].needs).toEqual(["gd_large", "fac_restroom"]);
   });
 
   it("읽을 수 없는 시작 시각은 작성 시간 0 으로 남긴다", async () => {
@@ -534,7 +534,7 @@ describe("등록 완료 기록", () => {
 
   it("시작할 때의 값을 보내지 않으면 고른 항목에서 안내 방식을 켰는지 본다", async () => {
     await registerHandler(db, body({ choices: ["gd_voice"] }), null, web, now);
-    await registerHandler(db, body({ choices: ["mov_no_stairs", "fac_rest"] }), null, web, now);
+    await registerHandler(db, body({ choices: ["mov_no_stairs", "fac_restroom"] }), null, web, now);
     await registerHandler(db, body({ choices: [] }), null, web, now);
     expect((await eventRows("reg_done")).map((e) => e.adapted)).toEqual([true, false, false]);
   });
@@ -873,11 +873,13 @@ describe("직원 화면: 호출 목록", () => {
     await createCall(db, "cc-108", registration.id, "guide", now);
     const [c] = await list(mid);
     expect(c.pass).toMatchObject({
-      choices: ["큰 글씨", "계단 어려움", "직원 호출 원함"],
+      choices: ["계단 어려움", "큰 글씨", "필요 시 호출"],
       lang: "en",
+      party: null,
+      note: "",
       flight: { flightNo: "KE123", gate: 127, area: "CONCOURSE", schedTime: "14:30", close: "open", minutesToClose: 140 },
     });
-    expect(Object.keys(c.pass!).sort()).toEqual(["choices", "flight", "lang"]);
+    expect(Object.keys(c.pass!).sort()).toEqual(["choices", "flight", "lang", "note", "party"]);
     // 항목 코드와 등록 id, QR 값은 나가지 않는다.
     const dump = JSON.stringify(c);
     for (const code of CHOICES) expect(dump).not.toContain(code);
@@ -1115,9 +1117,11 @@ describe("예매 완료 화면에서 연결: 증빙과 접점", () => {
   it("공항 입구 키오스크는 증빙(기기 안에서 인식)을 받고, 안내데스크의 대신 등록은 받지 않는다. 접점 표시는 휴대전화만", async () => {
     await registerHandler(db, body({ proof: true, via: "booking" }), kiosk, "kiosk-dev", now);
     await registerHandler(db, body({ proof: true, via: "booking" }), desk, "desk-dev", now, true);
-    expect(await proofOf()).toEqual([
-      { proof_status: "verified", via: "" },
-      { proof_status: "none", via: "" },
+    // 두 등록의 시각이 같아 id(무작위) 순서로는 어느 쪽이 먼저일지 모른다. 경로로 짝지어 본다.
+    const rows = await db.query<{ route: string; proof_status: string; via: string }>("select route, proof_status, via from registrations order by route");
+    expect(rows).toEqual([
+      { route: "assisted", proof_status: "none", via: "" },
+      { route: "kiosk", proof_status: "verified", via: "" },
     ]);
   });
 
@@ -1157,15 +1161,15 @@ describe("모의 체크인과 우대출구", () => {
   });
 
   it("증빙이 확인되고 체크인한 여객만 우대 대상으로 나온다. 대상 여부와 필요한 지원만 보인다", async () => {
-    const both = await newPass({ proof: true, choices: ["gd_large", "mov_no_stairs", "fac_rest", "stf_call"] });
+    const both = await newPass({ proof: true, choices: ["tr_walk", "tr_see", "mov_no_stairs", "gd_large", "stf_call", "fac_calm"] });
     await checkinHandler(db, { token: both.token }, web, now);
     const res = await exitCheckHandler(db, staff, { scanned: passUrl("https://x.test", both.token) }, "exit-dev", now);
     expect(res.status).toBe(200);
     const r = (res.body as { result: Record<string, unknown> }).result;
-    expect(r).toMatchObject({ eligible: true, proofVerified: true, checkedIn: true, needs: ["계단 어려움", "직원 호출 원함"] });
+    expect(r).toMatchObject({ eligible: true, proofVerified: true, checkedIn: true, needs: ["계단 어려움", "필요 시 호출"] });
     // 이름, 대상 유형, 서류, 안내 화면 설정, 찾는 시설은 오지 않는다.
     expect(Object.keys(r).sort()).toEqual(["checkedIn", "eligible", "flight", "needs", "proofVerified"]);
-    expect(JSON.stringify(r)).not.toMatch(/큰 글씨|쉴 곳|registrationId/);
+    expect(JSON.stringify(r)).not.toMatch(/큰 글씨|조용한 곳|registrationId/);
 
     const noCheckin = await newPass({ proof: true });
     expect(((await exitCheckHandler(db, staff, { scanned: noCheckin.token }, "exit-dev", now)).body as { result: { eligible: boolean } }).result.eligible).toBe(false);

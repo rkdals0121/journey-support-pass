@@ -52,7 +52,7 @@ let shellShown = false;
 
 export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, onBack, onHome, progress, cta, ctaAfterContent, children }: Props) {
   const t = textOf(lang, prefs.easy);
-  const { supported, speaking, speak, stop } = useSpeech(lang);
+  const { supported, speaking, speak, stop } = useSpeech(lang, prefs.slow);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   // 화면이 바뀌면 설정 창을 닫는다. 앞사람이 열어 둔 채 떠나 처음 화면으로 돌아가도 다음 사람에게 남지 않게 한다.
