@@ -391,9 +391,11 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       <h2>{t.passFlight}</h2>
       <FlightBoard flight={flight} t={t} lang={lang} />
       {/* 이동지원(전동차) 요청과 접수 상태. 공항 입구 안내로봇에서 청한 것도 여기서 보인다. */}
-      {online && <AssistBox token={token} t={t} />}
+      {/* 먼 날짜에 미리 등록한 편은 아직 공항에 올 때가 아니므로 이동지원을 청하지 않는다(받지 않은 요청은 60분 뒤 닫힌다). */}
+      {online && !flight.awaiting && <AssistBox token={token} t={t} />}
       {old && <Banner role="status">{asOf}</Banner>}
-      {stale && <Banner role="status">{t.stale}</Banner>}
+      {/* 운항 정보가 아직 없는 먼 날짜 편에는 "운항 정보가 늦어지고 있습니다"가 맞지 않는다. */}
+      {stale && !flight.awaiting && <Banner role="status">{t.stale}</Banner>}
 
       <h2>{t.passChoices}</h2>
       <SavedNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
