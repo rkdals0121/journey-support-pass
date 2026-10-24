@@ -381,6 +381,39 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         }}
       />
     );
+  } else if (view === "done" && issued && assisted) {
+    // 안내데스크의 대신 등록은 스티커를 뽑지 않는다(멘토링: 실물 매개체의 폐기물과 이중 절차).
+    // 여객이 휴대전화로 이 QR 을 찍으면 그 휴대전화에 등록 화면이 열리고, 체크인하면 탑승권에 저장된다.
+    // 증빙은 현장에서 받지 않는다. 지금처럼 체크인 카운터에서 확인한다.
+    const title = "여객 휴대전화로 이 QR을 찍게 해 주세요";
+    const body = "찍으면 여객의 휴대전화에 등록 화면이 열립니다. 체크인하면 탑승권에 저장되어 안내 키오스크에서 쓸 수 있습니다. 우대 확인은 지금처럼 체크인 카운터에서 합니다.";
+    screen = (
+      <FlowShell
+        lang={lang}
+        prefs={prefs}
+        kiosk
+        screenKey="done"
+        speakText={`${t.kioskDoneTitle}. ${title}. ${body}`}
+        onHome={reset}
+        cta={
+          <button className="btn btn-primary" onClick={reset}>
+            {t.kioskFinish}
+          </button>
+        }
+      >
+        <p className="success-head">
+          <CircleCheck size={30} aria-hidden="true" />
+          {t.kioskDoneTitle}
+        </p>
+        <div className="done-layout">
+          <PassQr token={issued.token} passNo={issued.passNo} label={t.passNo} />
+          <div>
+            <h1>{title}</h1>
+            <p className="lead">{body}</p>
+          </div>
+        </div>
+      </FlowShell>
+    );
   } else if (view === "done" && issued) {
     screen = (
       <FlowShell
@@ -475,7 +508,9 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
         <div className="kiosk-start">
           <h1>{assisted ? "여객 대신 등록하기" : t.kioskRegTitle}</h1>
           <p className="lead">
-            {assisted ? "여객께 여쭤보며 대신 눌러 주세요. 동의 화면은 여객이 직접 읽거나 읽어 드린 뒤 넘어갑니다. 끝나면 스티커를 뽑아 드립니다." : t.kioskRegBody}
+            {assisted
+              ? "예매 완료 화면의 링크를 보지 못한 여객을 대신 등록합니다. 여객께 여쭤보며 대신 눌러 주세요. 동의 화면은 여객이 직접 읽거나 읽어 드린 뒤 넘어갑니다. 끝나면 여객 휴대전화로 QR을 찍게 해 드립니다."
+              : t.kioskRegBody}
           </p>
           <button
             className="btn btn-primary btn-xl"
@@ -491,17 +526,19 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
             {t.kioskRegStart}
             <ArrowRight size={26} aria-hidden="true" />
           </button>
-          <button
-            className="btn btn-xl"
-            onClick={() => {
-              setError(null);
-              setView("reprint");
-            }}
-          >
-            <Smartphone size={24} aria-hidden="true" />
-            {/* 안내데스크에서는 직원이 보는 말로 쓴다. 키오스크의 말은 여객이 하는 말이다("이미 등록했어요"). */}
-            {assisted ? "여객 QR로 스티커 다시 뽑기" : t.kioskReprint}
-          </button>
+          {/* 스티커를 다시 뽑는 길은 예비로 둔 등록 키오스크에만 남긴다. 안내데스크는 스티커를 뽑지 않는다. */}
+          {!assisted && (
+            <button
+              className="btn btn-xl"
+              onClick={() => {
+                setError(null);
+                setView("reprint");
+              }}
+            >
+              <Smartphone size={24} aria-hidden="true" />
+              {t.kioskReprint}
+            </button>
+          )}
           {!assisted && <ListenStart t={t} />}
         </div>
         <p className="kiosk-foot">{here}</p>

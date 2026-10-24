@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, BellRing, ConciergeBell } from "lucide-react";
+import { BadgeCheck, BarChart3, BellRing, ConciergeBell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,8 @@ export function StaffNav({ isDesk }: { isDesk: boolean }) {
   const path = usePathname();
   const items = [
     { href: "/staff", label: "호출", Icon: BellRing, on: path === "/staff" },
+    // 우대출구 확인은 시제품에서 로그인한 직원 누구나 쓴다.
+    { href: "/staff/exit", label: "우대출구", Icon: BadgeCheck, on: path === "/staff/exit" },
     ...(isDesk
       ? [
           { href: "/staff/desk", label: "안내데스크", Icon: ConciergeBell, on: path === "/staff/desk" },

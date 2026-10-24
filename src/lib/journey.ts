@@ -28,10 +28,16 @@ export interface Journey {
   delayed: boolean;
   boardingNow: boolean; // 공공데이터가 알려 준 탑승중·마감예정
   boardingClosed: boolean; // 공공데이터가 알려 준 실제 탑승 마감
+  /** 증빙이 확인되었는가(우대 대상). 서류와 대상 유형은 갖고 있지 않다. */
+  proofVerified: boolean;
+  /** 체크인하면서 전자토큰을 탑승권에 저장했는가(시제품은 모의 체크인). */
+  checkedIn: boolean;
 }
 
 interface JourneyRow {
   id: string;
+  proof_status: string;
+  checked_in_at: Date | null;
   needs: string[];
   lang: string;
   submitted_at: Date;
@@ -59,7 +65,7 @@ interface JourneyRow {
 // f 는 여객이 고른 편, m 은 공동운항일 때의 실제 운항 편이다.
 // 탑승구·시각·상태는 m 이 있으면 m 의 값을 쓴다.
 const JOURNEY_SQL = `
-  select r.id, r.needs, r.lang, r.submitted_at, r.flight_no,
+  select r.id, r.needs, r.lang, r.submitted_at, r.flight_no, r.proof_status, p.checked_in_at,
     f.dest_name as f_dest_name, f.dest_code as f_dest_code, f.terminal as f_terminal,
     f.gate as f_gate, f.prev_gate as f_prev_gate, f.gate_changed_at as f_gate_changed_at,
     f.sched_at as f_sched_at, f.est_at as f_est_at, f.status as f_status,
@@ -68,6 +74,7 @@ const JOURNEY_SQL = `
     m.gate as m_gate, m.prev_gate as m_prev_gate, m.gate_changed_at as m_gate_changed_at,
     m.sched_at as m_sched_at, m.est_at as m_est_at, m.status as m_status
   from registrations r
+  left join passes p on p.registration_id = r.id and p.state = 'active'
   left join flights f on f.flight_date = r.flight_date and f.flight_no = r.flight_no
   left join flights m on m.flight_date = f.flight_date and m.flight_no = f.master_no
     and f.master_no <> '' and f.master_no <> f.flight_no
@@ -116,6 +123,8 @@ function toJourney(r: JourneyRow, now: Date): Journey {
     delayed: times ? isDelayed(times) : false,
     boardingNow: times ? isBoardingNow(times) : false,
     boardingClosed: times ? isBoardingClosed(times) : false,
+    proofVerified: r.proof_status === "verified",
+    checkedIn: r.checked_in_at !== null,
   };
 }
 

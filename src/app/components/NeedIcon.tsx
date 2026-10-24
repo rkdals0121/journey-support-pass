@@ -7,10 +7,13 @@ import {
   BellRing,
   Footprints,
   HandHelping,
+  HandHeart,
+  HeartPulse,
   Hourglass,
   Image as ImageIcon,
   Leaf,
   MessageCircle,
+  PersonStanding,
   Sofa,
   Toilet,
   UserCheck,
@@ -38,6 +41,11 @@ const BY_CODE: Record<string, LucideIcon> = {
   fac_calm: Leaf,
   stf_call: BellRing,
   stf_self: UserCheck,
+  // 증빙서류를 고르는 데 쓰는 대상(서버에 보내지 않는다).
+  tg_elderly: PersonStanding,
+  tg_infant: Baby,
+  tg_disabled: HandHeart,
+  tg_pregnant: HeartPulse,
 };
 
 const BY_FACILITY: Record<FacilityKind, LucideIcon> = {

@@ -5,6 +5,7 @@ import { shortOf } from "../catalog";
 import type { Db } from "../db";
 import { toFlightView, type FlightView } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll } from "../journey";
+import { logEvent } from "../metrics";
 import { todaySummary } from "../metrics";
 import { eraseRegistration } from "../purge";
 import { kstTime } from "../timing";
@@ -152,6 +153,47 @@ export async function callActionHandler(
     return ok();
   }
   return fail(400, "할 수 없는 동작입니다");
+}
+
+/** 우대출구 화면이 보여 주는 것. 대상 여부와 필요한 지원뿐이다. 증빙서류, 대상 유형, 이름은 없다. */
+export interface ExitCheckDto {
+  /** 증빙이 확인된 우대 대상이고 탑승권에 전자토큰이 있다. 참이면 패스트트랙으로 안내한다. */
+  eligible: boolean;
+  proofVerified: boolean;
+  checkedIn: boolean;
+  /** 필요한 지원(이동, 직원 도움)의 줄인 말. 안내 화면 설정(큰 글씨 등)과 찾는 시설은 넣지 않는다. */
+  needs: string[];
+  flight: FlightView;
+}
+
+/**
+ * 우대출구에서 탑승권의 전자토큰을 읽는다. 직원은 증빙서류를 요구하지 않고 이 결과만으로 확인한다.
+ * 어느 구역 직원이든 쓸 수 있다(시제품). 실제로는 우대출구 근무자에게만 연다.
+ */
+export async function exitCheckHandler(
+  db: Db,
+  session: Session | null,
+  body: { scanned?: unknown },
+  device: string,
+  now: Date,
+): Promise<ApiResult> {
+  const denied = staffError(session);
+  if (denied) return denied;
+  const found = await lookupPass(db, typeof body.scanned === "string" ? body.scanned : "", now);
+  if (found.kind === "none") return fail(404, "등록된 탑승권 토큰이 아닙니다. 체크인 카운터 확인 방식으로 안내해 주세요");
+  if (found.kind === "ended") return fail(410, "사용이 끝난 토큰입니다. 체크인 카운터 확인 방식으로 안내해 주세요");
+  const j = found.journey;
+  const eligible = j.proofVerified && j.checkedIn;
+  await logAccess(db, { at: now, zoneId: session!.zoneId, deviceKey: device, action: "exit_view", registrationId: j.registrationId });
+  await logEvent(db, { at: now, kind: "exit_check", route: "exit", value: eligible ? 1 : 0, deviceKey: device });
+  const result: ExitCheckDto = {
+    eligible,
+    proofVerified: j.proofVerified,
+    checkedIn: j.checkedIn,
+    needs: j.choices.filter((c) => c.startsWith("mov_") || c.startsWith("stf_")).map(shortOf),
+    flight: toFlightView(j, now),
+  };
+  return ok({ result });
 }
 
 /** 안내데스크의 오늘 현황. 건수만 있다. */

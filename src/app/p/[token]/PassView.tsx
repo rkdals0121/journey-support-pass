@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheck, Download, ScanLine, Trash2 } from "lucide-react";
+import { BadgeCheck, Circle, CircleCheck, Download, PlaneTakeoff, ScanLine, Ticket, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { GROUPS, itemsOf, prefsOf } from "@/lib/catalog";
 import type { FlightView, GuideDto } from "@/lib/guide";
@@ -49,7 +49,25 @@ function liveFlight(g: GuideDto, now: number | null, fetchedAt: number | null): 
   return { ...f, minutesToClose: m, urgent: m <= g.urgentMin };
 }
 
-/** 여객 휴대전화의 패스 화면. QR 과 번호, 내 항공편, 고른 안내가 있고 직접 지울 수 있다. */
+/** 준비 상황 한 줄. 끝났으면 초록 확인 표시, 아직이면 빈 동그라미. */
+function ReadyRow({ done, title, body, children }: { done: boolean; title: string; body?: string; children?: React.ReactNode }) {
+  return (
+    <li className={done ? "ready-row done" : "ready-row"}>
+      <span className="ready-mark">{done ? <CircleCheck size={24} aria-hidden="true" /> : <Circle size={24} aria-hidden="true" />}</span>
+      <div>
+        <strong>{title}</strong>
+        {body && <span>{body}</span>}
+        {children}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * 여객 휴대전화의 등록 화면. 준비 상황(등록, 증빙 확인, 체크인), 탑승권, 내 항공편, 고른 도움이 있고 직접 지울 수 있다.
+ * 제안서 구조: 체크인하면 전자토큰이 탑승권에 저장된다. 시제품은 「모의 체크인」 단추로 흉내 내고, 그 뒤에 탑승권(QR)을 보여 준다.
+ * QR 은 탑승권에 담긴 전자토큰을 뜻한다. 우대출구와 안내 키오스크가 이것을 읽는다.
+ */
 export function PassView({ token, initial, qr, isNew }: { token: string; initial: GuideDto; qr: string; isNew: boolean }) {
   const [guide, setGuide] = useState(initial);
   const [asking, setAsking] = useState(false);
@@ -64,6 +82,7 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
   const [fetchedAt, setFetchedAt] = useState<number | null>(null);
   // 지우기를 누른 뒤에는 탑승구를 다시 받던 요청의 답을 쓰지 않는다. 그 답("끝난 패스")이 "지웠습니다" 화면을 덮지 않게 한다.
   const erasing = useRef(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   const lang = guide.lang;
   const prefs = prefsOf(guide.choices);
@@ -197,6 +216,31 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
     }
   }
 
+  // 모의 체크인. 실제로는 항공사 체크인 때 전자토큰이 탑승권에 저장된다.
+  async function checkIn() {
+    if (checkingIn) return;
+    setCheckingIn(true);
+    setError(null);
+    const ctrl = new AbortController();
+    const limit = setTimeout(() => ctrl.abort(), 15_000);
+    try {
+      const res = await fetch("/api/pass/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        signal: ctrl.signal,
+      });
+      if (res.status === 410 || res.status === 404) return window.location.reload();
+      if (!res.ok) throw new Error();
+      setGuide((g) => ({ ...g, checkedIn: true }));
+    } catch {
+      setError(t.offline);
+    } finally {
+      clearTimeout(limit);
+      setCheckingIn(false);
+    }
+  }
+
   const home = () => window.location.assign(lang === "en" ? "/?lang=en" : "/");
   const picked = GROUPS.flatMap((g) => itemsOf(g)).filter((i) => guide.choices.includes(i.code));
 
@@ -230,8 +274,10 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
   const asOf = lang === "en" ? `As of ${kstHm(guide.generatedAt)}` : `${kstHm(guide.generatedAt)} 기준`;
   const speakText = [
     isNew ? t.passNew : t.passTitle,
+    t.readyRegistered,
+    guide.proofVerified ? `${t.readyProofOk}. ${t.readyProofOkBody}` : `${t.readyProofNone}. ${t.readyProofNoneBody}`,
+    guide.checkedIn ? `${t.readyCheckinDone}. ${guide.proofVerified ? t.boardingExit : ""} ${t.boardingKiosk}` : `${t.readyCheckinWait}. ${t.readyCheckinWaitBody}`,
     `${t.passNo} ${guide.passNo.split("").join(" ")}`,
-    t.passHow,
     `${flight.flightNo}, ${destOf(flight, lang)}, ${t.gate} ${flight.gate ?? t.gateTbd}`,
     // 키오스크의 소리 안내처럼 출발 시각(늦어졌으면 그 말까지)과 탑승 중인 것도 읽는다.
     departureText(flight, t),
@@ -253,18 +299,74 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
       )}
       <h1>{t.passTitle}</h1>
 
-      <div className="ticket">
-        <PassQr token={token} passNo={guide.passNo} label={t.passNo} svg={qr} />
-      </div>
+      <h2>{t.readyTitle}</h2>
+      <ol className="ready">
+        <ReadyRow done title={t.readyRegistered} />
+        <ReadyRow
+          done={guide.proofVerified}
+          title={guide.proofVerified ? t.readyProofOk : t.readyProofNone}
+          body={guide.proofVerified ? t.readyProofOkBody : t.readyProofNoneBody}
+        />
+        <ReadyRow
+          done={guide.checkedIn}
+          title={guide.checkedIn ? t.readyCheckinDone : t.readyCheckinWait}
+          body={guide.checkedIn ? undefined : t.readyCheckinWaitBody}
+        >
+          {!guide.checkedIn && (
+            <>
+              <button className="btn btn-primary ready-btn" onClick={checkIn} disabled={checkingIn} aria-busy={checkingIn}>
+                <Ticket size={20} aria-hidden="true" />
+                {t.checkinDemo}
+              </button>
+              <span className="fine">{t.checkinDemoNote}</span>
+            </>
+          )}
+        </ReadyRow>
+      </ol>
 
-      <div className="info-row quiet">
-        <span className="bubble bubble-sun">
-          <ScanLine size={22} aria-hidden="true" />
-        </span>
-        <div>
-          <span>{t.passHow}</span>
-        </div>
-      </div>
+      {guide.checkedIn && (
+        <>
+          <h2>{t.boardingTitle}</h2>
+          {/* 시연용 모의 탑승권. 항공사 표시는 넣지 않는다. QR 은 탑승권에 담긴 전자토큰이다. */}
+          <div className="boarding">
+            <div className="boarding-top">
+              <span className="boarding-flight">
+                <PlaneTakeoff size={18} aria-hidden="true" />
+                {flight.flightNo}
+              </span>
+              <b>ICN → {destOf(flight, lang)}</b>
+              <span className="num">{departureText(flight, t)}</span>
+            </div>
+            <div className={guide.proofVerified ? "boarding-badge ok" : "boarding-badge"}>
+              {guide.proofVerified && <BadgeCheck size={20} aria-hidden="true" />}
+              {guide.proofVerified ? t.boardingBadgeOk : t.boardingBadgeNone}
+            </div>
+            <div className="ticket">
+              <PassQr token={token} passNo={guide.passNo} label={t.passNo} svg={qr} />
+            </div>
+          </div>
+          {guide.proofVerified && (
+            <div className="info-row quiet">
+              <span className="bubble bubble-sun">
+                <BadgeCheck size={22} aria-hidden="true" />
+              </span>
+              <div>
+                <span>{t.boardingExit}</span>
+              </div>
+            </div>
+          )}
+          <div className="info-row quiet">
+            <span className="bubble">
+              <ScanLine size={22} aria-hidden="true" />
+            </span>
+            <div>
+              <span>
+                {t.boardingKiosk} {t.backupNo}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
       <div className="info-row quiet">
         <span className="bubble">
           <Download size={22} aria-hidden="true" />

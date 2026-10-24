@@ -108,6 +108,23 @@ export async function resolveToken(db: Db, token: string): Promise<Resolved> {
 }
 
 /**
+ * 모의 체크인. 체크인하면서 전자토큰을 탑승권에 저장한 것으로 적는다. 사용 중인 패스만 된다.
+ * 이미 체크인했으면 처음 시각을 그대로 두고 fresh 를 거짓으로 돌려준다(건수를 두 번 세지 않게).
+ */
+export async function checkIn(db: Db, token: string, now: Date): Promise<{ ok: boolean; fresh: boolean }> {
+  if (!TOKEN_RE.test(token)) return { ok: false, fresh: false };
+  const [row] = await db.query<{ fresh: boolean }>(
+    `update passes p set checked_in_at = coalesce(o.old, $2)
+     from (select id, checked_in_at as old from passes
+           where token = $1 and state = 'active' and registration_id is not null) o
+     where p.id = o.id
+     returning o.old is null as fresh`,
+    [token, now],
+  );
+  return { ok: row !== undefined, fresh: row?.fresh === true };
+}
+
+/**
  * 손으로 넣은 고유 일련 번호. 사용 중인 패스만 찾는다.
  * 번호는 조합이 적으므로, 끝난 패스가 있었는지는 알려 주지 않는다.
  */

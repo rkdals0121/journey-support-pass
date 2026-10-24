@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BarChart3, Check, FileText, MapPin, MonitorSmartphone, Plane, Search, Trash2 } from "lucide-react";
+import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, MonitorSmartphone, Paperclip, Plane, Search, ShieldCheck, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
 import { airlineLabel } from "@/lib/airline-en";
@@ -40,12 +40,22 @@ interface Props {
   onDone: (result: RegisterResult) => void;
   /** 언어나 안내 방식이 바뀔 때마다 알린다. 키오스크가 「직원 부르기」 버튼의 말과 크기를 맞추는 데 쓴다. */
   onPrefs?: (lang: Lang, prefs: Prefs) => void;
+  /** 들어온 접점. booking 이면 항공권 예매 완료 창의 링크로 들어왔다. 건수를 따로 세는 데만 쓴다. */
+  via?: "booking" | "";
 }
 
 // 묻는 순서. 한 화면에 질문 하나.
 // 안내받는 방식을 맨 먼저 묻는다. 큰 글씨를 고른 여객이 바로 다음 질문부터, 동의 글까지 큰 글씨로 보게 하기 위해서다.
-const ORDER = ["guide", "consent", "move", "facility", "staff", "flight", "review"] as const;
-type StepKind = (typeof ORDER)[number];
+// 필요한 도움(이동, 시설, 직원 도움)을 먼저 묻고 대상과 증빙을 나중에 묻는다(제안서: 불편과 필요한 지원 → 증빙서류).
+// 대상과 증빙은 휴대전화 등록에만 있다. 현장(키오스크, 안내데스크)에서는 지금처럼 체크인 카운터에서 확인받는다.
+// 대상을 고르지 않았으면 증빙 화면은 건너뛴다(단계 수는 그대로 두어 진행 표시가 중간에 바뀌지 않게 한다).
+type StepKind = "guide" | "consent" | "move" | "facility" | "staff" | "target" | "proof" | "flight" | "review";
+const WEB_ORDER: StepKind[] = ["guide", "consent", "move", "facility", "staff", "target", "proof", "flight", "review"];
+const SITE_ORDER: StepKind[] = ["guide", "consent", "move", "facility", "staff", "flight", "review"];
+
+/** 증빙서류를 고르는 데 쓰는 대상. 서버에 보내지 않는다(대상 유형은 민감정보라 공항이 갖지 않는 구조). */
+export type Target = "elderly" | "infant" | "disabled" | "pregnant";
+const TARGETS: Target[] = ["elderly", "infant", "disabled", "pregnant"];
 
 const SEARCH_DELAY_MS = 250;
 // 편 찾기 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않으면 「찾는 중…」이 끝없이 남고 「다시 찾기」도 나오지 않는다.
@@ -87,7 +97,7 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
 }
 
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. */
-export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs }: Props) {
+export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "" }: Props) {
   const kiosk = mode !== "web";
   // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
   // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
@@ -120,7 +130,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [error, setError] = useState<string | null>(null);
   // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.
   const [failSeq, setFailSeq] = useState(0);
+  // 고른 대상과 대상마다 고른 증빙 파일의 이름. 파일은 이 기기를 벗어나지 않는다(시연). 서버에는 "냈다"는 사실만 간다.
+  const [targets, setTargets] = useState<Target[]>([]);
+  const [proofFiles, setProofFiles] = useState<Partial<Record<Target, string>>>({});
+  const proofSent = targets.length > 0 && targets.every((x) => proofFiles[x]);
 
+  const ORDER = mode === "web" ? WEB_ORDER : SITE_ORDER;
+  // 대상을 고르지 않았으면 증빙 화면을 지나친다.
+  const skipped = (i: number) => ORDER[i] === "proof" && targets.length === 0;
   const kind: StepKind = ORDER[step];
   const itemLabel = (i: Item) => (lang === "en" ? i.en : i.label);
   const groupLabel = (g: Group) => (lang === "en" ? GROUP_EN[g] : GROUP_LABEL[g]);
@@ -235,7 +252,15 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     setError(null);
     setStep(target);
   };
-  const back = () => (step === 0 ? (onBackOut ?? onExit)(lang) : goTo(step - 1, true));
+  const toggleTarget = (x: Target) => {
+    touched();
+    setTargets((list) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x]));
+  };
+  const pickProof = (x: Target, file: File | undefined) => {
+    touched();
+    setProofFiles((m) => ({ ...m, [x]: file?.name }));
+  };
+  const back = () => (step === 0 ? (onBackOut ?? onExit)(lang) : goTo(skipped(step - 1) ? step - 2 : step - 1, true));
   const next = () => {
     // 첫 질문을 넘기면 "등록을 시작했다"고 센다. 안내 방식을 켰는지와 함께 남겨, 켰을 때와 껐을 때의 완료 비율을 견준다.
     // 직원이 대신 넣는 등록은 세지 않는다.
@@ -245,12 +270,12 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         fetch("/api/events", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kind: "reg_start", adapted: startAdapted.current }),
+          body: JSON.stringify({ kind: "reg_start", adapted: startAdapted.current, via }),
           keepalive: true,
         }).catch(() => {});
       }
     }
-    goTo(step + 1, false);
+    goTo(skipped(step + 1) ? step + 2 : step + 1, false);
   };
 
   // 「등록하기」를 아주 빠르게 두 번 눌러도 한 번만 보낸다. busy 는 화면이 다시 그려진 뒤에야 바뀌어 같은 순간의 두 번째 누름을 막지 못한다.
@@ -298,6 +323,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           startedAt: startedAt.current,
           editCount,
           startAdapted: startAdapted.current ?? isAdapted(choices),
+          // 증빙서류는 보내지 않는다. 냈다는 사실만 보낸다(시연에서는 이것으로 확인된 것으로 둔다).
+          proof: mode === "web" && proofSent,
+          via,
         }),
         signal: ctrl.signal,
       });
@@ -361,6 +389,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     move: t.moveTitle,
     facility: t.facilityTitle,
     staff: t.staffTitle,
+    target: t.targetTitle,
+    proof: t.proofTitle,
     flight: t.flightTitle,
     review: t.reviewTitle,
   };
@@ -369,6 +399,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     move: t.moveHint,
     facility: t.facilityHint,
     staff: t.staffHint,
+    target: t.targetHint,
+    proof: t.proofHint,
     flight: cityMode ? undefined : onScreenPad ? t.flightHintKiosk : t.flightHint,
   };
 
@@ -406,6 +438,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         // 항공편 화면에서 내용이 바뀐 뒤에는 제목과 설명을 되풀이하지 않고 바뀐 내용만 읽는다.
         ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [titleOf[kind], hintOf[kind] ?? ""]),
         ...(groupOfStep ? itemsOf(groupOfStep).map(itemLabel) : []),
+        ...(kind === "target" ? [...TARGETS.map((x) => t.targets[x]), t.targetNote] : []),
+        ...(kind === "proof" ? [...targets.map((x) => t.proofDocs[x]), t.proofKeep, t.proofNoneNote] : []),
         ...(kind === "consent"
           ? [t.whatTitle, t.whatBody, t.useTitle, t.useBody, t.whenTitle, t.whenBody, t.keepTitle, t.keepBody, t.consentNote]
           : []),
@@ -434,7 +468,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   }
 
   const canNext = kind === "flight" ? flight !== null : true;
-  const emptyStep = groupOfStep !== null && groupOfStep !== "guide" && pickedIn(groupOfStep).length === 0;
+  const emptyStep =
+    (groupOfStep !== null && groupOfStep !== "guide" && pickedIn(groupOfStep).length === 0) || (kind === "target" && targets.length === 0);
 
   const cta =
     kind === "review" ? (
@@ -453,7 +488,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       </>
     ) : (
       <button className="btn btn-primary" onClick={next} disabled={!canNext}>
-        {emptyStep ? t.skip : t.next}
+        {kind === "proof" && !proofSent ? t.proofSkip : emptyStep ? t.skip : t.next}
         <ArrowRight size={22} aria-hidden="true" />
       </button>
     );
@@ -516,6 +551,69 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
             />
           ))}
         </div>
+      )}
+
+      {kind === "target" && (
+        <>
+          <div role="group" aria-label={t.steps.target} className="choices">
+            {TARGETS.map((x) => (
+              <Choice key={x} code={`tg_${x}`} label={t.targets[x]} checked={targets.includes(x)} onToggle={() => toggleTarget(x)} />
+            ))}
+          </div>
+          <p className="fine">
+            <ShieldCheck size={16} aria-hidden="true" /> {t.targetNote}
+          </p>
+        </>
+      )}
+
+      {kind === "proof" && (
+        <>
+          <div className="info-row quiet">
+            <span className="bubble">
+              <ShieldCheck size={22} aria-hidden="true" />
+            </span>
+            <div>
+              <span>{t.proofKeep}</span>
+            </div>
+          </div>
+          <ul className="proof-list">
+            {targets.map((x) => (
+              <li key={x} className={proofFiles[x] ? "proof-item on" : "proof-item"}>
+                <div className="proof-head">
+                  <span className="bubble">{proofFiles[x] ? <FileCheck2 size={22} aria-hidden="true" /> : <FileText size={22} aria-hidden="true" />}</span>
+                  <div>
+                    <strong>{t.proofDocs[x]}</strong>
+                    <span className="muted">{t.targets[x]}</span>
+                  </div>
+                </div>
+                {proofFiles[x] ? (
+                  <div className="proof-file">
+                    <span role="status">{t.proofAdded(proofFiles[x]!)}</span>
+                    <button className="btn btn-ghost" onClick={() => pickProof(x, undefined)}>
+                      <X size={18} aria-hidden="true" />
+                      {t.proofRemove}
+                    </button>
+                  </div>
+                ) : (
+                  // 파일은 고르기만 하고 어디에도 올리지 않는다(시연). 실제로는 별도 서버가 암호화해 받는다.
+                  <label className="btn proof-pick">
+                    <Paperclip size={20} aria-hidden="true" />
+                    {t.proofAdd}
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="sr-only"
+                      aria-label={`${t.proofDocs[x]} ${t.proofAdd}`}
+                      onChange={(e) => pickProof(x, e.currentTarget.files?.[0])}
+                    />
+                  </label>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="fine">{t.proofDemo}</p>
+          {!proofSent && <p className="fine">{t.proofNoneNote}</p>}
+        </>
       )}
 
       {kind === "consent" && (
@@ -761,6 +859,26 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                 empty={t.notPicked}
               />
             ))}
+            {mode === "web" && (
+              <>
+                <ReviewGroup
+                  title={t.steps.target}
+                  edit={t.edit}
+                  onEdit={() => goTo(ORDER.indexOf("target"), true)}
+                  items={targets.map((x) => t.targets[x])}
+                  empty={t.notPicked}
+                />
+                {targets.length > 0 && (
+                  <ReviewGroup
+                    title={t.steps.proof}
+                    edit={t.edit}
+                    onEdit={() => goTo(ORDER.indexOf("proof"), true)}
+                    items={[proofSent ? t.proofSent(targets.length) : t.proofNotSent]}
+                    empty={t.proofNotSent}
+                  />
+                )}
+              </>
+            )}
           </dl>
         </div>
       )}

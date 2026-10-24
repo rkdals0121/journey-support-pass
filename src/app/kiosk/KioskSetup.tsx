@@ -21,8 +21,11 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
   const [autoPrint, setAutoPrint] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 예비로 둔 등록 키오스크를 고를 수 있게 할지(주소에 ?reserve=1).
+  const [reserve, setReserve] = useState(false);
 
   useEffect(() => {
+    setReserve(new URLSearchParams(window.location.search).get("reserve") === "1");
     try {
       setAutoPrint(localStorage.getItem(AUTOPRINT_KEY) === "1");
     } catch {
@@ -93,14 +96,18 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
             <small>여객이 QR을 대면 맞춤 안내를 보여줍니다</small>
           </span>
         </label>
-        <label className={use === "register" ? "on" : ""}>
-          <input type="radio" name="use" checked={use === "register"} onChange={() => setUse("register")} />
-          <ClipboardPen size={22} aria-hidden="true" />
-          <span>
-            <b>등록 키오스크</b>
-            <small>여객이 등록하고 QR 스티커를 받습니다</small>
-          </span>
-        </label>
+        {/* 등록 키오스크(스티커 인쇄)는 주 흐름에서 뺐다. 등록은 예매 완료 화면의 링크로 하고, 현장은 안내데스크가 대신 등록한다.
+            예비로 두려면 ?reserve=1 로 연다(시연·비교용). */}
+        {reserve && (
+          <label className={use === "register" ? "on" : ""}>
+            <input type="radio" name="use" checked={use === "register"} onChange={() => setUse("register")} />
+            <ClipboardPen size={22} aria-hidden="true" />
+            <span>
+              <b>등록 키오스크 (예비)</b>
+              <small>여객이 현장에서 등록하고 QR 스티커를 받습니다</small>
+            </span>
+          </label>
+        )}
       </fieldset>
 
       <label htmlFor="place">놓을 자리</label>

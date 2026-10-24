@@ -86,6 +86,7 @@ describe("등록", () => {
       route: "web",
       status: "pending",
       submittedAt: now,
+      proofVerified: false,
     });
     expect(isUuid(res.registration.id)).toBe(true);
   });

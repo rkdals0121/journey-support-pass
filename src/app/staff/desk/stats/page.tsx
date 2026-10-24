@@ -72,6 +72,18 @@ export default async function DeskStatsPage() {
           등록하다가 {s.calls.fromRegister}회 · 안내를 보다가 {s.calls.fromGuide}회 · 도움 마침 {s.calls.done}회 · 여객이 거둠{" "}
           {s.calls.cancelled}회 · 응답 없이 닫힘 {s.calls.expired}회
         </p>
+
+        <h2>4. 예매 완료 화면에서 연결하고, 우대출구는 탑승권만으로 확인한다</h2>
+        <div className="stat-grid">
+          <Rate label="예매 완료 화면 링크로 들어와 등록을 마친 비율" c={s.booking} />
+          <Stat label="증빙을 내고 등록을 마침" value={`${s.proofDone}`} unit="건" />
+          <Stat label="탑승권에 전자토큰 저장 (체크인)" value={`${s.checkins}`} unit="건" />
+          <Stat label="우대출구에서 탑승권으로 확인" value={`${s.exit.ok}`} unit="건" />
+        </div>
+        <p className="hint">
+          우대출구에서 확인되지 않아 체크인 카운터로 안내한 것 {s.exit.notOk}건. 체크인은 시연용 모의 체크인입니다. 증빙서류와 대상 유형은 세지
+          않습니다(공항이 갖지 않습니다).
+        </p>
         <p className="fine">건수와 시간만 셉니다. 항공편이나 여객이 고른 항목은 여기에 쓰이지 않습니다.</p>
       </main>
       <StaffNav isDesk />

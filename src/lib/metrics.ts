@@ -11,7 +11,7 @@ import { isJourneyOver, lastRealPoll, loadJourneys } from "./journey";
 //  3) 직원의 업무 부담을 늘리지 않는다          → 「직원 부르기」 횟수, 직원이 대신 입력한 건수
 // 사람을 알 수 있는 값은 세지도 꺼내지도 않는다.
 
-export type EventKind = "reg_start" | "reg_done" | "guide_open" | "survey";
+export type EventKind = "reg_start" | "reg_done" | "guide_open" | "survey" | "checkin" | "exit_check";
 
 export interface EventInput {
   at: Date;
@@ -86,6 +86,14 @@ export interface Summary {
     medianAcceptSec: number | null;
   };
   survey: { good: number; fair: number; poor: number; total: number };
+  /** 항공권 예매 완료 창의 링크로 들어와 등록을 시작한 수와 마친 수(링크 접속 후 등록 완료율). */
+  booking: Completion;
+  /** 증빙을 내고 등록을 마친 수. */
+  proofDone: number;
+  /** 체크인해서 탑승권에 전자토큰을 저장한 수(시제품은 모의 체크인). */
+  checkins: number;
+  /** 우대출구에서 탑승권을 확인한 수. 대상 확인 / 확인 안 됨(체크인 카운터 확인 방식으로 안내). */
+  exit: { ok: number; notOk: number };
 }
 
 function median(values: (number | null)[]): number | null {
@@ -114,8 +122,8 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
   // 패스 화면·키오스크·직원 화면이 끝난 패스를 열지 않는 기준(isJourneyOver)과 같다. 쿼리는 한 번이다.
   const lastPoll = await lastRealPoll(db);
   const active = (await loadJourneys(db, now)).filter((j) => !isJourneyOver(j, now, lastPoll)).length;
-  const events = await db.query<{ kind: EventKind; adapted: boolean; value: number | null; n: number }>(
-    "select kind, adapted, value, count(*)::int as n from events where at >= $1 group by kind, adapted, value",
+  const events = await db.query<{ kind: EventKind; route: string; adapted: boolean; value: number | null; n: number }>(
+    "select kind, route, adapted, value, count(*)::int as n from events where at >= $1 group by kind, route, adapted, value",
     [since],
   );
   // 받지 않은 채 CALL_EXPIRE_MIN 분 넘게 열려 있다 닫힌 호출은 "여객이 거둠"과 나눈다.
@@ -164,6 +172,10 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
       medianAcceptSec: median(calls.map((c) => c.accept_sec)),
     },
     survey: { ...survey, total: survey.good + survey.fair + survey.poor },
+    booking: completion(count("reg_start", (e) => e.route === "booking"), count("reg_done", (e) => e.route === "booking")),
+    proofDone: count("reg_done", (e) => e.value === 1),
+    checkins: count("checkin"),
+    exit: { ok: count("exit_check", (e) => e.value === 1), notOk: count("exit_check", (e) => e.value !== 1) },
   };
 }
 

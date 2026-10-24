@@ -2794,3 +2794,224 @@ html[data-picture] .route > li::before {
     word-spacing: 100vw;
   }
 }
+
+/* ── 예매 완료 뒤 연결: 증빙서류, 준비 상황, 모바일 탑승권, 우대출구 ── */
+.proof-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.proof-item {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 0.125rem solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.proof-item.on {
+  border-color: var(--green);
+  background: var(--mint-2);
+}
+.proof-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.proof-head > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.proof-file {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--green-press);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.proof-file .btn {
+  width: auto;
+  min-height: 2.75rem;
+  margin: 0;
+}
+.proof-pick {
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+}
+.proof-pick:focus-within {
+  outline: 0.1875rem solid var(--green);
+  outline-offset: 0.125rem;
+}
+.ready {
+  display: grid;
+  gap: 0;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+.ready-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.875rem 0;
+}
+.ready-row + .ready-row {
+  border-top: 1px solid var(--line);
+}
+.ready-mark {
+  flex: none;
+  color: var(--line-strong);
+}
+.ready-row.done .ready-mark {
+  color: var(--green);
+}
+.ready-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.ready-row > div > span {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+.ready-btn {
+  margin-top: 0.5rem;
+}
+.boarding {
+  margin: 0.5rem 0 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--ink);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+}
+.boarding-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 1rem 1.25rem 0.75rem;
+}
+.boarding-flight {
+  display: inline-flex;
+  gap: 0.375rem;
+  align-items: center;
+  color: var(--sun);
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+.boarding-top b {
+  font-size: 1.375rem;
+}
+.boarding-badge {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  padding: 0.5rem 1.25rem;
+  background: var(--ink-soft);
+  color: #fff;
+  font-weight: 700;
+}
+.boarding-badge.ok {
+  background: var(--sun);
+  color: var(--ink);
+}
+.boarding .ticket {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--text);
+}
+.exit-result {
+  margin: 1rem 0;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.exit-result.ok {
+  background: var(--mint);
+  color: var(--green-press);
+}
+.exit-result h2 {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 0.5rem;
+  color: inherit;
+  font-size: 1.5rem;
+}
+.exit-result p {
+  margin: 0.25rem 0;
+  color: var(--text);
+}
+.exit-result ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.exit-result li {
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+.booking-demo {
+  max-width: var(--col);
+  margin: 0 auto;
+}
+.booking-card {
+  margin: 1rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.booking-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+.booking-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.375rem 1rem;
+  margin: 0;
+}
+.booking-card dt {
+  color: var(--muted);
+}
+.booking-card dd {
+  margin: 0;
+  font-weight: 600;
+}
+.booking-link {
+  margin: 1rem 0;
+  padding: 1.25rem;
+  border: 0.125rem solid var(--green);
+  border-radius: var(--radius-lg);
+  background: var(--mint-2);
+}
+.booking-link p {
+  margin: 0 0 0.75rem;
+}
+.booking-sms {
+  margin: 1rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+  background: var(--line);
+  color: var(--text);
+  white-space: pre-line;
+}

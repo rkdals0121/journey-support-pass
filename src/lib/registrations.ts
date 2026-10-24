@@ -20,6 +20,10 @@ export interface RegistrationInput {
   consent: boolean;
   startedAt: Date;
   editCount: number;
+  /** 증빙서류를 냈는가. 휴대전화 등록에서만 받는다. 서류와 대상 유형은 받지 않는다(별도 서버가 맡는 구조). */
+  proof?: boolean;
+  /** 들어온 접점. booking 이면 항공권 예매 완료 창의 링크. */
+  via?: "booking" | "";
 }
 
 export interface Registration {
@@ -31,6 +35,7 @@ export interface Registration {
   route: Route;
   status: RegistrationStatus;
   submittedAt: Date;
+  proofVerified: boolean;
 }
 
 interface Row {
@@ -42,9 +47,10 @@ interface Row {
   route: Route;
   status: RegistrationStatus;
   submitted_at: Date;
+  proof_status: string;
 }
 
-const COLUMNS = "id, flight_date::text as flight_date, flight_no, needs, lang, route, status, submitted_at";
+const COLUMNS = "id, flight_date::text as flight_date, flight_no, needs, lang, route, status, submitted_at, proof_status";
 
 function toRegistration(r: Row): Registration {
   return {
@@ -56,6 +62,7 @@ function toRegistration(r: Row): Registration {
     route: r.route,
     status: r.status,
     submittedAt: r.submitted_at,
+    proofVerified: r.proof_status === "verified",
   };
 }
 
@@ -113,10 +120,14 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
   // 고친 횟수도 정수 칸에 들어갈 만큼으로 자른다. 지나치게 큰 값은 저장할 때 오류가 난다.
   const editCount = Number.isInteger(input.editCount) && input.editCount >= 0 ? Math.min(input.editCount, MAX_EDIT_COUNT) : 0;
 
+  // 증빙은 휴대전화 등록에서만 받는다. 키오스크와 안내데스크에는 증빙을 내는 단계가 없다(현장은 체크인 카운터에서 확인받는다).
+  // 시제품에는 증빙을 검토할 별도 서버가 없어, 냈다고 하면 바로 확인된 것으로 둔다.
+  const proof = input.route === "web" && input.proof === true ? "verified" : "none";
+  const via = input.route === "web" && input.via === "booking" ? "booking" : "";
   const [row] = await db.query<Row>(
     `insert into registrations
-       (flight_date, flight_no, needs, lang, route, consent_at, started_at, submitted_at, edit_count, is_mock)
-     values ($1, $2, $3, $4, $5, $6, $7, $6, $8, $9)
+       (flight_date, flight_no, needs, lang, route, consent_at, started_at, submitted_at, edit_count, is_mock, proof_status, via)
+     values ($1, $2, $3, $4, $5, $6, $7, $6, $8, $9, $10, $11)
      returning ${COLUMNS}`,
     [
       flight.flightDate,
@@ -128,6 +139,8 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
       startedAt,
       editCount,
       config.dataMode === "mock",
+      proof,
+      via,
     ],
   );
   return { ok: true, registration: toRegistration(row) };

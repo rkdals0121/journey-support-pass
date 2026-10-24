@@ -130,6 +130,10 @@ export interface GuideDto {
   generatedAt: number;
   /** 마감까지 이 분 이내면 임박(config.urgentMin). 화면이 남은 시간을 다시 셀 때 urgent 도 같은 기준으로 다시 정한다. */
   urgentMin: number;
+  /** 증빙이 확인되었는가. 확인되었으면 우대출구에서 탑승권만으로 확인받는다. */
+  proofVerified: boolean;
+  /** 체크인해서 전자토큰이 탑승권에 저장되었는가. */
+  checkedIn: boolean;
 }
 
 // 마감까지 이만큼(분)은 남아야 여유 있다고 본다.
@@ -187,5 +191,7 @@ export function buildGuide(j: Journey, passNo: string, place: Place | null, poll
     poll,
     generatedAt: now.getTime(),
     urgentMin: config.urgentMin,
+    proofVerified: j.proofVerified,
+    checkedIn: j.checkedIn,
   };
 }

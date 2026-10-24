@@ -254,7 +254,7 @@ export function DeviceCheck() {
       )}
 
       <p className="hint">
-        스티커 인쇄는 등록 키오스크에서 등록을 마친 화면의 「스티커 뽑기」로 확인합니다.
+        스티커 인쇄는 주 흐름에서 뺐습니다. 예비 등록 키오스크(키오스크 설치 주소에 ?reserve=1)를 쓸 때만 그 화면의 「스티커 뽑기」로 확인합니다.
       </p>
       <Link className="home-staff" href="/kiosk">
         키오스크 설치로

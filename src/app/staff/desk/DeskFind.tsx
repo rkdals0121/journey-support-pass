@@ -1,6 +1,6 @@
 "use client";
 
-import { PlaneTakeoff, Printer, Trash2, X } from "lucide-react";
+import { PlaneTakeoff, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GROUPS, itemsOf } from "@/lib/catalog";
 import type { GuideDto } from "@/lib/guide";
@@ -9,21 +9,18 @@ import { extractToken, formatPassNo, PASS_NO_LENGTH } from "@/lib/pass-format";
 import { ErrorNote } from "../../components/Alert";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { closeText } from "../../components/GuideParts";
-import { PassQr, Sticker } from "../../components/PassQr";
+import { PassQr } from "../../components/PassQr";
 import { Scanner } from "../../components/Scanner";
 
 const ko = textOf("ko");
 // 패스 찾기·등록 지우기 한 번을 기다리는 가장 긴 시간(키오스크의 QR 확인과 같다). 약한 와이파이에서 답이 오지 않는 요청 하나에
 // 붙잡히면 카메라가 「확인하는 중」으로 멈추고 「찾기」도 눌리지 않아, 화면을 새로 열기 전까지 어떤 여객의 패스도 찾지 못한다.
 const DESK_TIMEOUT_MS = 15_000;
-// 스티커의 QR 그림을 기다리는 가장 긴 시간(등록 키오스크와 같다). 그림은 따로 받아 오는 조각(qrcode)으로 그려서,
-// 약한 와이파이에서는 패스를 찾은 뒤에도 QR 칸이 한참 비어 있을 수 있다. 이만큼 기다려도 없으면 더 붙잡지 않는다.
-// 다시 누르면 그 조각을 새로 받아 다시 그린다(아래 qrTry). 한 번 받지 못한 그림은 저절로 다시 받지 않는다.
-const STICKER_WAIT_MS = 10_000;
 
 /**
  * 여객이 보여 준 QR 을 찍거나 불러 준 번호를 넣어 패스를 찾는다.
- * 찾은 패스는 스티커로 다시 뽑거나, 여객이 원하면 지운다. 이름으로는 찾을 수 없다(이름을 받지 않는다).
+ * 찾은 패스의 항공편과 고른 항목, 우대 확인 여부를 보고, 여객이 원하면 지운다. 이름으로는 찾을 수 없다(이름을 받지 않는다).
+ * 스티커 인쇄는 없앴다(멘토링: 실물 매개체의 폐기물과 이중 절차). QR 은 여객 휴대전화의 탑승권에 있다.
  */
 export function DeskFind() {
   const [found, setFound] = useState<{ token: string; guide: GuideDto } | null>(null);
@@ -45,12 +42,7 @@ export function DeskFind() {
   const justErased = useRef<{ token: string; at: number } | null>(null);
   const [asking, setAsking] = useState(false);
   const busyRef = useRef(false);
-  // QR 그림을 다시 받아 그린 횟수. 스티커와 화면의 QR 은 그림 조각(qrcode)을 처음 그릴 때 한 번만 받아서, 약한 와이파이에서 한 번
-  // 받지 못하면 그 칸은 계속 빈다. 그러면 「스티커 뽑기」를 몇 번 눌러도 매번 기다리다 같은 오류만 뜨고, 패스를 닫았다 다시 찾아야만 풀린다.
-  // 그래서 그림이 없을 때 누르면 이 수를 올려 두 QR 을 새로 그린다(key). 그때 조각도 다시 받는다. 아직 받는 중이었으면 그것을 그대로 기다린다.
-  const [qrTry, setQrTry] = useState(0);
-
-  // QR 그림을 그리는 조각(qrcode)을 화면을 열 때 미리 받아 둔다. 패스를 찾은 뒤에야 받기 시작하면 스티커의 QR 칸이 한참 비어 있다.
+  // QR 그림을 그리는 조각(qrcode)을 화면을 열 때 미리 받아 둔다. 패스를 찾은 뒤에야 받기 시작하면 QR 칸이 한참 비어 있다.
   // 받지 못해도 여기서는 알리지 않는다(QR 을 그릴 때 다시 받는다).
   useEffect(() => {
     import("qrcode").catch(() => {});
@@ -156,7 +148,7 @@ export function DeskFind() {
             <X size={22} aria-hidden="true" />
           </button>
         </div>
-        <PassQr key={`qr-${qrTry}`} token={found.token} passNo={g.passNo} label="고유 일련 번호" />
+        <PassQr token={found.token} passNo={g.passNo} label="고유 일련 번호" />
         <p className="call-flight">
           <PlaneTakeoff size={18} aria-hidden="true" />
           <b className="num">{g.flight.flightNo}</b> {g.flight.destName} · 탑승구 <b className="num">{g.flight.gate ?? "미정"}</b>
@@ -170,14 +162,14 @@ export function DeskFind() {
             </li>
           ))}
           {picked.length === 0 && <li className="chip">고른 항목 없음</li>}
+          <li className={g.proofVerified ? "chip chip-sun" : "chip"}>{g.proofVerified ? "우대 확인됨" : "우대 확인 없음"}</li>
+          <li className="chip">{g.checkedIn ? "탑승권 저장됨" : "체크인 전"}</li>
         </ul>
         {error && <ErrorNote>{error}</ErrorNote>}
-        <PrintSticker onRedraw={() => setQrTry((n) => n + 1)} />
         <button className="btn btn-ghost btn-danger-text" onClick={() => setAsking(true)}>
           <Trash2 size={20} aria-hidden="true" />
           등록 지우기
         </button>
-        <Sticker key={`sticker-${qrTry}`} token={found.token} passNo={g.passNo} />
         {asking && (
           <ConfirmSheet
             title="이 등록을 지울까요?"
@@ -236,57 +228,4 @@ export function DeskFind() {
       </form>
     </div>
   );
-}
-
-/**
- * 「스티커 뽑기」. 스티커는 QR 그림이 실제로 그려진 뒤에 뽑는다. 그림이 없을 때 뽑으면 QR 칸이 빈 스티커가 나온다.
- * 그림을 기다리는 동안은 단추를 막아 둔다. 오래 기다려도 그려지지 않으면 뽑지 않고 단추를 다시 풀어, 잠시 뒤 다시 누르라고 띄운다.
- * 그림이 없을 때 누르면 onRedraw 로 QR 을 새로 그리게 한다(DeskFind 의 qrTry). 그래야 한 번 받지 못한 그림도 다시 누르면 다시 받는다.
- * QR 칸이 빈 스티커는 안내 키오스크에서 찍을 수 없어 한 장만 버린다.
- * 찾은 패스를 닫거나 지우면 이 단추도 사라지고, 기다리던 인쇄도 함께 거둬진다.
- */
-function PrintSticker({ onRedraw }: { onRedraw: () => void }) {
-  const [waiting, setWaiting] = useState(false);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    if (!waiting) return;
-    const until = Date.now() + STICKER_WAIT_MS;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const check = () => {
-      const drawn = stickerDrawn();
-      if (!drawn && Date.now() < until) {
-        timer = setTimeout(check, 100);
-        return;
-      }
-      setWaiting(false);
-      if (!drawn) return setFailed(true);
-      window.print();
-    };
-    check();
-    return () => clearTimeout(timer);
-  }, [waiting]);
-  return (
-    <>
-      {failed && <ErrorNote>{ko.stickerQrFail}</ErrorNote>}
-      <button
-        className="btn btn-primary"
-        disabled={waiting}
-        aria-busy={waiting}
-        onClick={() => {
-          setFailed(false);
-          if (stickerDrawn()) return window.print();
-          onRedraw();
-          setWaiting(true);
-        }}
-      >
-        <Printer size={20} aria-hidden="true" />
-        스티커 뽑기
-      </button>
-    </>
-  );
-}
-
-/** 인쇄될 스티커(PassQr 의 Sticker)에 QR 그림이 실제로 들어가 있는지. */
-function stickerDrawn(): boolean {
-  return document.querySelector(".sticker-qr svg") !== null;
 }

@@ -170,6 +170,8 @@ async function fill(page: Page, selector: string, value: string) {
     { timeout: WAIT },
     selector,
   );
+  // 화면 가운데로 옮긴 뒤 누른다. 아래에 고정된 직원 메뉴 뒤에 입력란이 걸쳐 있으면 메뉴가 대신 눌린다.
+  await page.$eval(selector, (e) => e.scrollIntoView({ block: "center" }));
   await page.click(selector, { count: 3 });
   await page.keyboard.press("Backspace");
   if (value) await page.type(selector, value, { delay: 15 });
@@ -259,13 +261,13 @@ interface Made {
 }
 
 /** 여객 한 명을 등록한다. cookie 가 키오스크의 것이면 키오스크 등록이 된다. */
-async function register(flightNo: string, choices: string[], lang: "ko" | "en" = "ko", cookie = ""): Promise<Made> {
+async function register(flightNo: string, choices: string[], lang: "ko" | "en" = "ko", cookie = "", extra: Record<string, unknown> = {}): Promise<Made> {
   const found = await get(`/api/flights/search?q=${flightNo}`);
   const flight = (found.body.flights as { flightDate: string; flightNo: string }[]).find((f) => f.flightNo === flightNo);
   if (!flight) throw new Error(`${flightNo} 편이 없습니다. 모의 운항을 먼저 넣으세요.`);
   const res = await post(
     "/api/registrations",
-    { flightDate: flight.flightDate, flightNo, choices, lang, consent: true, startedAt: new Date(Date.now() - 60_000).toISOString(), editCount: 0 },
+    { flightDate: flight.flightDate, flightNo, choices, lang, consent: true, startedAt: new Date(Date.now() - 60_000).toISOString(), editCount: 0, ...extra },
     cookie,
   );
   if (res.status !== 200) throw new Error(`등록 실패 ${res.status} ${JSON.stringify(res.body)}`);
@@ -416,15 +418,24 @@ async function resetFlights(clearLocks = false) {
   // ───────── 1. 여객 휴대전화: 첫 화면과 등록 ─────────
   section("여객 휴대전화: 등록");
   await page.goto(BASE, { waitUntil: "load", timeout: 300_000 });
-  check("첫 화면이 열린다", await has(page, "한 번만 골라 두세요"));
-  check("첫 화면에서 이름·연락처·진단명을 받지 않는다고 알린다", await has(page, "이름·연락처·진단명은 받지 않아요"));
+  check("첫 화면이 열린다. 예매를 마친 자리에서 필요한 도움을 알려 두는 서비스라고 소개한다", await has(page, "예매를 마친 그 자리에서"));
+  check("첫 화면에서 이름·연락처를 받지 않는다고 알린다", await has(page, "이름·연락처는 받지 않아요"));
   check("첫 화면은 직원이 먼저 돕겠다는 약속을 하지 않는다", !(await has(page, "다시 묻지 않습니다")) && !(await has(page, "먼저 다가")));
+  check("링크를 못 본 여객은 지금처럼 체크인 카운터에서 확인받는다고 알린다", await has(page, "체크인 카운터"));
   await shot(page, "휴대전화-첫화면");
-  await clickText(page, "a", "등록 시작하기");
+  // 제안서 1단계: 항공권 예매 완료 화면의 링크로 들어온다(시연용 모의 화면).
+  await clickText(page, "a", "예매 완료 화면에서 들어오는 모습 보기");
+  await waitText(page, "공항에서 필요한 도움이 있으신가요?");
+  check("예매 완료 모의 화면은 시연용이라고 밝히고, 실제 항공사 이름을 쓰지 않는다", (await has(page, "시연용 모의 화면")) && !(await has(page, "대한항공")) && !(await has(page, "아시아나")));
+  check("링크를 둘 수 없을 때의 대체 접점(예약 확인 문자)도 보여 준다", await has(page, "예약 확인 문자"));
+  await shot(page, "예매완료-링크");
+  await clickText(page, "a", "필요한 도움 미리 알려 두기");
+  await page.waitForFunction(() => location.pathname === "/register" && location.search.includes("via=booking"), { timeout: WAIT });
+  check("링크에는 접점 표시(via=booking)만 있고 예약 정보는 싣지 않는다", !page.url().includes("DEMO01") && !page.url().includes("NRT"));
 
   await waitText(page, "안내를 어떻게 보여 드릴까요?");
   check("첫 질문은 안내받는 방식이다 (고른 방식이 다음 질문부터 적용되도록)", (await count(page, '[role="checkbox"]')) === 4);
-  check("진행 표시가 7단계 중 1단계다", await has(page, "1/7"));
+  check("진행 표시가 9단계 중 1단계다 (대상·증빙서류 포함)", await has(page, "1/9"));
   check("「이전」과 「처음으로」가 화면 왼쪽 위에 있다", (await spot(page, ".bar-btn", "이전")) !== null && (await spot(page, ".bar-btn", "처음으로")) !== null);
   check("휴대전화 화면에는 「직원 부르기」가 없다 (공항 키오스크에만 있다)", (await count(page, ".call-btn")) === 0);
   const basePx = await rootPx(page);
@@ -489,7 +500,7 @@ async function resetFlights(clearLocks = false) {
   await sleep(900);
   check("「다음」을 두 번 빠르게 눌러도 한 화면만 넘어간다. 동의 화면을 읽지 않고 지나치지 않는다", await has(page, "등록 전에 확인해 주세요"));
   check("두 번째는 동의다. 무엇을 받는지, 어디에 쓰는지, 언제 지우는지, 무엇이 남는지 네 가지를 보여준다", (await count(page, ".info-row")) === 4);
-  check("동의 글에 이름·연락처·진단명을 받지 않는다고 적혀 있다", await has(page, "이름, 연락처, 진단명은 받지 않습니다"));
+  check("동의 글에 이름과 연락처를 받지 않고, 증빙서류는 공항이 아닌 별도 서버가 보관한다고 적혀 있다", (await has(page, "이름과 연락처는 받지 않습니다")) && (await has(page, "별도 서버")));
   check("동의 글에 「직원 부르기」를 누르면 고른 항목이 직원에게 전달된다고 적혀 있다", await has(page, "그 직원에게 전달됩니다"));
   check("동의 화면도 큰 글씨로 보인다", (await rootPx(page)) === largePx);
   check("「이전」과 「처음으로」가 앞 화면과 같은 자리에 있다", (await spot(page, ".bar-btn", "이전")) === backAt && (await spot(page, ".bar-btn", "처음으로")) === homeAt);
@@ -528,6 +539,29 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, '[role="radio"]', "스스로 이용하겠습니다");
   check("직원 도움은 하나만 골라진다", (await count(page, '[role="radio"][aria-checked="true"]')) === 1);
   await shot(page, "휴대전화-직원도움");
+  await clickText(page, ".flow-cta button", "다음");
+
+  // 제안서: 필요한 도움을 먼저 고르고, 이어서 대상 유형에 맞는 증빙서류를 낸다.
+  await waitText(page, "해당하는 대상을 골라 주세요");
+  check("필요한 도움 다음에 대상을 묻는다. 네 가지이고 해당이 없으면 넘어갈 수 있다", (await count(page, '[role="checkbox"]')) === 4 && (await has(page, "해당 없음, 다음")));
+  check("고른 대상은 공항에 보내지 않는다고 알린다", await has(page, "공항에 보내지 않습니다"));
+  await clickText(page, '[role="checkbox"]', "장애가 있습니다");
+  await shot(page, "휴대전화-대상");
+  await clickText(page, ".flow-cta button", "다음");
+  await waitText(page, "증빙서류를 내 주세요");
+  check("고른 대상에 맞는 증빙서류(복지카드)를 묻는다. 공항이 아닌 별도 서버가 보관한다고 알린다", (await has(page, "복지카드")) && (await has(page, "별도 서버")));
+  check("증빙을 내지 않고도 넘어갈 수 있다 (내지 않으면 체크인 카운터에서 확인)", (await has(page, "지금 내지 않고 다음")) && (await has(page, "체크인 카운터")));
+  const proofImage = path.join(os.tmpdir(), `jsp-proof-${Date.now()}.png`);
+  fs.writeFileSync(proofImage, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
+  tempFiles.push(proofImage);
+  const proofSent: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST" && (r.postData() ?? "").includes("PNG")) proofSent.push(r.url());
+  });
+  await (await page.$(".proof-list input[type=file]"))!.uploadFile(proofImage);
+  await waitText(page, "고른 파일:");
+  check("파일을 고르면 「다음」으로 바뀐다", (await has(page, "다음")) && !(await has(page, "지금 내지 않고 다음")));
+  await shot(page, "휴대전화-증빙서류");
   await clickText(page, ".flow-cta button", "다음");
 
   await waitText(page, "타실 항공편을 알려 주세요");
@@ -600,13 +634,13 @@ async function resetFlights(clearLocks = false) {
   const review = await text(page);
   check(
     "확인 화면에 항공편과 고른 것이 모두 나온다",
-    ["MK127", "큰 글씨로 보여주세요", "휠체어를 이용합니다", "계단이나 에스컬레이터", "장애인 화장실", "스스로 이용하겠습니다"].every((s) => review.includes(s)),
+    ["MK127", "큰 글씨로 보여주세요", "휠체어를 이용합니다", "계단이나 에스컬레이터", "장애인 화장실", "스스로 이용하겠습니다", "장애가 있습니다", "1개 냄"].every((s) => review.includes(s)),
   );
   await shot(page, "휴대전화-확인");
   await page.evaluate(() => (document.querySelector('.review-edit[aria-label^="찾는 시설"]') as HTMLElement).click());
   await waitText(page, "자주 찾는 시설을 골라 주세요");
   check("확인 화면의 '고치기'는 그 질문으로 돌아간다. 골라 둔 것이 남아 있다", (await count(page, '[role="checkbox"][aria-checked="true"]')) === 1);
-  for (const title of ["직원 도움이 필요하신가요?", "타실 항공편을 알려 주세요", "이대로 등록할까요?"]) {
+  for (const title of ["직원 도움이 필요하신가요?", "해당하는 대상을 골라 주세요", "증빙서류를 내 주세요", "타실 항공편을 알려 주세요", "이대로 등록할까요?"]) {
     await clickText(page, ".flow-cta button", "다음");
     await waitText(page, title);
   }
@@ -617,8 +651,16 @@ async function resetFlights(clearLocks = false) {
   await page.waitForFunction(() => location.pathname.startsWith("/p/"), { timeout: WAIT });
   await waitText(page, "내 패스");
   const myToken = page.url().split("/p/")[1].split("?")[0];
+  check("증빙서류 파일은 어디에도 보내지 않는다 (냈다는 사실만 보낸다)", proofSent.length === 0, proofSent.join(", "));
+  check("등록을 마치면 준비 상황이 나온다: 등록됨, 증빙 확인됨, 아직 체크인 전", (await has(page, "필요한 도움을 등록했습니다")) && (await has(page, "증빙이 확인되었습니다")) && (await has(page, "아직 체크인 전입니다")));
+  check("체크인 전에는 탑승권 QR 이 없다 (체크인하면 전자토큰이 탑승권에 저장된다)", (await count(page, ".pass-qr-code")) === 0);
+  await shot(page, "휴대전화-준비상황");
+  await clickText(page, "button", "모의 체크인 하기");
+  await waitText(page, "탑승권에 전자토큰이 저장되었습니다");
+  check("모의 체크인을 하면 모바일 탑승권에 '교통약자 우대 확인'과 QR 이 나온다", (await has(page, "교통약자 우대 확인")) && (await count(page, ".boarding .pass-qr-code")) === 1);
+  check("우대출구에서 탑승권만 보여 주면 된다고 알린다", await has(page, "증빙서류는 꺼내지 않아도 됩니다"));
   const myNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
-  check("등록을 마치면 QR 과 여섯 자리 번호가 바로 나온다", /^\d{6}$/.test(myNo), myNo.replace(/\d{3}$/, "***"));
+  check("탑승권에 QR 과 여섯 자리 고유 일련 번호가 나온다", /^\d{6}$/.test(myNo), myNo.replace(/\d{3}$/, "***"));
   const qrText = await readQr(page, ".pass-qr-code svg");
   check("QR 에는 패스 주소만 들어 있고 전부 대문자·숫자다 (칸 수를 줄여 잘 읽히게)", qrText === `HTTP://LOCALHOST:3000/P/${myToken}`, qrText.replace(myToken, "…"));
   check("패스 화면에 내 항공편과 탑승구가 나온다", (await has(page, "MK127")) && (await page.$eval(".gate-sign b", (e) => (e as HTMLElement).innerText)) === "127");
@@ -1109,7 +1151,11 @@ async function resetFlights(clearLocks = false) {
   page = await open(browser, KIOSK_WIDE);
   await page.goto(`${BASE}/kiosk`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "키오스크 설치");
-  await clickText(page, ".setup-use label", "등록 키오스크");
+  await page.waitForFunction(() => document.querySelectorAll(".setup-use label").length >= 1, { timeout: WAIT });
+  check("키오스크 설치에서 등록 키오스크(스티커 인쇄)는 주 흐름에서 빠졌다", !(await has(page, "등록 키오스크")));
+  await page.goto(`${BASE}/kiosk?reserve=1`, { waitUntil: "load", timeout: 300_000 });
+  await waitText(page, "키오스크 설치");
+  await clickText(page, ".setup-use label", "등록 키오스크 (예비)");
   const regPlaces = await page.$$eval("#place option", (os) => os.map((o) => (o as HTMLOptionElement).textContent ?? ""));
   check("등록 키오스크는 안심여행센터·안내데스크·헬프데스크 자리를 고른다", regPlaces.some((p) => p.includes("장애인 안심여행센터")) && regPlaces.some((p) => p.includes("헬프데스크")) && !regPlaces.some((p) => p.includes("면세구역")));
   await page.select("#place", "t1-care");
@@ -1382,19 +1428,53 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".flow-cta button", "다음");
   await clickText(page, ".flow-cta button", "등록하기");
   await waitText(page, "등록을 마쳤습니다");
-  check("직원이 대신 등록하면 스티커를 뽑을 수 있다", await has(page, "스티커 뽑기"));
+  check("직원이 대신 등록하면 스티커 대신 여객 휴대전화로 QR 을 찍게 한다", (await has(page, "여객 휴대전화로 이 QR을 찍게 해 주세요")) && !(await has(page, "스티커 뽑기")));
+  check("현장 등록은 우대 확인을 체크인 카운터에서 한다고 알린다", await has(page, "체크인 카운터"));
   await shot(page, "데스크-대신등록-마침");
+
+  // ───────── 우대출구 ─────────
+  // 증빙이 확인되고 체크인한 여객의 탑승권을 우대출구 직원이 찍는다. 대상 여부와 필요한 지원만 나온다.
+  const exitPass = await register("MK127", ["gd_large", "mov_no_stairs", "fac_rest", "stf_call"], "ko", "", { proof: true });
+  check("모의 체크인으로 탑승권에 전자토큰을 저장한다", (await post("/api/pass/checkin", { token: exitPass.token })).status === 200);
+  const tmpExit = await launch();
+  const exitFile = await cameraFile(tmpExit, exitPass.token, false);
+  await tmpExit.close();
+  await browser.close();
+  browser = await launch(CAMERA(exitFile));
+  page = await open(browser, PHONE);
+  await useCookie(page, zoneStaff);
+  await page.goto(`${BASE}/staff/exit`, { waitUntil: "load", timeout: 300_000 });
+  await waitText(page, "교통약자 우대출구");
+  await waitText(page, "우대 대상 확인됨");
+  const exitText = await text(page);
+  check("우대출구에서 탑승권을 찍으면 '우대 대상 확인됨'과 필요한 지원만 나온다", exitText.includes("계단 어려움") && exitText.includes("직원 호출 원함") && exitText.includes("패스트트랙"));
+  check("우대출구 화면에는 대상 유형, 증빙서류, 안내 화면 설정, 찾는 시설이 나오지 않는다", !["장애", "복지카드", "큰 글씨", "쉴 곳"].some((s) => exitText.includes(s)));
+  await shot(page, "우대출구-확인됨");
+  await browser.close();
+  fs.rmSync(exitFile, { force: true });
+  const noProof = await register("MK127", ["mov_no_stairs"]);
+  await post("/api/pass/checkin", { token: noProof.token });
+  const notOk = await post("/api/staff/exit", { scanned: noProof.token }, zoneStaff);
+  check("증빙을 내지 않은 여객은 우대 확인이 안 되어 체크인 카운터로 안내한다", notOk.status === 200 && notOk.body.result.eligible === false);
+  browser = await launch();
+  page = await open(browser, KIOSK_WIDE);
+  await useCookie(page, desk);
 
   await page.goto(`${BASE}/staff/desk/stats`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "오늘 현황");
   const stats = await text(page);
-  check("오늘 현황이 제안서의 확인 방법 세 가지로 나뉘어 있다", ["1. 자신에게 맞는 안내를 받는다", "2. 기기를 쓰기 어렵던 여객도 스스로 이용한다", "3. 직원의 업무 부담을 늘리지 않는다"].every((s) => stats.includes(s)));
+  check("오늘 현황이 제안서의 확인 방법 네 가지로 나뉘어 있다", ["1. 자신에게 맞는 안내를 받는다", "2. 기기를 쓰기 어렵던 여객도 스스로 이용한다", "3. 직원의 업무 부담을 늘리지 않는다", "4. 예매 완료 화면에서 연결하고"].every((s) => stats.includes(s)));
   const summary = (await get("/api/desk/summary", desk)).body.summary;
   check("등록 경로가 휴대전화·키오스크·직원 대신 입력으로 나뉘어 세어진다", summary.byRoute.web >= 5 && summary.byRoute.kiosk >= 2 && summary.byRoute.assisted >= 1, JSON.stringify(summary.byRoute));
   check("안내 방식을 켠 여객과 켜지 않은 여객의 등록 완료 비율이 따로 나온다", summary.completion.adapted.started >= 2 && summary.completion.adapted.done >= 2 && summary.completion.plain.started >= 1, JSON.stringify(summary.completion));
   check("안내 화면을 연 횟수와 만족도 응답이 세어진다", summary.guideOpens >= 8 && summary.survey.good >= 1, `열람 ${summary.guideOpens}, 응답 ${summary.survey.total}`);
   check("「직원 부르기」 횟수가 등록 중·안내 중으로 나뉘어 세어진다", summary.calls.total >= 4 && summary.calls.fromRegister >= 1 && summary.calls.fromGuide >= 3, JSON.stringify(summary.calls));
   check("현황에는 항공편이나 고른 항목이 없다 (건수와 시간뿐)", !JSON.stringify(summary).includes("MK") && !stats.includes("MK1"));
+  check(
+    "예매 링크 등록 완료율, 증빙, 체크인, 우대출구 확인이 세어진다",
+    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins >= 3 && summary.exit.ok >= 1 && summary.exit.notOk >= 1,
+    JSON.stringify({ booking: summary.booking, proofDone: summary.proofDone, checkins: summary.checkins, exit: summary.exit }),
+  );
   await shot(page, "데스크-오늘현황");
   check("현장 직원은 오늘 현황을 받을 수 없다 (403)", (await get("/api/desk/summary", zoneStaff)).status === 403);
   await browser.close();

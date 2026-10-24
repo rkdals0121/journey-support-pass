@@ -31,7 +31,7 @@ export default async function DeskPage() {
     <>
       <main className="page has-nav">
         <h1>안내데스크</h1>
-        <p className="muted">키오스크를 쓰기 어려운 여객을 대신 등록하고, 패스를 다시 뽑거나 지웁니다.</p>
+        <p className="muted">예매 완료 화면의 링크를 보지 못한 여객을 대신 등록하고, 여객의 등록을 찾거나 지웁니다.</p>
 
         <Link className="desk-card" href="/staff/desk/register">
           <span className="bubble">
@@ -39,7 +39,7 @@ export default async function DeskPage() {
           </span>
           <span>
             <strong>여객 대신 등록하기</strong>
-            <small>여객께 여쭤보며 대신 누르고 스티커를 뽑아 드립니다</small>
+            <small>여객께 여쭤보며 대신 누르고, 여객 휴대전화로 QR을 찍게 해 드립니다</small>
           </span>
           <ChevronRight size={22} aria-hidden="true" />
         </Link>

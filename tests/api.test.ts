@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { zoneName } from "@/lib/api/dto";
 import { resolveHandler } from "@/lib/api/kiosk";
 import {
+  checkinHandler,
   claimRegistration,
   destinationsHandler,
   eraseHandler,
@@ -15,6 +16,7 @@ import {
   callActionHandler,
   callsHandler,
   deskEraseHandler,
+  exitCheckHandler,
   summaryHandler,
   switchZoneHandler,
   zonesHandler,
@@ -519,8 +521,8 @@ describe("등록 완료 기록", () => {
     await registerHandler(db, body(), null, web, now);
     await registerHandler(db, body(), kiosk, "kiosk-dev", now);
     expect(await eventRows("reg_done")).toEqual([
-      { route: "web", adapted: true, place_id: null, value: null, device_key: web },
-      { route: "kiosk", adapted: true, place_id: "cc-108", value: null, device_key: "kiosk-dev" },
+      { route: "web", adapted: true, place_id: null, value: 0, device_key: web },
+      { route: "kiosk", adapted: true, place_id: "cc-108", value: 0, device_key: "kiosk-dev" },
     ]);
   });
 
@@ -1081,5 +1083,124 @@ describe("안내데스크: 여객 요청으로 지우기", () => {
       body: { erased: true },
     });
     expect(await logCount("cancel")).toBe(1);
+  });
+});
+
+describe("예매 완료 화면에서 연결: 증빙과 접점", () => {
+  const proofOf = async () =>
+    (await db.query<{ proof_status: string; via: string }>("select proof_status, via from registrations order by submitted_at, id"));
+
+  it("증빙을 냈다고 하면 확인된 것으로 둔다. 서류와 대상 유형은 받지 않는다", async () => {
+    const res = await registerHandler(
+      db,
+      body({ proof: true, via: "booking", targets: ["disabled"], proofFile: "welfare-card.jpg" }),
+      null,
+      web,
+      now,
+    );
+    expect(res.status).toBe(200);
+    expect(await proofOf()).toEqual([{ proof_status: "verified", via: "booking" }]);
+    // 등록 행에도 기록에도 대상과 파일 이름이 없다.
+    const row = (await db.query("select * from registrations"))[0];
+    expect(JSON.stringify(row)).not.toMatch(/disabled|welfare/);
+    // 예매 링크로 들어온 완료는 따로 세고, 증빙을 냈는지(1)도 남긴다.
+    expect(await eventRows("reg_done")).toEqual([{ route: "booking", adapted: true, place_id: null, value: 1, device_key: web }]);
+  });
+
+  it("증빙을 내지 않으면 확인되지 않은 채로 둔다", async () => {
+    await registerHandler(db, body(), null, web, now);
+    expect(await proofOf()).toEqual([{ proof_status: "none", via: "" }]);
+  });
+
+  it("키오스크와 안내데스크에서는 증빙을 받지 않는다(현장은 체크인 카운터에서 확인)", async () => {
+    await registerHandler(db, body({ proof: true, via: "booking" }), kiosk, "kiosk-dev", now);
+    await registerHandler(db, body({ proof: true, via: "booking" }), desk, "desk-dev", now, true);
+    expect(await proofOf()).toEqual([
+      { proof_status: "none", via: "" },
+      { proof_status: "none", via: "" },
+    ]);
+  });
+
+  it("예매 링크로 들어와 시작한 것도 따로 센다", async () => {
+    await eventHandler(db, { kind: "reg_start", adapted: false, via: "booking" }, null, web, now);
+    await eventHandler(db, { kind: "reg_start", adapted: false, via: "booking" }, kiosk, "kiosk-dev", now);
+    expect((await eventRows("reg_start")).map((e) => e.route)).toEqual(["booking", "kiosk"]);
+  });
+
+  it("지우면 증빙 확인 값도 지운다", async () => {
+    const reg = await registerHandler(db, body({ proof: true }), null, web, now);
+    await eraseHandler(db, { token: (reg.body as { token: string }).token }, web, now);
+    expect((await proofOf())[0].proof_status).toBe("none");
+  });
+});
+
+describe("모의 체크인과 우대출구", () => {
+  const newPass = async (over: Record<string, unknown> = {}) =>
+    (await registerHandler(db, body(over), null, web, now)).body as { token: string; passNo: string };
+  const guideOf = async (token: string) => ((await guideHandler(db, token, null, now)).body as { guide: GuideDto }).guide;
+
+  it("체크인하면 탑승권에 전자토큰이 저장된 것으로 바뀐다. 두 번 해도 한 번만 센다", async () => {
+    const { token } = await newPass({ proof: true });
+    expect((await guideOf(token)).checkedIn).toBe(false);
+    expect(await checkinHandler(db, { token }, web, now)).toEqual({ status: 200, body: { checkedIn: true } });
+    expect(await checkinHandler(db, { token }, web, now)).toEqual({ status: 200, body: { checkedIn: true } });
+    expect((await guideOf(token)).checkedIn).toBe(true);
+    expect((await guideOf(token)).proofVerified).toBe(true);
+    expect(await eventRows("checkin")).toHaveLength(1);
+  });
+
+  it("없는 패스와 끝난 패스는 체크인하지 않는다", async () => {
+    expect((await checkinHandler(db, { token: "AAAAAAAAAAAAAAAA" }, web, now)).status).toBe(404);
+    const { token } = await newPass();
+    await eraseHandler(db, { token }, web, now);
+    expect((await checkinHandler(db, { token }, web, now)).status).toBe(410);
+  });
+
+  it("증빙이 확인되고 체크인한 여객만 우대 대상으로 나온다. 대상 여부와 필요한 지원만 보인다", async () => {
+    const both = await newPass({ proof: true, choices: ["gd_large", "mov_no_stairs", "fac_rest", "stf_call"] });
+    await checkinHandler(db, { token: both.token }, web, now);
+    const res = await exitCheckHandler(db, staff, { scanned: passUrl("https://x.test", both.token) }, "exit-dev", now);
+    expect(res.status).toBe(200);
+    const r = (res.body as { result: Record<string, unknown> }).result;
+    expect(r).toMatchObject({ eligible: true, proofVerified: true, checkedIn: true, needs: ["계단 어려움", "직원 호출 원함"] });
+    // 이름, 대상 유형, 서류, 안내 화면 설정, 찾는 시설은 오지 않는다.
+    expect(Object.keys(r).sort()).toEqual(["checkedIn", "eligible", "flight", "needs", "proofVerified"]);
+    expect(JSON.stringify(r)).not.toMatch(/큰 글씨|쉴 곳|registrationId/);
+
+    const noCheckin = await newPass({ proof: true });
+    expect(((await exitCheckHandler(db, staff, { scanned: noCheckin.token }, "exit-dev", now)).body as { result: { eligible: boolean } }).result.eligible).toBe(false);
+    const noProof = await newPass();
+    await checkinHandler(db, { token: noProof.token }, web, now);
+    expect(((await exitCheckHandler(db, staff, { scanned: noProof.token }, "exit-dev", now)).body as { result: { eligible: boolean } }).result.eligible).toBe(false);
+
+    expect((await eventRows("exit_check")).map((e) => e.value)).toEqual([1, 0, 0]);
+    expect(await logCount("exit_view")).toBe(3);
+  });
+
+  it("직원이 아니면 우대출구 확인을 쓸 수 없다. 모르는 토큰과 끝난 토큰은 체크인 카운터로 안내한다", async () => {
+    const { token } = await newPass({ proof: true });
+    expect((await exitCheckHandler(db, null, { scanned: token }, "d", now)).status).toBe(401);
+    expect((await exitCheckHandler(db, kiosk, { scanned: token }, "d", now)).status).toBe(401);
+    expect((await exitCheckHandler(db, common, { scanned: token }, "d", now)).status).toBe(409);
+    const unknown = await exitCheckHandler(db, staff, { scanned: "AAAAAAAAAAAAAAAA" }, "d", now);
+    expect(unknown.status).toBe(404);
+    expect((unknown.body as { error: string }).error).toContain("체크인 카운터");
+    await eraseHandler(db, { token }, web, now);
+    expect((await exitCheckHandler(db, staff, { scanned: token }, "d", now)).status).toBe(410);
+  });
+
+  it("오늘 현황에 예매 링크 완료율, 증빙, 체크인, 우대출구 확인을 센다", async () => {
+    await eventHandler(db, { kind: "reg_start", adapted: false, via: "booking" }, null, web, now);
+    await eventHandler(db, { kind: "reg_start", adapted: false, via: "booking" }, null, web, now);
+    const a = await newPass({ proof: true, via: "booking", startAdapted: false });
+    await checkinHandler(db, { token: a.token }, web, now);
+    await exitCheckHandler(db, staff, { scanned: a.token }, "d", now);
+    const b = await newPass();
+    await exitCheckHandler(db, staff, { scanned: b.token }, "d", now);
+    const s = ((await summaryHandler(db, desk, now)).body as { summary: Summary }).summary;
+    expect(s.booking).toEqual({ started: 2, done: 1, rate: 50 });
+    expect(s.proofDone).toBe(1);
+    expect(s.checkins).toBe(1);
+    expect(s.exit).toEqual({ ok: 1, notOk: 1 });
   });
 });

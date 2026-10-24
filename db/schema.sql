@@ -70,6 +70,14 @@ alter table registrations add column if not exists lang text not null default 'k
 alter table registrations drop constraint if exists registrations_route_check;
 alter table registrations add constraint registrations_route_check
   check (route in ('web','kiosk','assisted','paper'));
+-- 증빙 확인 결과. 증빙서류와 대상 유형(노약자·영유아 동반·장애·임산부)은 받지 않는다.
+-- 제안 구조에서 증빙은 공항이 아닌 별도 서버가 암호화해 보관하고, 공항은 "확인됐다"는 값만 쓴다.
+-- 시제품에는 별도 서버가 없으므로 여객이 증빙을 냈다고 하면 바로 확인된 것(verified)으로 둔다.
+alter table registrations add column if not exists proof_status text not null default 'none';
+alter table registrations drop constraint if exists registrations_proof_check;
+alter table registrations add constraint registrations_proof_check check (proof_status in ('none','verified'));
+-- 등록에 들어온 접점. booking: 항공권 예매 완료 창(또는 예약 확인 문자)의 링크. 빈 글자: 그 밖.
+alter table registrations add column if not exists via text not null default '';
 
 create table if not exists passes (
   id uuid primary key default gen_random_uuid(),
@@ -91,6 +99,8 @@ create unique index if not exists passes_live_pass_no
 -- 한 등록이 쓰는 패스는 한 장뿐이다.
 create unique index if not exists passes_one_active_per_registration
   on passes (registration_id) where state = 'active';
+-- 체크인하면서 전자토큰을 탑승권에 저장한 시각(시제품은 모의 체크인). 아직이면 null.
+alter table passes add column if not exists checked_in_at timestamptz;
 
 -- 여객이 키오스크에서 누른 「직원 부르기」. 어느 키오스크에서 불렀는지와 받은 구역만 남긴다. 직원 개인은 남기지 않는다.
 create table if not exists calls (
@@ -122,6 +132,11 @@ create table if not exists events (
   device_key text                         -- 남용을 막는 데만 쓴다. 접속 주소와 기기 표시의 해시
 );
 create index if not exists events_at on events (at);
+-- checkin: 모의 체크인으로 탑승권에 전자토큰을 저장함   exit_check: 우대출구에서 탑승권을 확인함 (value 1 대상 확인 / 0 확인 안 됨)
+-- reg_done 의 value 는 증빙을 냈는가(1/0)다. 등록은 출발 뒤 지워지지만 이 건수는 남는다.
+alter table events drop constraint if exists events_kind_check;
+alter table events add constraint events_kind_check
+  check (kind in ('reg_start','reg_done','guide_open','survey','checkin','exit_check'));
 
 create table if not exists access_logs (
   id bigserial primary key,
@@ -134,5 +149,5 @@ create table if not exists access_logs (
 -- 먼저 만들어진 DB 에도 같은 규칙이 걸리도록 이름으로 지웠다가 다시 건다.
 alter table access_logs drop constraint if exists access_logs_action_check;
 alter table access_logs add constraint access_logs_action_check check (action in
-  ('scan_view','number_view','receipt_view','list_view','link','reissue','cancel','edit','login_fail','number_fail','register'));
+  ('scan_view','number_view','receipt_view','list_view','link','reissue','cancel','edit','login_fail','number_fail','register','exit_view'));
 create index if not exists access_logs_device on access_logs (device_key, action, at);

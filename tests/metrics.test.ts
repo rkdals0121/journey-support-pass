@@ -338,6 +338,10 @@ describe("오늘 현황", () => {
       guideOpens: 0,
       calls: { total: 0, fromRegister: 0, fromGuide: 0, done: 0, cancelled: 0, expired: 0, open: 0, medianAcceptSec: null },
       survey: { good: 0, fair: 0, poor: 0, total: 0 },
+      booking: { started: 0, done: 0, rate: null },
+      proofDone: 0,
+      checkins: 0,
+      exit: { ok: 0, notOk: 0 },
     });
   });
 

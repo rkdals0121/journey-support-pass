@@ -8,7 +8,7 @@ import { flightsToCity, suggestFlights, listDestinations } from "../flights/sear
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll, type Journey } from "../journey";
 import { logEvent, logLimitedEvent } from "../metrics";
-import { extractToken, issuePass, resolveToken } from "../passes";
+import { checkIn, extractToken, issuePass, resolveToken } from "../passes";
 import { eraseRegistration } from "../purge";
 import { createRegistration, type Route } from "../registrations";
 import { pollState } from "../timing";
@@ -65,6 +65,10 @@ export interface RegisterBody {
   editCount?: unknown;
   /** 첫 질문을 넘길 때 안내 방식을 켜 두었는가. 시작 기록과 같은 값으로 완료를 세기 위해 화면이 함께 보낸다. */
   startAdapted?: unknown;
+  /** 증빙서류를 냈는가. 서류 자체는 보내지 않는다. */
+  proof?: unknown;
+  /** 들어온 접점. "booking" 이면 항공권 예매 완료 창의 링크. */
+  via?: unknown;
 }
 
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -111,6 +115,8 @@ export async function registerHandler(
       consent: body.consent === true,
       startedAt: new Date(typeof body.startedAt === "string" ? body.startedAt : Number.NaN),
       editCount: typeof body.editCount === "number" ? body.editCount : 0,
+      proof: body.proof === true,
+      via: body.via === "booking" ? "booking" : "",
     },
     now,
   );
@@ -153,9 +159,12 @@ export async function registerHandler(
     await logEvent(db, {
       at: now,
       kind: "reg_done",
-      route,
+      // 예매 완료 창의 링크로 들어온 등록은 따로 센다(링크 접속 후 등록 완료율).
+      route: route === "web" && body.via === "booking" ? "booking" : route,
       adapted: typeof body.startAdapted === "boolean" ? body.startAdapted : isAdapted(choices),
       placeId: session?.placeId,
+      // 증빙을 냈는가. 등록은 출발 뒤 지워지지만 이 건수는 남는다.
+      value: res.registration.proofVerified ? 1 : 0,
       deviceKey: clientKey,
     });
   }
@@ -196,6 +205,22 @@ export async function guideHandler(db: Db, token: string, session: Session | nul
   return ok({ guide: buildGuide(found.journey, found.passNo, place, poll) });
 }
 
+/**
+ * 모의 체크인. 실제로는 항공사 체크인(모바일·카운터) 때 전자토큰이 탑승권에 저장된다.
+ * 공항이 항공사 체크인에 끼어들 수 있는지는 확인하지 못했으므로(제안서 리스크), 시제품은 여객이 단추를 눌러 흉내 낸다.
+ */
+export async function checkinHandler(db: Db, body: { token?: unknown }, clientKey: string, now: Date): Promise<ApiResult> {
+  const found = await lookupPass(db, typeof body.token === "string" ? body.token : "", now);
+  if (found.kind === "none") return fail(404, NOT_A_PASS);
+  if (found.kind === "ended") return fail(410, PASS_ENDED);
+  const res = await checkIn(db, found.token, now);
+  if (!res.ok) return fail(410, PASS_ENDED);
+  if (res.fresh) {
+    await logEvent(db, { at: now, kind: "checkin", route: "web", adapted: isAdapted(found.journey.choices), deviceKey: clientKey });
+  }
+  return ok({ checkedIn: true });
+}
+
 /** 여객이 자기 등록을 지운다. QR 값을 아는 사람만 할 수 있다. 지우면 패스는 더 쓸 수 없다. */
 export async function eraseHandler(db: Db, body: { token?: unknown }, clientKey: string, now: Date): Promise<ApiResult> {
   const found = await lookupPass(db, typeof body.token === "string" ? body.token : "", now);
@@ -212,14 +237,15 @@ export async function eraseHandler(db: Db, body: { token?: unknown }, clientKey:
  */
 export async function eventHandler(
   db: Db,
-  body: { kind?: unknown; adapted?: unknown; value?: unknown },
+  body: { kind?: unknown; adapted?: unknown; value?: unknown; via?: unknown },
   session: Session | null,
   clientKey: string,
   now: Date,
 ): Promise<ApiResult> {
   const base = {
     at: now,
-    route: session?.isKiosk ? "kiosk" : "web",
+    // 예매 완료 창의 링크로 들어온 휴대전화 등록은 따로 센다(링크 접속 후 등록 완료율).
+    route: session?.isKiosk ? "kiosk" : body.via === "booking" ? "booking" : "web",
     adapted: body.adapted === true,
     placeId: session?.placeId,
     deviceKey: clientKey,

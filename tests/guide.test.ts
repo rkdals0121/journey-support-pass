@@ -35,6 +35,8 @@ function journey(over: Partial<Journey> = {}): Journey {
     delayed: false,
     boardingNow: false,
     boardingClosed: false,
+    proofVerified: false,
+    checkedIn: false,
     ...over,
   };
 }
@@ -320,7 +322,7 @@ describe("안내 내용: 고른 항목에 따라 달라지는 것", () => {
     expect(later).toBeLessThanOrEqual(Date.now());
   });
 
-  it("이름 칸은 없다. 싣는 칸은 정해진 열두 가지뿐이다", () => {
+  it("이름 칸은 없다. 싣는 칸은 정해진 열네 가지뿐이다", () => {
     const g = buildGuide(journey(), "123456", at("cc-center"), poll);
     expect(Object.keys(g).sort()).toEqual(
       [
@@ -336,6 +338,8 @@ describe("안내 내용: 고른 항목에 따라 달라지는 것", () => {
         "poll",
         "routeNote",
         "urgentMin",
+        "proofVerified",
+        "checkedIn",
       ].sort(),
     );
     expect(hasKey(g, "name")).toBe(false);

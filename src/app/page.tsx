@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, ClipboardList, ConciergeBell, Languages, QrCode, ScanLine, ShieldCheck, Trash2, UserX } from "lucide-react";
+import { ArrowRight, ChevronRight, ClipboardList, ConciergeBell, FileCheck2, Languages, ShieldCheck, Ticket, Trash2, UserX } from "lucide-react";
 import Link from "next/link";
 import { langOf, textOf } from "@/lib/i18n";
 import { Brand, PassArt } from "./components/Sunflower";
@@ -39,7 +39,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </li>
         <li>
           <span className="bubble">
-            <QrCode size={22} aria-hidden="true" />
+            <FileCheck2 size={22} aria-hidden="true" />
           </span>
           <div>
             <strong>{t.step2}</strong>
@@ -48,7 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </li>
         <li>
           <span className="bubble bubble-sun">
-            <ScanLine size={22} aria-hidden="true" />
+            <Ticket size={22} aria-hidden="true" />
           </span>
           <div>
             <strong>{t.step3}</strong>
@@ -78,6 +78,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       </div>
 
       <div className="home-links">
+        <Link className="home-staff" href={`/demo/booking${q}`}>
+          {t.bookingDemoLink}
+          <ChevronRight size={16} aria-hidden="true" />
+        </Link>
         <Link className="home-staff" href="/staff">
           {t.staffLink}
           <ChevronRight size={16} aria-hidden="true" />
