@@ -1,6 +1,4 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import QRCode from "qrcode";
 import { placeOf } from "@/lib/airport";
 import { config } from "@/lib/config";
 import { currentSession } from "@/lib/session-server";
@@ -15,24 +13,14 @@ export default async function KioskGuidePage({ searchParams }: { searchParams: P
   const idleAskSec = Number.isFinite(idle) && idle > 0 ? idle : config.idleAskSec;
   const session = await currentSession();
   const place = session?.isKiosk ? placeOf(session.placeId) : null;
+  // 미리 등록하지 않은 여객에게 휴대전화로 찍을 등록 QR 을 보여 주지 않는다. 여객이 QR 을 쓰는 일이 없게 한다(피드백 2).
+  // 그런 여객은 공항 입구 안내로봇에서 탑승권을 대고 등록하거나 안내데스크에서 돕는다.
   if (!place) redirect("/kiosk");
-  // 아직 등록하지 않은 여객이 자기 휴대전화로 찍어 바로 등록할 수 있게, 등록 화면의 주소를 QR 로 보여 준다.
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
-  // 영어 화면에서 보여 줄 QR 은 영어 등록 화면을 연다. 영어 안내를 보고 찍었는데 한국어 화면이 열리면 언어 단추부터 찾아야 한다.
-  // 두 그림은 함께 만들어 서버가 두 번 기다리지 않게 한다.
-  const base = `${proto}://${host}`;
-  const [registerQr, registerQrEn] = await Promise.all(
-    [`${base}/register`, `${base}/register?lang=en`].map((url) => QRCode.toString(url, { type: "svg", errorCorrectionLevel: "M", margin: 2 })),
-  );
   return (
     <GuideKiosk
       placeLabel={place.label}
       placeLabelEn={place.labelEn}
       refreshSec={config.guideRefreshSec}
-      registerQr={registerQr}
-      registerQrEn={registerQrEn}
       idleAskSec={idleAskSec}
       idleAnswerSec={config.idleAnswerSec}
     />

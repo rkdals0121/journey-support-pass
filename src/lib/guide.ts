@@ -1,6 +1,7 @@
 import {
   FACILITY_OF_CODE,
   isArea,
+  OPTIONAL_KINDS,
   nearestFacilities,
   routeOptionsOf,
   routeToGate,
@@ -9,6 +10,7 @@ import {
   type Place,
   type Route,
 } from "./airport";
+import type { Extra } from "./catalog";
 import type { Journey } from "./journey";
 import { config } from "./config";
 import { kstDate } from "./flights/normalize";
@@ -118,6 +120,8 @@ export interface GuideDto {
   passNo: string;
   lang: "ko" | "en";
   choices: string[];
+  /** 함께 가는 분의 수, 유모차 수, 「더 하고 싶은 말씀」. 키오스크의 "미리 등록한 내용"과 고치기에 쓴다. */
+  extra: Extra;
   flight: FlightView;
   place: { id: string; label: string; labelEn: string; level: number; landside: boolean } | null;
   gateRoute: Route | null;
@@ -168,10 +172,11 @@ export function buildGuide(j: Journey, passNo: string, place: Place | null, poll
   const chosenKinds = new Set<FacilityKind>(
     j.choices.map((c) => FACILITY_OF_CODE[c]).filter((k): k is FacilityKind => k !== undefined),
   );
-  if (j.choices.includes("mov_wheelchair_need")) chosenKinds.add("wheelchair");
-  // 휠체어가 필요하다고 한 여객에게는 빌리는 곳을 맨 앞에 둔다. 그다음은 고른 시설, 나머지 순이다.
+  // 휠체어를 빌린다고 한 여객에게는 빌리는 곳을 맨 앞에 둔다. 그다음은 고른 시설, 나머지 순이다.
   const rank = (f: NearFacility) => (f.kind === "wheelchair" && chosenKinds.has("wheelchair") ? 0 : chosenKinds.has(f.kind) ? 1 : 2);
+  // 약국·식당·유모차 대여소·점자 안내판은 고른 여객에게만 보여 준다.
   const facilities = (place ? nearestFacilities(place, opts) : [])
+    .filter((f) => !OPTIONAL_KINDS.includes(f.kind) || chosenKinds.has(f.kind))
     .map((f, i) => ({ f, i }))
     .sort((a, b) => rank(a.f) - rank(b.f) || a.i - b.i)
     .map(({ f }) => ({ ...f, chosen: chosenKinds.has(f.kind) }));
@@ -180,6 +185,7 @@ export function buildGuide(j: Journey, passNo: string, place: Place | null, poll
     passNo,
     lang: j.lang,
     choices: j.choices,
+    extra: j.extra,
     flight: toFlightView(j, now),
     place: place
       ? { id: place.id, label: place.label, labelEn: place.labelEn, level: place.level, landside: place.landside }

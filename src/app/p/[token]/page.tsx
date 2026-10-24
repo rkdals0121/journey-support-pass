@@ -1,6 +1,5 @@
 import { CircleSlash, SearchX } from "lucide-react";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { lookupPass } from "@/lib/api/public";
@@ -9,7 +8,7 @@ import { getDb } from "@/lib/db";
 import { lastSuccessfulPoll } from "@/lib/flights/ingest";
 import { buildGuide } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
-import { passUrl, TOKEN_RE } from "@/lib/pass-format";
+import { TOKEN_RE } from "@/lib/pass-format";
 import { pollState } from "@/lib/timing";
 import { Brand } from "../../components/Sunflower";
 import { PassView } from "./PassView";
@@ -23,8 +22,8 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   return TOKEN_RE.test(token) ? { manifest: `/p/${token}/manifest` } : {};
 }
 
-// 패스 QR 이 가리키는 주소. 이 주소가 곧 패스다.
-// 여객이 등록을 마치면 여기로 오고, 휴대전화 기본 카메라로 QR 을 찍어도 여기로 온다.
+// 여객의 등록 현황. 여객이 등록을 마치면 여기로 온다.
+// 이 화면에는 여객이 공항에서 보여 줄 QR 이 없다(피드백 2). 체크인하면 전자토큰이 탑승권에 저장되고, 여객은 탑승권만 보여 준다.
 // 이름은 애초에 받지 않으므로 여기 나오는 것은 항공편과 고른 항목뿐이다.
 export default async function PassPage({
   params,
@@ -71,12 +70,10 @@ export default async function PassPage({
   }
 
   const guide = buildGuide(found.journey, found.passNo, null, pollState(await lastSuccessfulPoll(db), now), now);
-  // QR 은 서버에서 미리 그려 보낸다. 느린 휴대전화에서도 화면을 열자마자 QR 이 보인다.
-  // 주소는 여객이 지금 연 그 주소를 따른다.
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
-  const qr = await QRCode.toString(passUrl(`${proto}://${host}`, found.token), { type: "svg", errorCorrectionLevel: "M", margin: 4 });
+  // 체크인했으면 모의 탑승권의 바코드(BP1)를 서버에서 미리 그려 보낸다. 항공사가 주는 탑승권을 흉내 낸 것이고,
+  // 키오스크·우대출구는 이 탑승권으로 등록을 찾는다. 서비스 전용 QR(패스 주소)은 여객에게 보여 주지 않는다.
+  const boarding = found.journey.boarding;
+  const qr = boarding ? await QRCode.toString(boarding, { type: "svg", errorCorrectionLevel: "M", margin: 4 }) : "";
   const prefs = prefsOf(found.journey.choices);
   const early = [
     prefs.large ? 'document.documentElement.style.setProperty("--scale","1.25")' : "",

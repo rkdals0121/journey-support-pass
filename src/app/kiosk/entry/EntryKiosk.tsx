@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, Baby, BookOpen, CarFront, ClipboardCheck, Footprints, MessageCircle, Navigation, PersonStanding, Ticket, X } from "lucide-react";
+import { ArrowRight, Baby, BookOpen, CarFront, ClipboardCheck, Ear, Eye, Footprints, Navigation, Pencil, PersonStanding, Ticket, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { itemOf, prefsOf } from "@/lib/catalog";
+import { labelOf, prefsOf } from "@/lib/catalog";
 import type { Target } from "@/lib/docscan";
 import type { GuideDto } from "@/lib/guide";
 import { textOf, type Lang } from "@/lib/i18n";
@@ -13,8 +13,9 @@ import { FlightBoard } from "../../components/GuideParts";
 import { IdleGuard } from "../../components/IdleGuard";
 import { Choice } from "../../components/Inputs";
 import { ListenStart } from "../../components/ListenStart";
-import { NeedIcon } from "../../components/NeedIcon";
+import { RegisterFlow } from "../../components/RegisterFlow";
 import { Robot } from "../../components/Robot";
+import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { Scanner } from "../../components/Scanner";
 import { StaffCall } from "../../components/StaffCall";
 import { useRobotTheme } from "../../components/useRobotTheme";
@@ -30,14 +31,17 @@ import { resetViewSettings, useViewSettings } from "../../components/viewSetting
 const REQ_TIMEOUT_MS = 15_000;
 const STATUS_POLL_MS = 5_000;
 
-// 그 자리에서 고르는 불편 다섯 가지와 등록 항목(catalog)의 대응. 화면 안내가 달라지도록 고른 것이다.
+// 그 자리에서 고르는 불편. 체크리스트 1쪽의 묶음 이름을 그대로 쓰고, 고르면 화면과 길 안내가 달라지도록 가지 안의 답을 함께 넣는다.
+// 자세한 답은 등록한 뒤 「고치기」에서 체크리스트 질문 그대로 고칠 수 있다.
 const EASY = [
-  { key: "walk", codes: ["mov_no_stairs", "mov_need_rest"], Icon: Footprints },
-  { key: "stand", codes: ["mov_no_standing"], Icon: PersonStanding },
-  { key: "understand", codes: ["gd_easy", "gd_picture"], Icon: BookOpen },
-  { key: "talk", codes: ["gd_large"], Icon: MessageCircle },
-  { key: "child", codes: ["fac_nursing"], Icon: Baby },
+  { key: "walk", codes: ["tr_walk", "mov_no_stairs", "mov_need_rest"], Icon: Footprints },
+  { key: "stand", codes: ["tr_stand", "mov_no_standing"], Icon: PersonStanding },
+  { key: "see", codes: ["tr_see", "gd_large"], Icon: Eye },
+  { key: "hear", codes: ["tr_hear", "hear_text"], Icon: Ear },
+  { key: "understand", codes: ["tr_understand", "gd_easy", "gd_picture"], Icon: BookOpen },
+  { key: "child", codes: ["tr_child", "chd_diaper"], Icon: Baby },
 ] as const;
+const easyLabel = (e: (typeof EASY)[number], lang: Lang) => labelOf(e.codes[0], lang);
 type EasyKey = (typeof EASY)[number]["key"];
 const TARGETS: Target[] = ["elderly", "infant", "disabled", "pregnant"];
 
@@ -57,6 +61,7 @@ type View =
   | { kind: "sleep" }
   | { kind: "nopass" }
   | { kind: "confirm"; token: string; guide: GuideDto }
+  | { kind: "edit"; token: string; guide: GuideDto }
   | { kind: "ask"; boarding: string; flight: FlightLite }
   | { kind: "proof"; boarding: string; flight: FlightLite }
   | { kind: "consent"; boarding: string; flight: FlightLite }
@@ -100,7 +105,7 @@ export function EntryKiosk({ placeLabel, placeLabelEn, idleAskSec, idleAnswerSec
   const choices = "guide" in view ? view.guide.choices : pickedCodes;
   const prefs = prefsOf(choices);
   const t = textOf(lang, prefs.easy);
-  const { speak, stop } = useSpeech(lang);
+  const { speak, stop } = useSpeech(lang, prefs.slow);
   const voiceOn = useViewSettings().voice ?? prefs.voice;
   const here = lang === "en" ? placeLabelEn : placeLabel;
   const token = "token" in view ? view.token : null;
@@ -272,37 +277,48 @@ export function EntryKiosk({ placeLabel, placeLabelEn, idleAskSec, idleAnswerSec
   } else if (view.kind === "nopass") {
     screen = shell("nopass", `${t.entryNoPass}. ${t.entryNoPassBody}`, <>{bubble("awake", t.entryNoPass)}<h1>{t.entryNoPass}</h1><p className="lead">{t.entryNoPassBody}</p></>);
   } else if (view.kind === "confirm") {
-    const picked = view.guide.choices.map((c) => itemOf(c)).filter((i): i is NonNullable<typeof i> => i !== null);
-    const label = (i: (typeof picked)[number]) => (lang === "en" ? i.en : i.label);
+    // 미리 등록한 내용을 먼저 보여 주고, 고칠 것이 있으면 체크리스트 질문 그대로 고친다(피드백 3).
     screen = shell(
       "confirm",
-      [t.entryWake, t.entryConfirmTitle, ...picked.map(label)].join(". "),
+      [t.entryWake, t.savedTitle, savedNeedsText(view.guide.choices, view.guide.extra, lang, t), t.savedAsk].join(". "),
       <>
         {bubble("happy", t.entryWake)}
-        <h1>{t.entryConfirmTitle}</h1>
+        <h1>{t.savedTitle}</h1>
+        <p className="lead">{t.savedAsk}</p>
         <FlightBoard flight={view.guide.flight} t={t} lang={lang} />
-        {picked.length === 0 ? (
-          <p className="muted">{t.entryConfirmEmpty}</p>
-        ) : (
-          <ul className="picked">
-            {picked.map((i) => (
-              <li key={i.code}>
-                <NeedIcon code={i.code} size={22} />
-                {label(i)}
-              </li>
-            ))}
-          </ul>
-        )}
+        <SavedNeeds choices={view.guide.choices} extra={view.guide.extra} lang={lang} t={t} />
       </>,
-      <button className="btn btn-primary" onClick={() => setView({ kind: "services", token: view.token, guide: view.guide })}>
-        {t.entryConfirmOk}
-        <ArrowRight size={24} aria-hidden="true" />
-      </button>,
+      <>
+        <button className="btn btn-primary" onClick={() => setView({ kind: "services", token: view.token, guide: view.guide })}>
+          {t.entryConfirmOk}
+          <ArrowRight size={24} aria-hidden="true" />
+        </button>
+        <button className="btn" onClick={() => setView({ kind: "edit", token: view.token, guide: view.guide })}>
+          <Pencil size={22} aria-hidden="true" />
+          {t.savedEdit}
+        </button>
+      </>,
+    );
+  } else if (view.kind === "edit") {
+    const { token: tok, guide } = view;
+    screen = (
+      <RegisterFlow
+        mode="edit"
+        initialLang={lang}
+        onExit={reset}
+        onBackOut={() => setView({ kind: "confirm", token: tok, guide })}
+        edit={{
+          token: tok,
+          choices: guide.choices,
+          extra: guide.extra,
+          onSaved: (g) => setView({ kind: "services", token: tok, guide: g }),
+        }}
+      />
     );
   } else if (view.kind === "ask") {
     screen = shell(
       "ask",
-      [t.entryWake, t.entryAskTitle, t.entryAskHint, ...EASY.map((e) => t.entryEasy[e.key])].join(". "),
+      [t.entryWake, t.entryAskTitle, t.entryAskHint, ...EASY.map((e) => easyLabel(e, lang))].join(". "),
       <>
         {bubble("awake", t.entryWake)}
         <h1>{t.entryAskTitle}</h1>
@@ -311,16 +327,16 @@ export function EntryKiosk({ placeLabel, placeLabelEn, idleAskSec, idleAnswerSec
         </p>
         <p className="muted">{t.entryAskHint}</p>
         <div className="easy-grid" role="group" aria-label={t.entryAskTitle}>
-          {EASY.map(({ key, Icon }) => (
+          {EASY.map((e) => (
             <button
-              key={key}
+              key={e.key}
               role="checkbox"
-              aria-checked={picks.includes(key)}
-              className={picks.includes(key) ? "easy-tile on" : "easy-tile"}
-              onClick={() => setPicks((p) => (p.includes(key) ? p.filter((k) => k !== key) : [...p, key]))}
+              aria-checked={picks.includes(e.key)}
+              className={picks.includes(e.key) ? "easy-tile on" : "easy-tile"}
+              onClick={() => setPicks((p) => (p.includes(e.key) ? p.filter((k) => k !== e.key) : [...p, e.key]))}
             >
-              <Icon size={40} aria-hidden="true" />
-              {t.entryEasy[key]}
+              <e.Icon size={40} aria-hidden="true" />
+              {easyLabel(e, lang)}
             </button>
           ))}
         </div>
@@ -413,7 +429,6 @@ export function EntryKiosk({ placeLabel, placeLabelEn, idleAskSec, idleAnswerSec
     );
   } else if (view.kind === "guide") {
     const { token: tok, guide } = view;
-    const picked = guide.choices.map((c) => itemOf(c)).filter((i): i is NonNullable<typeof i> => i !== null);
     screen = shell(
       "guide",
       [t.svcGuide, t.noteLandside].join(". "),
@@ -421,16 +436,7 @@ export function EntryKiosk({ placeLabel, placeLabelEn, idleAskSec, idleAnswerSec
         <h1>{t.svcGuide}</h1>
         <FlightBoard flight={guide.flight} t={t} lang={lang} />
         <p className="lead">{t.noteLandside}</p>
-        {picked.length > 0 && (
-          <ul className="picked">
-            {picked.map((i) => (
-              <li key={i.code}>
-                <NeedIcon code={i.code} size={22} />
-                {lang === "en" ? i.en : i.label}
-              </li>
-            ))}
-          </ul>
-        )}
+        <SavedNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
       </>,
       <button className="btn btn-primary" onClick={() => setView({ kind: "services", token: tok, guide })}>
         {t.back}

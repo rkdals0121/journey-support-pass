@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Frown, Info, Keyboard, Meh, Navigation, QrCode, Smile, Sunrise } from "lucide-react";
+import { ArrowRight, ChevronRight, ClipboardList, Frown, Info, Keyboard, Meh, Navigation, Pencil, Smile, Sunrise, Ticket } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
@@ -15,6 +15,8 @@ import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
 import { Scanner } from "../../components/Scanner";
 import { ListenStart } from "../../components/ListenStart";
+import { RegisterFlow } from "../../components/RegisterFlow";
+import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
 import { Robot } from "../../components/Robot";
@@ -26,17 +28,22 @@ interface Props {
   placeLabel: string;
   placeLabelEn: string;
   refreshSec: number;
-  /** 휴대전화로 찍어 바로 등록할 수 있는 QR 그림(svg). 아직 등록하지 않은 여객에게 처음 화면에서 보여 준다. */
-  registerQr: string;
-  /** 같은 QR 의 영어판. 영어로 바꾼 처음 화면에서는 이것을 보여 주어, 찍으면 영어 등록 화면이 바로 열린다. */
-  registerQrEn: string;
   idleAskSec: number;
   idleAnswerSec: number;
 }
 
-type View = { kind: "scan" } | { kind: "number" } | { kind: "home" } | { kind: "route"; target: RouteTarget } | { kind: "survey" } | { kind: "thanks" };
+// saved: 탑승권을 읽은 뒤 맨 먼저 띄우는 "미리 등록하신 내용"과 "고칠 것이 있으신가요?"(피드백 3). edit: 같은 체크리스트 질문으로 고치기.
+type View =
+  | { kind: "scan" }
+  | { kind: "number" }
+  | { kind: "saved" }
+  | { kind: "edit" }
+  | { kind: "home" }
+  | { kind: "route"; target: RouteTarget }
+  | { kind: "survey" }
+  | { kind: "thanks" };
 
-const NO_PREFS: Prefs = { large: false, voice: false, picture: false, easy: false, wantsStaff: false };
+const NO_PREFS: Prefs = { large: false, voice: false, picture: false, easy: false, slow: false, wantsStaff: false };
 const THANKS_MS = 3500;
 const ERROR_SHOW_MS = 6000;
 // 안내를 끝낸 여객이 QR 을 아직 카메라 앞에 들고 있어도 곧바로 다시 열리지 않게, 방금 끝낸 패스는 잠시 읽지 않는다.
@@ -47,10 +54,12 @@ const REFRESH_TIMEOUT_MS = 15_000;
 const KIOSK_SETUP = "/kiosk";
 
 /**
- * 안내 키오스크. 여객이 QR 을 보여 주거나 번호를 누르면, 그 여객이 고른 대로 화면이 바뀌고 길과 시설을 안내한다.
- * 한 페이지 안에서 처음 화면 → 안내 → 끝내기 → 처음 화면으로 돈다. 끝내면 앞사람의 내용은 화면에서 지운다.
+ * 안내 키오스크. 여객이 탑승권을 대거나 번호를 누르면, 미리 등록한 내용을 먼저 보여 주고 고칠 것이 있는지 묻는다.
+ * 그 뒤 그 여객이 고른 대로 화면이 바뀌고 길과 시설을 안내한다. 여객이 따로 QR 을 들고 올 일은 없다(피드백 2):
+ * 체크인할 때 전자토큰이 탑승권에 저장되고, 키오스크는 탑승권 바코드로 등록을 찾는다.
+ * 한 페이지 안에서 처음 화면 → 등록 내용 확인(고치기) → 안내 → 끝내기 → 처음 화면으로 돈다. 끝내면 앞사람의 내용은 화면에서 지운다.
  */
-export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec, registerQr, registerQrEn }: Props) {
+export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec }: Props) {
   useRobotTheme();
   const [view, setView] = useState<View>({ kind: "scan" });
   const [token, setToken] = useState<string | null>(null);
@@ -60,6 +69,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callActive, setCallActive] = useState(false);
+  // 키오스크에서 고친 내용을 저장했는지. 안내 첫 화면에 한 번 알린다.
+  const [edited, setEdited] = useState(false);
   // 지금 여객의 차례. 처음 화면으로 돌아갈 때마다 하나 올린다.
   const sessionSeq = useRef(0);
   // 「직원 부르기」를 누른 차례. 앞사람이 부르고 간 호출은 처음 화면으로 돌아간 뒤에도 열려 있다(직원은 그 자리로 온다).
@@ -109,7 +120,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const lang: Lang = guide ? guide.lang : startLang;
   const prefs = guide ? prefsOf(guide.choices) : NO_PREFS;
   const t = textOf(lang, prefs.easy);
-  const { speak, stop } = useSpeech(lang);
+  const { speak, stop } = useSpeech(lang, prefs.slow);
   // 직원 부르기의 상태도 소리로 읽는다. 등록 때 소리를 고르지 않았어도 키오스크에서 소리를 켰으면 읽는다.
   const viewSettings = useViewSettings();
   const voiceOn = viewSettings.voice ?? prefs.voice;
@@ -169,6 +180,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     setGuide(null);
     setDigits("");
     setError(null);
+    setEdited(false);
     setStartLang("ko");
     // 앞사람이 「설정」에서 바꾼 글자 크기와 소리도 지운다.
     resetViewSettings();
@@ -224,7 +236,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         // 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
         if (callerLeft(at)) setCallSeq(null);
         emptyCall.current = null;
-        setView({ kind: "home" });
+        // 안내보다 먼저, 미리 등록한 내용을 보여 주고 고칠 것이 있는지 묻는다(피드백 3).
+        setView({ kind: "saved" });
       } catch {
         // 처음 화면으로 돌아가며 끊은 것이면 알리지 않는다. 알리면 다음 여객 앞에 앞사람의 오류가 뜬다.
         // 누른 번호도 지운다. 여섯 칸이 찬 채로 두면 번호판이 눌리지 않아 고장 난 것처럼 보인다.
@@ -275,7 +288,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
 
   // 안내를 보는 동안 탑승구와 남은 시간을 다시 받는다. 탑승구가 바뀌면 길도 바뀐다.
   // 안내와 길 화면을 오가도 시계를 새로 시작하지 않는다. 30초보다 자주 오가면 한 번도 다시 받지 못하기 때문이다.
-  const viewing = view.kind === "home" || view.kind === "route";
+  const viewing = view.kind === "home" || view.kind === "route" || view.kind === "saved";
   useEffect(() => {
     if (!token || !viewing) return;
     let alive = true;
@@ -453,7 +466,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                 <p className="robot-bubble">{t.guideRobot}</p>
               </div>
               <h1>
-                <QrCode size={32} aria-hidden="true" /> {t.scanTitle}
+                <Ticket size={32} aria-hidden="true" /> {t.scanTitle}
               </h1>
               <p className="lead">{t.scanBody}</p>
               <ListenStart t={t} />
@@ -473,10 +486,6 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
                   <strong>{t.noPassTitle}</strong>
                   <span>{t.noPassBody}</span>
                 </div>
-                <figure className="register-qr">
-                  <div dangerouslySetInnerHTML={{ __html: startLang === "en" ? registerQrEn : registerQr }} role="img" aria-label={t.noPassQr} />
-                  <figcaption>{t.noPassQr}</figcaption>
-                </figure>
               </div>
             </div>
             <Scanner
@@ -489,6 +498,67 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           <p className="kiosk-foot">{here}</p>
         </FlowShell>
         {call}
+      </>
+    );
+  }
+
+  // ── 미리 등록하신 내용: 고칠 것이 있는지 먼저 묻는다(피드백 3) ──
+  if (view.kind === "saved") {
+    return (
+      <>
+        <FlowShell
+          lang={lang}
+          prefs={prefs}
+          kiosk
+          screenKey="saved"
+          speakText={[t.savedTitle, `${guide.flight.flightNo}, ${destOf(guide.flight, lang)}`, savedNeedsText(guide.choices, guide.extra, lang, t), t.savedAsk].join(". ")}
+          onHome={reset}
+          cta={
+            <>
+              <button className="btn btn-primary" onClick={() => setView({ kind: "home" })}>
+                {t.savedKeep}
+                <ArrowRight size={24} aria-hidden="true" />
+              </button>
+              <button className="btn" onClick={() => setView({ kind: "edit" })}>
+                <Pencil size={22} aria-hidden="true" />
+                {t.savedEdit}
+              </button>
+            </>
+          }
+        >
+          <p className="kicker">
+            <ClipboardList size={20} aria-hidden="true" /> {t.savedTitle}
+          </p>
+          <h1>{t.savedAsk}</h1>
+          <FlightBoard flight={guide.flight} t={t} lang={lang} />
+          <SavedNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
+        </FlowShell>
+        {call}
+        {idle}
+      </>
+    );
+  }
+  if (view.kind === "edit" && token) {
+    return (
+      <>
+        <RegisterFlow
+          mode="edit"
+          initialLang={lang}
+          onExit={reset}
+          onBackOut={() => setView({ kind: "saved" })}
+          edit={{
+            token,
+            choices: guide.choices,
+            extra: guide.extra,
+            onSaved: (g) => {
+              setGuide(g);
+              setEdited(true);
+              setView({ kind: "home" });
+            },
+          }}
+        />
+        {call}
+        {idle}
       </>
     );
   }
@@ -667,6 +737,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       >
         {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
         <h1 className="kicker">{t.guideHello}</h1>
+        {edited && <Banner role="status">{t.editSaved}</Banner>}
         <FlightBoard flight={flight} t={t} lang={lang} />
         {offlineNow ? <Banner role="status">{t.kioskOffline}</Banner> : guide.poll.stale && <Banner role="status">{t.stale}</Banner>}
 
@@ -700,6 +771,10 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
             <div className="tiles tiles-small">{others.map(tile)}</div>
           </>
         )}
+        <button className="btn" onClick={() => setView({ kind: "saved" })}>
+          <ClipboardList size={22} aria-hidden="true" />
+          {t.savedTitle}
+        </button>
         <button className="btn finish-btn" onClick={() => setView({ kind: "survey" })}>
           {t.finish}
         </button>

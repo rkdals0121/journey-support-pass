@@ -499,7 +499,7 @@ describe("키오스크에서 직원 부르기", () => {
     const { pass } = await registerWithPass(db, now, { choices: ["gd_voice", "mov_wheelchair_need"] });
     await callHandler(db, other, { token: pass.token, screen: "guide" }, now);
     const [c] = await staffList();
-    expect(c.pass).toMatchObject({ choices: ["소리 안내", "휠체어 필요"], flight: { flightNo: "KE123", gate: 127 } });
+    expect(c.pass).toMatchObject({ choices: ["휠체어 대여", "소리 안내"], flight: { flightNo: "KE123", gate: 127 } });
   });
 
   it("패스 없이 불렀다가 패스를 찍고 다시 부르면 같은 호출에 패스가 붙는다", async () => {

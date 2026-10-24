@@ -101,7 +101,7 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
           <Navigation size={22} aria-hidden="true" />
           <span>
             <b>안내 키오스크 (출국심사 뒤)</b>
-            <small>여객이 탑승권 QR을 대면 탑승구 가는 길과 시설을 맞춤으로 보여줍니다</small>
+            <small>여객이 탑승권을 대면 미리 등록한 내용을 보여 주고(그 자리에서 고칠 수 있음) 탑승구 가는 길과 시설을 맞춤으로 보여줍니다</small>
           </span>
         </label>
         {/* 등록 키오스크(스티커 인쇄)는 주 흐름에서 뺐다. 등록은 예매 완료 화면의 링크로 하고, 현장은 안내데스크가 대신 등록한다.

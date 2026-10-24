@@ -124,7 +124,7 @@ export function readSession(token: string | undefined, now: Date): Session | nul
 
 // DB 의 제약(schema.sql)에는 예전 구조의 값도 남아 있다. 먼저 만들어진 DB 의 옛 기록 때문이다. 지금 쓰는 것은 아래 다섯 가지다.
 // exit_view: 우대출구에서 탑승권의 전자토큰을 읽음.
-export type LogAction = "register" | "cancel" | "login_fail" | "number_fail" | "exit_view";
+export type LogAction = "register" | "cancel" | "edit" | "login_fail" | "number_fail" | "exit_view";
 
 export async function logAccess(
   db: Db,

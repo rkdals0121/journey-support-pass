@@ -31,6 +31,13 @@ function newToken(): string {
   return s;
 }
 
+/** 모의 탑승권 번호 10자. 실제로는 항공사가 체크인 때 탑승권을 만든다. */
+function newBoardingRef(): string {
+  let s = "";
+  for (let i = 0; i < 10; i++) s += TOKEN_ALPHABET[randomInt(0, TOKEN_ALPHABET.length)];
+  return s;
+}
+
 function newPassNo(): string {
   return String(randomInt(0, 10 ** PASS_NO_LENGTH)).padStart(PASS_NO_LENGTH, "0");
 }
@@ -120,18 +127,20 @@ export async function bindBoardingPass(db: Db, token: string, ref: string, now: 
 }
 
 /**
- * 모의 체크인. 체크인하면서 전자토큰을 탑승권에 저장한 것으로 적는다. 사용 중인 패스만 된다.
- * 이미 체크인했으면 처음 시각을 그대로 두고 fresh 를 거짓으로 돌려준다(건수를 두 번 세지 않게).
+ * 모의 체크인. 체크인하면 사전 등록한 정보로 전자토큰이 자동으로 발급되어 탑승권에 함께 저장된다(피드백 2).
+ * 시제품은 모의 탑승권 번호(boarding_ref)를 만들어 패스에 잇는다. 그 뒤로 여객이 보여 주는 것은 탑승권뿐이고,
+ * 키오스크와 우대출구는 탑승권 바코드로 등록을 찾는다. 서비스 전용 QR 은 여객에게 보이지 않는다.
+ * 이미 체크인했으면 처음 시각과 번호를 그대로 두고 fresh 를 거짓으로 돌려준다(건수를 두 번 세지 않게).
  */
 export async function checkIn(db: Db, token: string, now: Date): Promise<{ ok: boolean; fresh: boolean }> {
   if (!TOKEN_RE.test(token)) return { ok: false, fresh: false };
   const [row] = await db.query<{ fresh: boolean }>(
-    `update passes p set checked_in_at = coalesce(o.old, $2)
+    `update passes p set checked_in_at = coalesce(o.old, $2), boarding_ref = coalesce(p.boarding_ref, $3)
      from (select id, checked_in_at as old from passes
            where token = $1 and state = 'active' and registration_id is not null) o
      where p.id = o.id
      returning o.old is null as fresh`,
-    [token, now],
+    [token, now, newBoardingRef()],
   );
   return { ok: row !== undefined, fresh: row?.fresh === true };
 }

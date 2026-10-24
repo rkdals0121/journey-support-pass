@@ -1,13 +1,14 @@
 import { placeOf, PLACES } from "../airport";
-import { claimAttempt, forgetAttempt, login, sessionDeviceKey, type Session } from "../auth";
+import { claimAttempt, forgetAttempt, logAccess, login, sessionDeviceKey, type Session } from "../auth";
 import { cancelCall, createCall, getCallAt } from "../calls";
-import { isAdapted } from "../catalog";
+import { cleanExtra, isAdapted } from "../catalog";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll } from "../journey";
 import { logEvent } from "../metrics";
 import { cleanPassNo, resolvePassNo } from "../passes";
+import { updateNeeds } from "../registrations";
 import { pollState } from "../timing";
 import { fail, ok, type ApiResult } from "./dto";
 import { lookupPass, NOT_A_PASS, PASS_ENDED, type PassLookup } from "./public";
@@ -91,6 +92,33 @@ export async function resolveHandler(
   const poll = pollState(await lastSuccessfulPoll(db), now);
   // QR 값(token)은 스티커를 다시 뽑을 때 쓴다. 확인된 기기에만 돌려준다.
   return ok({ token: found.token, guide: buildGuide(found.journey, found.passNo, place, poll) });
+}
+
+/**
+ * 안내 키오스크에서 여객이 미리 등록한 내용을 고친다(피드백 3: 안내 키오스크에서 수정이 가능해야 함).
+ * 탑승권을 찍어 연 등록만 고친다(패스 값을 아는 확인된 키오스크). 항공편은 탑승권으로 정해져 고치지 않는다.
+ * 고친 뒤의 안내를 이 키오스크 자리를 기준으로 다시 만들어 돌려준다.
+ */
+export async function updateNeedsHandler(
+  db: Db,
+  session: Session | null,
+  body: { token?: unknown; choices?: unknown; party?: unknown; strollers?: unknown; note?: unknown },
+  device: string,
+  now: Date,
+): Promise<ApiResult> {
+  if (!session) return fail(401, "로그인이 필요합니다");
+  if (!session.isKiosk) return fail(403, NEED_KIOSK);
+  const found = await lookupPass(db, typeof body.token === "string" ? body.token : "", now);
+  if (found.kind === "none") return fail(404, NOT_A_PASS);
+  if (found.kind === "ended") return fail(410, PASS_ENDED);
+  const choices = Array.isArray(body.choices) ? body.choices : [];
+  const res = await updateNeeds(db, found.journey.registrationId, choices, cleanExtra(body));
+  if (!res.ok) return fail(400, res.error);
+  await logAccess(db, { at: now, zoneId: session.zoneId, deviceKey: device, action: "edit", registrationId: found.journey.registrationId });
+  const journey = await getJourney(db, found.journey.registrationId, now);
+  if (!journey) return fail(410, PASS_ENDED);
+  const poll = pollState(await lastSuccessfulPoll(db), now);
+  return ok({ guide: buildGuide(journey, found.passNo, placeOf(session.placeId), poll, now) });
 }
 
 /** 여객이 「직원 부르기」를 눌렀다. 패스를 찍은 뒤라면 그 패스를 붙여, 직원이 고른 항목을 보고 오게 한다. */

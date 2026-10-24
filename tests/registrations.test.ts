@@ -174,7 +174,8 @@ describe("등록", () => {
     expect(await errorOf({ choices: ["nope"] })).toBe("선택 항목이 맞지 않습니다");
     expect(await errorOf({ choices: ["cat_senior"] })).toBe("선택 항목이 맞지 않습니다");
     expect(await errorOf({ choices: ["gd_large", "gd_large"] })).not.toBeNull();
-    expect(await errorOf({ choices: ["stf_call", "stf_self"] })).toContain("하나만");
+    expect(await errorOf({ choices: ["bug_ride", "bug_no"] })).toContain("하나만");
+    expect(await errorOf({ choices: ["tr_none", "tr_walk"] })).toContain("함께 고를 수 없습니다");
     expect(await errorOf({ choices: "gd_large" as never })).not.toBeNull();
     expect(await errorOf({ flightNo: "ZZ999" })).toBe("편명을 다시 확인해 주세요");
     expect(await errorOf({ flightNo: "" })).toBe("편명을 다시 확인해 주세요");
