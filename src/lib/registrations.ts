@@ -120,9 +120,9 @@ export async function createRegistration(db: Db, input: RegistrationInput, now: 
   // 고친 횟수도 정수 칸에 들어갈 만큼으로 자른다. 지나치게 큰 값은 저장할 때 오류가 난다.
   const editCount = Number.isInteger(input.editCount) && input.editCount >= 0 ? Math.min(input.editCount, MAX_EDIT_COUNT) : 0;
 
-  // 증빙은 휴대전화 등록에서만 받는다. 키오스크와 안내데스크에는 증빙을 내는 단계가 없다(현장은 체크인 카운터에서 확인받는다).
-  // 시제품에는 증빙을 검토할 별도 서버가 없어, 냈다고 하면 바로 확인된 것으로 둔다.
-  const proof = input.route === "web" && input.proof === true ? "verified" : "none";
+  // 증빙은 여객이 스스로 하는 등록(휴대전화, 공항 입구 키오스크)에서 받는다. 서류는 그 기기 안에서 읽어 판정하고(docscan),
+  // 서버에는 "확인됨"만 온다. 안내데스크의 대신 등록에는 증빙 단계가 없다(체크인 카운터에서 확인받는다).
+  const proof = input.route !== "assisted" && input.proof === true ? "verified" : "none";
   const via = input.route === "web" && input.via === "booking" ? "booking" : "";
   const [row] = await db.query<Row>(
     `insert into registrations

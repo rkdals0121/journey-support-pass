@@ -94,6 +94,10 @@ export interface Summary {
   checkins: number;
   /** 우대출구에서 탑승권을 확인한 수. 대상 확인 / 확인 안 됨(체크인 카운터 확인 방식으로 안내). */
   exit: { ok: number; notOk: number };
+  /** 공항 입구 키오스크에서 그 자리에서 등록한 수. */
+  onsite: number;
+  /** 이동지원(전동차) 요청. 요청부터 직원이 받기까지 걸린 시간의 가운데값(초). */
+  assist: { total: number; done: number; open: number; cancelled: number; medianAssignSec: number | null };
 }
 
 function median(values: (number | null)[]): number | null {
@@ -142,6 +146,10 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
      from calls where created_at >= $1`,
     [since, CALL_EXPIRE_MIN],
   );
+  const assists = await db.query<{ state: string; assign_sec: number | null }>(
+    `select state, extract(epoch from (assigned_at - created_at))::int as assign_sec from assist_requests where created_at >= $1`,
+    [since],
+  );
   // "지금 열려 있는 호출"은 언제 만들어졌든 센다. 자정 직전에 부른 호출도 아직 열려 있으면 보여야 한다.
   const [openNow] = await db.query<{ n: number }>("select count(*)::int as n from calls where ended_at is null");
 
@@ -176,6 +184,14 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
     proofDone: count("reg_done", (e) => e.value === 1),
     checkins: count("checkin"),
     exit: { ok: count("exit_check", (e) => e.value === 1), notOk: count("exit_check", (e) => e.value !== 1) },
+    onsite: count("reg_done", (e) => e.route === "entry"),
+    assist: {
+      total: assists.length,
+      done: assists.filter((a) => a.state === "done").length,
+      open: assists.filter((a) => ["received", "assigned", "moving"].includes(a.state)).length,
+      cancelled: assists.filter((a) => a.state === "cancelled").length,
+      medianAssignSec: median(assists.map((a) => a.assign_sec)),
+    },
   };
 }
 

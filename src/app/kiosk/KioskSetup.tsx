@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ClipboardPen, Navigation, Stethoscope } from "lucide-react";
+import { Bot, ChevronLeft, ClipboardPen, Navigation, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ErrorNote } from "../components/Alert";
@@ -16,7 +16,7 @@ const AUTOPRINT_KEY = "jsp:kiosk:autoprint";
 
 export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; currentPlace: PlaceOption | null }) {
   const [code, setCode] = useState("");
-  const [use, setUse] = useState<"register" | "guide">("guide");
+  const [use, setUse] = useState<"register" | "guide" | "entry">("entry");
   const [placeId, setPlaceId] = useState("");
   const [autoPrint, setAutoPrint] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -33,8 +33,8 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
     }
   }, []);
 
-  // 쓰임새에 맞는 자리만 보여준다. 등록 키오스크는 보안검색 전에, 안내 키오스크는 그 뒤에 놓인다.
-  const shown = places.filter((p) => (use === "register" ? p.landside : !p.landside));
+  // 쓰임새에 맞는 자리만 보여준다. 입구 키오스크와 등록 키오스크는 보안검색 전에, 안내 키오스크는 그 뒤에 놓인다.
+  const shown = places.filter((p) => (use === "guide" ? !p.landside : p.landside));
   useEffect(() => {
     if (!shown.some((p) => p.id === placeId)) setPlaceId("");
   }, [use]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -80,20 +80,28 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
           <span>
             지금 설치된 자리: <b>{currentPlace.label}</b>
           </span>
-          <Link className="btn btn-inline" href={currentPlace.landside ? "/kiosk/register" : "/kiosk/guide"}>
-            {currentPlace.landside ? "등록 화면 열기" : "안내 화면 열기"}
+          <Link className="btn btn-inline" href={currentPlace.landside ? "/kiosk/entry" : "/kiosk/guide"}>
+            {currentPlace.landside ? "입구 안내로봇 열기" : "안내 화면 열기"}
           </Link>
         </div>
       )}
 
       <fieldset className="setup-use">
         <legend>쓰임새</legend>
+        <label className={use === "entry" ? "on" : ""}>
+          <input type="radio" name="use" checked={use === "entry"} onChange={() => setUse("entry")} />
+          <Bot size={22} aria-hidden="true" />
+          <span>
+            <b>공항 입구 안내로봇</b>
+            <small>여객이 탑승권을 찍으면 고른 도움을 확인하고, 등록하지 않은 여객은 그 자리에서 등록합니다</small>
+          </span>
+        </label>
         <label className={use === "guide" ? "on" : ""}>
           <input type="radio" name="use" checked={use === "guide"} onChange={() => setUse("guide")} />
           <Navigation size={22} aria-hidden="true" />
           <span>
-            <b>안내 키오스크</b>
-            <small>여객이 QR을 대면 맞춤 안내를 보여줍니다</small>
+            <b>안내 키오스크 (출국심사 뒤)</b>
+            <small>여객이 탑승권 QR을 대면 탑승구 가는 길과 시설을 맞춤으로 보여줍니다</small>
           </span>
         </label>
         {/* 등록 키오스크(스티커 인쇄)는 주 흐름에서 뺐다. 등록은 예매 완료 화면의 링크로 하고, 현장은 안내데스크가 대신 등록한다.

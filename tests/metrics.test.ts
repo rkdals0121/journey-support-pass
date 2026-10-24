@@ -342,6 +342,8 @@ describe("오늘 현황", () => {
       proofDone: 0,
       checkins: 0,
       exit: { ok: 0, notOk: 0 },
+      onsite: 0,
+      assist: { total: 0, done: 0, open: 0, cancelled: 0, medianAssignSec: null },
     });
   });
 

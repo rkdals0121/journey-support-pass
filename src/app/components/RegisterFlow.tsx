@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, MonitorSmartphone, Paperclip, Plane, Search, ShieldCheck, Trash2, X } from "lucide-react";
+import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, MonitorSmartphone, Plane, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { GROUP_EN, GROUP_LABEL, GROUPS, isAdapted, itemsOf, prefsOf, type Group, type Item, type Prefs } from "@/lib/catalog";
 import { airlineLabel } from "@/lib/airline-en";
@@ -9,7 +9,9 @@ import { textOf, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "./Alert";
 import { bucketKey, bucketsOf, CityPicker, type Destination } from "./FlightFinder";
 import { FlowShell } from "./FlowShell";
+import { DocScan } from "./DocScan";
 import { AlnumPad, Choice } from "./Inputs";
+import type { Target } from "@/lib/docscan";
 
 export interface FlightOption {
   airline: string;
@@ -53,8 +55,7 @@ type StepKind = "guide" | "consent" | "move" | "facility" | "staff" | "target" |
 const WEB_ORDER: StepKind[] = ["guide", "consent", "move", "facility", "staff", "target", "proof", "flight", "review"];
 const SITE_ORDER: StepKind[] = ["guide", "consent", "move", "facility", "staff", "flight", "review"];
 
-/** 증빙서류를 고르는 데 쓰는 대상. 서버에 보내지 않는다(대상 유형은 민감정보라 공항이 갖지 않는 구조). */
-export type Target = "elderly" | "infant" | "disabled" | "pregnant";
+// 증빙서류를 고르는 데 쓰는 대상(Target). 서버에 보내지 않는다(대상 유형은 민감정보라 공항이 갖지 않는 구조).
 const TARGETS: Target[] = ["elderly", "infant", "disabled", "pregnant"];
 
 const SEARCH_DELAY_MS = 250;
@@ -130,10 +131,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [error, setError] = useState<string | null>(null);
   // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.
   const [failSeq, setFailSeq] = useState(0);
-  // 고른 대상과 대상마다 고른 증빙 파일의 이름. 파일은 이 기기를 벗어나지 않는다(시연). 서버에는 "냈다"는 사실만 간다.
+  // 고른 대상과 대상마다 증빙이 인식되었는지. 서류는 이 기기 안에서 읽고(DocScan) 서버에는 "확인됨"만 간다.
   const [targets, setTargets] = useState<Target[]>([]);
-  const [proofFiles, setProofFiles] = useState<Partial<Record<Target, string>>>({});
-  const proofSent = targets.length > 0 && targets.every((x) => proofFiles[x]);
+  const [proofOk, setProofOk] = useState<Partial<Record<Target, boolean>>>({});
+  const proofSent = targets.length > 0 && targets.every((x) => proofOk[x]);
 
   const ORDER = mode === "web" ? WEB_ORDER : SITE_ORDER;
   // 대상을 고르지 않았으면 증빙 화면을 지나친다.
@@ -256,10 +257,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     touched();
     setTargets((list) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x]));
   };
-  const pickProof = (x: Target, file: File | undefined) => {
-    touched();
-    setProofFiles((m) => ({ ...m, [x]: file?.name }));
-  };
+  const setProof = (x: Target, ok: boolean) => setProofOk((m) => (m[x] === ok ? m : { ...m, [x]: ok }));
   const back = () => (step === 0 ? (onBackOut ?? onExit)(lang) : goTo(skipped(step - 1) ? step - 2 : step - 1, true));
   const next = () => {
     // 첫 질문을 넘기면 "등록을 시작했다"고 센다. 안내 방식을 켰는지와 함께 남겨, 켰을 때와 껐을 때의 완료 비율을 견준다.
@@ -578,36 +576,16 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           </div>
           <ul className="proof-list">
             {targets.map((x) => (
-              <li key={x} className={proofFiles[x] ? "proof-item on" : "proof-item"}>
+              <li key={x} className={proofOk[x] ? "proof-item on" : "proof-item"}>
                 <div className="proof-head">
-                  <span className="bubble">{proofFiles[x] ? <FileCheck2 size={22} aria-hidden="true" /> : <FileText size={22} aria-hidden="true" />}</span>
+                  <span className="bubble">{proofOk[x] ? <FileCheck2 size={22} aria-hidden="true" /> : <FileText size={22} aria-hidden="true" />}</span>
                   <div>
                     <strong>{t.proofDocs[x]}</strong>
                     <span className="muted">{t.targets[x]}</span>
                   </div>
                 </div>
-                {proofFiles[x] ? (
-                  <div className="proof-file">
-                    <span role="status">{t.proofAdded(proofFiles[x]!)}</span>
-                    <button className="btn btn-ghost" onClick={() => pickProof(x, undefined)}>
-                      <X size={18} aria-hidden="true" />
-                      {t.proofRemove}
-                    </button>
-                  </div>
-                ) : (
-                  // 파일은 고르기만 하고 어디에도 올리지 않는다(시연). 실제로는 별도 서버가 암호화해 받는다.
-                  <label className="btn proof-pick">
-                    <Paperclip size={20} aria-hidden="true" />
-                    {t.proofAdd}
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      className="sr-only"
-                      aria-label={`${t.proofDocs[x]} ${t.proofAdd}`}
-                      onChange={(e) => pickProof(x, e.currentTarget.files?.[0])}
-                    />
-                  </label>
-                )}
+                {/* 서류 사진은 이 기기 안에서 읽는다. 어디에도 올리지 않는다. */}
+                <DocScan target={x} t={t} mode={kiosk ? "kiosk" : "phone"} confirmed={proofOk[x] === true} onResult={(ok) => setProof(x, ok)} />
               </li>
             ))}
           </ul>

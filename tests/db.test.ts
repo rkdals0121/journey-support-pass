@@ -12,12 +12,13 @@ describe("스키마", () => {
     db = await createTestDb();
   });
 
-  it("테이블 8개를 만든다. 응대 기록 표는 없다", async () => {
+  it("테이블 9개를 만든다(이동지원 요청 포함). 응대 기록 표는 없다", async () => {
     const rows = await db.query<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public'",
     );
     expect(rows.map((r) => r.table_name).sort()).toEqual([
       "access_logs",
+      "assist_requests",
       "calls",
       "events",
       "flight_polls",

@@ -1112,11 +1112,11 @@ describe("예매 완료 화면에서 연결: 증빙과 접점", () => {
     expect(await proofOf()).toEqual([{ proof_status: "none", via: "" }]);
   });
 
-  it("키오스크와 안내데스크에서는 증빙을 받지 않는다(현장은 체크인 카운터에서 확인)", async () => {
+  it("공항 입구 키오스크는 증빙(기기 안에서 인식)을 받고, 안내데스크의 대신 등록은 받지 않는다. 접점 표시는 휴대전화만", async () => {
     await registerHandler(db, body({ proof: true, via: "booking" }), kiosk, "kiosk-dev", now);
     await registerHandler(db, body({ proof: true, via: "booking" }), desk, "desk-dev", now, true);
     expect(await proofOf()).toEqual([
-      { proof_status: "none", via: "" },
+      { proof_status: "verified", via: "" },
       { proof_status: "none", via: "" },
     ]);
   });

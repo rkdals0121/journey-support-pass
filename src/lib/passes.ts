@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import type { Db } from "./db";
-import { PASS_NO_LENGTH, PASS_NO_RE, TOKEN_ALPHABET, TOKEN_LENGTH, TOKEN_RE } from "./pass-format";
+import { BOARDING_REF_RE, PASS_NO_LENGTH, PASS_NO_RE, TOKEN_ALPHABET, TOKEN_LENGTH, TOKEN_RE } from "./pass-format";
 import { isUuid } from "./registrations";
 
 export { cleanPassNo, extractToken, formatPassNo, PASS_NO_LENGTH, passUrl, TOKEN_LENGTH } from "./pass-format";
@@ -105,6 +105,18 @@ export async function resolveToken(db: Db, token: string): Promise<Resolved> {
   if (!TOKEN_RE.test(token)) return { kind: "unknown" };
   const [row] = await db.query<JoinedRow>(`${JOINED} where p.token = $1`, [token]);
   return classify(row);
+}
+
+/** 공항 입구 키오스크에서 그 자리에서 등록한 여객의 탑승권 번호로 패스를 찾는다. */
+export async function resolveBoardingRef(db: Db, ref: string): Promise<Resolved> {
+  if (!BOARDING_REF_RE.test(ref)) return { kind: "unknown" };
+  const [row] = await db.query<JoinedRow>(`${JOINED} where p.boarding_ref = $1 and p.state = 'active'`, [ref]);
+  return classify(row);
+}
+
+/** 탑승권에 패스를 잇는다. 탑승권이 이미 있으므로 체크인한 것으로 둔다. */
+export async function bindBoardingPass(db: Db, token: string, ref: string, now: Date): Promise<void> {
+  await db.query("update passes set boarding_ref = $2, checked_in_at = coalesce(checked_in_at, $3) where token = $1", [token, ref, now]);
 }
 
 /**

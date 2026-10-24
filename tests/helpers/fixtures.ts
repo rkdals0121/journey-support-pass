@@ -68,7 +68,7 @@ export async function registerWithPass(db: Db, now: Date, over: Partial<Registra
  */
 export async function resetData(db: Db): Promise<void> {
   await db.exec(
-    "truncate table calls, events, access_logs, passes, registrations, flights, flight_polls restart identity cascade",
+    "truncate table assist_requests, calls, events, access_logs, passes, registrations, flights, flight_polls restart identity cascade",
   );
 }
 

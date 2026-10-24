@@ -27,6 +27,27 @@ export function extractToken(scanned: string): string | null {
   return m && TOKEN_RE.test(m[1]) ? m[1] : null;
 }
 
+// 시연용 모의 탑승권의 QR. 실제 탑승권 바코드(IATA BCBP)는 항공사가 만들고 공항이 읽는 방식은 확인하지 못했다(제안서 리스크).
+// 시제품은 편과 탑승권 번호만 담는다: "BP1:20261024:KE123:0123456789". 이름은 없다.
+export const BOARDING_REF_RE = /^[0-9A-HJKMNP-TV-Z]{10}$/;
+const BOARDING_RE = /^BP1:(\d{4})(\d{2})(\d{2}):([A-Z0-9]{3,8}):([0-9A-HJKMNP-TV-Z]{10})$/;
+
+export interface BoardingPass {
+  flightDate: string; // 2026-10-24
+  flightNo: string;
+  ref: string;
+}
+
+export function boardingPassText(b: BoardingPass): string {
+  return `BP1:${b.flightDate.replace(/-/g, "")}:${b.flightNo}:${b.ref}`;
+}
+
+/** 찍은 글자가 모의 탑승권이면 편과 번호를 꺼낸다. */
+export function parseBoardingPass(scanned: string): BoardingPass | null {
+  const m = BOARDING_RE.exec((scanned ?? "").trim().toUpperCase());
+  return m ? { flightDate: `${m[1]}-${m[2]}-${m[3]}`, flightNo: m[4], ref: m[5] } : null;
+}
+
 /** 손으로 넣은 번호에서 숫자만 남긴다. 여섯 자리가 아니면 null. */
 export function cleanPassNo(input: unknown): string | null {
   const s = typeof input === "string" ? input.replace(/\D/g, "") : "";

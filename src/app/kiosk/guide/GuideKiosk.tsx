@@ -17,6 +17,8 @@ import { Scanner } from "../../components/Scanner";
 import { ListenStart } from "../../components/ListenStart";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
+import { Robot } from "../../components/Robot";
+import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import { resetViewSettings, useViewSettings } from "../../components/viewSettings";
 
@@ -49,6 +51,7 @@ const KIOSK_SETUP = "/kiosk";
  * 한 페이지 안에서 처음 화면 → 안내 → 끝내기 → 처음 화면으로 돈다. 끝내면 앞사람의 내용은 화면에서 지운다.
  */
 export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec, registerQr, registerQrEn }: Props) {
+  useRobotTheme();
   const [view, setView] = useState<View>({ kind: "scan" });
   const [token, setToken] = useState<string | null>(null);
   const [guide, setGuide] = useState<GuideDto | null>(null);
@@ -444,6 +447,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           </div>
           <div className="scan-layout">
             <div>
+              {/* 공항 입구 안내로봇과 같은 로봇. 탑승권을 대면 깨어나 길을 알려 준다. */}
+              <div className="robot-stage robot-stage-left">
+                <Robot mood="sleep" size={150} />
+                <p className="robot-bubble">{t.guideRobot}</p>
+              </div>
               <h1>
                 <QrCode size={32} aria-hidden="true" /> {t.scanTitle}
               </h1>

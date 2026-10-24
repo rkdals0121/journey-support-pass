@@ -1,4 +1,5 @@
 import { placeOf } from "../airport";
+import { advanceAssist, listAssist, type AssistAction, type AssistState } from "../assist";
 import { login, logAccess, switchZone, type Session } from "../auth";
 import { acceptCall, endReason, finishCall, listCalls, type Call, type CallEndReason } from "../calls";
 import { shortOf } from "../catalog";
@@ -194,6 +195,69 @@ export async function exitCheckHandler(
     flight: toFlightView(j, now),
   };
   return ok({ result });
+}
+
+/** 직원 화면의 이동지원 요청 한 줄. 여객의 필요한 지원(이동·직원 도움)과 항공편만 보인다. 이름과 증빙은 없다. */
+export interface AssistItemDto {
+  id: string;
+  state: AssistState;
+  /** 요청한 곳. 휴대전화에서 청했으면 "휴대전화로 요청". */
+  place: string;
+  time: string;
+  createdAt: string;
+  waitedMin: number;
+  /** 받은 구역 이름. */
+  assignedBy: string | null;
+  assignedByMe: boolean;
+  /** 여객이 떠났거나 지웠으면 null. */
+  pass: { needs: string[]; lang: "ko" | "en"; proofVerified: boolean; flight: FlightView } | null;
+}
+
+/** 이동지원 요청 목록. 어느 구역 직원이든 본다(전동차는 터미널 전체를 다닌다). */
+export async function assistListHandler(db: Db, session: Session | null, now: Date): Promise<ApiResult> {
+  const denied = staffError(session);
+  if (denied) return denied;
+  const me = session as Session;
+  const zones = await db.query<{ id: string; label: string }>("select id, label from zones");
+  const labelOf = (id: string | null) => (id ? zoneName(zones.find((z) => z.id === id)?.label ?? "") : "");
+  const lastPoll = await lastRealPoll(db);
+  const items: AssistItemDto[] = [];
+  for (const a of await listAssist(db, now)) {
+    const found = a.registrationId ? await getJourney(db, a.registrationId, now) : null;
+    const j = found && !isJourneyOver(found, now, lastPoll) ? found : null;
+    const end = a.endedAt ?? now;
+    items.push({
+      id: a.id,
+      state: a.state,
+      place: a.placeId ? (placeOf(a.placeId)?.label ?? a.placeId) : "휴대전화로 요청",
+      time: kstTime(a.createdAt),
+      createdAt: a.createdAt.toISOString(),
+      waitedMin: Math.max(0, Math.floor((end.getTime() - a.createdAt.getTime()) / 60_000)),
+      assignedBy: a.assignedZone ? labelOf(a.assignedZone) : null,
+      assignedByMe: a.assignedZone === me.zoneId,
+      pass: j
+        ? {
+            needs: j.choices.filter((c) => c.startsWith("mov_") || c.startsWith("stf_")).map(shortOf),
+            lang: j.lang,
+            proofVerified: j.proofVerified,
+            flight: toFlightView(j, now),
+          }
+        : null,
+    });
+  }
+  return ok({ requests: items });
+}
+
+/** 직원이 이동지원 요청을 받고(배정), 이동을 시작하고, 마친다. */
+export async function assistActionHandler(db: Db, session: Session | null, id: string, body: { action?: unknown }, now: Date): Promise<ApiResult> {
+  const denied = staffError(session);
+  if (denied) return denied;
+  const action = body.action;
+  if (action !== "assign" && action !== "move" && action !== "done") return fail(400, "할 수 없는 동작입니다");
+  if (!(await advanceAssist(db, id, session!.zoneId, action as AssistAction, now))) {
+    return fail(409, action === "assign" ? "다른 직원이 먼저 받았거나 끝난 요청입니다" : "이 구역이 받은 요청이 아니거나 이미 끝난 요청입니다");
+  }
+  return ok();
 }
 
 /** 안내데스크의 오늘 현황. 건수만 있다. */

@@ -3015,3 +3015,292 @@ html[data-picture] .route > li::before {
   color: var(--text);
   white-space: pre-line;
 }
+/* 증빙서류 인식 */
+.docscan {
+  display: grid;
+  gap: 0.5rem;
+}
+.docscan .btn {
+  margin: 0;
+}
+.docscan-msg {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+.docscan-msg svg {
+  flex: none;
+  margin-top: 0.125rem;
+}
+.docscan-msg.ok {
+  color: var(--green-press);
+}
+.docscan-msg.bad {
+  color: var(--red);
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+.docscan-cam {
+  display: grid;
+  gap: 0.5rem;
+}
+.docscan-cam video {
+  width: 100%;
+  max-height: 40vh;
+  border-radius: var(--radius);
+  background: #0b1712;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+
+/* ── 안내로봇 키오스크: 파란 바탕과 로봇(참고 그림 "탑승권으로 깨우는 공항 도우미") ──
+   키오스크 화면에만 쓴다. 색 이름은 그대로 두고 값만 파랑으로 바꿔, 누르는 것·고른 것이 모두 파랗게 보인다. */
+.robot-theme {
+  --green: #2459c9;
+  --green-press: #1b45a0;
+  --mint: #e2ecff;
+  --mint-2: #f0f5ff;
+  --ink: #0f2350;
+  --ink-2: #183374;
+  --ink-soft: #2a4a8f;
+  --line: #d6e1f5;
+  --line-strong: #9fb5dc;
+  --bg: #eef4ff;
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #dce9ff 0%, #f3f7ff 45%, #ffffff 100%);
+}
+.robot-stage {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5rem 0 1rem;
+}
+.robot {
+  flex: none;
+  max-width: 40vw;
+  height: auto;
+}
+.robot-sleep {
+  animation: robot-breathe 3.2s ease-in-out infinite;
+}
+.robot-z {
+  animation: robot-z 2.4s ease-in-out infinite;
+}
+.robot-z2 {
+  animation-delay: 0.6s;
+}
+@keyframes robot-breathe {
+  50% {
+    transform: translateY(4px);
+  }
+}
+@keyframes robot-z {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .robot-sleep,
+  .robot-z {
+    animation: none;
+  }
+}
+.robot-bubble {
+  position: relative;
+  max-width: 22rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 1.375rem;
+  font-weight: 800;
+  line-height: 1.35;
+  box-shadow: var(--shadow-2);
+}
+.robot-bubble::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -0.625rem;
+  border: 0.625rem solid transparent;
+  border-right-color: #ffffff;
+  border-left: 0;
+  transform: translateY(-50%);
+}
+.robot-stage-left {
+  justify-content: flex-start;
+}
+.robot-home {
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+}
+.robot-panel {
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, #1d4fbf 0%, #3a7df0 100%);
+  box-shadow: var(--shadow-2);
+}
+.robot-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+.robot-home .robot-actions,
+.robot-home .kiosk-foot {
+  grid-column: 1 / -1;
+}
+/* 가로 키오스크: 로봇과 카메라를 나란히 둔다. */
+@media (min-width: 900px) and (orientation: landscape) {
+  .robot-home {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+.robot-scan .scanner {
+  max-width: 22rem;
+}
+.robot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+}
+.robot-actions .btn {
+  width: auto;
+  margin: 0;
+}
+.easy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.easy-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 8.5rem;
+  padding: 1rem;
+  border: 0.1875rem solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.125rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+}
+.easy-tile svg.lucide,
+.easy-tile svg {
+  width: 3rem;
+  height: 3rem;
+  color: var(--green);
+}
+.easy-tile.on {
+  border-color: var(--green);
+  background: var(--mint);
+}
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  gap: 0.875rem;
+}
+.svc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  align-items: flex-start;
+  min-height: 10rem;
+  padding: 1.25rem;
+  border: 0.125rem solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-2);
+}
+.svc-card svg {
+  color: var(--green);
+}
+.svc-card strong {
+  font-size: 1.25rem;
+}
+.svc-card span {
+  color: var(--muted);
+}
+.svc-card:disabled {
+  opacity: 0.6;
+}
+.assist-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.375rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.assist-steps li {
+  padding: 0.75rem 0.25rem 0.5rem;
+  border-top: 0.375rem solid var(--line);
+  color: var(--muted);
+  font-weight: 700;
+  text-align: center;
+}
+.assist-steps li.on {
+  border-top-color: var(--green);
+  color: var(--green-press);
+}
+.assist-state {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  background: var(--mint);
+}
+.assist-state strong {
+  color: var(--ink);
+  font-size: 1.375rem;
+}
+.assist-box {
+  margin: 1rem 0 1.5rem;
+}
+.assist-box h2 {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.assist-box .btn {
+  margin-top: 0.5rem;
+}

@@ -101,6 +101,11 @@ create unique index if not exists passes_one_active_per_registration
   on passes (registration_id) where state = 'active';
 -- 체크인하면서 전자토큰을 탑승권에 저장한 시각(시제품은 모의 체크인). 아직이면 null.
 alter table passes add column if not exists checked_in_at timestamptz;
+-- 공항 입구 키오스크에서 그 자리에서 등록한 여객의 탑승권 번호(시연용 모의 탑승권 QR 의 번호).
+-- 그 탑승권을 다시 찍으면 이 패스가 열린다. 미리 등록한 여객은 null(휴대전화 탑승권의 QR 이 곧 패스다).
+alter table passes add column if not exists boarding_ref text;
+create unique index if not exists passes_live_boarding_ref
+  on passes (boarding_ref) where boarding_ref is not null and state in ('idle','active');
 
 -- 여객이 키오스크에서 누른 「직원 부르기」. 어느 키오스크에서 불렀는지와 받은 구역만 남긴다. 직원 개인은 남기지 않는다.
 create table if not exists calls (
@@ -117,6 +122,22 @@ create table if not exists calls (
 );
 -- 한 키오스크에서 끝나지 않은 호출은 하나뿐이다. 버튼을 여러 번 눌러도 한 줄만 생긴다.
 create unique index if not exists calls_open_per_place on calls (place_id) where ended_at is null;
+
+-- 이동지원(전동차) 요청. 여객이 공항 입구 키오스크나 휴대전화에서 청하고, 직원이 받아 배정·이동·완료로 처리한다.
+-- 누구의 것인지는 등록과의 연결로만 알며, 여객이 떠나면 연결을 끊는다.
+create table if not exists assist_requests (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null,
+  registration_id uuid references registrations(id),
+  place_id text,
+  state text not null check (state in ('received','assigned','moving','done','cancelled')),
+  assigned_zone text,
+  assigned_at timestamptz,
+  ended_at timestamptz
+);
+-- 한 여객의 끝나지 않은 요청은 하나뿐이다.
+create unique index if not exists assist_open_per_registration
+  on assist_requests (registration_id) where state in ('received','assigned','moving');
 
 -- 기대효과를 확인하는 데 쓰는 건수 기록. 누구의 것인지 알 수 있는 값은 없다.
 --   reg_start: 등록을 시작함 (첫 질문을 넘김)   reg_done: 등록을 마침

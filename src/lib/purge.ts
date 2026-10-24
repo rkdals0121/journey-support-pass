@@ -19,7 +19,7 @@ export async function eraseRegistration(
   finalStatus: "expired" | "revoked" = "expired",
 ): Promise<void> {
   await db.query(
-    `update passes set state = $2, registration_id = null, linked_at = null
+    `update passes set state = $2, registration_id = null, linked_at = null, boarding_ref = null
      where registration_id = $1 and state = 'active'`,
     [id, finalStatus],
   );
@@ -30,6 +30,12 @@ export async function eraseRegistration(
     [id, now],
   );
   await db.query("update calls set registration_id = null where registration_id = $1", [id]);
+  // 끝나지 않은 이동지원 요청도 닫고 연결을 끊는다.
+  await db.query(
+    "update assist_requests set state = 'cancelled', ended_at = $2 where registration_id = $1 and state in ('received','assigned','moving')",
+    [id, now],
+  );
+  await db.query("update assist_requests set registration_id = null where registration_id = $1", [id]);
   await db.query("update access_logs set registration_id = null where registration_id = $1", [id]);
   await db.query(
     `update registrations set name = null, flight_date = null, flight_no = null, needs = '{}', categories = '{}',

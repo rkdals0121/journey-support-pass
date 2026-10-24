@@ -294,8 +294,8 @@ async function useCookie(page: Page, cookie: string) {
 }
 
 /** 가짜 카메라에 넣을 장면. 패스 QR 을 가까이 댄 것(near)과 20~30cm 떨어져 작게 보이는 것(far). */
-async function cameraFile(browser: Browser, token: string, far: boolean): Promise<string> {
-  const svg = await QRCode.toString(passUrl(BASE, token), { type: "svg", errorCorrectionLevel: "M", margin: 4 });
+async function cameraFile(browser: Browser, token: string, far: boolean, raw = false): Promise<string> {
+  const svg = await QRCode.toString(raw ? token : passUrl(BASE, token), { type: "svg", errorCorrectionLevel: "M", margin: 4 });
   const side = far ? 170 : 620;
   const p = await browser.newPage();
   await p.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
@@ -306,6 +306,20 @@ async function cameraFile(browser: Browser, token: string, far: boolean): Promis
   );
   const file = path.join(os.tmpdir(), `jsp-cam-${far ? "far" : "near"}-${Date.now()}.mjpeg`);
   fs.writeFileSync(file, await p.screenshot({ type: "jpeg", quality: far ? 86 : 92 }));
+  tempFiles.push(file);
+  await p.close();
+  return file;
+}
+
+/** 증빙 서류 견본 사진(가상의 글자). 글자 인식 점검에 쓴다. */
+async function docImage(browser: Browser, lines: string[]): Promise<string> {
+  const p = await browser.newPage();
+  await p.setViewport({ width: 1000, height: 420, deviceScaleFactor: 1 });
+  await p.setContent(
+    `<body style="margin:0;padding:40px;background:#fff;font:700 64px 'Malgun Gothic',sans-serif;color:#111">${lines.map((l) => `<div>${l}</div>`).join("")}</body>`,
+  );
+  const file = path.join(os.tmpdir(), `jsp-doc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.png`);
+  fs.writeFileSync(file, await p.screenshot({ type: "png" }));
   tempFiles.push(file);
   await p.close();
   return file;
@@ -551,16 +565,20 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "증빙서류를 내 주세요");
   check("고른 대상에 맞는 증빙서류(복지카드)를 묻는다. 공항이 아닌 별도 서버가 보관한다고 알린다", (await has(page, "복지카드")) && (await has(page, "별도 서버")));
   check("증빙을 내지 않고도 넘어갈 수 있다 (내지 않으면 체크인 카운터에서 확인)", (await has(page, "지금 내지 않고 다음")) && (await has(page, "체크인 카운터")));
-  const proofImage = path.join(os.tmpdir(), `jsp-proof-${Date.now()}.png`);
-  fs.writeFileSync(proofImage, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
-  tempFiles.push(proofImage);
+  // 견본 복지카드 사진(가상의 글자)을 만들어 고른다. 이 기기 안에서 글자를 읽어 판정한다.
+  const proofImage = await docImage(browser, ["장애인복지카드", "성명 홍길동(견본)", "발급 2020. 1. 2."]);
+  const wrongImage = await docImage(browser, ["영수증", "합계 12,000원"]);
   const proofSent: string[] = [];
   page.on("request", (r) => {
-    if (r.method() === "POST" && (r.postData() ?? "").includes("PNG")) proofSent.push(r.url());
+    const body = r.postData() ?? "";
+    if (r.method() === "POST" && (body.includes("PNG") || body.includes("복지카드") || body.length > 20_000)) proofSent.push(r.url());
   });
+  await (await page.$(".proof-list input[type=file]"))!.uploadFile(wrongImage);
+  await waitText(page, "서류를 알아보지 못했습니다");
+  check("엉뚱한 사진(영수증)은 증빙으로 받지 않는다", await has(page, "지금 내지 않고 다음"));
   await (await page.$(".proof-list input[type=file]"))!.uploadFile(proofImage);
-  await waitText(page, "고른 파일:");
-  check("파일을 고르면 「다음」으로 바뀐다", (await has(page, "다음")) && !(await has(page, "지금 내지 않고 다음")));
+  await waitText(page, "복지카드로 확인되었습니다");
+  check("복지카드 사진을 찍으면 이 기기 안에서 글자를 읽어 '복지카드로 확인'한다. 「다음」으로 바뀐다", (await has(page, "다음")) && !(await has(page, "지금 내지 않고 다음")));
   await shot(page, "휴대전화-증빙서류");
   await clickText(page, ".flow-cta button", "다음");
 
@@ -715,6 +733,8 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "키오스크 설치");
   check("설치하지 않은 기기에서 키오스크 화면을 열면 설치 화면으로 간다", page.url().endsWith("/kiosk"));
   await shot(page, "키오스크-설치");
+  check("키오스크 쓰임새는 공항 입구 안내로봇이 먼저다. 보안검색 전 자리를 고른다", (await has(page, "공항 입구 안내로봇")) && (await page.$$eval("#place option", (os) => os.some((o) => (o.textContent ?? "").includes("안내데스크")))));
+  await clickText(page, ".setup-use label", "안내 키오스크");
   const guidePlaces = await page.$$eval("#place option", (os) => os.map((o) => (o as HTMLOptionElement).textContent ?? ""));
   check("안내 키오스크는 보안검색 뒤의 자리만 고를 수 있다", guidePlaces.length > 5 && !guidePlaces.some((p) => p.includes("안내데스크")));
   await page.select("#place", "cc-train");
@@ -794,6 +814,8 @@ async function resetFlights(clearLocks = false) {
 
   await page.click(".gate-go");
   await waitText(page, "127번 탑승구 가는 길");
+  // 처음 화면의 단추에도 같은 글이 있으므로, 길 안내 목록이 실제로 나올 때까지 기다린다.
+  await page.waitForSelector(".route > li", { timeout: WAIT });
   const steps = await page.$$eval(".route > li", (es) => es.map((e) => (e as HTMLElement).innerText.replace(/\n/g, " ")));
   check("길 안내가 '지금 계신 곳'에서 시작해 '도착'으로 끝난다", steps[0].includes("지금 계신 곳") && steps[steps.length - 1].includes("127 도착"), `${steps.length}줄`);
   check("휠체어를 쓰는 여객에게는 엘리베이터로 안내한다 (에스컬레이터 아님)", steps.some((s) => s.includes("엘리베이터를 타고 3층")) && !steps.some((s) => s.includes("에스컬레이터를 타고")));
@@ -1456,6 +1478,58 @@ async function resetFlights(clearLocks = false) {
   await post("/api/pass/checkin", { token: noProof.token });
   const notOk = await post("/api/staff/exit", { scanned: noProof.token }, zoneStaff);
   check("증빙을 내지 않은 여객은 우대 확인이 안 되어 체크인 카운터로 안내한다", notOk.status === 200 && notOk.body.result.eligible === false);
+
+  // ───────── 공항 입구 안내로봇 ─────────
+  section("공항 입구 안내로봇과 이동지원");
+  // 미리 등록하지 않은 여객의 모의 탑승권(편과 탑승권 번호만)을 가짜 카메라에 보여 준다.
+  const entryFlight = ((await get("/api/flights/search?q=MK5")).body.flights as { flightDate: string; flightNo: string; cancelled: boolean }[]).find((f) => !f.cancelled)!;
+  const bpText = `BP1:${entryFlight.flightDate.replace(/-/g, "")}:${entryFlight.flightNo}:E2E${String(Date.now()).slice(-7)}`;
+  const tmpBp = await launch();
+  const bpFile = await cameraFile(tmpBp, bpText, false, true);
+  await tmpBp.close();
+  browser = await launch(CAMERA(bpFile));
+  page = await open(browser, KIOSK_WIDE);
+  await useCookie(page, await kioskCookie("t1-info"));
+  await page.goto(`${BASE}/kiosk/entry?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+  await waitText(page, "어떤 점이 불편하세요?");
+  check("탑승권을 찍으면 로봇이 깨어나고, 등록하지 않은 여객에게 불편 다섯 가지를 묻는다", (await count(page, ".easy-tile")) === 5 && (await has(page, "왔군요!")) && (await has(page, entryFlight.flightNo)));
+  await shot(page, "입구로봇-불편고르기");
+  await clickText(page, ".easy-tile", "걷기");
+  await clickText(page, ".flow-cta button", "다음");
+  await waitText(page, "우대출구를 쓰시려면 서류를 보여 주세요");
+  check("그 자리에서 서류를 인식시켜 우대 확인을 받을 수 있고, 서류 없이도 계속할 수 있다", (await count(page, '[role="radio"]')) === 4 && (await has(page, "서류 없이 계속")));
+  await clickText(page, ".flow-cta button", "서류 없이 계속");
+  await waitText(page, "동의하고 등록하기");
+  check("등록 전에 무엇을 받는지 알리고 동의를 받는다", await has(page, "이름과 연락처는 받지 않습니다"));
+  await clickText(page, ".flow-cta button", "동의하고 등록하기");
+  await waitText(page, "무엇을 도와드릴까요?");
+  check("등록하면 맞춤 안내·이동지원 요청·접수 상태 확인으로 이어진다", (await count(page, ".svc-card")) === 3);
+  await shot(page, "입구로봇-서비스");
+  await clickText(page, ".svc-card", "이동지원 요청");
+  await waitText(page, "접수되었습니다");
+  await shot(page, "입구로봇-이동지원-접수");
+  // 직원 휴대전화: 이동지원 요청이 바로 뜨고, 받으면 키오스크에 '직원 배정'이 보인다.
+  const staffBrowser = await launch();
+  const staffPage = await open(staffBrowser, PHONE);
+  await useCookie(staffPage, zoneStaff);
+  await staffPage.goto(`${BASE}/staff/assist`, { waitUntil: "load", timeout: 300_000 });
+  await staffPage.waitForFunction((no) => document.body.innerText.includes(no) && document.body.innerText.includes("제가 맡겠습니다"), { timeout: WAIT }, entryFlight.flightNo);
+  const staffText = await staffPage.evaluate(() => document.body.innerText);
+  check("이동지원 요청이 직원 화면에 바로 뜬다. 청한 곳, 항공편, 필요한 지원만 나온다", staffText.includes("안내데스크") && staffText.includes("계단 어려움") && !staffText.includes("BP1:"));
+  await shot(staffPage, "직원-이동지원");
+  await clickText(staffPage, "button", "제가 맡겠습니다");
+  await staffPage.waitForFunction(() => document.body.innerText.includes("이동 시작"), { timeout: WAIT });
+  await staffBrowser.close();
+  await waitText(page, "직원이 배정되었습니다");
+  check("직원이 받으면 키오스크의 접수 상태가 '직원 배정'으로 바뀐다", true);
+  await shot(page, "입구로봇-이동지원-배정");
+  await page.goto(`${BASE}/kiosk/entry?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+  await waitText(page, "선택한 도움을 확인해 주세요");
+  check("같은 탑승권을 다시 찍으면 등록한 여객으로 알아보고 고른 도움을 확인하게 한다", await has(page, "계단이나 에스컬레이터"));
+  await shot(page, "입구로봇-도움확인");
+  await browser.close();
+  fs.rmSync(bpFile, { force: true });
+
   browser = await launch();
   page = await open(browser, KIOSK_WIDE);
   await useCookie(page, desk);
@@ -1472,7 +1546,7 @@ async function resetFlights(clearLocks = false) {
   check("현황에는 항공편이나 고른 항목이 없다 (건수와 시간뿐)", !JSON.stringify(summary).includes("MK") && !stats.includes("MK1"));
   check(
     "예매 링크 등록 완료율, 증빙, 체크인, 우대출구 확인이 세어진다",
-    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins >= 3 && summary.exit.ok >= 1 && summary.exit.notOk >= 1,
+    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins >= 3 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1 && summary.assist.total >= 1,
     JSON.stringify({ booking: summary.booking, proofDone: summary.proofDone, checkins: summary.checkins, exit: summary.exit }),
   );
   await shot(page, "데스크-오늘현황");

@@ -7,6 +7,7 @@ import type { FlightView, GuideDto } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
 import { staleNow } from "@/lib/timing";
 import { Banner, ErrorNote } from "../../components/Alert";
+import { AssistBox } from "../../components/AssistBox";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { FlowShell } from "../../components/FlowShell";
 import { closeText, departureText, destOf, FlightBoard } from "../../components/GuideParts";
@@ -378,6 +379,8 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
 
       <h2>{t.passFlight}</h2>
       <FlightBoard flight={flight} t={t} lang={lang} />
+      {/* 이동지원(전동차) 요청과 접수 상태. 공항 입구 안내로봇에서 청한 것도 여기서 보인다. */}
+      {online && <AssistBox token={token} t={t} />}
       {old && <Banner role="status">{asOf}</Banner>}
       {stale && <Banner role="status">{t.stale}</Banner>}
 
