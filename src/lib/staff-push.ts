@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import webpush, { type PushSubscription } from "web-push";
+import type { PushSubscription } from "web-push";
 import type { Session } from "./auth";
 import type { Db } from "./db";
 import { fail, ok } from "./api/dto";
@@ -111,41 +111,7 @@ export async function configurePush(
   return ok();
 }
 export async function notifyNewRequest(db: Db, requestId: string, now: Date) {
-  const config = pushConfig();
-  if (!config.enabled) return;
-  await db.query(
-    "delete from request_push_subscriptions where expires_at <= $1",
-    [now],
-  );
-  const rows = await db.query<{ id: string; subscription: PushSubscription }>(
-    "select id,subscription from request_push_subscriptions where expires_at>$1 limit 100",
-    [now],
-  );
-  const payload = JSON.stringify({
-    title: "새 도움 요청",
-    body: "통합 요청 화면에서 접수 내용을 확인해 주세요.",
-    tag: "request-" + requestId,
-  });
-  await Promise.allSettled(
-    rows.map(async (row) => {
-      if (!validSubscription(row.subscription)) return;
-      try {
-        await webpush.sendNotification(row.subscription, payload, {
-          TTL: 60,
-          timeout: 3000,
-          vapidDetails: {
-            subject: config.subject,
-            publicKey: config.publicKey,
-            privateKey: config.privateKey,
-          },
-        });
-      } catch (e) {
-        const status = (e as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410)
-          await db.query("delete from request_push_subscriptions where id=$1", [
-            row.id,
-          ]);
-      }
-    }),
-  );
+  if (!/^[a-f0-9-]{36}$/i.test(requestId)) return;
+  const { processAlertQueue } = await import("./request-alerts");
+  await processAlertQueue(db, now, { requestId });
 }

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { PushSettings } from "./PushSettings";
 import { ResourceDispatch } from "./ResourceDispatch";
 import { ResourceAvailability } from "@/app/components/ResourceAvailability";
+import { RequestAlertStatus } from "./RequestAlertStatus";
+import type { RequestAlert } from "@/lib/request-alert-model";
 import type { DispatchResource } from "@/lib/resource-model";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { labelOf } from "@/lib/catalog";
@@ -25,6 +27,8 @@ export function RequestList({
 }) {
   const [summary, setSummary] = useState<OperationalSummary | null>(null);
   const [resources, setResources] = useState<DispatchResource[]>([]);
+  const [alerts, setAlerts] = useState<Record<string, RequestAlert>>({});
+  const [pushEnabled, setPushEnabled] = useState(false);
   const [zoneLabels, setZoneLabels] = useState<Record<string, string>>({});
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
@@ -111,6 +115,8 @@ export function RequestList({
         setDispatchZones(data.dispatchZones ?? []);
         setSummary(data.summary ?? null);
         setResources(data.resources ?? []);
+        setAlerts(data.alerts ?? {});
+        setPushEnabled(data.pushEnabled === true);
         setZoneLabels(data.zoneLabels ?? {});
         setReady(true);
         setError("");
@@ -198,6 +204,11 @@ export function RequestList({
         장비 현황 · 배차
       </Link>
       {ready && <ResourceAvailability resources={resources} />}
+      {isDesk && (
+        <Link className="btn" href="/staff/alerts">
+          알림 운영 현황
+        </Link>
+      )}
       {isDesk && (
         <Link className="btn btn-primary" href="/staff/requests/new">
           여객 대신 새 요청 접수
@@ -392,6 +403,17 @@ export function RequestList({
               )}
               {r.note && <p>여객의 말: {r.note}</p>}
               {r.reason && <p>안내한 이유: {r.reason}</p>}
+              {current && open && (
+                <RequestAlertStatus
+                  id={r.id}
+                  alert={alerts[r.id]}
+                  pushEnabled={pushEnabled}
+                  zoneLabels={zoneLabels}
+                  onChanged={async () => {
+                    await load();
+                  }}
+                />
+              )}
               {r.service === "robot" && (
                 <p className="fine">
                   로봇 출발·도착은 이 화면에서 바꾸는 모의 상태입니다.

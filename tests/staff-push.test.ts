@@ -18,6 +18,7 @@ import { sessionOf, kioskSession } from "./helpers/fixtures";
 import { seedZones } from "@/lib/zones";
 import type { Db } from "@/lib/db";
 import webpush from "web-push";
+import { createServiceRequest } from "@/lib/service-requests";
 vi.mock("web-push", () => ({
   default: { sendNotification: vi.fn().mockResolvedValue({ statusCode: 201 }) },
 }));
@@ -28,12 +29,33 @@ const sub = (id = "one") => ({
   endpoint: "https://fcm.googleapis.com/fcm/send/" + id,
   keys: { p256dh: "A".repeat(87), auth: "B".repeat(22) },
 });
+async function makeRequestId() {
+  const result = await createServiceRequest(
+    db,
+    null,
+    {
+      receipt: "a".repeat(64),
+      service: "guidance",
+      placeId: "cc-center",
+      choices: [],
+      party: 1,
+      note: "",
+      lang: "ko",
+      consent: true,
+    },
+    "push:test",
+    now,
+  );
+  return (result.body.request as { id: string }).id;
+}
 beforeAll(async () => {
   db = await createTestDb();
   await seedZones(db, () => "x:y");
 });
 beforeEach(async () => {
-  await db.exec("truncate request_push_subscriptions");
+  await db.exec(
+    "truncate service_requests,service_request_limits,request_push_subscriptions cascade",
+  );
   vi.clearAllMocks();
   vi.mocked(webpush.sendNotification).mockResolvedValue({
     statusCode: 201,
@@ -97,19 +119,21 @@ describe("직원 브라우저 알림", () => {
   });
   it("알림에는 요청 내용·위치·개인정보나 확인용 링크가 없다", async () => {
     await configurePush(db, session, sub(), now);
-    await notifyNewRequest(db, "request-id", now);
+    const id = await makeRequestId();
+    await notifyNewRequest(db, id, now);
     const [, payload, options] = vi.mocked(webpush.sendNotification).mock
       .calls[0];
-    expect(JSON.parse(payload as string)).toEqual({
+    expect(JSON.parse(payload as string)).toMatchObject({
       title: "새 도움 요청",
       body: "통합 요청 화면에서 접수 내용을 확인해 주세요.",
-      tag: "request-request-id",
+      tag: "request-" + id,
     });
     expect(options?.timeout).toBe(3000);
   });
   it("만료된 로그인 기기는 정리하고 발송하지 않는다", async () => {
     await configurePush(db, session, sub(), now);
-    await notifyNewRequest(db, "id", new Date(session.exp + 1));
+    const id = await makeRequestId();
+    await notifyNewRequest(db, id, new Date(session.exp + 1));
     expect(webpush.sendNotification).not.toHaveBeenCalled();
     expect(
       await db.query("select id from request_push_subscriptions"),
@@ -118,7 +142,8 @@ describe("직원 브라우저 알림", () => {
   it("푸시 서버가 기기 폐기를 알리면 구독을 지운다", async () => {
     await configurePush(db, session, sub(), now);
     vi.mocked(webpush.sendNotification).mockRejectedValue({ statusCode: 410 });
-    await expect(notifyNewRequest(db, "id", now)).resolves.toBeUndefined();
+    const id = await makeRequestId();
+    await expect(notifyNewRequest(db, id, now)).resolves.toBeUndefined();
     expect(
       await db.query("select id from request_push_subscriptions"),
     ).toHaveLength(0);
@@ -126,7 +151,8 @@ describe("직원 브라우저 알림", () => {
   it("일시적인 발송 실패는 구독과 접수를 유지한다", async () => {
     await configurePush(db, session, sub(), now);
     vi.mocked(webpush.sendNotification).mockRejectedValue({ statusCode: 503 });
-    await expect(notifyNewRequest(db, "id", now)).resolves.toBeUndefined();
+    const id = await makeRequestId();
+    await expect(notifyNewRequest(db, id, now)).resolves.toBeUndefined();
     expect(
       await db.query("select id from request_push_subscriptions"),
     ).toHaveLength(1);

@@ -11,7 +11,8 @@ import { getZone } from "./zones";
 import { operationalSummary, legacyWorkAction } from "./request-operations";
 import { closeStale } from "./calls";
 import { closeStaleAssist } from "./assist";
-import { notifyNewRequest } from "./staff-push";
+import { alertSnapshots,maintainAlertQueue } from "./request-alerts";
+import { pushConfig } from "./staff-push";
 import { resourceSnapshot } from "./dispatch-resources";
 import { fail, ok, type ApiResult } from "./api/dto";
 import {
@@ -206,13 +207,7 @@ export async function createServiceRequest(
       );
     return fail(429, "요청이 많습니다. 잠시 후 다시 시도해 주세요");
   }
-  // Dispatch once on the successful insert; retries do not send duplicate alerts.
-  // Push failure never changes the accepted request or its receipt.
-  try {
-    await notifyNewRequest(db, rows[0].id, now);
-  } catch {
-    /* Polling remains available. */
-  }
+  // The database trigger enqueues alerts atomically. Route-level after() sends after responding.
   return ok({ request: view(rows[0]) });
 }
 export async function serviceRequestStatus(
@@ -268,6 +263,7 @@ export async function listServiceRequests(
   await expireServiceRequests(db, now);
   await closeStale(db, now);
   await closeStaleAssist(db, now);
+  await maintainAlertQueue(db,now);
   const offset = Math.max(
     0,
     Math.min(100000, Number.isInteger(options.offset) ? options.offset! : 0),
@@ -325,6 +321,8 @@ export async function listServiceRequests(
     isDesk: s!.isDesk,
     summary,
     resources: await resourceSnapshot(db),
+    alerts: await alertSnapshots(db,rows.filter(r=>r.queue==="integrated").map(r=>r.id)),
+    pushEnabled:pushConfig().enabled,
     dispatchZones: await db.query(
       "select id,label from zones where active and not is_kiosk and not is_common order by label",
     ),
