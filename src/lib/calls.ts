@@ -19,6 +19,8 @@ export interface Call {
   acceptedZone: string | null;
   endedAt: Date | null;
   state: CallState;
+  /** Recorded outcomes take precedence; missing values retain the historical fallback. */
+  endKind?: CallEndReason | null;
 }
 
 interface Row {
@@ -31,7 +33,7 @@ interface Row {
   accepted_at: Date | null;
   accepted_zone: string | null;
   ended_at: Date | null;
-  end_kind: string | null;
+  end_kind: CallEndReason | null;
 }
 
 const COLUMNS =
@@ -50,6 +52,7 @@ function toCall(r: Row): Call {
     acceptedZone: r.accepted_zone,
     endedAt: r.ended_at,
     state,
+    endKind: r.end_kind,
   };
 }
 
@@ -67,12 +70,13 @@ export type CallEndReason = "done" | "cancelled" | "expired";
 
 /**
  * 끝난 호출이 왜 끝났는가. 끝나지 않았으면 null.
- * DB 에는 done 과 cancelled 둘만 남는다. cancelled 는 "여객이 거둠" 또는 "시간이 지나 닫힘"이다.
+ * 명시적으로 저장한 종료 사유를 우선한다. 사유가 없는 이전 기록만 시간으로 추정한다.
  * 아무도 받지 않은 채 CALL_EXPIRE_MIN 분 넘게 열려 있다 닫혔으면 시간이 지나 닫힌 것(expired)으로 본다.
  * 직원 화면이 놓친 호출을 "여객이 거둠"으로 보여 주면 직원은 놓친 줄 모른다.
  */
 export function endReason(c: Call): CallEndReason | null {
   if (!c.endedAt) return null;
+  if (c.endKind) return c.endKind;
   if (c.state === "done") return "done";
   const open = c.endedAt.getTime() - c.createdAt.getTime();
   return (!c.acceptedAt && open >= CALL_EXPIRE_MIN * MIN) || (c.acceptedAt && c.endedAt.getTime()-c.acceptedAt.getTime()>=CALL_ACCEPTED_EXPIRE_MIN*MIN) ? "expired" : "cancelled";
