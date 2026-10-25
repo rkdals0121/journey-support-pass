@@ -19,8 +19,8 @@ export default async function DeskPage() {
             <strong>안내데스크에서만 쓸 수 있습니다</strong>
             <p>대신 등록과 패스 찾기는 안내데스크 코드로 로그인해야 쓸 수 있습니다.</p>
           </div>
-          <Link className="btn" href="/staff">
-            호출 화면으로
+          <Link className="btn" href="/staff/requests">
+            통합 요청으로
           </Link>
         </main>
         <StaffNav isDesk={false} />

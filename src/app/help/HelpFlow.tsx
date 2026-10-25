@@ -19,6 +19,7 @@ import { ReceiptQr } from "./ReceiptQr";
 import { useSpeech } from "../components/useSpeech";
 
 const STORAGE = "jsp-dx-receipt-v1";
+const STORAGE_SCOPE = "jsp-dx-receipt-registration-v1";
 const supportCodes = [
   "mov_no_stairs",
   "mov_wheelchair",
@@ -62,6 +63,10 @@ export function HelpFlow({
   lockedPlace = false,
   assisted = false,
   initialReceipt,
+  initialService = "guidance",
+  returnTo,
+  freshShared = false,
+  checkExisting = false,
 }: {
   lang: "ko" | "en";
   initialPlace?: string;
@@ -73,11 +78,15 @@ export function HelpFlow({
   lockedPlace?: boolean;
   assisted?: boolean;
   initialReceipt?: string;
+  initialService?: ServiceType;
+  returnTo?: string;
+  freshShared?: boolean;
+  checkExisting?: boolean;
 }) {
   const [lang, setLang] = useState(initialLang);
   const en = lang === "en";
   const [placeId, setPlaceId] = useState(placeOf(initialPlace)?.id ?? "");
-  const [service, setService] = useState<ServiceType>("guidance");
+  const [service, setService] = useState<ServiceType>(initialService);
   const [choices, setChoices] = useState(savedChoices);
   const [party, setParty] = useState(savedParty);
   const [note, setNote] = useState("");
@@ -90,6 +99,7 @@ export function HelpFlow({
   const [restoring, setRestoring] = useState(true);
   const [large, setLarge] = useState(savedChoices.includes("gd_large"));
   const inFlight = useRef(false);
+  const freshConsumed = useRef(false);
   const speech = useSpeech(lang);
   const tr = (ko: string, english: string) => (en ? english : ko);
   const applyRequest = useCallback(
@@ -102,6 +112,7 @@ export function HelpFlow({
   const forgetExpired = useCallback(() => {
     try {
       sessionStorage.removeItem(STORAGE);
+      sessionStorage.removeItem(STORAGE_SCOPE);
     } catch {}
     setReceipt(null);
     setRequest(null);
@@ -120,6 +131,27 @@ export function HelpFlow({
     const timer = setTimeout(() => controller.abort(), 10000);
     let saved: string | null = null;
     try {
+      if (sharedDevice && freshShared && !freshConsumed.current) {
+        freshConsumed.current = true;
+        if (
+          !registrationToken ||
+          sessionStorage.getItem(STORAGE_SCOPE) !== registrationToken
+        ) {
+          sessionStorage.removeItem(STORAGE);
+          sessionStorage.removeItem(STORAGE_SCOPE);
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.delete("fresh");
+        window.history.replaceState(window.history.state, "", url);
+      }
+      if (
+        sharedDevice &&
+        registrationToken &&
+        sessionStorage.getItem(STORAGE_SCOPE) !== registrationToken
+      ) {
+        sessionStorage.removeItem(STORAGE);
+        sessionStorage.removeItem(STORAGE_SCOPE);
+      }
       saved = initialReceipt ?? sessionStorage.getItem(STORAGE);
       if (initialReceipt) sessionStorage.setItem(STORAGE, initialReceipt);
     } catch {
@@ -154,7 +186,14 @@ export function HelpFlow({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [initialReceipt, applyRequest, forgetExpired]);
+  }, [
+    initialReceipt,
+    applyRequest,
+    forgetExpired,
+    sharedDevice,
+    freshShared,
+    registrationToken,
+  ]);
   useEffect(() => {
     if (!receipt || !request || !OPEN_REQUEST_STATES.includes(request.state))
       return;
@@ -214,6 +253,7 @@ export function HelpFlow({
         setReceipt(key);
         try {
           sessionStorage.setItem(STORAGE, key);
+          sessionStorage.setItem(STORAGE_SCOPE, registrationToken ?? "");
         } catch {}
       }
       const ctrl = new AbortController();
@@ -292,12 +332,16 @@ export function HelpFlow({
     if (sharedDevice) {
       try {
         sessionStorage.removeItem(STORAGE);
+        sessionStorage.removeItem(STORAGE_SCOPE);
       } catch {}
-      window.location.assign(assisted ? "/staff/requests/new" : "/help");
+      window.location.assign(
+        assisted ? "/staff/requests/new" : (returnTo ?? "/help"),
+      );
       return;
     }
     try {
       sessionStorage.removeItem(STORAGE);
+      sessionStorage.removeItem(STORAGE_SCOPE);
     } catch {}
     setReceipt(null);
     setRequest(null);
@@ -311,7 +355,21 @@ export function HelpFlow({
   return (
     <main className={`page dx-page ${large ? "dx-large" : ""}`} lang={lang}>
       <div className="dx-toolbar">
-        <Link href={en ? "/?lang=en" : "/"}>{tr("처음으로", "Home")}</Link>
+        <Link
+          href={returnTo ?? (en ? "/?lang=en" : "/")}
+          onClick={() => {
+            if (sharedDevice) {
+              try {
+                sessionStorage.removeItem(STORAGE);
+                sessionStorage.removeItem(STORAGE_SCOPE);
+              } catch {}
+            }
+          }}
+        >
+          {returnTo
+            ? tr("안내 화면으로", "Back to kiosk")
+            : tr("처음으로", "Home")}
+        </Link>
         <button
           className="btn btn-ghost"
           onClick={() => setLang(en ? "ko" : "en")}
@@ -359,6 +417,14 @@ export function HelpFlow({
           {tr(
             "사전등록을 불러올 수 없습니다. 아래에서 새로 요청할 수 있습니다.",
             "Pre-registration could not be loaded. You can make a new request below.",
+          )}
+        </p>
+      )}
+      {checkExisting && !restoring && !request && !receipt && (
+        <p role="status" className="dx-notice">
+          {tr(
+            "이 기기에 연결된 접수 내역이 없습니다. 휴대전화로 이어 본 요청은 해당 휴대전화에서 확인해 주세요. 필요한 경우 아래에서 새로 접수할 수 있습니다.",
+            "No request is linked on this device. If you moved it to your phone, check it there. You can make a new request below.",
           )}
         </p>
       )}

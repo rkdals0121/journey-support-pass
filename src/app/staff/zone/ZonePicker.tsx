@@ -95,7 +95,7 @@ function Picker({ first }: { first: boolean }) {
       }
       const next = params.get("next");
       // 쿠키가 바뀌었으므로 화면을 통째로 다시 받는다. 앞서 받아 둔 화면이 남지 않게 한다. 내부 경로만 받는다.
-      window.location.replace(next && /^\/staff\//.test(next) ? next : "/staff");
+      window.location.replace(next && /^\/staff\//.test(next) ? next : "/staff/requests");
     } catch {
       setError("연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
@@ -126,7 +126,7 @@ function Picker({ first }: { first: boolean }) {
     <div>
       {!first && (
         <div className="topbar">
-          <Link className="icon-btn" href="/staff" aria-label="호출 화면으로">
+          <Link className="icon-btn" href="/staff/requests" aria-label="통합 요청으로">
             <ChevronLeft size={26} aria-hidden="true" />
           </Link>
           <span className="topbar-title">근무 구역 바꾸기</span>

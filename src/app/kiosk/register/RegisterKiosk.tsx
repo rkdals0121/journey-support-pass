@@ -324,6 +324,7 @@ export function RegisterKiosk({ placeLabel, placeLabelEn, assisted = false, idle
     <div className="call-dock">
       <div className="call-dock-inner">
         <StaffCall
+          lang={lang}
           t={t}
           big={prefs.wantsStaff}
           token={issued?.token ?? null}
