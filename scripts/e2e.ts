@@ -1151,7 +1151,7 @@ async function resetFlights(clearLocks = false) {
   await useCookie(page, await kioskCookie("cc-125"));
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
   await openGuide(page, "Guide me with this", "Guidance for you");
-  check("영어로 등록한 여객이 QR 을 대면 키오스크가 영어로 바뀐다", (await has(page, "Way to Gate 130")) && (await has(page, "Call staff")));
+  check("영어로 등록한 여객이 QR 을 대면 키오스크가 영어로 바뀐다", (await has(page, "Way to Gate 130")) && (await has(page, "Request assistance")));
   check("계단이 어렵다고 한 여객의 라운지 길은 lift 로 안내한다", true);
   await clickText(page, ".tile", "Assistance lounge");
   await waitText(page, "Take the lift up to 4F");
@@ -1445,7 +1445,7 @@ async function resetFlights(clearLocks = false) {
   await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) JSP-E2E-Desk");
   await fill(page, "#code", DESK_CODE);
   await page.keyboard.press("Enter");
-  await waitText(page, "직원 호출");
+  await waitText(page, "통합 요청");
   check("안내데스크 코드로 들어오면 메뉴에 안내데스크와 오늘 현황이 있다", (await has(page, "안내데스크")) && (await has(page, "오늘 현황")));
   await clickText(page, ".staff-nav a", "안내데스크");
   await waitText(page, "여객 대신 등록하기");

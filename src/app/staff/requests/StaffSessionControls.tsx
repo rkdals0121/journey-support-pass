@@ -25,7 +25,7 @@ export function StaffSessionControls({ canSwitch }: { canSwitch: boolean }) {
       <div className="dx-actions">
         {canSwitch && (
           <Link
-            className="sign-btn"
+            className="sign-btn dx-session-btn"
             href="/staff/zone?next=%2Fstaff%2Frequests"
           >
             구역 바꾸기
@@ -33,7 +33,7 @@ export function StaffSessionControls({ canSwitch }: { canSwitch: boolean }) {
         )}
         <button
           type="button"
-          className="sign-btn"
+          className="sign-btn dx-session-btn"
           disabled={busy}
           onClick={() => void logout()}
         >
