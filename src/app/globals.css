@@ -3463,3 +3463,34 @@ html[data-picture] .route > li::before {
 .later-open {
   margin-top: 0.75rem;
 }
+
+/* DX integrated request pilot, separate from the existing pre-registration screens. */
+.dx-home-links,.dx-card {display:grid;gap:.85rem;margin:1.25rem 0;padding:1.25rem;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);}
+.dx-toolbar,.dx-actions {display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
+.dx-toolbar .btn {min-height:44px;}
+.dx-notice {padding:1rem;border-left:4px solid var(--green-press);background:var(--surface);}
+.dx-page label,.dx-page legend {font-weight:700;}
+.dx-page select,.dx-page input[type=number],.dx-page textarea {width:100%;min-height:48px;padding:.8rem;border:2px solid var(--line-strong);border-radius:.65rem;color:var(--text);background:var(--surface);font:inherit;}
+.dx-page textarea {min-height:90px;resize:vertical;}
+.dx-page fieldset {border:1px solid var(--line-strong);border-radius:.65rem;padding:.9rem;min-width:0;}
+.dx-option {display:flex;gap:.75rem;align-items:center;min-height:48px;padding:.5rem 0;}
+.dx-option input {width:24px;height:24px;flex-shrink:0;accent-color:var(--green-press);}
+.dx-request-list {padding:0;list-style:none;}
+.dx-card h2,.dx-card p {margin:0;}
+.dx-large {font-size:1.4rem;}
+.dx-large .fine {font-size:1.05rem;}
+.dx-ending {display:grid;gap:.5rem;border-top:1px solid var(--line-strong);padding-top:1rem;}
+.dx-pass-help {margin-bottom:1.25rem;}
+
+.dx-toolbar .btn {width:auto;flex:1 1 auto;padding:.55rem .7rem;font-size:.95rem;min-height:44px;}
+.dx-toolbar > a {color:var(--green-press);font-weight:700;}
+.dx-home-links .btn,.dx-actions .btn {margin:0;}
+.dx-page :focus-visible {outline:3px solid var(--green-press);outline-offset:3px;}
+
+.dx-receipt {border-top:1px solid var(--line-strong);padding-top:1rem;}
+.dx-receipt img {display:block;max-width:100%;height:auto;background:white;}
+
+.dx-summary {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;}
+.dx-summary div {background:var(--surface);border:1px solid var(--line-strong);border-radius:.75rem;padding:.75rem;}
+.dx-summary dt {font-size:.85rem;}
+.dx-summary dd {font-size:1.2rem;font-weight:700;margin:.3rem 0 0;}

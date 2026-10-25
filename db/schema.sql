@@ -177,3 +177,40 @@ alter table access_logs drop constraint if exists access_logs_action_check;
 alter table access_logs add constraint access_logs_action_check check (action in
   ('scan_view','number_view','receipt_view','list_view','link','reissue','cancel','edit','login_fail','number_fail','register','exit_view'));
 create index if not exists access_logs_device on access_logs (device_key, action, at);
+
+
+-- DX pilot: a request is distinct from pre-registration or an equipment reservation.
+-- Existing registration/pass/assist tables and their behaviour stay intact.
+create table if not exists service_requests (
+ id uuid primary key default gen_random_uuid(),
+ receipt_hash text not null unique,
+ registration_id uuid references registrations(id) on delete set null,
+ service text not null check (service in ('guidance','robot','mobility')),
+ state text not null default 'received' check (state in ('received','assigned','en_route','arrived','serving','done','cancelled','unavailable','expired')),
+ place_id text not null,
+ choices text[] not null default '{}', party int not null check (party between 1 and 20),
+ note text not null default '', lang text not null check (lang in ('ko','en')),
+ source text not null check (source in ('web','preregistered','kiosk','assisted')),
+ assigned_zone text references zones(id), reason text not null default '',
+ created_at timestamptz not null, updated_at timestamptz not null,
+ accepted_at timestamptz, arrived_at timestamptz, started_at timestamptz, ended_at timestamptz,
+ expires_at timestamptz not null, version int not null default 0,
+ device_key text not null
+);
+create index if not exists service_requests_open on service_requests (state, created_at);
+create index if not exists service_requests_device on service_requests (device_key, created_at);
+-- One active request per pre-registration; a second browser cannot create a duplicate.
+create unique index if not exists service_requests_one_active_registration
+ on service_requests(registration_id) where registration_id is not null and state in ('received','assigned','en_route','arrived','serving');
+
+-- Atomic quota counters; do not rely on a stale count in concurrent requests.
+create table if not exists service_request_limits (
+ bucket text not null, window_at timestamptz not null, used int not null,
+ primary key(bucket,window_at)
+);
+
+-- Staff opt-in browser push subscriptions expire with their login session.
+create table if not exists request_push_subscriptions (
+ id text primary key, zone_id text not null references zones(id),
+ subscription jsonb not null, expires_at timestamptz not null
+);

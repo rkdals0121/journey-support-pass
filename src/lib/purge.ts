@@ -1,3 +1,4 @@
+import { expireServiceRequests } from "./service-requests";
 import { config } from "./config";
 import type { Db } from "./db";
 import { isJourneyOver, lastRealPoll, loadJourneys } from "./journey";
@@ -24,6 +25,10 @@ export async function eraseRegistration(
     [id, finalStatus],
   );
   await db.query("update passes set registration_id = null where registration_id = $1", [id]);
+  // Bound DX requests carry a snapshot. Explicit erasure/flight expiry must remove it too.
+  await db.query(`update service_requests set state=case when state in ('received','assigned','en_route','arrived','serving') then 'cancelled' else state end,
+    registration_id=null, choices='{}', note='', reason='', device_key='', place_id='',party=1,
+    ended_at=coalesce(ended_at,$2),expires_at=$2,updated_at=$2,version=version+1 where registration_id=$1`,[id,now]);
   // 여객이 떠났는데 끝나지 않은 호출은 닫는다.
   await db.query(
     "update calls set ended_at = $2, end_kind = 'cancelled' where registration_id = $1 and ended_at is null",
@@ -49,6 +54,7 @@ export async function purge(
   db: Db,
   now: Date,
 ): Promise<{ purged: number; unlinkedPurged: number; logsDeleted: number }> {
+  await expireServiceRequests(db, now);
   let purged = 0;
   const lastPoll = await lastRealPoll(db);
   for (const j of await loadJourneys(db, now)) {

@@ -19,12 +19,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           </Link>
         </div>
         <h1>
-          {t.heroTitle1}
+          {lang === "en" ? "The help you need" : "공항에서 필요한 도움"}
           <br />
-          <em>{t.heroTitle2}</em>
+          <em>{lang === "en" ? "connected in one place" : "접수부터 지원까지 한곳에서"}</em>
         </h1>
-        <p>{t.heroBody}</p>
+        <p>{lang === "en" ? "Save your needs before your trip, or request help where you are. Follow your request from staff confirmation to completion." : "필요한 도움을 미리 등록하거나 공항에서 바로 요청하세요. 현재 위치에서 접수하고 담당자 확인부터 완료까지 살펴볼 수 있습니다."}</p>
       </div>
+      <section className="dx-home-links" aria-label={lang === "en" ? "Choose when you need help" : "도움받을 시점 선택"}>
+        <Link className="btn btn-primary" href={`/help${q}`}>{lang === "en" ? "Request help now" : "지금 도움 요청하기"}</Link>
+        <Link className="btn btn-ghost" href={`/register${q}`}>{lang === "en" ? "Register needs in advance" : "미리 필요한 도움 등록하기"}</Link>
+        <p className="fine">{lang === "en" ? "Registration saves your needs. It does not confirm a staff, robot or vehicle booking." : "사전등록은 필요한 도움을 미리 알려 두는 기능입니다. 직원·로봇·차량의 예약 확정은 아닙니다."}</p>
+      </section>
       <PassArt label={t.passNo} />
 
       <ol className="steps-list">
@@ -33,8 +38,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <ClipboardList size={22} aria-hidden="true" />
           </span>
           <div>
-            <strong>{t.step1}</strong>
-            <span>{t.step1Body}</span>
+            <strong>{lang === "en" ? "Save your needs in advance" : "필요한 도움을 미리 알려 두세요"}</strong>
+            <span>{lang === "en" ? "Pre-registration is optional for on-site requests." : "사전등록을 해 두면 현장에서 답을 다시 입력하는 부담을 줄일 수 있습니다."}</span>
           </div>
         </li>
         <li>
@@ -42,8 +47,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <FileCheck2 size={22} aria-hidden="true" />
           </span>
           <div>
-            <strong>{t.step2}</strong>
-            <span>{t.step2Body}</span>
+            <strong>{lang === "en" ? "Request at your current pickup point" : "현재 위치에서 도움을 요청하세요"}</strong>
+            <span>{lang === "en" ? "You can also start without pre-registration or documents." : "등록하지 않았어도 필요한 도움과 만날 곳을 확인해 접수할 수 있습니다."}</span>
           </div>
         </li>
         <li>
@@ -51,8 +56,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <Ticket size={22} aria-hidden="true" />
           </span>
           <div>
-            <strong>{t.step3}</strong>
-            <span>{t.step3Body}</span>
+            <strong>{lang === "en" ? "See how your request is handled" : "담당자 확인부터 완료까지 살펴보세요"}</strong>
+            <span>{lang === "en" ? "Assignment is confirmed by staff, not by registration alone." : "사전등록과 요청 접수는 직원·로봇·차량의 배정 확정이 아닙니다."}</span>
           </div>
         </li>
       </ol>

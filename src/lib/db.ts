@@ -73,7 +73,7 @@ export function getDb(): Promise<Db> {
     holder.__jspDb = url
       ? openPg(url)
       : (async () => {
-          const dir = path.join(process.cwd(), ".data", "pglite");
+          const dir = process.env.JSP_LOCAL_DB_DIR || path.join(process.cwd(), ".data", "pglite");
           fs.mkdirSync(dir, { recursive: true });
           const db = await openPglite(dir);
           await migrate(db);
