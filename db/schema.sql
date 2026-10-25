@@ -353,3 +353,32 @@ begin
  update dispatch_resources set status=p_status,version=version+1,updated_at=p_now where id=p_id;
  return 'ok';
 end $$;
+
+-- Durable generic notification metadata; never store passenger contents or push endpoints here.
+create table if not exists request_alerts (
+ request_id uuid primary key references service_requests(id) on delete cascade,
+ created_at timestamptz not null, expires_at timestamptz not null,
+ acknowledged_at timestamptz, acknowledged_zone text references zones(id)
+);
+create table if not exists request_alert_deliveries (
+ id uuid primary key default gen_random_uuid(),
+ request_id uuid not null references request_alerts(request_id) on delete cascade,
+ subscription_id text not null, zone_id text not null,
+ state text not null default 'queued' check(state in ('queued','sending','retry','sent','failed','expired','cancelled')),
+ attempts int not null default 0, next_attempt_at timestamptz not null,
+ lease_token uuid, lease_until timestamptz, accepted_at timestamptz, received_at timestamptz,
+ error_code text not null default '', unique(request_id,subscription_id)
+);
+create index if not exists request_alert_due on request_alert_deliveries(state,next_attempt_at);
+create or replace function enqueue_request_alert() returns trigger language plpgsql as $$
+begin
+ insert into request_alerts(request_id,created_at,expires_at)
+ values(NEW.id,NEW.created_at,NEW.created_at+interval '10 minutes');
+ insert into request_alert_deliveries(request_id,subscription_id,zone_id,next_attempt_at)
+ select NEW.id,s.id,s.zone_id,NEW.created_at from request_push_subscriptions s
+ where s.expires_at>NEW.created_at;
+ return NEW;
+end $$;
+drop trigger if exists enqueue_request_alert_trigger on service_requests;
+create trigger enqueue_request_alert_trigger after insert on service_requests
+ for each row execute function enqueue_request_alert();
