@@ -37,8 +37,11 @@ function LoginForm() {
       const next = params.get("next");
       const safe = next && /^\/staff\//.test(next) ? next : null;
       // 쿠키가 바뀌었으므로 화면을 통째로 다시 받는다. 앞서 받아 둔 화면이 남지 않게 한다.
-      if (data.needsZone) window.location.replace(safe ? `/staff/zone?next=${encodeURIComponent(safe)}` : "/staff/zone");
-      else window.location.replace(safe ?? "/staff");
+      if (data.needsZone)
+        window.location.replace(
+          safe ? `/staff/zone?next=${encodeURIComponent(safe)}` : "/staff/zone",
+        );
+      else window.location.replace(safe ?? "/staff/requests");
     } catch {
       setError("연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
@@ -68,7 +71,8 @@ function LoginForm() {
         {busy ? "확인하는 중…" : "로그인"}
       </button>
       <p className="hint" style={{ marginTop: 18 }}>
-        현장 직원은 공통 코드로 들어와 근무 구역을 고릅니다. 안내데스크는 안내데스크 코드를 씁니다.
+        현장 직원은 공통 코드로 들어와 근무 구역을 고릅니다. 안내데스크는
+        안내데스크 코드를 씁니다.
       </p>
     </form>
   );

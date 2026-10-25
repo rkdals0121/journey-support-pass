@@ -310,6 +310,12 @@ async function main() {
           })
         ).violations.map((v) => ({ id: v.id, impact: v.impact }));
       });
+      if (violations.length)
+        console.error(
+          name,
+          "accessibility violations",
+          JSON.stringify(violations),
+        );
       check(name + " accessibility rules", violations.length === 0);
     }
     await page.setViewport({ width: 360, height: 640 });

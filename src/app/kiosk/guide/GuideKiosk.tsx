@@ -374,7 +374,7 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" session={sessionSeq.current} onActive={onCallActive} onPress={onCallPress} say={voiceOn ? speak : undefined} />
+        <StaffCall lang={lang} t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" session={sessionSeq.current} onActive={onCallActive} onPress={onCallPress} say={voiceOn ? speak : undefined} />
       </div>
     </div>
   );

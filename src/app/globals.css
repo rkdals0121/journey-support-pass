@@ -3465,6 +3465,9 @@ html[data-picture] .route > li::before {
 }
 
 /* DX integrated request pilot, separate from the existing pre-registration screens. */
+a.call-btn,a.svc-card {text-decoration:none;}
+.dx-session-btn {color:var(--green-press);border-color:var(--green-press);background:var(--surface);font:inherit;cursor:pointer;}
+.dx-session-btn:hover {background:var(--mint);}
 .dx-home-links,.dx-card {display:grid;gap:.85rem;margin:1.25rem 0;padding:1.25rem;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);}
 .dx-toolbar,.dx-actions {display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
 .dx-toolbar .btn {min-height:44px;}
