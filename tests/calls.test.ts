@@ -342,6 +342,16 @@ describe("직원 부르기: 키오스크가 자기 호출 보기", () => {
 });
 
 describe("직원 부르기: 오래된 호출", () => {
+  it("오래 기다린 뒤 명시적으로 취소한 호출은 시간 초과로 바꾸어 표시하지 않는다", async () => {
+    const call=await createCall(db,"cc-108",null,"guide",t0);
+    await cancelCall(db,call!.id,"cc-108",after(40));
+    expect(endReason((await getCallAt(db,call!.id,"cc-108"))!)).toBe("cancelled");
+  });
+  it("기록된 만료 사유는 과거의 시간 추정 기준보다 우선한다", async () => {
+    const call=await createCall(db,"cc-108",null,"guide",t0);
+    await db.query("update calls set ended_at=$2,end_kind='expired' where id=$1",[call!.id,after(1)]);
+    expect(endReason((await getCallAt(db,call!.id,"cc-108"))!)).toBe("expired");
+  });
   it(`받지 않은 채 ${CALL_EXPIRE_MIN}분이 넘으면 저절로 닫힌다`, async () => {
     expect(CALL_EXPIRE_MIN).toBe(30);
     const call = await createCall(db, "cc-108", null, "guide", t0);
