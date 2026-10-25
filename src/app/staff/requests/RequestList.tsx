@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
 import { PushSettings } from "./PushSettings";
+import { ResourceDispatch } from "./ResourceDispatch";
+import { ResourceAvailability } from "@/app/components/ResourceAvailability";
+import type { DispatchResource } from "@/lib/resource-model";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { labelOf } from "@/lib/catalog";
 import {
@@ -21,6 +24,7 @@ export function RequestList({
   isDesk: boolean;
 }) {
   const [summary, setSummary] = useState<OperationalSummary | null>(null);
+  const [resources, setResources] = useState<DispatchResource[]>([]);
   const [zoneLabels, setZoneLabels] = useState<Record<string, string>>({});
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
@@ -106,6 +110,7 @@ export function RequestList({
         setTotal(data.total ?? list.length);
         setDispatchZones(data.dispatchZones ?? []);
         setSummary(data.summary ?? null);
+        setResources(data.resources ?? []);
         setZoneLabels(data.zoneLabels ?? {});
         setReady(true);
         setError("");
@@ -189,6 +194,10 @@ export function RequestList({
   );
   return (
     <section>
+      <Link className="btn" href="/staff/resources">
+        장비 현황 · 배차
+      </Link>
+      {ready && <ResourceAvailability resources={resources} />}
       {isDesk && (
         <Link className="btn btn-primary" href="/staff/requests/new">
           여객 대신 새 요청 접수
@@ -388,6 +397,17 @@ export function RequestList({
                   로봇 출발·도착은 이 화면에서 바꾸는 모의 상태입니다.
                 </p>
               )}
+              {current && open && r.service !== "guidance" && (
+                <ResourceDispatch
+                  request={r}
+                  resources={resources}
+                  canEdit={isDesk || mine}
+                  onChanged={async () => {
+                    await load();
+                    if (history[r.id]) await loadHistory(r.id);
+                  }}
+                />
+              )}
               {next && (r.state === "received" || mine) && (
                 <button
                   className="btn btn-primary"
@@ -490,9 +510,16 @@ export function RequestList({
                             ? "이전 버전 기준 상태"
                             : h.action === "transfer"
                               ? "담당 인계"
-                              : h.action === "privacy_erased"
-                                ? "상세 보관 종료"
-                                : requestStateLabel({ ...r, state: h.state })}
+                              : h.action === "resource_assign"
+                                ? "장비 배차"
+                                : h.action === "resource_release"
+                                  ? "장비 배차 해제"
+                                  : h.action === "privacy_erased"
+                                    ? "상세 보관 종료"
+                                    : requestStateLabel({
+                                        ...r,
+                                        state: h.state,
+                                      })}
                           {h.assignedZone &&
                             ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
                           {h.actorZone &&

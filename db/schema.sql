@@ -292,3 +292,64 @@ select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
  (extract(epoch from a.created_at)*10000+case a.state when 'received' then 0 when 'assigned' then 1 when 'moving' then 2 else 3 end)::double precision,
  a.assigned_at,null::timestamptz,null::timestamptz,a.ended_at,a.registration_linked
 from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');
+
+-- Internal pilot inventory. No physical device is provisioned or commanded here.
+create table if not exists dispatch_resources (
+ id uuid primary key default gen_random_uuid(),
+ label text not null unique check (length(label) between 1 and 40),
+ kind text not null check (kind in ('robot','mobility')),
+ zone_id text not null references zones(id),
+ status text not null default 'ready' check (status in ('ready','maintenance','offline')),
+ version int not null default 0,
+ created_at timestamptz not null, updated_at timestamptz not null
+);
+alter table service_requests add column if not exists resource_id uuid references dispatch_resources(id);
+create unique index if not exists one_active_request_per_resource on service_requests(resource_id)
+ where resource_id is not null and state in ('received','assigned','en_route','arrived','serving');
+
+-- Serialize allocation and inventory status changes on the resource row. All statements
+-- inside these functions share one transaction; history-trigger failures roll back allocation.
+create or replace function allocate_dispatch_resource(
+ p_request uuid,p_version int,p_resource uuid,p_actor text,p_desk boolean,p_now timestamptz
+) returns text language plpgsql as $$
+declare gear dispatch_resources%rowtype; job service_requests%rowtype;
+begin
+ if p_resource is not null then
+  select * into gear from dispatch_resources where id=p_resource for update;
+  if not found then return 'resource_missing'; end if;
+  if gear.status<>'ready' then return 'not_ready'; end if;
+  if not exists(select 1 from zones where id=gear.zone_id and active) then return 'not_ready'; end if;
+ end if;
+ select * into job from service_requests where id=p_request for update;
+ if not found or job.expires_at<=p_now then return 'request_missing'; end if;
+ if job.version<>p_version then return 'stale'; end if;
+ if not p_desk and job.assigned_zone is distinct from p_actor then return 'forbidden'; end if;
+ if job.state<>'assigned' then return 'stage'; end if;
+ if job.service not in ('robot','mobility') then return 'kind'; end if;
+ if p_resource is not null then
+  if gear.kind<>job.service then return 'kind'; end if;
+  if exists(select 1 from service_requests where resource_id=p_resource and id<>p_request
+   and state in ('received','assigned','en_route','arrived','serving')) then return 'busy'; end if;
+ end if;
+ if job.resource_id is not distinct from p_resource then return 'unchanged'; end if;
+ update service_requests set resource_id=p_resource,version=version+1,updated_at=p_now,
+  last_action=case when p_resource is null then 'resource_release' else 'resource_assign' end,
+  last_actor_zone=p_actor,last_action_reason=case when p_resource is null then '장비 배차 해제' else '장비 배차: '||gear.label end
+ where id=p_request;
+ return 'ok';
+end $$;
+
+create or replace function change_dispatch_resource_status(
+ p_id uuid,p_version int,p_status text,p_now timestamptz
+) returns text language plpgsql as $$
+declare gear dispatch_resources%rowtype;
+begin
+ select * into gear from dispatch_resources where id=p_id for update;
+ if not found then return 'resource_missing'; end if;
+ if gear.version<>p_version then return 'stale'; end if;
+ if p_status not in ('ready','maintenance','offline') then return 'status'; end if;
+ if exists(select 1 from service_requests where resource_id=p_id
+  and state in ('received','assigned','en_route','arrived','serving')) then return 'busy'; end if;
+ update dispatch_resources set status=p_status,version=version+1,updated_at=p_now where id=p_id;
+ return 'ok';
+end $$;

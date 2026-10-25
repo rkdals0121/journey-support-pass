@@ -51,7 +51,7 @@ describe("초기 설정", () => {
     await migrate(db);
   });
   beforeEach(async () => {
-    await db.exec("truncate table service_request_history, request_push_subscriptions, service_requests, service_request_limits, zones, flights, flight_polls, access_logs restart identity");
+    await db.exec("truncate table service_request_history, request_push_subscriptions, service_requests, dispatch_resources, service_request_limits, zones, flights, flight_polls, access_logs restart identity");
   });
 
   it("빈 DB 에 테이블, 구역, 모의 운항을 채운다. 패스는 미리 만들지 않는다", async () => {
