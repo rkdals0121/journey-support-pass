@@ -1,4 +1,4 @@
-import { expireServiceRequests } from "./service-requests";
+import { expireServiceRequests } from "./request-retention";
 import { config } from "./config";
 import type { Db } from "./db";
 import { isJourneyOver, lastRealPoll, loadJourneys } from "./journey";
@@ -25,9 +25,10 @@ export async function eraseRegistration(
     [id, finalStatus],
   );
   await db.query("update passes set registration_id = null where registration_id = $1", [id]);
+  await db.query("update service_request_history set reason='' where request_id in (select id from service_requests where registration_id=$1)",[id]);
   // Bound DX requests carry a snapshot. Explicit erasure/flight expiry must remove it too.
   await db.query(`update service_requests set state=case when state in ('received','assigned','en_route','arrived','serving') then 'cancelled' else state end,
-    registration_id=null, choices='{}', note='', reason='', device_key='', place_id='',party=1,
+    registration_id=null, choices='{}', note='', reason='', device_key='', place_id='',party=1,last_action='privacy_erased',last_actor_zone=null,last_action_reason='',
     ended_at=coalesce(ended_at,$2),expires_at=$2,updated_at=$2,version=version+1 where registration_id=$1`,[id,now]);
   // 여객이 떠났는데 끝나지 않은 호출은 닫는다.
   await db.query(

@@ -12,9 +12,9 @@ describe("스키마", () => {
     db = await createTestDb();
   });
 
-  it("테이블 12개를 만든다(DX 통합 요청·제한·알림 포함). 응대 기록 표는 없다", async () => {
+  it("기존 표를 보존하고 업무 변경 이력까지 13개 표를 만든다", async () => {
     const rows = await db.query<{ table_name: string }>(
-      "select table_name from information_schema.tables where table_schema = 'public'",
+      "select table_name from information_schema.tables where table_schema = 'public' and table_type='BASE TABLE'",
     );
     expect(rows.map((r) => r.table_name).sort()).toEqual([
       "access_logs",
@@ -26,6 +26,7 @@ describe("스키마", () => {
       "passes",
       "registrations",
       "request_push_subscriptions",
+      "service_request_history",
       "service_request_limits",
       "service_requests",
       "zones",

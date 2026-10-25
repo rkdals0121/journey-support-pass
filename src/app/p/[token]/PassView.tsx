@@ -1,4 +1,5 @@
 "use client";
+import {PassRequests} from "./PassRequests";
 import Link from "next/link";
 
 import { BadgeCheck, Circle, CircleCheck, PlaneTakeoff, ScanLine, Ticket, Trash2 } from "lucide-react";
@@ -294,6 +295,7 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
   return (
     <FlowShell lang={lang} prefs={prefs} kiosk={false} screenKey="pass" speakText={speakText} onHome={home}>
       <Link className="btn btn-primary dx-pass-help" href={`/p/${token}/help`}>{lang === "en" ? "Request help with my saved needs" : "사전등록 내용으로 지금 도움 요청"}</Link>
+      <PassRequests token={token} lang={lang}/>
 
       {isNew ? (
         <p className="success-head">

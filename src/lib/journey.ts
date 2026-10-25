@@ -5,7 +5,15 @@ import { lastSuccessfulPoll } from "./flights/ingest";
 import { addDays, kstDate } from "./flights/normalize";
 import { boardingPassText } from "./pass-format";
 import { isUuid, type Lang } from "./registrations";
-import { departureAt, isBoardingClosed, isBoardingNow, isCancelled, isDelayed, isDeparted, minutesToClose } from "./timing";
+import {
+  departureAt,
+  isBoardingClosed,
+  isBoardingNow,
+  isCancelled,
+  isDelayed,
+  isDeparted,
+  minutesToClose,
+} from "./timing";
 
 /** 패스를 쓰고 있는 여객 한 명의 등록과 그 항공편. 이름은 없다. */
 export interface Journey {
@@ -112,13 +120,19 @@ function toJourney(r: JourneyRow, now: Date): Journey {
         estAt: r.f_est_at,
         status: r.f_status ?? "",
       };
-  const times = op.schedAt ? { schedAt: op.schedAt, estAt: op.estAt, status: op.status } : null;
+  const times = op.schedAt
+    ? { schedAt: op.schedAt, estAt: op.estAt, status: op.status }
+    : null;
   const cancelled = times ? isCancelled(times) : false;
   return {
     registrationId: r.id,
     flightDate: r.flight_date,
     choices: knownCodes(r.needs),
-    extra: { party: r.party_size, strollers: r.stroller_count, note: r.note ?? "" },
+    extra: {
+      party: r.party_size,
+      strollers: r.stroller_count,
+      note: r.note ?? "",
+    },
     lang: r.lang === "en" ? "en" : "ko",
     submittedAt: r.submitted_at,
     flightNo: r.flight_no ?? "",
@@ -141,19 +155,31 @@ function toJourney(r: JourneyRow, now: Date): Journey {
     checkedIn: r.checked_in_at !== null,
     boarding:
       r.checked_in_at !== null && r.boarding_ref && r.flight_date && r.flight_no
-        ? boardingPassText({ flightDate: r.flight_date, flightNo: r.flight_no, ref: r.boarding_ref })
+        ? boardingPassText({
+            flightDate: r.flight_date,
+            flightNo: r.flight_no,
+            ref: r.boarding_ref,
+          })
         : null,
   };
 }
 
 /** 패스를 쓰고 있는 등록 전체. 삭제 작업이 이 목록으로 지울 대상을 고른다. */
 export async function loadJourneys(db: Db, now: Date): Promise<Journey[]> {
-  return (await db.query<JourneyRow>(JOURNEY_SQL)).map((r) => toJourney(r, now));
+  return (await db.query<JourneyRow>(JOURNEY_SQL)).map((r) =>
+    toJourney(r, now),
+  );
 }
 
-export async function getJourney(db: Db, registrationId: string, now: Date): Promise<Journey | null> {
+export async function getJourney(
+  db: Db,
+  registrationId: string,
+  now: Date,
+): Promise<Journey | null> {
   if (!isUuid(registrationId)) return null;
-  const rows = await db.query<JourneyRow>(`${JOURNEY_SQL} and r.id = $1`, [registrationId]);
+  const rows = await db.query<JourneyRow>(`${JOURNEY_SQL} and r.id = $1`, [
+    registrationId,
+  ]);
   return rows[0] ? toJourney(rows[0], now) : null;
 }
 
@@ -184,12 +210,18 @@ export async function lastRealPoll(db: Db): Promise<Date | null> {
  * 그사이 늦어진 편을 옛 출발 시각으로 끝난 것으로 보면 아직 공항에 있는 여객의 등록을 지워 버린다.
  * 수집이 멈춘 채면 수집 지연 경고 시간(staleMin)만큼만 더 기다린다.
  */
-export function isJourneyOver(j: Journey, now: Date, lastPoll: Date | null): boolean {
+export function isJourneyOver(
+  j: Journey,
+  now: Date,
+  lastPoll: Date | null,
+): boolean {
   const t = now.getTime();
   // 운항 정보가 없다: 먼 날짜에 미리 등록해 아직 운항 정보가 들어오지 않았거나, 운항 정보가 사라졌다.
   // 등록한 날짜의 다음 날 04:00 까지 기다리고(그 사이 운항 정보가 들어오면 위의 규칙을 따른다), 등록 뒤 48시간도 지나야 지운다.
   if (!j.schedAt) {
-    const byDate = j.flightDate ? new Date(`${addDays(j.flightDate, 1)}T04:00:00+09:00`).getTime() : 0;
+    const byDate = j.flightDate
+      ? new Date(`${addDays(j.flightDate, 1)}T04:00:00+09:00`).getTime()
+      : 0;
     return t >= Math.max(byDate, j.submittedAt.getTime() + ORPHAN_HOURS * HOUR);
   }
 
@@ -197,8 +229,21 @@ export function isJourneyOver(j: Journey, now: Date, lastPoll: Date | null): boo
   const times = { schedAt: j.schedAt, estAt: j.estAt, status: j.status };
   if (j.cancelled) return t >= cancelledUntil(j.schedAt).getTime();
   if (isDeparted(times)) return true;
-  const end = departureAt(times).getTime() + config.purgeAfterDepartureMin * MIN;
+  const end =
+    departureAt(times).getTime() + config.purgeAfterDepartureMin * MIN;
   if (t < end) return false;
   if (!lastPoll || lastPoll.getTime() >= end) return true;
   return t >= end + config.staleMin * MIN;
+}
+
+/** Batch the same active-journey privacy check used by legacy staff endpoints. */
+export async function journeysByIds(
+  db: Db,
+  ids: string[],
+  now: Date,
+): Promise<Journey[]> {
+  if (!ids.length) return [];
+  return (
+    await db.query<JourneyRow>(JOURNEY_SQL + " and r.id=any($1::uuid[])", [ids])
+  ).map((r) => toJourney(r, now));
 }

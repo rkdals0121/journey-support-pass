@@ -75,17 +75,17 @@ export function endReason(c: Call): CallEndReason | null {
   if (!c.endedAt) return null;
   if (c.state === "done") return "done";
   const open = c.endedAt.getTime() - c.createdAt.getTime();
-  return !c.acceptedAt && open >= CALL_EXPIRE_MIN * MIN ? "expired" : "cancelled";
+  return (!c.acceptedAt && open >= CALL_EXPIRE_MIN * MIN) || (c.acceptedAt && c.endedAt.getTime()-c.acceptedAt.getTime()>=CALL_ACCEPTED_EXPIRE_MIN*MIN) ? "expired" : "cancelled";
 }
 
 export async function closeStale(db: Db, now: Date): Promise<void> {
   await db.query(
-    `update calls set ended_at = $1, end_kind = 'cancelled'
+    `update calls set ended_at = $1, end_kind = 'expired'
      where ended_at is null and accepted_at is null and created_at < $2`,
     [now, new Date(now.getTime() - CALL_EXPIRE_MIN * MIN)],
   );
   await db.query(
-    "update calls set ended_at = $1, end_kind = 'done' where ended_at is null and accepted_at < $2",
+    "update calls set ended_at = $1, end_kind = 'expired' where ended_at is null and accepted_at < $2",
     [now, new Date(now.getTime() - CALL_ACCEPTED_EXPIRE_MIN * MIN)],
   );
 }

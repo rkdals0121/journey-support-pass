@@ -214,3 +214,81 @@ create table if not exists request_push_subscriptions (
  id text primary key, zone_id text not null references zones(id),
  subscription jsonb not null, expires_at timestamptz not null
 );
+
+-- Explicit termination reasons for future legacy writes; existing unknown outcomes are not reclassified.
+alter table calls drop constraint if exists calls_end_kind_check;
+alter table calls add constraint calls_end_kind_check check (end_kind in ('done','cancelled','expired'));
+alter table assist_requests add column if not exists end_kind text check (end_kind in ('done','cancelled','expired'));
+
+-- Work history is recorded atomically with each version change, including expiry/erasure.
+alter table service_requests add column if not exists last_action text not null default 'baseline';
+alter table service_requests add column if not exists last_actor_zone text;
+alter table service_requests add column if not exists last_action_reason text not null default '';
+create table if not exists service_request_history (
+ request_id uuid not null references service_requests(id) on delete cascade,
+ version int not null, at timestamptz not null, action text not null, state text not null,
+ actor_zone text, assigned_zone text, reason text not null default '',
+ primary key(request_id,version)
+);
+create or replace function record_service_request_history() returns trigger language plpgsql as $$
+begin
+ if TG_OP='INSERT' or NEW.version<>OLD.version then
+  insert into service_request_history(request_id,version,at,action,state,actor_zone,assigned_zone,reason)
+   values(NEW.id,NEW.version,NEW.updated_at,NEW.last_action,NEW.state,NEW.last_actor_zone,NEW.assigned_zone,NEW.last_action_reason)
+   on conflict do nothing;
+ end if;
+ return NEW;
+end $$;
+drop trigger if exists service_request_history_trigger on service_requests;
+create trigger service_request_history_trigger after insert or update on service_requests
+ for each row execute function record_service_request_history();
+-- Existing rows are a known baseline, not invented historical events.
+insert into service_request_history(request_id,version,at,action,state,assigned_zone)
+ select id,version,updated_at,'baseline',state,assigned_zone from service_requests on conflict do nothing;
+
+-- Anonymous linkage counters survive erasure of the actual registration identifier.
+alter table service_requests add column if not exists registration_linked boolean not null default false;
+alter table calls add column if not exists registration_linked boolean not null default false;
+alter table assist_requests add column if not exists registration_linked boolean not null default false;
+update service_requests set registration_linked=true where not registration_linked and (registration_id is not null or source='preregistered');
+update calls set registration_linked=true where not registration_linked and registration_id is not null;
+update assist_requests set registration_linked=true where not registration_linked and registration_id is not null;
+create or replace function remember_request_registration_link() returns trigger language plpgsql as $$
+begin
+ if NEW.registration_id is not null then NEW.registration_linked=true;
+ elsif TG_OP='UPDATE' and OLD.registration_linked then NEW.registration_linked=true;
+ end if;
+ return NEW;
+end $$;
+drop trigger if exists remember_request_registration on service_requests;
+create trigger remember_request_registration before insert or update on service_requests for each row execute function remember_request_registration_link();
+drop trigger if exists remember_request_registration on calls;
+create trigger remember_request_registration before insert or update on calls for each row execute function remember_request_registration_link();
+drop trigger if exists remember_request_registration on assist_requests;
+create trigger remember_request_registration before insert or update on assist_requests for each row execute function remember_request_registration_link();
+
+-- One operational read model; source records remain authoritative and are never copied twice.
+create or replace view request_work_ledger as
+select id::text,id as source_id,'integrated'::text as queue,registration_id,service,state,place_id,choices,party,note,lang,source,
+ assigned_zone,reason,created_at,updated_at,expires_at,version::double precision as version,
+ accepted_at,arrived_at,started_at,ended_at,registration_linked
+from service_requests
+union all
+select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
+ case when c.ended_at is null then case when c.accepted_at is null then 'received' else 'serving' end
+ when c.end_kind='done' then 'done'
+ when c.end_kind='expired' then 'expired' else 'cancelled' end,
+ c.place_id,coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),'kiosk',
+ c.accepted_zone,''::text,c.created_at,coalesce(c.ended_at,c.accepted_at,c.created_at),c.created_at+interval '24 hours',
+ (extract(epoch from c.created_at)*10000+case when c.ended_at is not null then 2 when c.accepted_at is not null then 1 else 0 end)::double precision,
+ c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked
+from calls c left join registrations r on r.id=c.registration_id and r.status in ('active','pending')
+union all
+select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
+ case when a.state='moving' then 'serving' when a.end_kind='expired' then 'expired' else a.state end,
+ coalesce(a.place_id,''),coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),
+ case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,''::text,a.created_at,
+ coalesce(a.ended_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
+ (extract(epoch from a.created_at)*10000+case a.state when 'received' then 0 when 'assigned' then 1 when 'moving' then 2 else 3 end)::double precision,
+ a.assigned_at,null::timestamptz,null::timestamptz,a.ended_at,a.registration_linked
+from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');

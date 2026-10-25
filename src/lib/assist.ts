@@ -53,11 +53,11 @@ const MIN = 60_000;
 
 export async function closeStaleAssist(db: Db, now: Date): Promise<void> {
   await db.query(
-    "update assist_requests set state = 'cancelled', ended_at = $1 where state = 'received' and created_at < $2",
+    "update assist_requests set state = 'cancelled', end_kind='expired', ended_at = $1 where state = 'received' and created_at < $2",
     [now, new Date(now.getTime() - ASSIST_EXPIRE_MIN * MIN)],
   );
   await db.query(
-    "update assist_requests set state = 'done', ended_at = $1 where state in ('assigned','moving') and assigned_at < $2",
+    "update assist_requests set state = 'cancelled', end_kind='expired', ended_at = $1 where state in ('assigned','moving') and assigned_at < $2",
     [now, new Date(now.getTime() - ASSIST_ACCEPTED_EXPIRE_MIN * MIN)],
   );
 }
@@ -100,7 +100,7 @@ export async function latestAssistOf(db: Db, registrationId: string, now: Date):
 export async function cancelAssist(db: Db, registrationId: string, now: Date): Promise<boolean> {
   if (!isUuid(registrationId)) return false;
   const rows = await db.query(
-    `update assist_requests set state = 'cancelled', ended_at = $2
+    `update assist_requests set state = 'cancelled', end_kind='cancelled', ended_at = $2
      where registration_id = $1 and state in ('received','assigned') returning id`,
     [registrationId, now],
   );
@@ -133,7 +133,7 @@ export async function advanceAssist(db: Db, id: string, zoneId: string, action: 
              where id = $1 and state = 'received' returning id`,
     move: `update assist_requests set state = 'moving'
            where id = $1 and state = 'assigned' and assigned_zone = $2 returning id`,
-    done: `update assist_requests set state = 'done', ended_at = $3
+    done: `update assist_requests set state = 'done', end_kind='done', ended_at = $3
            where id = $1 and state in ('assigned','moving') and assigned_zone = $2 returning id`,
   };
   const params = action === "move" ? [id, zoneId] : [id, zoneId, now];

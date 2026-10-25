@@ -8,8 +8,7 @@ import {
   SERVICE_TYPES,
   SERVICE_LABEL,
   SERVICE_EN,
-  STATE_LABEL,
-  STATE_EN,
+  requestStateLabel,
   type ServiceRequestView,
   type ServiceType,
 } from "@/lib/service-request-model";
@@ -350,7 +349,7 @@ export function HelpFlow({
   }
   const currentPlace = placeOf(placeId);
   const readText = request
-    ? `${en ? STATE_EN[request.state] : STATE_LABEL[request.state]}. ${en ? request.placeEn : request.place}. ${request.reason}`
+    ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
     : `${tr("지금 도움 요청하기", "Request help now")}. ${tr("현재 위치와 필요한 도움을 확인해 주세요. 사전등록은 서비스 예약 확정이 아닙니다.", "Confirm your pickup point and assistance. Pre-registration is not a confirmed service booking.")}`;
   return (
     <main className={`page dx-page ${large ? "dx-large" : ""}`} lang={lang}>
@@ -443,9 +442,7 @@ export function HelpFlow({
         </p>
       ) : request ? (
         <section className="dx-card">
-          <h2 role="status">
-            {en ? STATE_EN[request.state] : STATE_LABEL[request.state]}
-          </h2>
+          <h2 role="status">{requestStateLabel(request, lang)}</h2>
           <p>
             {en ? SERVICE_EN[request.service] : SERVICE_LABEL[request.service]}
           </p>
