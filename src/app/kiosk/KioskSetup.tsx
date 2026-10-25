@@ -151,6 +151,7 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
       <button className="btn btn-primary" disabled={busy || !code.trim() || !placeId}>
         {busy ? "확인하는 중…" : "이 기기를 키오스크로 쓰기"}
       </button>
+      {currentPlace && <Link className="btn btn-ghost" href="/help">이 위치에서 통합 도움 접수 열기</Link>}
       <Link className="home-staff" href="/check">
         <Stethoscope size={16} aria-hidden="true" />
         이 기기 점검하기 (카메라·소리·인터넷)

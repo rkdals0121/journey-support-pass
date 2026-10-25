@@ -12,7 +12,7 @@ describe("스키마", () => {
     db = await createTestDb();
   });
 
-  it("테이블 9개를 만든다(이동지원 요청 포함). 응대 기록 표는 없다", async () => {
+  it("테이블 12개를 만든다(DX 통합 요청·제한·알림 포함). 응대 기록 표는 없다", async () => {
     const rows = await db.query<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public'",
     );
@@ -25,6 +25,9 @@ describe("스키마", () => {
       "flights",
       "passes",
       "registrations",
+      "request_push_subscriptions",
+      "service_request_limits",
+      "service_requests",
       "zones",
     ]);
   });

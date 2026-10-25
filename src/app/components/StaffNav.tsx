@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 export function StaffNav({ isDesk }: { isDesk: boolean }) {
   const path = usePathname();
   const items = [
+    { href: "/staff/requests", label: "통합 요청", Icon: ConciergeBell, on: path.startsWith("/staff/requests") },
     { href: "/staff", label: "호출", Icon: BellRing, on: path === "/staff" },
     // 우대출구 확인은 시제품에서 로그인한 직원 누구나 쓴다.
     { href: "/staff/assist", label: "이동지원", Icon: CarFront, on: path === "/staff/assist" },

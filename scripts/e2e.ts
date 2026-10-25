@@ -11,6 +11,9 @@
  * 카메라 QR 스캔은 패스 QR 그림을 가짜 카메라 영상으로 넣어 확인한다. 진짜 카메라와 조명은 사람이 따로 확인한다.
  * 설치된 Chrome 을 새 프로필로 띄우므로 평소 쓰는 브라우저에는 영향이 없다.
  */
+import type { CallDto } from "../src/lib/api/staff";
+import type { GuideDto } from "../src/lib/guide";
+import type { Summary } from "../src/lib/metrics";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -63,6 +66,7 @@ const KIOSK_CODE = seed.find((z) => z.isKiosk)!.code;
 
 // 개발 서버의 운영자 통로를 여는 값. .env.local 에 있으면 그 값을, 없으면 개발용 기본값을 쓴다.
 function devSecret(): string {
+  if (process.env.E2E_CRON_SECRET) return process.env.E2E_CRON_SECRET;
   const file = path.join(process.cwd(), ".env.local");
   const line = fs.existsSync(file) ? fs.readFileSync(file, "utf-8").split(/\r?\n/).find((l) => l.startsWith("CRON_SECRET=")) : undefined;
   return line?.slice("CRON_SECRET=".length).replace(/^"(.*)"$/, "$1") || "dev-only-secret-change-me";
@@ -95,6 +99,8 @@ async function shot(page: Page, name: string) {
  * 자동 점검은 대비·이름표·역할 같은 것만 잡는다. 화면 읽기 프로그램으로 실제로 써 보는 것을 대신하지 않는다.
  */
 async function audit(page: Page, name: string) {
+  // Next streams the root metadata during navigation; audit the settled document.
+  await page.waitForFunction(() => document.title.trim().length > 0, { timeout: WAIT });
   await page.evaluate(AXE);
   const found = (await page.evaluate(
     "axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } }).then(r => r.violations.map(v => v.id + ' ' + v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')))",
@@ -249,7 +255,12 @@ function writeReport() {
 
 // ── 서버에 직접 묻는 도우미 (화면을 거치지 않고 준비물을 만들 때) ──
 
-async function post(pathname: string, body: unknown, cookie = ""): Promise<{ status: number; body: Record<string, any>; cookie: string }> {
+interface TestApiBody {
+ [key:string]:unknown;
+ token:string;passNo:string;id:string;state:string;
+ guide:GuideDto;result:{eligible:boolean};summary:Summary;calls:CallDto[];
+}
+async function post(pathname: string, body: unknown, cookie = ""): Promise<{ status: number; body: TestApiBody; cookie: string }> {
   const res = await fetch(`${BASE}${pathname}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(cookie ? { Cookie: cookie } : {}) },
@@ -257,14 +268,14 @@ async function post(pathname: string, body: unknown, cookie = ""): Promise<{ sta
   });
   return {
     status: res.status,
-    body: (await res.json().catch(() => ({}))) as Record<string, any>,
+    body: (await res.json().catch(() => ({}))) as TestApiBody,
     cookie: res.headers.get("set-cookie")?.split(";")[0] ?? "",
   };
 }
 
-async function get(pathname: string, cookie = ""): Promise<{ status: number; body: Record<string, any> }> {
+async function get(pathname: string, cookie = ""): Promise<{ status: number; body: TestApiBody }> {
   const res = await fetch(`${BASE}${pathname}`, { headers: cookie ? { Cookie: cookie } : {} });
-  return { status: res.status, body: (await res.json().catch(() => ({}))) as Record<string, any> };
+  return { status: res.status, body: (await res.json().catch(() => ({}))) as TestApiBody };
 }
 
 interface Made {
@@ -444,7 +455,7 @@ async function resetFlights(clearLocks = false) {
   // ───────── 1. 여객 휴대전화: 첫 화면과 등록 ─────────
   section("여객 휴대전화: 등록");
   await page.goto(BASE, { waitUntil: "load", timeout: 300_000 });
-  check("첫 화면이 열린다. 예매를 마친 자리에서 필요한 도움을 알려 두는 서비스라고 소개한다", await has(page, "예매를 마친 그 자리에서"));
+  check("첫 화면은 사전등록 유지와 현장 요청·처리 통합을 소개한다", await has(page, "필요한 도움을 미리 등록하거나 공항에서 바로 요청하세요"));
   check("첫 화면에서 이름·연락처를 받지 않는다고 알린다", await has(page, "이름·연락처는 받지 않아요"));
   check("첫 화면은 직원이 먼저 돕겠다는 약속을 하지 않는다", !(await has(page, "다시 묻지 않습니다")) && !(await has(page, "먼저 다가")));
   check("링크를 못 본 여객은 지금처럼 체크인 카운터에서 확인받는다고 알린다", await has(page, "체크인 카운터"));
@@ -876,6 +887,12 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "화면 설정");
   await clickText(page, ".size-pick button", "아주 크게");
   await page.waitForFunction((b) => parseFloat(getComputedStyle(document.documentElement).fontSize) > b, { timeout: WAIT }, kPx);
+  // ResizeObserver adjusts the top toolbar after the font-size change.
+  await page.waitForFunction(() => {
+    const call = document.querySelector(".call-btn")?.getBoundingClientRect();
+    const buttons = [...document.querySelectorAll(".flow-bar .bar-btn")].map(b => b.getBoundingClientRect());
+    return !!call && buttons.length >= 3 && buttons.every(b => b.bottom <= call.top + 1);
+  }, {timeout:WAIT});
   check("키오스크에서도 설정으로 글자와 그림을 더 키울 수 있다. 「직원 부르기」는 여전히 위쪽 줄 아래에 있다", (await rootPx(page)) > kPx && (await callBelowBar(page)));
   check("글자를 아주 크게 해도 설정의 닫는 버튼이 화면 안에 보인다 (안내키오스크)", await closeInView(page));
   await shot(page, "안내키오스크-설정-아주크게");
@@ -924,12 +941,13 @@ async function resetFlights(clearLocks = false) {
   const zoneStaff = await staffCookie(COMMON_CODE, "cc-center");
   const otherStaff = await staffCookie(COMMON_CODE, "t2-mid");
   const seen = await get("/api/staff/calls", zoneStaff);
-  const mine = (seen.body.calls as any[]).find((c) => c.state === "waiting");
+  const mine = (seen.body.calls as CallDto[]).find((c) => c.state === "waiting");
+  if (!mine?.pass) throw new Error("Expected an active call with passenger information");
   check("그 키오스크가 속한 구역의 직원 화면에 호출이 뜬다 (내 구역)", mine?.mine === true && mine.place.includes("셔틀트레인 도착층"));
-  check("직원에게 여객이 고른 항목이 줄인 말로 전달된다", ["큰 글씨", "휠체어 이용", "계단 어려움", "필요 시 호출", "화장실"].every((s) => mine.pass.choices.includes(s)), mine?.pass?.choices.join(", "));
+  check("직원에게 여객이 고른 항목이 줄인 말로 전달된다", ["큰 글씨", "휠체어 이용", "계단 어려움", "필요 시 호출", "화장실"].every((s) => mine.pass!.choices.includes(s)), mine?.pass?.choices.join(", "));
   check("직원에게 가는 응답에 이름이 없다", !JSON.stringify(seen.body).includes("name\""));
   const theirs = await get("/api/staff/calls", otherStaff);
-  check("다른 구역 직원에게는 '내 구역' 호출이 아니다", (theirs.body.calls as any[]).find((c) => c.id === mine.id)?.mine === false);
+  check("다른 구역 직원에게는 '내 구역' 호출이 아니다", (theirs.body.calls as CallDto[]).find((c) => c.id === mine.id)?.mine === false);
   await clickText(page, ".sheet-box button", "기다리면서 계속 보기");
   check("기다리는 동안에도 안내를 계속 볼 수 있고, 버튼이 '직원 부르는 중'으로 바뀐다", (await has(page, "직원 부르는 중")) && sameSpot(await callSpot(page), callAt));
   check("직원이 받는다 (가겠습니다)", (await post(`/api/staff/calls/${mine.id}`, { action: "accept" }, zoneStaff)).status === 200);
@@ -1112,7 +1130,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "직원을 부르고 있습니다");
   await sleep(1500);
   const deskSide = await staffCookie(COMMON_CODE, "cc-center");
-  const nowCall = ((await get("/api/staff/calls", deskSide)).body.calls as any[]).find((c) => c.mine && c.state === "waiting");
+  const nowCall = ((await get("/api/staff/calls", deskSide)).body.calls as CallDto[]).find((c) => c.mine && c.state === "waiting");
   check("앞사람의 호출이 남은 키오스크에서 다음 사람이 「직원 부르기」를 누르면 호출에 지금 사람의 항공편이 붙는다", nowCall?.pass?.flight.flightNo === "MK112", nowCall?.pass?.flight.flightNo ?? "패스 없음");
   if (nowCall) await post(`/api/staff/calls/${nowCall.id}`, { action: "done" }, deskSide);
 
@@ -1307,12 +1325,13 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "직원을 부르고 있습니다");
   const desk = await staffCookie(DESK_CODE);
   const deskCalls = await get("/api/staff/calls", desk);
-  const regCall = (deskCalls.body.calls as any[]).find((c) => c.state === "waiting" && c.screen === "register");
+  const regCall = (deskCalls.body.calls as CallDto[]).find((c) => c.state === "waiting" && c.screen === "register");
+  if (!regCall) throw new Error("Expected the registration assistance call");
   check("등록하다가 부른 호출은 안내데스크로 간다. 패스가 없으므로 고른 항목은 전달되지 않는다", regCall?.mine === true && regCall.pass === null && regCall.place.includes("장애인 안심여행센터"));
   await clickText(page, ".sheet-box button", "부르기 취소");
   await waitGone(page, "직원을 부르고 있습니다");
   const afterCancel = await get("/api/staff/calls", desk);
-  check("여객이 호출을 거두면 직원 화면에서 '여객이 거둠'으로 바뀐다", (afterCancel.body.calls as any[]).find((c) => c.id === regCall.id)?.state === "cancelled");
+  check("여객이 호출을 거두면 직원 화면에서 '여객이 거둠'으로 바뀐다", (afterCancel.body.calls as CallDto[]).find((c) => c.id === regCall.id)?.state === "cancelled");
 
   for (const k of "MK50") await clickText(page, ".pad-alnum .pad-key", k);
   await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length === 1, { timeout: WAIT });
@@ -1329,7 +1348,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "등록을 마쳤습니다");
   const kioskNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
   const kioskQr = await readQr(page, ".pass-qr-code svg");
-  check("등록을 마치면 QR 과 번호가 화면에 나오고 스티커를 뽑을 수 있다", /^\d{6}$/.test(kioskNo) && kioskQr.startsWith("HTTP://LOCALHOST:3000/P/") && (await has(page, "스티커 뽑기")));
+  check("등록을 마치면 QR 과 번호가 화면에 나오고 스티커를 뽑을 수 있다", /^\d{6}$/.test(kioskNo) && kioskQr.toUpperCase().startsWith(`${BASE.toUpperCase()}/P/`) && (await has(page, "스티커 뽑기")));
   check("북클립에 붙여 여권에 끼우라고 안내한다", await has(page, "북클립"));
   await shot(page, "등록키오스크-마침");
   // 가로 키오스크에서 큰 글씨를 골라도 QR 과 번호가 아래 단추 줄(스티커 뽑기)에 가리지 않는다.
