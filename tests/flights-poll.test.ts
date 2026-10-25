@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { lastSuccessfulPoll } from "@/lib/flights/ingest";
 import { runPoll } from "@/lib/flights/poll";
 import { isCronAuthorized } from "@/lib/cron";
@@ -82,8 +82,11 @@ describe("예약 실행 인증", () => {
     new Request("http://localhost/api/cron/poll-flights", { headers: auth ? { authorization: auth } : {} });
 
   it("Bearer 값이 맞아야 통과한다", () => {
-    expect(isCronAuthorized(req("Bearer dev-only-secret-change-me"))).toBe(true);
-    expect(isCronAuthorized(req("Bearer wrong"))).toBe(false);
-    expect(isCronAuthorized(req())).toBe(false);
+    vi.stubEnv("CRON_SECRET", "cron-auth-test-value");
+    try {
+      expect(isCronAuthorized(req("Bearer cron-auth-test-value"))).toBe(true);
+      expect(isCronAuthorized(req("Bearer wrong"))).toBe(false);
+      expect(isCronAuthorized(req())).toBe(false);
+    } finally {vi.unstubAllEnvs();}
   });
 });
