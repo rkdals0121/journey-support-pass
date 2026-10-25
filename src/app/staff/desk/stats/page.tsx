@@ -4,6 +4,8 @@ import { todaySummary, type Completion } from "@/lib/metrics";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../../components/StaffNav";
 import {OperationsSummary} from "./OperationsSummary";
+import { resourceSnapshot } from "@/lib/dispatch-resources";
+import { ResourceAvailability } from "@/app/components/ResourceAvailability";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,9 @@ function duration(sec: number | null): string {
 export default async function DeskStatsPage() {
   const session = await requireStaff();
   if (!session.isDesk) redirect("/staff");
-  const s = await todaySummary(await getDb(), new Date());
+  const db=await getDb();
+  const s = await todaySummary(db, new Date());
+  const resources=await resourceSnapshot(db);
   const [, month, day] = s.date.split("-");
   const pct = (n: number) => (s.survey.total === 0 ? 0 : Math.round((n / s.survey.total) * 100));
 
@@ -33,6 +37,7 @@ export default async function DeskStatsPage() {
           </span>
         </h1>
         <OperationsSummary value={s.operations}/>
+        <ResourceAvailability resources={resources}/>
         <div className="stat-grid">
           <Stat label="지금 패스를 쓰는 여객" value={`${s.active}`} unit="명" />
           <Stat label="오늘 받은 등록" value={`${s.registered}`} unit="건" />

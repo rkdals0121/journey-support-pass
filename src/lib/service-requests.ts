@@ -12,6 +12,7 @@ import { operationalSummary, legacyWorkAction } from "./request-operations";
 import { closeStale } from "./calls";
 import { closeStaleAssist } from "./assist";
 import { notifyNewRequest } from "./staff-push";
+import { resourceSnapshot } from "./dispatch-resources";
 import { fail, ok, type ApiResult } from "./api/dto";
 import {
   OPEN_REQUEST_STATES,
@@ -323,6 +324,7 @@ export async function listServiceRequests(
     zoneId: s!.zoneId,
     isDesk: s!.isDesk,
     summary,
+    resources: await resourceSnapshot(db),
     dispatchZones: await db.query(
       "select id,label from zones where active and not is_kiosk and not is_common order by label",
     ),
@@ -426,6 +428,7 @@ export async function actOnServiceRequest(
   const rows = await db.query<Row>(
     `update service_requests set state=$3,updated_at=$4,version=version+1,
  assigned_zone=case when $8='transfer' then $5 when $3='received' then null when $3='assigned' then $5 else assigned_zone end,
+ resource_id=case when $3='received' then null else resource_id end,
  accepted_at=case when $8='transfer' then accepted_at when $3='received' then null when $3='assigned' then $4 else accepted_at end,
  arrived_at=case when $8='transfer' then arrived_at when $3='received' then null when $3='arrived' then $4 else arrived_at end,
  started_at=case when $8='transfer' then started_at when $3='serving' then $4 else started_at end,
