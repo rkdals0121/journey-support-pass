@@ -1,3 +1,4 @@
+import { journeysByIds, isJourneyOver, lastRealPoll } from "./journey";
 import { createHash } from "node:crypto";
 import { kstDate } from "./flights/normalize";
 import { placeOf } from "./airport";
@@ -6,6 +7,10 @@ import { ipPart, type Session } from "./auth";
 import { isUuid } from "./registrations";
 import { knownCodes } from "./catalog";
 import { lookupPass } from "./api/public";
+import { getZone } from "./zones";
+import { operationalSummary, legacyWorkAction } from "./request-operations";
+import { closeStale } from "./calls";
+import { closeStaleAssist } from "./assist";
 import { notifyNewRequest } from "./staff-push";
 import { fail, ok, type ApiResult } from "./api/dto";
 import {
@@ -15,17 +20,18 @@ import {
   type RequestState,
   type ServiceType,
   type RequestAction,
-  type RequestSummary,
 } from "./service-request-model";
 
 const RECEIPT = /^[a-f0-9]{64}$/;
 const hash = (v: string) => createHash("sha256").update(v).digest("hex");
 const validReceipt = (v: unknown): v is string =>
   typeof v === "string" && RECEIPT.test(v);
-export const REQUEST_TTL_MS = 24 * 60 * 60 * 1000;
+import { expireServiceRequests, REQUEST_TTL_MS } from "./request-retention";
+export { expireServiceRequests, REQUEST_TTL_MS } from "./request-retention";
 interface Row {
   id: string;
   receipt_hash: string;
+  queue?: "integrated" | "call" | "assist";
   registration_id: string | null;
   service: ServiceType;
   state: RequestState;
@@ -46,6 +52,7 @@ function view(r: Row): ServiceRequestView {
   const place = placeOf(r.place_id);
   return {
     id: r.id,
+    queue: r.queue ?? "integrated",
     service: r.service,
     state: r.state,
     placeId: r.place_id,
@@ -63,38 +70,6 @@ function view(r: Row): ServiceRequestView {
     expiresAt: r.expires_at.toISOString(),
     version: r.version,
   };
-}
-export async function expireServiceRequests(db: Db, now: Date) {
-  await db.query(
-    "delete from request_push_subscriptions where expires_at <= $1",
-    [now],
-  );
-  // A timeout is never a completed service. Pilot thresholds, not promised arrival times.
-  await db.query(
-    `update service_requests set state='expired',ended_at=$1,updated_at=$1,version=version+1,
- reason='응답 대기 시간이 지나 종료되었습니다. 가까운 안내데스크에 문의하거나 새로 요청해 주세요 / Timed out. Contact the nearest information desk or make a new request.'
- where expires_at>$1 and ((state='received' and created_at<=$2) or
- (state in ('assigned','en_route','arrived','serving') and updated_at<=$3))`,
-    [
-      now,
-      new Date(now.getTime() - 60 * 60 * 1000),
-      new Date(now.getTime() - 3 * 60 * 60 * 1000),
-    ],
-  );
-  // Erase contents at the separate retention deadline.
-  await db.query(
-    `update service_requests set state=case when state in ('received','assigned','en_route','arrived','serving') then 'expired' else state end,
- registration_id=null, choices='{}', note='', device_key='', reason='', place_id='', party=1,
- ended_at=coalesce(ended_at,$1), updated_at=$1, version=version+1
- where expires_at <= $1 and (place_id<>'' or device_key<>'' or registration_id is not null or note<>'')`,
-    [now],
-  );
-  await db.query("delete from service_request_limits where window_at < $1", [
-    new Date(now.getTime() - REQUEST_TTL_MS),
-  ]);
-  await db.query("delete from service_requests where expires_at < $1", [
-    new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
-  ]);
 }
 async function receiptRow(db: Db, receipt: unknown): Promise<Row | undefined> {
   if (!validReceipt(receipt)) return undefined;
@@ -166,6 +141,19 @@ export async function createServiceRequest(
     registrationId = found.journey.registrationId;
     choices = Array.isArray(body.choices) ? choices : found.journey.choices;
   }
+  if (registrationId) {
+    await closeStale(db, now);
+    await closeStaleAssist(db, now);
+    const previousLegacy = await db.query(
+      "select id from request_work_ledger where registration_id=$1 and service=$2 and queue<>'integrated' and state in ('received','assigned','en_route','arrived','serving')",
+      [registrationId, body.service],
+    );
+    if (previousLegacy.length)
+      return fail(
+        409,
+        "같은 사전등록으로 진행 중인 이전 요청이 있습니다. 직원에게 기존 접수 상태를 확인해 주세요",
+      );
+  }
   const source = session?.isKiosk
     ? "kiosk"
     : session?.isDesk && body.assisted === true
@@ -179,8 +167,8 @@ export async function createServiceRequest(
  insert into service_request_limits(bucket,window_at,used)
  values($13,$14,1) on conflict(bucket,window_at) do update set used=service_request_limits.used+1
  where service_request_limits.used<20 returning used
- ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key)
- select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12 from quota
+ ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action)
+ select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12,'created' from quota
  on conflict do nothing returning *`,
     [
       hash(body.receipt),
@@ -252,7 +240,7 @@ export async function cancelServiceRequest(
   if (r.expires_at <= now) return fail(410, "보관 기간이 끝난 요청입니다");
   if (r.state === "cancelled") return ok({ request: view(r) });
   const rows = await db.query<Row>(
-    `update service_requests set state='cancelled',ended_at=$2,updated_at=$2,version=version+1
+    `update service_requests set state='cancelled',ended_at=$2,updated_at=$2,version=version+1,last_action='cancel',last_actor_zone=null,last_action_reason=''
  where id=$1 and state in ('received','assigned','en_route','arrived') returning *`,
     [r.id, now],
   );
@@ -272,36 +260,72 @@ export async function listServiceRequests(
   db: Db,
   s: Session | null,
   now: Date,
+  options: { history?: boolean; offset?: number } = {},
 ): Promise<ApiResult> {
   const denied = staffDenied(s);
   if (denied) return denied;
   await expireServiceRequests(db, now);
-  const rows = await db.query<Row>(
-    `select * from service_requests where expires_at>$1 and
- (state in ('received','assigned','en_route','arrived','serving') or ended_at>$2) order by (state in ('received','assigned','en_route','arrived','serving')) desc, created_at asc limit 200`,
-    [now, new Date(now.getTime() - 30 * 60 * 1000)],
+  await closeStale(db, now);
+  await closeStaleAssist(db, now);
+  const offset = Math.max(
+    0,
+    Math.min(100000, Number.isInteger(options.offset) ? options.offset! : 0),
   );
-  const [summary] = await db.query<RequestSummary>(
-    `select
- count(*) filter(where state='received')::int as received,
- count(*) filter(where state in ('received','assigned','en_route','arrived','serving'))::int as active,
- count(*) filter(where state='done')::int as done,
- count(*) filter(where state='cancelled')::int as cancelled,
- count(*) filter(where state='unavailable')::int as unavailable,
- count(*) filter(where state='expired')::int as expired,
- (percentile_cont(.5) within group(order by extract(epoch from (accepted_at-created_at))) filter(where accepted_at is not null))::int as "medianAcceptSec",
- (percentile_cont(.5) within group(order by extract(epoch from (arrived_at-accepted_at))) filter(where arrived_at is not null and accepted_at is not null))::int as "medianArrivalSec"
- from service_requests where created_at >= $1`,
-    [new Date(`${kstDate(now)}T00:00:00+09:00`)],
+  const condition = options.history
+    ? "created_at >= $2 and $1::timestamptz is not null"
+    : "expires_at>$1 and (state in ('received','assigned','en_route','arrived','serving') or ended_at>$2)";
+  const since = options.history
+    ? new Date(now.getTime() - 90 * 86400000)
+    : new Date(now.getTime() - 30 * 60000);
+  const rows = await db.query<Row>(
+    `select * from request_work_ledger where ${condition} order by (state in ('received','assigned','en_route','arrived','serving')) desc,created_at desc,id limit 200 offset $3`,
+    [now, since, offset],
+  );
+  const [count] = await db.query<{ total: number }>(
+    `select count(*)::int as total from request_work_ledger where ${condition}`,
+    [now, since],
+  );
+  const summary = await operationalSummary(
+    db,
+    new Date(`${kstDate(now)}T00:00:00+09:00`),
+    now,
+  );
+  const legacyIds = Array.from(
+    new Set(
+      rows
+        .filter((r) => r.queue !== "integrated" && r.registration_id)
+        .map((r) => r.registration_id!),
+    ),
+  );
+  const visibleJourneys = await journeysByIds(db, legacyIds, now);
+  const lastPoll = legacyIds.length ? await lastRealPoll(db) : null;
+  const allowedLegacy = new Set(
+    visibleJourneys
+      .filter((j) => !isJourneyOver(j, now, lastPoll))
+      .map((j) => j.registrationId),
   );
   const zones = await db.query<{ id: string; label: string }>(
     "select id,label from zones where is_kiosk=false",
   );
   return ok({
-    requests: rows.map(view),
+    requests: rows.map((r) =>
+      view(
+        r.expires_at <= now ||
+          (r.queue !== "integrated" &&
+            r.registration_id &&
+            !allowedLegacy.has(r.registration_id))
+          ? { ...r, place_id: "", choices: [], note: "", reason: "", party: 1 }
+          : r,
+      ),
+    ),
+    total: count.total,
+    offset,
     zoneId: s!.zoneId,
     isDesk: s!.isDesk,
     summary,
+    dispatchZones: await db.query(
+      "select id,label from zones where active and not is_kiosk and not is_common order by label",
+    ),
     zoneLabels: Object.fromEntries(zones.map((z) => [z.id, z.label])),
   });
 }
@@ -322,6 +346,8 @@ export async function actOnServiceRequest(
   const denied = staffDenied(s);
   if (denied) return denied;
   await expireServiceRequests(db, now);
+  if (id.startsWith("call:") || id.startsWith("assist:"))
+    return legacyWorkAction(db, s!, id, body, now);
   if (!isUuid(id) || !Number.isInteger(body.version))
     return fail(400, "요청을 다시 불러와 주세요");
   const action = body.action as RequestAction;
@@ -333,7 +359,38 @@ export async function actOnServiceRequest(
   if (r.version !== body.version)
     return fail(409, "요청 상태가 바뀌었습니다. 최신 내용을 확인해 주세요");
   let next: RequestState;
-  if (action === "reopen") {
+  let assignedZone = s!.zoneId;
+  if (body.zoneId !== undefined) {
+    if (!s!.isDesk)
+      return fail(403, "다른 구역 배정은 안내데스크에서 처리합니다");
+    const target =
+      typeof body.zoneId === "string" ? await getZone(db, body.zoneId) : null;
+    if (
+      !target ||
+      target.isCommon ||
+      !(
+        await db.query("select id from zones where id=$1 and not is_kiosk", [
+          target.id,
+        ])
+      ).length
+    )
+      return fail(400, "배정할 근무 구역을 확인해 주세요");
+    assignedZone = target.id;
+  }
+  if (action === "transfer") {
+    if (!s!.isDesk) return fail(403, "교대·인계는 안내데스크에서 처리합니다");
+    if (!["assigned", "en_route", "arrived", "serving"].includes(r.state))
+      return fail(409, "진행 중인 배정만 인계할 수 있습니다");
+    if (!body.zoneId || assignedZone === r.assigned_zone)
+      return fail(400, "다른 담당 구역을 골라 주세요");
+    if (
+      typeof body.reason !== "string" ||
+      !body.reason.trim() ||
+      body.reason.length > 120
+    )
+      return fail(400, "인계 사유를 120자 이내로 적어 주세요");
+    next = r.state;
+  } else if (action === "reopen") {
     if (!s!.isDesk) return fail(403, "재배정은 안내데스크에서 확인해 주세요");
     if (!["assigned", "en_route", "arrived"].includes(r.state))
       return fail(409, "이 상태에서는 재배정할 수 없습니다");
@@ -353,31 +410,114 @@ export async function actOnServiceRequest(
   } else {
     const step = transitions[action];
     if (!step) return fail(400, "할 수 없는 동작입니다");
-    if (r.state !== step.from) return fail(409, "요청 상태가 바뀌었습니다");
+    if (
+      r.state !== step.from &&
+      !(
+        action === "serve" &&
+        r.service === "guidance" &&
+        r.state === "assigned"
+      )
+    )
+      return fail(409, "요청 상태가 바뀌었습니다");
     if (action !== "assign" && r.assigned_zone !== s!.zoneId)
       return fail(403, "담당 구역에서 처리해 주세요");
     next = step.to;
   }
   const rows = await db.query<Row>(
     `update service_requests set state=$3,updated_at=$4,version=version+1,
- assigned_zone=case when $3='received' then null when $3='assigned' then $5 else assigned_zone end,
- accepted_at=case when $3='received' then null when $3='assigned' then $4 else accepted_at end,
- arrived_at=case when $3='received' then null when $3='arrived' then $4 else arrived_at end,
- started_at=case when $3='serving' then $4 else started_at end,
+ assigned_zone=case when $8='transfer' then $5 when $3='received' then null when $3='assigned' then $5 else assigned_zone end,
+ accepted_at=case when $8='transfer' then accepted_at when $3='received' then null when $3='assigned' then $4 else accepted_at end,
+ arrived_at=case when $8='transfer' then arrived_at when $3='received' then null when $3='arrived' then $4 else arrived_at end,
+ started_at=case when $8='transfer' then started_at when $3='serving' then $4 else started_at end,
  ended_at=case when $3 in ('done','unavailable') then $4 else ended_at end,
- reason=case when $3='unavailable' then $6 else '' end
+ reason=case when $3='unavailable' then $6 else '' end,
+ last_action=$8,last_actor_zone=$9,last_action_reason=case when $8 in ('transfer','unavailable','reopen') then $6 else '' end
  where id=$1 and version=$2 and state=$7 returning *`,
     [
       id,
       body.version,
       next,
       now,
-      s!.zoneId,
+      assignedZone,
       typeof body.reason === "string" ? body.reason.trim() : "",
       r.state,
+      action,
+      s!.zoneId,
     ],
   );
   return rows[0]
     ? ok({ request: view(rows[0]) })
     : fail(409, "다른 직원이 먼저 처리했습니다. 새로 확인해 주세요");
+}
+
+export async function serviceRequestHistory(
+  db: Db,
+  s: Session | null,
+  id: string,
+  now: Date,
+): Promise<ApiResult> {
+  const denied = staffDenied(s);
+  if (denied) return denied;
+  if (!isUuid(id)) return fail(400, "통합 요청 번호를 확인해 주세요");
+  await expireServiceRequests(db, now);
+  const [row] = await db.query("select id from service_requests where id=$1", [
+    id,
+  ]);
+  if (!row) return fail(404, "요청을 찾을 수 없습니다");
+  const history = await db.query<{
+    version: number;
+    at: Date;
+    action: string;
+    state: string;
+    actor_zone: string | null;
+    assigned_zone: string | null;
+    reason: string;
+  }>(
+    "select * from service_request_history where request_id=$1 order by version",
+    [id],
+  );
+  return ok({
+    history: history.map((h) => ({
+      version: h.version,
+      at: h.at.toISOString(),
+      action: h.action,
+      state: h.state,
+      actorZone: h.actor_zone,
+      assignedZone: h.assigned_zone,
+      reason: h.reason,
+    })),
+  });
+}
+
+export async function registeredRequestProgress(
+  db: Db,
+  token: unknown,
+  now: Date,
+): Promise<ApiResult> {
+  const found = await lookupPass(
+    db,
+    typeof token === "string" ? token : "",
+    now,
+  );
+  if (found.kind !== "ok") return fail(410, "사전등록을 불러올 수 없습니다");
+  await expireServiceRequests(db, now);
+  await closeStale(db, now);
+  await closeStaleAssist(db, now);
+  const rows = await db.query<{
+    service: ServiceType;
+    state: RequestState;
+    created_at: Date;
+    updated_at: Date;
+  }>(
+    "select service,state,created_at,updated_at from request_work_ledger where registration_id=$1 and expires_at>$2 order by created_at desc limit 10",
+    [found.journey.registrationId, now],
+  );
+  return ok({
+    requests: rows.map((r) => ({
+      service: r.service,
+      state: r.state,
+      createdAt: r.created_at.toISOString(),
+      updatedAt: r.updated_at.toISOString(),
+    })),
+  });
 }

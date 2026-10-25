@@ -1,3 +1,5 @@
+import {operationalSummary} from "./request-operations";
+import type {OperationalSummary} from "./service-request-model";
 import { ipPart } from "./auth";
 import { CALL_EXPIRE_MIN, closeStale } from "./calls";
 import type { Db } from "./db";
@@ -62,6 +64,7 @@ export interface Completion {
 }
 
 export interface Summary {
+  operations:OperationalSummary;
   date: string; // 한국 날짜
   /** 지금 패스를 쓰고 있는 여객 수. */
   active: number;
@@ -141,8 +144,7 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
   }>(
     `select screen, end_kind, (ended_at is not null) as ended,
             extract(epoch from (accepted_at - created_at))::int as accept_sec,
-            (ended_at is not null and end_kind = 'cancelled' and accepted_at is null
-              and ended_at - created_at >= make_interval(mins => $2::int)) as expired
+            (end_kind='expired' or (ended_at is not null and end_kind = 'cancelled' and ((accepted_at is null and ended_at - created_at >= make_interval(mins => $2::int)) or (accepted_at is not null and ended_at-accepted_at >= interval '90 minutes')))) as expired
      from calls where created_at >= $1`,
     [since, CALL_EXPIRE_MIN],
   );
@@ -159,6 +161,7 @@ export async function summarize(db: Db, since: Date, date: string, now: Date): P
   const survey = { good: count("survey", (e) => e.value === 3), fair: count("survey", (e) => e.value === 2), poor: count("survey", (e) => e.value === 1) };
 
   return {
+    operations:await operationalSummary(db,since,now),
     date,
     active,
     registered: regs.length,

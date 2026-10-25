@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { todaySummary, type Completion } from "@/lib/metrics";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../../components/StaffNav";
+import {OperationsSummary} from "./OperationsSummary";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function DeskStatsPage() {
             {Number(month)}월 {Number(day)}일
           </span>
         </h1>
+        <OperationsSummary value={s.operations}/>
         <div className="stat-grid">
           <Stat label="지금 패스를 쓰는 여객" value={`${s.active}`} unit="명" />
           <Stat label="오늘 받은 등록" value={`${s.registered}`} unit="건" />

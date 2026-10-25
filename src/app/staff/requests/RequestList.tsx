@@ -4,13 +4,14 @@ import { PushSettings } from "./PushSettings";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { labelOf } from "@/lib/catalog";
 import {
-  NEXT_REQUEST_ACTION,
+  nextRequestAction,
+  requestStateLabel,
   OPEN_REQUEST_STATES,
   SERVICE_LABEL,
-  STATE_LABEL,
   type ServiceRequestView,
   type RequestAction,
-  type RequestSummary,
+  type OperationalSummary,
+  type RequestHistoryItem,
 } from "@/lib/service-request-model";
 export function RequestList({
   zoneId,
@@ -19,8 +20,31 @@ export function RequestList({
   zoneId: string;
   isDesk: boolean;
 }) {
-  const [summary, setSummary] = useState<RequestSummary | null>(null);
+  const [summary, setSummary] = useState<OperationalSummary | null>(null);
   const [zoneLabels, setZoneLabels] = useState<Record<string, string>>({});
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
+  const [dispatchZones, setDispatchZones] = useState<
+    { id: string; label: string }[]
+  >([]);
+  const [targets, setTargets] = useState<Record<string, string>>({});
+  const [history, setHistory] = useState<Record<string, RequestHistoryItem[]>>(
+    {},
+  );
+  async function loadHistory(id: string) {
+    try {
+      const res = await fetch(
+        `/api/staff/requests/${encodeURIComponent(id)}/history`,
+        { cache: "no-store", signal: AbortSignal.timeout(10000) },
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "이력을 불러오지 못했습니다");
+      setHistory((current) => ({ ...current, [id]: data.history }));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
   const [rows, setRows] = useState<ServiceRequestView[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -32,62 +56,70 @@ export function RequestList({
   const loading = useRef(false);
   const audio = useRef<AudioContext | null>(null);
   const enabled = useRef(false);
-  const load = useCallback(async (signal?: AbortSignal) => {
-    if (loading.current) return;
-    loading.current = true;
-    const controller = new AbortController();
-    const forward = () => controller.abort();
-    signal?.addEventListener("abort", forward, { once: true });
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    try {
-      const res = await fetch("/api/staff/requests", {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      if (res.status === 401) {
-        window.location.assign("/staff/login");
-        return;
-      }
-      if (res.status === 409) {
-        window.location.assign("/staff/zone");
-        return;
-      }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "불러오지 못했습니다");
-      const list = data.requests as ServiceRequestView[];
-      const fresh = list.some(
-        (r) =>
-          r.state === "received" && known.current && !known.current.has(r.id),
-      );
-      if (fresh && enabled.current) {
-        navigator.vibrate?.([200, 100, 200]);
-        const ctx = audio.current;
-        if (ctx && ctx.state === "running") {
-          const tone = ctx.createOscillator();
-          const gain = ctx.createGain();
-          gain.gain.value = 0.06;
-          tone.frequency.value = 660;
-          tone.connect(gain);
-          gain.connect(ctx.destination);
-          tone.start();
-          tone.stop(ctx.currentTime + 0.18);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      if (loading.current) return;
+      loading.current = true;
+      const controller = new AbortController();
+      const forward = () => controller.abort();
+      signal?.addEventListener("abort", forward, { once: true });
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const res = await fetch(
+          `/api/staff/requests?offset=${offset}&history=${showHistory ? 1 : 0}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+        if (res.status === 401) {
+          window.location.assign("/staff/login");
+          return;
         }
+        if (res.status === 409) {
+          window.location.assign("/staff/zone");
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "불러오지 못했습니다");
+        const list = data.requests as ServiceRequestView[];
+        const fresh = list.some(
+          (r) =>
+            r.state === "received" && known.current && !known.current.has(r.id),
+        );
+        if (fresh && enabled.current) {
+          navigator.vibrate?.([200, 100, 200]);
+          const ctx = audio.current;
+          if (ctx && ctx.state === "running") {
+            const tone = ctx.createOscillator();
+            const gain = ctx.createGain();
+            gain.gain.value = 0.06;
+            tone.frequency.value = 660;
+            tone.connect(gain);
+            gain.connect(ctx.destination);
+            tone.start();
+            tone.stop(ctx.currentTime + 0.18);
+          }
+        }
+        known.current = new Set(list.map((r) => r.id));
+        setRows(list);
+        setTotal(data.total ?? list.length);
+        setDispatchZones(data.dispatchZones ?? []);
+        setSummary(data.summary ?? null);
+        setZoneLabels(data.zoneLabels ?? {});
+        setReady(true);
+        setError("");
+      } catch (e) {
+        if (!signal?.aborted)
+          setError(e instanceof Error ? e.message : "연결을 확인해 주세요");
+      } finally {
+        clearTimeout(timeout);
+        signal?.removeEventListener("abort", forward);
+        loading.current = false;
       }
-      known.current = new Set(list.map((r) => r.id));
-      setRows(list);
-      setSummary(data.summary ?? null);
-      setZoneLabels(data.zoneLabels ?? {});
-      setReady(true);
-      setError("");
-    } catch (e) {
-      if (!signal?.aborted)
-        setError(e instanceof Error ? e.message : "연결을 확인해 주세요");
-    } finally {
-      clearTimeout(timeout);
-      signal?.removeEventListener("abort", forward);
-      loading.current = false;
-    }
-  }, []);
+    },
+    [offset, showHistory],
+  );
   useEffect(() => {
     const ctrl = new AbortController();
     void load(ctrl.signal);
@@ -98,9 +130,14 @@ export function RequestList({
       clearInterval(timer);
       ctrl.abort();
       window.removeEventListener("focus", focus);
-      void audio.current?.close();
     };
   }, [load]);
+  useEffect(
+    () => () => {
+      void audio.current?.close();
+    },
+    [],
+  );
   async function toggleSound() {
     enabled.current = !enabled.current;
     setSound(enabled.current);
@@ -113,7 +150,11 @@ export function RequestList({
       }
     }
   }
-  async function act(r: ServiceRequestView, action: RequestAction) {
+  async function act(
+    r: ServiceRequestView,
+    action: RequestAction,
+    targetZone?: string,
+  ) {
     if (busy) return;
     setBusy(r.id);
     try {
@@ -126,11 +167,13 @@ export function RequestList({
           version: r.version,
           action,
           reason: reasons[r.id] ?? "",
+          ...(targetZone ? { zoneId: targetZone } : {}),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "처리하지 못했습니다");
       await load();
+      if (history[r.id]) await loadHistory(r.id);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -177,8 +220,70 @@ export function RequestList({
           ? `진행 중 ${open.length}건 · 미배정 ${rows.filter((r) => r.state === "received").length}건`
           : "불러오는 중…"}
       </p>
+      <label className="dx-option">
+        <input
+          type="checkbox"
+          checked={showHistory}
+          onChange={(e) => {
+            setShowHistory(e.target.checked);
+            setOffset(0);
+          }}
+        />
+        처리 이력 포함 · 최근 90일
+      </label>
+      <p>
+        기존 호출·이동지원과 새 통합 요청을 같은 목록에서 확인합니다. 화면
+        필터는 현재 페이지에 적용됩니다.
+      </p>
+      <div className="dx-actions">
+        <button
+          className="btn"
+          disabled={offset === 0}
+          onClick={() => setOffset(Math.max(0, offset - 200))}
+        >
+          이전 목록
+        </button>
+        <span>
+          {total}건 중 {total === 0 ? 0 : offset + 1}–
+          {Math.min(offset + rows.length, total)}
+        </span>
+        <button
+          className="btn"
+          disabled={offset + rows.length >= total}
+          onClick={() => setOffset(offset + 200)}
+        >
+          다음 목록
+        </button>
+      </div>
       {summary && (
         <dl className="dx-summary">
+          <div>
+            <dt>오늘 전체 접수</dt>
+            <dd>{summary.total}건</dd>
+          </div>
+          <div>
+            <dt>사전등록 연결</dt>
+            <dd>{summary.linked}건</dd>
+          </div>
+          <div>
+            <dt>확인 지연 · 운영자 점검</dt>
+            <dd>{summary.awaitingAttention}건</dd>
+          </div>
+          <div>
+            <dt>직원 안내 / 로봇 / 이동지원</dt>
+            <dd>
+              {summary.byService?.guidance ?? 0} /{" "}
+              {summary.byService?.robot ?? 0} /{" "}
+              {summary.byService?.mobility ?? 0}건
+            </dd>
+          </div>
+          <div>
+            <dt>통합 / 이전 호출 / 이전 이동지원</dt>
+            <dd>
+              {summary.byQueue?.integrated ?? 0} / {summary.byQueue?.call ?? 0}{" "}
+              / {summary.byQueue?.assist ?? 0}건
+            </dd>
+          </div>
           <div>
             <dt>오늘 완료</dt>
             <dd>{summary.done}건</dd>
@@ -231,14 +336,22 @@ export function RequestList({
       )}
       <ul className="dx-request-list">
         {visible.map((r) => {
-          const next = NEXT_REQUEST_ACTION[r.state];
+          const next = nextRequestAction(r);
+          const current = r.queue !== "call" && r.queue !== "assist";
           const mine = r.assignedZone === zoneId;
           const open = OPEN_REQUEST_STATES.includes(r.state);
           return (
             <li key={r.id} data-request-id={r.id} className="dx-card">
               <h2>{SERVICE_LABEL[r.service]}</h2>
+              {!current && (
+                <p>
+                  <strong>
+                    {r.queue === "call" ? "이전 직원 호출" : "이전 이동지원"}
+                  </strong>
+                </p>
+              )}
               <p>
-                <strong>{STATE_LABEL[r.state]}</strong> ·{" "}
+                <strong>{requestStateLabel(r)}</strong> ·{" "}
                 {new Date(r.createdAt).toLocaleTimeString("ko-KR", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -287,10 +400,10 @@ export function RequestList({
               {open && r.assignedZone && !mine && (
                 <p>다른 구역에서 맡은 요청입니다.</p>
               )}
-              {open && (mine || isDesk) && (
+              {current && open && (mine || isDesk) && (
                 <div className="dx-ending">
                   <label htmlFor={`reason-${r.id}`}>
-                    지원할 수 없는 이유 · 여객에게 전달됩니다
+                    처리 사유 · 지원 불가 시 여객에게 전달됩니다
                   </label>
                   <textarea
                     id={`reason-${r.id}`}
@@ -309,7 +422,8 @@ export function RequestList({
                   </button>
                 </div>
               )}
-              {isDesk &&
+              {current &&
+                isDesk &&
                 ["assigned", "en_route", "arrived"].includes(r.state) && (
                   <button
                     className="btn btn-ghost"
@@ -319,6 +433,77 @@ export function RequestList({
                     배정 해제 · 다시 접수
                   </button>
                 )}
+              {current && isDesk && open && (
+                <div className="dx-ending">
+                  <label htmlFor={`target-${r.id}`}>
+                    담당 구역 지정 · 교대 인계
+                  </label>
+                  <select
+                    id={`target-${r.id}`}
+                    value={targets[r.id] ?? ""}
+                    onChange={(e) =>
+                      setTargets((old) => ({ ...old, [r.id]: e.target.value }))
+                    }
+                  >
+                    <option value="">구역을 선택하세요</option>
+                    {dispatchZones.map((z) => (
+                      <option key={z.id} value={z.id}>
+                        {z.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="btn"
+                    disabled={
+                      !!busy ||
+                      !targets[r.id] ||
+                      (r.state !== "received" && !(reasons[r.id] ?? "").trim())
+                    }
+                    onClick={() =>
+                      void act(
+                        r,
+                        r.state === "received" ? "assign" : "transfer",
+                        targets[r.id],
+                      )
+                    }
+                  >
+                    {r.state === "received"
+                      ? "선택 구역에 배정"
+                      : "사유 기록 후 담당 인계"}
+                  </button>
+                </div>
+              )}
+              {current && (
+                <div className="dx-ending">
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => void loadHistory(r.id)}
+                  >
+                    처리·인계 이력 확인
+                  </button>
+                  {history[r.id] && (
+                    <ol>
+                      {history[r.id].map((h) => (
+                        <li key={h.version}>
+                          {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
+                          {h.action === "baseline"
+                            ? "이전 버전 기준 상태"
+                            : h.action === "transfer"
+                              ? "담당 인계"
+                              : h.action === "privacy_erased"
+                                ? "상세 보관 종료"
+                                : requestStateLabel({ ...r, state: h.state })}
+                          {h.assignedZone &&
+                            ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
+                          {h.actorZone &&
+                            ` · 처리 ${zoneLabels[h.actorZone] ?? h.actorZone}`}
+                          {h.reason && ` · ${h.reason}`}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              )}
             </li>
           );
         })}

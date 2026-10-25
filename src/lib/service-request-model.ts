@@ -53,6 +53,7 @@ export const STATE_EN: Record<RequestState, string> = {
   expired: "Timed out · closed",
 };
 export interface ServiceRequestView {
+  queue?: "integrated" | "call" | "assist";
   id: string;
   service: ServiceType;
   state: RequestState;
@@ -78,7 +79,8 @@ export type RequestAction =
   | "serve"
   | "complete"
   | "unavailable"
-  | "reopen";
+  | "reopen"
+  | "transfer";
 export const NEXT_REQUEST_ACTION: Partial<
   Record<RequestState, { action: RequestAction; label: string }>
 > = {
@@ -98,4 +100,50 @@ export interface RequestSummary {
   expired: number;
   medianAcceptSec: number | null;
   medianArrivalSec: number | null;
+}
+
+export function nextRequestAction(
+  r: Pick<ServiceRequestView, "service" | "state" | "queue">,
+) {
+  if (r.service === "guidance" && r.state === "assigned")
+    return { action: "serve" as const, label: "응대 시작" };
+  if (r.queue === "assist" && r.state === "assigned")
+    return { action: "travel" as const, label: "이동지원 시작" };
+  const next = NEXT_REQUEST_ACTION[r.state];
+  if (next && r.service === "robot" && r.state === "assigned")
+    return { ...next, label: "로봇 출발 · 모의" };
+  if (next && r.service === "mobility" && r.state === "arrived")
+    return { ...next, label: "이동지원 시작" };
+  return next;
+}
+export function requestStateLabel(
+  r: Pick<ServiceRequestView, "service" | "state">,
+  lang: "ko" | "en" = "ko",
+) {
+  if (r.service === "mobility" && r.state === "serving")
+    return lang === "en" ? "Mobility assistance in progress" : "이동지원 중";
+  if (r.service === "robot" && r.state === "en_route")
+    return lang === "en"
+      ? "Robot on the way · simulation"
+      : "로봇 이동 중 · 모의";
+  if (r.service === "robot" && r.state === "arrived")
+    return lang === "en" ? "Robot arrived · simulation" : "로봇 도착 · 모의";
+  return lang === "en" ? STATE_EN[r.state] : STATE_LABEL[r.state];
+}
+export interface OperationalSummary extends RequestSummary {
+  total: number;
+  linked: number;
+  awaitingAttention: number;
+  byService: Record<ServiceType, number>;
+  byQueue: Record<"integrated" | "call" | "assist", number>;
+  bySource: Record<string, number>;
+}
+export interface RequestHistoryItem {
+  version: number;
+  at: string;
+  action: string;
+  state: RequestState;
+  actorZone: string | null;
+  assignedZone: string | null;
+  reason: string;
 }

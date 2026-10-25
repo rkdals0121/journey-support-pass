@@ -400,7 +400,7 @@ describe("직원 부르기: 오래된 호출", () => {
     expect((await createCall(db, "cc-108", null, "guide", after(60)))?.id).toBe(call!.id);
   });
 
-  it(`받고도 마치지 않은 호출은 받은 지 ${CALL_ACCEPTED_EXPIRE_MIN}분이 넘으면 마친 것으로 닫힌다`, async () => {
+  it(`받고도 마치지 않은 호출은 받은 지 ${CALL_ACCEPTED_EXPIRE_MIN}분이 넘으면 완료가 아닌 시간 초과로 닫힌다`, async () => {
     expect(CALL_ACCEPTED_EXPIRE_MIN).toBe(90);
     const call = await createCall(db, "cc-108", null, "guide", t0);
     await acceptCall(db, call!.id, "cc-mid", after(10));
@@ -412,7 +412,7 @@ describe("직원 부르기: 오래된 호출", () => {
     expect(list).toHaveLength(1);
     expect(list[0]).toMatchObject({
       id: call!.id,
-      state: "done",
+      state: "cancelled",
       endedAt: after(100, 1),
       acceptedAt: after(10),
       acceptedZone: "cc-mid",
@@ -425,7 +425,7 @@ describe("직원 부르기: 오래된 호출", () => {
     const fresh = await createCall(db, "cc-108", null, "guide", after(92));
     expect(fresh?.id).not.toBe(old?.id);
     expect(fresh).toMatchObject({ state: "waiting", createdAt: after(92), acceptedAt: null });
-    expect((await getCallAt(db, old!.id, "cc-108"))?.state).toBe("done");
+    expect((await getCallAt(db, old!.id, "cc-108"))?.state).toBe("cancelled");
   });
 
   it("이미 끝난 호출의 끝난 시각과 종류는 건드리지 않는다", async () => {

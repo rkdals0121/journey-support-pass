@@ -329,6 +329,7 @@ describe("오늘 현황", () => {
 
   it("아무것도 없으면 0 과 null", async () => {
     expect(await todaySummary(db, now)).toEqual({
+      operations:{total:0,linked:0,received:0,active:0,done:0,cancelled:0,unavailable:0,expired:0,awaitingAttention:0,medianAcceptSec:null,medianArrivalSec:null,byService:{guidance:0,robot:0,mobility:0},byQueue:{integrated:0,call:0,assist:0},bySource:{}},
       date: "2026-10-05",
       active: 0,
       registered: 0,
