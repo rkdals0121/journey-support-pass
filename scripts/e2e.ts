@@ -1578,9 +1578,11 @@ async function resetFlights(clearLocks = false) {
   check("현황에는 항공편이나 고른 항목이 없다 (건수와 시간뿐)", !JSON.stringify(summary).includes("MK") && !stats.includes("MK1"));
   check(
     "예매 링크 등록 완료율, 증빙, 체크인, 우대출구 확인이 세어진다",
-    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins >= 3 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1 && summary.assist.total >= 1,
+    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins >= 3 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1,
     JSON.stringify({ booking: summary.booking, proofDone: summary.proofDone, checkins: summary.checkins, exit: summary.exit }),
   );
+  const unifiedSummary=await get("/api/staff/requests",desk);
+  check("새 이동지원 접수는 통합 요청 현황에 취소 기록까지 남는다",(unifiedSummary.body.requests as {id:string;service:string;state:string}[]).some(r=>r.id===integrated.id&&r.service==="mobility"&&r.state==="cancelled"));
   await shot(page, "데스크-오늘현황");
   check("현장 직원은 오늘 현황을 받을 수 없다 (403)", (await get("/api/desk/summary", zoneStaff)).status === 403);
   await browser.close();
