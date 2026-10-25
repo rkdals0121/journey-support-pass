@@ -68,6 +68,8 @@ WEB_PUSH_SUBJECT=mailto:<운영 연락 주소>
 
 ## 검사 방법
 
+GitHub PR과 main 푸시는 `.github/workflows/ci.yml`에서 lint·단위 검사·운영 빌드를 실행한다. 운영 비밀값이나 DB 연결 문자열을 사용하지 않는다. 실제 브라우저·기기 검사는 아래 로컬 절차로 별도 실행한다.
+
 ```text
 npm run lint
 npm test
