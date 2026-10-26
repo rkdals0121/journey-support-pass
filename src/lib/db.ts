@@ -4,8 +4,11 @@ import path from "node:path";
 // 브라우저 코드에서 가져오지 말 것. DB 접근은 서버에서만 한다.
 
 export interface Db {
-  query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>;
-  /** 여러 문장을 한 번에 실행한다. 스키마 적용 전용. */
+  query<T = Record<string, unknown>>(
+    sql: string,
+    params?: unknown[],
+  ): Promise<T[]>;
+  /** 여러 문장을 한 트랜잭션으로 실행한다. 스키마 적용 전용. */
   exec(sql: string): Promise<void>;
 }
 
@@ -26,7 +29,9 @@ export async function openPglite(dataDir?: string): Promise<Db> {
       return res.rows as T[];
     },
     async exec(sql: string) {
-      await pg.exec(sql);
+      await pg.transaction(async (transaction) => {
+        await transaction.exec(sql);
+      });
     },
   };
 }
@@ -37,7 +42,10 @@ export async function openPglite(dataDir?: string): Promise<Db> {
  * 그래서 주소에서 sslmode 를 떼고, 암호화는 하되 인증서 검증은 하지 않게 한다.
  * 실제 여객 정보를 받기 전에 Supabase 인증 기관 인증서를 넣어 검증을 켤 것 (README 참고).
  */
-export function pgOptions(url: string): { connectionString: string; ssl?: { rejectUnauthorized: false } } {
+export function pgOptions(url: string): {
+  connectionString: string;
+  ssl?: { rejectUnauthorized: false };
+} {
   const u = new URL(url);
   const mode = u.searchParams.get("sslmode");
   if (!mode || mode === "disable") return { connectionString: url };
@@ -56,7 +64,22 @@ async function openPg(url: string): Promise<Db> {
       return res.rows as T[];
     },
     async exec(sql: string) {
-      await pool.query(sql);
+      const client = await pool.connect();
+      let destroy = false;
+      try {
+        await client.query("BEGIN");
+        await client.query(sql);
+        await client.query("COMMIT");
+      } catch (error) {
+        try {
+          await client.query("ROLLBACK");
+        } catch {
+          destroy = true;
+        }
+        throw error;
+      } finally {
+        client.release(destroy);
+      }
     },
   };
 }
@@ -69,11 +92,14 @@ export function getDb(): Promise<Db> {
     // Vercel 의 Postgres 연동은 POSTGRES_URL 이름으로 넣어 준다.
     const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
     // 배포 환경의 파일 시스템은 요청마다 사라진다. 내장 DB 로 조용히 넘어가면 등록이 저장되지 않는다.
-    if (!url && process.env.VERCEL) throw new Error("DATABASE_URL 이 설정되지 않았습니다");
+    if (!url && process.env.VERCEL)
+      throw new Error("DATABASE_URL 이 설정되지 않았습니다");
     holder.__jspDb = url
       ? openPg(url)
       : (async () => {
-          const dir = process.env.JSP_LOCAL_DB_DIR || path.join(process.cwd(), ".data", "pglite");
+          const dir =
+            process.env.JSP_LOCAL_DB_DIR ||
+            path.join(process.cwd(), ".data", "pglite");
           fs.mkdirSync(dir, { recursive: true });
           const db = await openPglite(dir);
           await migrate(db);
