@@ -151,8 +151,8 @@ export function PlaceFinder({
       </label>
       <p className="place-finder-hint" id={id + "-hint"}>
         {tr(
-          "현재 서 있는 곳의 게이트 번호나 안내판을 찾아보세요. 목적지 번호와는 달라요.",
-          "Look for the gate number or sign where you are standing, not your destination.",
+          "지금 계신 곳의 게이트 번호나 안내판을 찾아보세요.",
+          "Use the gate number or sign where you are standing.",
         )}
       </p>
       <div className="place-find-actions">
@@ -207,12 +207,15 @@ export function PlaceFinder({
         )}
       </div>
       {photos && (
-        <p className="place-finder-hint">
-          {tr(
-            "사진은 이 기기에서 글자만 읽고 서버에 보내거나 저장하지 않아요. 매장 상호만으로는 위치를 확정하지 않아요.",
-            "The photo is read on this device and is not uploaded or stored. A shop name alone does not confirm a location.",
-          )}
-        </p>
+        <details className="place-photo-info">
+          <summary>{tr("사진 이용 안내", "About photo recognition")}</summary>
+          <p className="place-finder-hint">
+            {tr(
+              "사진은 이 기기에서 글자만 읽고 서버에 보내거나 저장하지 않아요. 매장 상호만으로는 위치를 확정하지 않아요.",
+              "The photo is read on this device and is not uploaded or stored. A shop name alone does not confirm a location.",
+            )}
+          </p>
+        </details>
       )}
       {photo && (
         <figure className="place-photo-preview">
@@ -315,6 +318,7 @@ export function PlaceFinder({
           )}
           <div
             className="place-candidates"
+            role="group"
             aria-label={tr("현재 위치 후보", "Possible current locations")}
           >
             {(hasText

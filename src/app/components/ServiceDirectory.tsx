@@ -71,27 +71,29 @@ export function ServiceDirectory({
         />
         <button type="submit">{en ? "Search" : "검색"}</button>
       </form>
-      <div
-        className="public-filter"
-        role="group"
-        aria-label={en ? "Service type" : "이용 방식"}
-      >
-        {[
-          ["all", en ? "All services" : "전체"],
-          ["request", en ? "Support requests" : "도움 요청"],
-          ["referral", en ? "Enquiries & referrals" : "상담·담당 연결"],
-          ["simulation", en ? "Simulation" : "모의 체험"],
-        ].map(([v, label]) => (
-          <button
-            key={v}
-            type="button"
-            aria-pressed={filter === v}
-            onClick={() => setFilter(v)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {!compact && (
+        <div
+          className="public-filter"
+          role="group"
+          aria-label={en ? "Service type" : "이용 방식"}
+        >
+          {[
+            ["all", en ? "All services" : "전체"],
+            ["request", en ? "Support requests" : "도움 요청"],
+            ["referral", en ? "Enquiries & referrals" : "상담·담당 연결"],
+            ["simulation", en ? "Simulation" : "모의 체험"],
+          ].map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={filter === v}
+              onClick={() => setFilter(v)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="public-results-line">
         <h2>{en ? "Find the support you need" : "필요한 도움을 선택하세요"}</h2>
         <span role="status">
@@ -127,12 +129,17 @@ export function ServiceDirectory({
                 </span>
               </div>
               <h3>{en ? s.en : s.label}</h3>
-              <p>{en ? s.descriptionEn : s.description}</p>
-              <Link href={topicLink(s.id, lang)}>
+              {!compact && <p>{en ? s.descriptionEn : s.description}</p>}
+              <Link
+                href={topicLink(s.id, lang)}
+                aria-label={`${en ? s.en : s.label} · ${en ? "Request support" : "도움 요청"}`}
+              >
                 {s.mode === "referral"
                   ? en
                     ? "Ask staff"
-                    : "직원 상담 요청"
+                    : compact
+                      ? "상담하기"
+                      : "직원 상담 요청"
                   : en
                     ? "Start request"
                     : "요청하기"}

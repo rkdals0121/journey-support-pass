@@ -38,6 +38,7 @@ export function PublicShell({
     ["/help", en ? "Request help" : "현장 도움 요청"],
     ["/help?resume=1", en ? "My request" : "내 요청 확인"],
     ["/prepare", en ? "Before you travel" : "여행 전 사전등록"],
+    ["/devices", en ? "Kiosk & robot" : "키오스크·로봇"],
   ];
   return (
     <div className="public-site" lang={lang}>
@@ -108,15 +109,10 @@ export function PublicShell({
           <span className="public-footer-brand">
             분(分)실 · Journey Support Pass
           </span>
-          <p>
-            {en
-              ? "Airport assistance, connected from request to support."
-              : "공항에서 필요한 도움, 접수부터 지원까지 연결합니다."}
-          </p>
           <p className="public-caption">
             {en
-              ? "Contest prototype. Actual service provision is confirmed at the airport."
-              : "공모전 시제품 · 실제 서비스 제공은 공항 현장에서 확인해 주세요."}
+              ? "Contest prototype"
+              : "공모전 시제품"}
           </p>
         </div>
         <div className="public-footer-links">
@@ -126,6 +122,7 @@ export function PublicShell({
           <Link href={"/demo/booking" + suffix}>
             {en ? "Booking connection demo" : "예매 연결 시연"}
           </Link>
+          <Link href={"/devices" + suffix}>{en ? "Kiosk & robot" : "키오스크·로봇"}</Link>
           <Link href="/staff">
             {en ? "Staff workspace" : "직원 업무 화면"}
             <ArrowUpRight size={14} aria-hidden="true" />

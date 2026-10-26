@@ -31,7 +31,6 @@ export default async function RequestsPage({
         <div className="workspace-page-head">
           <div>
             <h1>통합 요청</h1>
-            <p>사전등록·현장 접수를 함께 처리합니다 · 모의 시연</p>
           </div>
           <div className="workspace-page-tools">
             {s.isDesk && (

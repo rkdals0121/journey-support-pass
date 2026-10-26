@@ -194,12 +194,12 @@ async function main() {
         .find((b) => b.textContent === "새 요청 시작")
         ?.click(),
     );
-    await page.evaluate(() =>
-      Array.from(document.querySelectorAll("button"))
-        .find((b) => b.textContent === "English")
-        ?.click(),
-    );
+    await Promise.all([
+      page.waitForNavigation(),
+      page.click('.public-tools a[hreflang="en"]'),
+    ]);
     await page.waitForSelector("#dx-place");
+    await page.waitForFunction(() => document.querySelector('main[lang="en"]'));
     check(
       "English request form",
       (await page.evaluate(() => document.body.innerText)).includes(
