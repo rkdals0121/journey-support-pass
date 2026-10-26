@@ -10,6 +10,7 @@ import {
   ChartColumn,
   Settings2,
   ArrowUpRight,
+  PlayCircle,
 } from "lucide-react";
 import { Sunflower } from "./Sunflower";
 export function StaffFrame({
@@ -33,6 +34,7 @@ export function StaffFrame({
             label: "통합 운영 현황",
             Icon: ChartColumn,
           },
+          { href: "/staff/demo", label: "시연 준비", Icon: PlayCircle },
         ]
       : []),
     { href: "/staff/legacy", label: "이전 요청·인계", Icon: ArrowLeftRight },
