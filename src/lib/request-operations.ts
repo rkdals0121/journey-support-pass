@@ -161,8 +161,8 @@ export async function legacyWorkAction(
       sql = `update assist_requests set state='assigned',assigned_zone=$2,assigned_at=$3
       where id=$1 and work_version=$4 and state='received' returning id`;
     else if (body.action === "travel")
-      sql = `update assist_requests set state='moving'
-      where id=$1 and work_version=$4 and state='assigned' and assigned_zone=$2 and $3::timestamptz is not null returning id`;
+      sql = `update assist_requests set state='moving',moving_at=$3
+      where id=$1 and work_version=$4 and state='assigned' and assigned_zone=$2 returning id`;
     else if (body.action === "complete")
       sql = `update assist_requests set state='done',end_kind='done',ended_at=$3
       where id=$1 and work_version=$4 and state in ('assigned','moving') and assigned_zone=$2 returning id`;

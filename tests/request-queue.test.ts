@@ -10,7 +10,7 @@ import {
 } from "./helpers/fixtures";
 import { listServiceRequests } from "@/lib/service-requests";
 import { createCall } from "@/lib/calls";
-import { createAssist } from "@/lib/assist";
+import { createAssist,advanceAssist } from "@/lib/assist";
 import { queueQuery, type QueueOptions } from "@/lib/request-queue";
 const now = kst("2026-10-26 12:00"),
   staff = sessionOf(now);
@@ -70,6 +70,18 @@ beforeEach(async () => {
   counter = 0;
 });
 describe("whole-queue filtering and priority", () => {
+  it("does not flag freshly started retained mobility using its older assignment time",async()=>{
+    const createdAt=new Date(now.getTime()-50*60000),assignedAt=new Date(now.getTime()-45*60000);
+    await addFlights(db,[flightRow("KE123","2026-10-26 18:00")],createdAt);
+    const {registration}=await registerWithPass(db,createdAt,{flightDate:"2026-10-26"});
+    const a=await createAssist(db,registration.id,"cc-center",createdAt);
+    await advanceAssist(db,a!.id,staff.zoneId,"assign",assignedAt);
+    expect((await list({scope:"attention"})).total).toBe(1);
+    await advanceAssist(db,a!.id,staff.zoneId,"move",now);
+    expect((await list({scope:"attention"})).total).toBe(0);
+    const [row]=await db.query<{updated_at:Date;started_at:Date}>("select updated_at,started_at from request_work_ledger where id=$1",["assist:"+a!.id]);
+    expect(row.updated_at).toEqual(now);expect(row.started_at).toEqual(now);
+  });
   it("finds a matching pickup beyond the original two-hundred-row page", async () => {
     await db.query(
       `insert into service_requests(receipt_hash,service,place_id,party,lang,source,created_at,updated_at,expires_at,device_key)

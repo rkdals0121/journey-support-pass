@@ -131,11 +131,11 @@ export async function advanceAssist(db: Db, id: string, zoneId: string, action: 
   const sql: Record<AssistAction, string> = {
     assign: `update assist_requests set state = 'assigned', assigned_zone = $2, assigned_at = $3
              where id = $1 and state = 'received' returning id`,
-    move: `update assist_requests set state = 'moving'
+    move: `update assist_requests set state = 'moving',moving_at=$3
            where id = $1 and state = 'assigned' and assigned_zone = $2 returning id`,
     done: `update assist_requests set state = 'done', end_kind='done', ended_at = $3
            where id = $1 and state in ('assigned','moving') and assigned_zone = $2 returning id`,
   };
-  const params = action === "move" ? [id, zoneId] : [id, zoneId, now];
+  const params = [id, zoneId, now];
   return (await db.query(sql[action], params)).length === 1;
 }

@@ -270,6 +270,7 @@ create trigger remember_request_registration before insert or update on assist_r
 -- One operational read model; source records remain authoritative and are never copied twice.
 alter table calls add column if not exists work_version bigint not null default 0;
 alter table assist_requests add column if not exists work_version bigint not null default 0;
+alter table assist_requests add column if not exists moving_at timestamptz;
 alter table calls add column if not exists operator_reason text not null default '';
 alter table assist_requests add column if not exists operator_reason text not null default '';
 alter table calls add column if not exists operator_actor_zone text;
@@ -312,9 +313,9 @@ select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
  case when a.state='moving' then 'serving' when a.end_kind='expired' then 'expired' else a.state end,
  coalesce(a.place_id,''),coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),
  case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,a.operator_reason,a.created_at,
- coalesce(a.ended_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
+ coalesce(a.ended_at,a.moving_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
  a.work_version::double precision,
- a.assigned_at,null::timestamptz,null::timestamptz,a.ended_at,a.registration_linked,null::text,null::timestamptz
+ a.assigned_at,null::timestamptz,a.moving_at,a.ended_at,a.registration_linked,null::text,null::timestamptz
 from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');
 
 -- Internal pilot inventory. No physical device is provisioned or commanded here.
