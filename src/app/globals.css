@@ -440,6 +440,7 @@ label {
   font-weight: 700;
 }
 input[type="text"],
+input[type="search"],
 input[type="password"],
 select {
   width: 100%;

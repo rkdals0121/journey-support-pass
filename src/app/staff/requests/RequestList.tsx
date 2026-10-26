@@ -64,26 +64,68 @@ export function RequestList({
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [sound, setSound] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [draft, setDraft] = useState(""),
+    [search, setSearch] = useState("");
+  const [service, setService] = useState("all"),
+    [source, setSource] = useState("all"),
+    [queue, setQueue] = useState("all"),
+    [zone, setZone] = useState("all");
+  const [order, setOrder] = useState("priority"),
+    [pageSize, setPageSize] = useState(50);
+  const knownQuery = useRef("");
+  const inFlightLoad = useRef<{
+    controller: AbortController;
+    url: string;
+  } | null>(null);
   const known = useRef<Set<string> | null>(null);
-  const loading = useRef(false);
   const audio = useRef<AudioContext | null>(null);
   const enabled = useRef(false);
+  const requestUrl =
+    "/api/staff/requests?" +
+    new URLSearchParams({
+      offset: String(offset),
+      history: showHistory ? "1" : "0",
+      scope: filter,
+      search,
+      service,
+      source,
+      queue,
+      zone,
+      order,
+      limit: String(pageSize),
+    });
+  const activeQuery = useRef(requestUrl);
+  const [loadedUrl, setLoadedUrl] = useState("");
   const load = useCallback(
-    async (signal?: AbortSignal) => {
-      if (loading.current) return;
-      loading.current = true;
+    async (signal?: AbortSignal, force = false) => {
+      const params = new URLSearchParams({
+        offset: String(offset),
+        history: showHistory ? "1" : "0",
+        scope: filter,
+        search,
+        service,
+        source,
+        queue,
+        zone,
+        order,
+        limit: String(pageSize),
+      });
+      const url = "/api/staff/requests?" + params;
+      if (activeQuery.current !== url) return;
+      if (inFlightLoad.current?.url === url && !force) return;
+      inFlightLoad.current?.controller.abort();
       const controller = new AbortController();
+      inFlightLoad.current = { controller, url };
       const forward = () => controller.abort();
       signal?.addEventListener("abort", forward, { once: true });
       const timeout = setTimeout(() => controller.abort(), 10000);
       try {
-        const res = await fetch(
-          `/api/staff/requests?offset=${offset}&history=${showHistory ? 1 : 0}`,
-          {
-            cache: "no-store",
-            signal: controller.signal,
-          },
-        );
+        const res = await fetch(url, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (inFlightLoad.current?.controller !== controller || signal?.aborted)
+          return;
         if (res.status === 401) {
           window.location.assign("/staff/login");
           return;
@@ -93,11 +135,20 @@ export function RequestList({
           return;
         }
         const data = await res.json();
+        if (inFlightLoad.current?.controller !== controller || signal?.aborted)
+          return;
         if (!res.ok) throw new Error(data.error ?? "불러오지 못했습니다");
+        if (offset > 0 && offset >= (data.total ?? 0)) {
+          setOffset(0);
+          return;
+        }
         const list = data.requests as ServiceRequestView[];
         const fresh = list.some(
           (r) =>
-            r.state === "received" && known.current && !known.current.has(r.id),
+            r.state === "received" &&
+            knownQuery.current === url &&
+            known.current &&
+            !known.current.has(r.id),
         );
         if (fresh && enabled.current) {
           navigator.vibrate?.([200, 100, 200]);
@@ -114,7 +165,9 @@ export function RequestList({
           }
         }
         known.current = new Set(list.map((r) => r.id));
+        knownQuery.current = url;
         setRows(list);
+        setLoadedUrl(url);
         setTotal(data.total ?? list.length);
         setDispatchZones(data.dispatchZones ?? []);
         setSummary(data.summary ?? null);
@@ -126,18 +179,32 @@ export function RequestList({
         setReady(true);
         setError("");
       } catch (e) {
-        if (!signal?.aborted)
+        if (!signal?.aborted && inFlightLoad.current?.controller === controller)
           setError(e instanceof Error ? e.message : "연결을 확인해 주세요");
       } finally {
         clearTimeout(timeout);
         signal?.removeEventListener("abort", forward);
-        loading.current = false;
+        if (inFlightLoad.current?.controller === controller)
+          inFlightLoad.current = null;
       }
     },
-    [offset, showHistory],
+    [
+      offset,
+      showHistory,
+      filter,
+      search,
+      service,
+      source,
+      queue,
+      zone,
+      order,
+      pageSize,
+    ],
   );
   useEffect(() => {
     const ctrl = new AbortController();
+    activeQuery.current = requestUrl;
+    setReady(false);
     void load(ctrl.signal);
     const timer = setInterval(() => void load(ctrl.signal), 5000);
     const focus = () => void load(ctrl.signal);
@@ -145,9 +212,11 @@ export function RequestList({
     return () => {
       clearInterval(timer);
       ctrl.abort();
+      inFlightLoad.current?.controller.abort();
+      inFlightLoad.current = null;
       window.removeEventListener("focus", focus);
     };
-  }, [load]);
+  }, [load, requestUrl]);
   useEffect(
     () => () => {
       void audio.current?.close();
@@ -190,10 +259,10 @@ export function RequestList({
       });
       const data = await res.json();
       if (!res.ok) {
-        if (res.status === 409) await load();
+        if (res.status === 409) await load(undefined, true);
         throw new Error(data.error ?? "처리하지 못했습니다");
       }
-      await load();
+      await load(undefined, true);
       if (history[r.id]) await loadHistory(r.id);
     } catch (e) {
       setError((e as Error).message);
@@ -201,14 +270,11 @@ export function RequestList({
       setBusy(null);
     }
   }
-  const open = rows.filter((r) => OPEN_REQUEST_STATES.includes(r.state));
-  const visible = rows.filter(
-    (r) =>
-      filter === "all" ||
-      (filter === "mine" && r.assignedZone === zoneId) ||
-      (filter === "location" && !!r.pendingPlaceId) ||
-      (filter === "waiting" && r.state === "received"),
-  );
+  const pageReady = ready && loadedUrl === requestUrl;
+  const open = pageReady
+    ? rows.filter((r) => OPEN_REQUEST_STATES.includes(r.state))
+    : [];
+  const visible = pageReady ? rows : [];
   return (
     <section>
       <Link className="btn" href="/staff/resources">
@@ -247,8 +313,8 @@ export function RequestList({
         </p>
       )}
       <p role="status">
-        {ready
-          ? `진행 중 ${open.length}건 · 미배정 ${rows.filter((r) => r.state === "received").length}건`
+        {pageReady
+          ? `현재 페이지 · 진행 중 ${open.length}건 · 미배정 ${rows.filter((r) => r.state === "received").length}건`
           : "불러오는 중…"}
       </p>
       <label className="dx-option">
@@ -263,25 +329,164 @@ export function RequestList({
         처리 이력 포함 · 최근 90일
       </label>
       <p>
-        기존 호출·이동지원과 새 통합 요청을 같은 목록에서 확인합니다. 화면
-        필터는 현재 페이지에 적용됩니다.
+        기존 호출·이동지원과 새 통합 요청을 함께 확인합니다. 검색·필터는 전체
+        대상에 적용됩니다.
       </p>
+      <form
+        className="dx-card"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSearch(draft.trim());
+          setOffset(0);
+        }}
+      >
+        <label htmlFor="queue-search">요청 번호 또는 만날 곳 검색</label>
+        <input
+          id="queue-search"
+          type="search"
+          value={draft}
+          maxLength={80}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="예: 127, 탑승동, 요청 번호"
+        />
+        <button className="btn" type="submit">
+          검색 적용
+        </button>
+        <button
+          className="btn btn-ghost"
+          type="button"
+          onClick={() => {
+            setDraft("");
+            setSearch("");
+            setService("all");
+            setSource("all");
+            setQueue("all");
+            setZone("all");
+            setFilter("all");
+            setOrder("priority");
+            setOffset(0);
+          }}
+        >
+          검색·필터 초기화
+        </button>
+        <details data-queue-filters>
+          <summary>
+            서비스·구역·정렬·표시 건수
+            {[service, source, queue, zone].some((v) => v !== "all")
+              ? " · 세부 필터 적용 중"
+              : ""}
+          </summary>
+          <label htmlFor="queue-service">서비스</label>
+          <select
+            id="queue-service"
+            value={service}
+            onChange={(e) => {
+              setService(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="all">전체 서비스</option>
+            {Object.entries(SERVICE_LABEL).map(([id, label]) => (
+              <option value={id} key={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="queue-source">접수 경로</label>
+          <select
+            id="queue-source"
+            value={source}
+            onChange={(e) => {
+              setSource(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="all">전체 접수 경로</option>
+            <option value="web">현장 웹</option>
+            <option value="preregistered">사전등록 연결 웹</option>
+            <option value="kiosk">키오스크</option>
+            <option value="assisted">직원 대리 접수</option>
+          </select>
+          <label htmlFor="queue-original">기록 종류</label>
+          <select
+            id="queue-original"
+            value={queue}
+            onChange={(e) => {
+              setQueue(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="all">전체 기록</option>
+            <option value="integrated">새 통합 요청</option>
+            <option value="call">이전 호출</option>
+            <option value="assist">이전 이동지원</option>
+          </select>
+          <label htmlFor="queue-zone">담당 구역</label>
+          <select
+            id="queue-zone"
+            value={zone}
+            onChange={(e) => {
+              setZone(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="all">전체 담당 구역</option>
+            {Object.entries(zoneLabels).map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="queue-order">정렬</label>
+          <select
+            id="queue-order"
+            value={order}
+            onChange={(e) => {
+              setOrder(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="priority">확인 필요 우선</option>
+            <option value="oldest">오래된 접수순</option>
+            <option value="newest">최신 접수순</option>
+          </select>
+          <p className="fine">
+            확인 필요 우선: 위치 변경 → 확인 지연 → 미배정 → 진행 중. 같은
+            분류에서는 오래된 접수부터 표시합니다.
+          </p>
+          <label htmlFor="queue-limit">페이지당 표시</label>
+          <select
+            id="queue-limit"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setOffset(0);
+            }}
+          >
+            {[25, 50, 100, 200].map((n) => (
+              <option key={n} value={n}>
+                {n}건
+              </option>
+            ))}
+          </select>
+        </details>
+      </form>
       <div className="dx-actions">
         <button
           className="btn"
-          disabled={offset === 0}
-          onClick={() => setOffset(Math.max(0, offset - 200))}
+          disabled={!pageReady || offset === 0}
+          onClick={() => setOffset(Math.max(0, offset - pageSize))}
         >
           이전 목록
         </button>
         <span>
-          {total}건 중 {total === 0 ? 0 : offset + 1}–
-          {Math.min(offset + rows.length, total)}
+          검색·필터 결과 {total}건 중 {visible.length === 0 ? 0 : offset + 1}–
+          {visible.length === 0 ? 0 : Math.min(offset + visible.length, total)}
         </span>
         <button
           className="btn"
-          disabled={offset + rows.length >= total}
-          onClick={() => setOffset(offset + 200)}
+          disabled={!pageReady || offset + rows.length >= total}
+          onClick={() => setOffset(offset + pageSize)}
         >
           다음 목록
         </button>
@@ -353,14 +558,21 @@ export function RequestList({
       <select
         id="request-filter"
         value={filter}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(e) => {
+          setFilter(e.target.value);
+          setOffset(0);
+        }}
       >
         <option value="all">전체</option>
         <option value="waiting">미배정</option>
         <option value="location">위치 변경 확인 대기</option>
+        <option value="attention">확인 지연</option>
         <option value="mine">내 구역 담당</option>
       </select>
-      {ready && visible.length === 0 && <p>표시할 요청이 없습니다.</p>}
+      <p className="fine">
+        화면 내 소리 알림은 현재 표시되는 목록의 새 접수를 대상으로 합니다.
+      </p>
+      {pageReady && visible.length === 0 && <p>표시할 요청이 없습니다.</p>}
       {rows.length >= 200 && (
         <p role="status">
           목록은 최대 200건을 표시합니다. 미처리 요청을 먼저 확인해 주세요.
