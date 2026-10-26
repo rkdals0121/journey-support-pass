@@ -15,7 +15,7 @@ export function PushSettings() {
       ) {
         if (live)
           setStatus(
-            "이 브라우저는 백그라운드 알림을 지원하지 않습니다. 화면 내 알림을 이용해 주세요.",
+            "이 브라우저는 백그라운드 알림을 지원하지 않습니다. 아이폰은 Safari에서 홈 화면에 추가한 뒤 아이콘으로 열어 주세요. 그 밖의 기기는 화면 내 알림을 이용해 주세요.",
           );
         return;
       }
@@ -69,6 +69,11 @@ export function PushSettings() {
     if (busy) return;
     setBusy(true);
     try {
+      // iOS requires the permission prompt to directly follow the button gesture.
+      if (!active && (await Notification.requestPermission()) !== "granted")
+        throw new Error(
+          "알림 권한이 허용되지 않았습니다. 브라우저 설정에서 변경할 수 있습니다.",
+        );
       const registration = await navigator.serviceWorker.register(
         "/staff/staff-request-sw.js",
         { scope: "/staff/" },
@@ -91,11 +96,6 @@ export function PushSettings() {
         setActive(false);
         setStatus("이 기기의 브라우저 알림을 껐습니다.");
       } else {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted")
-          throw new Error(
-            "알림 권한이 허용되지 않았습니다. 브라우저 설정에서 변경할 수 있습니다.",
-          );
         if (!registration.active)
           await new Promise<void>((resolve, reject) => {
             const worker = registration.installing ?? registration.waiting;
