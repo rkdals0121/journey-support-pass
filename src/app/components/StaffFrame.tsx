@@ -11,6 +11,7 @@ import {
   Settings2,
   ArrowUpRight,
   PlayCircle,
+  Plug,
 } from "lucide-react";
 import { Sunflower } from "./Sunflower";
 export function StaffFrame({
@@ -28,6 +29,7 @@ export function StaffFrame({
     ...(isDesk
       ? [
           { href: "/staff/alerts", label: "알림 운영", Icon: Bell },
+          { href: "/staff/integrations", label: "외부 연동", Icon: Plug },
           { href: "/staff/desk", label: "안내데스크", Icon: ClipboardCheck },
           {
             href: "/staff/overview",
@@ -56,6 +58,21 @@ export function StaffFrame({
           여객 화면
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
+        <details className="workspace-mobile-menu">
+          <summary>업무 메뉴</summary>
+          <nav aria-label="모바일 업무 메뉴">
+            {items.map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                aria-current={path === href ? "page" : undefined}
+              >
+                <Icon size={18} aria-hidden="true" />
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </details>
       </header>
       <div className="workspace-grid">
         <aside className="workspace-side">
@@ -78,11 +95,6 @@ export function StaffFrame({
               </Link>
             ))}
           </nav>
-          <div className="workspace-side-note">
-            접수부터 현장 지원까지
-            <br />
-            같은 요청으로 연결합니다.
-          </div>
         </aside>
         <div id="staff-content" className="workspace-content">
           {children}

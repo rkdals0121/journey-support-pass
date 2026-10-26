@@ -83,54 +83,57 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
         {rows.filter((r) => r.status !== "ready").length}대
       </p>
       {isDesk && (
-        <form
-          className="dx-card"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void mutate({ action: "create", label, kind, zoneId });
-          }}
-        >
-          <h2>시범 장비 등록</h2>
-          <label htmlFor="resource-label">장비 이름</label>
-          <input
-            id="resource-label"
-            type="text"
-            required
-            maxLength={40}
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="예: 모의 로봇 01"
-          />
-          <label htmlFor="resource-kind">장비 종류</label>
-          <select
-            id="resource-kind"
-            value={kind}
-            onChange={(e) => setKind(e.target.value as ResourceKind)}
+        <details className="resource-register">
+          <summary>장비 등록</summary>
+          <form
+            className="dx-card"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void mutate({ action: "create", label, kind, zoneId });
+            }}
           >
-            {Object.entries(RESOURCE_KIND).map(([value, text]) => (
-              <option value={value} key={value}>
-                {text}
-              </option>
-            ))}
-          </select>
-          <label htmlFor="resource-zone">기준 구역</label>
-          <select
-            id="resource-zone"
-            required
-            value={zoneId}
-            onChange={(e) => setZone(e.target.value)}
-          >
-            <option value="">구역을 선택하세요</option>
-            {zones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.label}
-              </option>
-            ))}
-          </select>
-          <button className="btn btn-primary" type="submit" disabled={busy}>
-            장비 등록
-          </button>
-        </form>
+            <h2>시범 장비 등록</h2>
+            <label htmlFor="resource-label">장비 이름</label>
+            <input
+              id="resource-label"
+              type="text"
+              required
+              maxLength={40}
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="예: 모의 로봇 01"
+            />
+            <label htmlFor="resource-kind">장비 종류</label>
+            <select
+              id="resource-kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value as ResourceKind)}
+            >
+              {Object.entries(RESOURCE_KIND).map(([value, text]) => (
+                <option value={value} key={value}>
+                  {text}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="resource-zone">기준 구역</label>
+            <select
+              id="resource-zone"
+              required
+              value={zoneId}
+              onChange={(e) => setZone(e.target.value)}
+            >
+              <option value="">구역을 선택하세요</option>
+              {zones.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.label}
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-primary" type="submit" disabled={busy}>
+              장비 등록
+            </button>
+          </form>
+        </details>
       )}
       {!ready ? (
         <p role="status">장비 현황 확인 중</p>

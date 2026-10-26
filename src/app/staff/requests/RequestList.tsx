@@ -371,7 +371,7 @@ export function RequestList({
       </p>
 
       <form
-        className="dx-card"
+        className="dx-card work-search"
         onSubmit={(e) => {
           e.preventDefault();
           setSearch(draft.trim());
@@ -388,7 +388,7 @@ export function RequestList({
           placeholder="예: 127, 탑승동, 요청 번호"
         />
         <button className="btn" type="submit">
-          검색 적용
+          검색
         </button>
         <button
           className="btn btn-ghost"
@@ -407,11 +407,11 @@ export function RequestList({
             setOffset(0);
           }}
         >
-          검색·필터 초기화
+          초기화
         </button>
         <details data-queue-filters>
           <summary>
-            서비스·구역·정렬·표시 건수
+            상세 필터
             {business !== "all" ? ` · ${businessFilterLabel(business)}` : ""}
             {[service, source, queue, zone, topic, business].some(
               (v) => v !== "all",
@@ -622,6 +622,28 @@ export function RequestList({
         </dl>
       )}
       <div className="work-scope-control">
+        <div className="work-scope-tabs" role="group" aria-label="요청 범위">
+          {[
+            ["all", "전체"],
+            ["waiting", "미배정"],
+            ["active", "진행 중"],
+            ["mine", "내 구역"],
+            ["location", "위치 변경"],
+            ["attention", "확인 지연"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => {
+                setFilter(value);
+                setOffset(0);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <label htmlFor="request-filter">보여 줄 요청</label>
         <select
           id="request-filter"
@@ -762,21 +784,31 @@ export function RequestList({
                 >
                   요청 목록으로
                 </button>
+                <div className="work-detail-heading">
+                  <span className="work-state-badge">
+                    {requestStateLabel(r)}
+                  </span>
+                  <span className="work-request-ref">{r.id.slice(0, 8)}</span>
+                </div>
                 <h2 tabIndex={-1}>
                   {taskOf(r.serviceDetails?.task)?.label ??
                     SERVICE_LABEL[r.service]}
                 </h2>
-                {r.serviceDetails && (
-                  <dl className="service-detail-list">
-                    {serviceDetailsLines(r.serviceDetails).map((f) => (
-                      <div key={f.label}>
-                        <dt>{f.label}</dt>
-                        <dd>{f.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-                {r.topicId && (
+                <p className="work-meeting-place">
+                  <strong>만날 곳: {r.place}</strong>
+                </p>
+                {r.serviceDetails &&
+                  serviceDetailsLines(r.serviceDetails).length > 0 && (
+                    <dl className="service-detail-list">
+                      {serviceDetailsLines(r.serviceDetails).map((f) => (
+                        <div key={f.label}>
+                          <dt>{f.label}</dt>
+                          <dd>{f.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                {r.topicId && !r.serviceDetails?.task && (
                   <p className="public-topic-note">
                     {supportTopic(r.topicId)?.label}
                   </p>
@@ -803,16 +835,6 @@ export function RequestList({
                     </strong>
                   </p>
                 )}
-                <p>
-                  <strong>{requestStateLabel(r)}</strong> ·{" "}
-                  {new Date(r.createdAt).toLocaleTimeString("ko-KR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-                <p>
-                  <strong>만날 곳: {r.place}</strong>
-                </p>
                 {r.assignedZone && (
                   <p>
                     담당 구역: {zoneLabels[r.assignedZone] ?? r.assignedZone}
@@ -873,6 +895,22 @@ export function RequestList({
                 {r.resolution && (
                   <RequestResolutionView resolution={r.resolution} />
                 )}
+                {next &&
+                  !(
+                    current &&
+                    next.action === "complete" &&
+                    supportTopic(r.topicId)?.mode === "referral"
+                  ) &&
+                  !r.pendingPlaceId &&
+                  (r.state === "received" || mine) && (
+                    <button
+                      className="btn btn-primary"
+                      disabled={!!busy}
+                      onClick={() => void act(r, next.action)}
+                    >
+                      {next.label}
+                    </button>
+                  )}
                 {current && open && (mine || isDesk) && (
                   <BusinessHandling
                     key={`${r.id}-${r.businessId ?? ""}`}
@@ -884,15 +922,18 @@ export function RequestList({
                   />
                 )}
                 {current && open && (
-                  <RequestAlertStatus
-                    id={r.id}
-                    alert={alerts[r.id]}
-                    pushEnabled={pushEnabled}
-                    zoneLabels={zoneLabels}
-                    onChanged={async () => {
-                      await load();
-                    }}
-                  />
+                  <details className="work-delivery">
+                    <summary>알림 전달 상태</summary>
+                    <RequestAlertStatus
+                      id={r.id}
+                      alert={alerts[r.id]}
+                      pushEnabled={pushEnabled}
+                      zoneLabels={zoneLabels}
+                      onChanged={async () => {
+                        await load();
+                      }}
+                    />
+                  </details>
                 )}
                 {r.service === "robot" && (
                   <p className="fine">
@@ -910,22 +951,6 @@ export function RequestList({
                     }}
                   />
                 )}
-                {next &&
-                  !(
-                    current &&
-                    next.action === "complete" &&
-                    supportTopic(r.topicId)?.mode === "referral"
-                  ) &&
-                  !r.pendingPlaceId &&
-                  (r.state === "received" || mine) && (
-                    <button
-                      className="btn btn-primary"
-                      disabled={!!busy}
-                      onClick={() => void act(r, next.action)}
-                    >
-                      {next.label}
-                    </button>
-                  )}
                 {open && r.assignedZone && !mine && (
                   <p>다른 구역에서 맡은 요청입니다.</p>
                 )}

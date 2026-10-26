@@ -28,6 +28,10 @@ export async function expireServiceRequests(db: Db, now: Date) {
   );
   // Erase contents at the separate retention deadline.
   await db.query(
+    `update integration_jobs j set state='stopped',external_id=null,last_error='',lease_until=null,updated_at=$1,version=j.version+1 from service_requests r where j.request_id=r.id and r.expires_at<=$1 and (j.state<>'stopped' or j.external_id is not null or j.last_error<>'')`,
+    [now],
+  );
+  await db.query(
     `update service_requests set state=case when state in ('received','assigned','en_route','arrived','serving') then 'expired' else state end,
  service_details='{}'::jsonb, registration_id=null, choices='{}', note='', device_key='', reason='', place_id='', destination_id=null, topic_id=null, business_id=null, resolution_kind=null, resolution_business_id=null, resolution_message='', party=1,last_action='privacy_erased',last_actor_zone=null,last_action_reason='',pending_place_id=null,pending_place_at=null,
  ended_at=coalesce(ended_at,$1), updated_at=$1, version=version+1

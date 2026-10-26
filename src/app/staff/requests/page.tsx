@@ -27,10 +27,11 @@ export default async function RequestsPage({
       : "all";
   return (
     <>
-      <main className="page has-nav dx-page">
+      <main className="page has-nav dx-page staff-console">
         <div className="workspace-page-head">
           <div>
-            <h1>통합 요청</h1>
+            <p className="eyebrow">지원 운영</p>
+            <h1>접수·배정</h1>
           </div>
           <div className="workspace-page-tools">
             {s.isDesk && (
