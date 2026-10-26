@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { RequestResolutionView } from "./RequestResolutionView";
 import { useEffect, useState } from "react";
 import { ArrowRight, Clock3 } from "lucide-react";
 import {
@@ -93,6 +94,12 @@ export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
             {requestStateLabel(request, lang)}
           </p>
           <p>{en ? request.placeEn : request.place}</p>
+          {request.resolution && (
+            <RequestResolutionView
+              resolution={request.resolution}
+              lang={lang}
+            />
+          )}
           <p className="public-caption">
             {en
               ? "Status updates as staff process your request."

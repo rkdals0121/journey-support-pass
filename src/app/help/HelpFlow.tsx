@@ -16,6 +16,7 @@ import { textOf } from "@/lib/i18n";
 import { IdleGuard } from "../components/IdleGuard";
 import { ReceiptQr } from "./ReceiptQr";
 import { PickupChange } from "./PickupChange";
+import { RequestResolutionView } from "../components/RequestResolutionView";
 import { useSpeech } from "../components/useSpeech";
 import { supportTopic, topicMatchesService } from "@/lib/service-catalog";
 import {
@@ -544,6 +545,12 @@ export function HelpFlow({
               {tr("안내: ", "Message: ")}
               {request.reason}
             </p>
+          )}
+          {request.resolution && (
+            <RequestResolutionView
+              resolution={request.resolution}
+              lang={en ? "en" : "ko"}
+            />
           )}
           {OPEN_REQUEST_STATES.includes(request.state) && (
             <p>

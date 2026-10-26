@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { RequestResolutionView } from "@/app/components/RequestResolutionView";
+import type { RequestResolution } from "@/lib/request-resolution";
 import {
   requestStateLabel,
   SERVICE_LABEL,
@@ -12,7 +14,8 @@ type Progress = {
   state: RequestState;
   createdAt: string;
   updatedAt: string;
-  locationChangePending?:boolean;
+  locationChangePending?: boolean;
+  resolution?: RequestResolution;
 };
 export function PassRequests({
   token,
@@ -101,13 +104,24 @@ export function PassRequests({
               {lang === "en" ? SERVICE_EN[r.service] : SERVICE_LABEL[r.service]}
             </strong>{" "}
             · {requestStateLabel(r, lang)}
-            {r.locationChangePending&&<strong> · {lang==="en"?"Pickup change awaiting confirmation":"위치 변경 확인 대기"}</strong>}
+            {r.locationChangePending && (
+              <strong>
+                {" "}
+                ·{" "}
+                {lang === "en"
+                  ? "Pickup change awaiting confirmation"
+                  : "위치 변경 확인 대기"}
+              </strong>
+            )}
             <br />
             <small>
               {new Date(r.updatedAt).toLocaleString(
                 lang === "en" ? "en-GB" : "ko-KR",
               )}
             </small>
+            {r.resolution && (
+              <RequestResolutionView resolution={r.resolution} lang={lang} />
+            )}
           </li>
         ))}
       </ul>

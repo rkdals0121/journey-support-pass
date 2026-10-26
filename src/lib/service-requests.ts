@@ -20,6 +20,12 @@ import { pushConfig } from "./staff-push";
 import { resourceSnapshot } from "./dispatch-resources";
 import { supportTopic } from "./service-catalog";
 import { businessOf, pilotDestinations } from "./operating-profile";
+import {
+  parseResolution,
+  RESOLUTION_LABEL,
+  type ResolutionKind,
+  type RequestResolution,
+} from "./request-resolution";
 import { queueQuery, type QueueOptions } from "./request-queue";
 import {
   isServiceClaimConflict,
@@ -66,6 +72,9 @@ interface Row {
   topic_id?: string | null;
   business_id?: string | null;
   destination_id?: string | null;
+  resolution_kind?: ResolutionKind | null;
+  resolution_business_id?: string | null;
+  resolution_message?: string;
 }
 function view(r: Row): ServiceRequestView {
   const place = placeOf(r.place_id);
@@ -95,6 +104,15 @@ function view(r: Row): ServiceRequestView {
     ...(r.topic_id ? { topicId: r.topic_id } : {}),
     ...(r.business_id ? { businessId: r.business_id } : {}),
     ...(r.destination_id ? { destinationId: r.destination_id } : {}),
+    ...(r.resolution_kind
+      ? {
+          resolution: {
+            kind: r.resolution_kind,
+            businessId: r.resolution_business_id ?? null,
+            message: r.resolution_message ?? "",
+          },
+        }
+      : {}),
   };
 }
 async function receiptRow(db: Db, receipt: unknown): Promise<Row | undefined> {
@@ -585,6 +603,51 @@ export async function actOnServiceRequest(
     return fail(409, "요청 상태가 바뀌었습니다. 최신 내용을 확인해 주세요");
   if (action === "accept_place" || action === "reject_place")
     return decideRequestPlace(db, s!, r, action, body.reason, now);
+  if (body.action === "classify_business") {
+    if (!OPEN_REQUEST_STATES.includes(r.state))
+      return fail(409, "진행 중인 요청만 분류할 수 있습니다");
+    if (!s!.isDesk && r.assigned_zone !== s!.zoneId)
+      return fail(403, "담당 구역에서 처리해 주세요");
+    const business = businessOf(body.businessId);
+    if (!business) return fail(400, "담당 업무를 골라 주세요");
+    if (business.id === r.business_id)
+      return fail(400, "현재와 다른 담당 업무를 골라 주세요");
+    if (
+      typeof body.reason !== "string" ||
+      !body.reason.trim() ||
+      body.reason.trim().length > 120
+    )
+      return fail(400, "분류 변경 사유를 120자 이내로 적어 주세요");
+    const changed = await db.query<Row>(
+      `update service_requests set business_id=$3,updated_at=$4,version=version+1,
+      last_action='classify_business',last_actor_zone=$5,last_action_reason=$6
+      where id=$1 and version=$2 and state=$7 returning *`,
+      [
+        id,
+        body.version,
+        business.id,
+        now,
+        s!.zoneId,
+        `담당 업무: ${businessOf(r.business_id)?.label ?? "미분류"} → ${business.label}. ${body.reason.trim()}`,
+        r.state,
+      ],
+    );
+    return changed[0]
+      ? ok({ request: view(changed[0]) })
+      : fail(409, "다른 직원이 먼저 처리했습니다. 새로 확인해 주세요");
+  }
+  let resolution: RequestResolution | undefined;
+  if (body.resolution !== undefined && action !== "complete")
+    return fail(400, "처리 결과는 완료 단계에서 기록해 주세요");
+  if (
+    action === "complete" &&
+    (body.resolution !== undefined ||
+      supportTopic(r.topic_id)?.mode === "referral")
+  ) {
+    const parsed = parseResolution(body.resolution);
+    if (typeof parsed === "string") return fail(400, parsed);
+    resolution = parsed;
+  }
   if (
     r.pending_place_id &&
     ["travel", "arrive", "serve", "reopen"].includes(action)
@@ -680,7 +743,9 @@ export async function actOnServiceRequest(
  started_at=case when $8='transfer' then started_at when $3='serving' then $4 else started_at end,
  ended_at=case when $3 in ('done','unavailable','cancelled') then $4 else ended_at end,
  reason=case when $3 in ('unavailable','cancelled') then $6 else '' end,
- last_action=$8,last_actor_zone=$9,last_action_reason=case when $8 in ('transfer','unavailable','reopen','operator_cancel') then $6 else '' end
+ resolution_kind=coalesce($10,resolution_kind),resolution_business_id=case when $10::text is not null then $11 else resolution_business_id end,
+ resolution_message=case when $10::text is not null then $12 else resolution_message end,
+ last_action=$8,last_actor_zone=$9,last_action_reason=case when $10::text is not null then $13 when $8 in ('transfer','unavailable','reopen','operator_cancel') then $6 else '' end
  where id=$1 and version=$2 and state=$7 returning *`,
     [
       id,
@@ -692,6 +757,12 @@ export async function actOnServiceRequest(
       r.state,
       action,
       s!.zoneId,
+      resolution?.kind ?? null,
+      resolution?.businessId ?? null,
+      resolution?.message ?? "",
+      resolution
+        ? `${RESOLUTION_LABEL[resolution.kind]}${resolution.businessId ? " · " + businessOf(resolution.businessId)?.label : ""}: ${resolution.message}`
+        : "",
     ],
   );
   return rows[0]
@@ -760,8 +831,11 @@ export async function registeredRequestProgress(
     created_at: Date;
     updated_at: Date;
     location_change_pending: boolean;
+    resolution_kind: ResolutionKind | null;
+    resolution_business_id: string | null;
+    resolution_message: string;
   }>(
-    "select service,state,created_at,updated_at,pending_place_id is not null as location_change_pending from request_work_ledger where registration_id=$1 and expires_at>$2 order by created_at desc limit 10",
+    "select service,state,created_at,updated_at,pending_place_id is not null as location_change_pending,resolution_kind,resolution_business_id,resolution_message from request_work_ledger where registration_id=$1 and expires_at>$2 order by created_at desc limit 10",
     [found.journey.registrationId, now],
   );
   return ok({
@@ -771,6 +845,15 @@ export async function registeredRequestProgress(
       createdAt: r.created_at.toISOString(),
       updatedAt: r.updated_at.toISOString(),
       locationChangePending: r.location_change_pending,
+      ...(r.resolution_kind
+        ? {
+            resolution: {
+              kind: r.resolution_kind,
+              businessId: r.resolution_business_id,
+              message: r.resolution_message,
+            },
+          }
+        : {}),
     })),
   });
 }

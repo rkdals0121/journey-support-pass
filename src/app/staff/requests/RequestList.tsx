@@ -5,12 +5,14 @@ import { ResourceDispatch } from "./ResourceDispatch";
 import { ResourceAvailability } from "@/app/components/ResourceAvailability";
 import { RequestAlertStatus } from "./RequestAlertStatus";
 import { OperatorClose } from "./OperatorClose";
+import { BusinessHandling } from "./BusinessHandling";
+import { RequestResolutionView } from "@/app/components/RequestResolutionView";
 import type { RequestAlert } from "@/lib/request-alert-model";
 import type { DispatchResource } from "@/lib/resource-model";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { labelOf } from "@/lib/catalog";
 import { supportTopic, SERVICE_CATALOG } from "@/lib/service-catalog";
-import { businessOf } from "@/lib/operating-profile";
+import { businessOf, BUSINESS_AREAS } from "@/lib/operating-profile";
 import { placeOf } from "@/lib/airport";
 import {
   nextRequestAction,
@@ -79,6 +81,7 @@ export function RequestList({
     [queue, setQueue] = useState("all"),
     [zone, setZone] = useState("all");
   const [topic, setTopic] = useState("all");
+  const [business, setBusiness] = useState("all");
   const [order, setOrder] = useState("priority"),
     [pageSize, setPageSize] = useState(50);
   const knownQuery = useRef("");
@@ -98,6 +101,7 @@ export function RequestList({
       search,
       service,
       topic,
+      business,
       source,
       queue,
       zone,
@@ -115,6 +119,7 @@ export function RequestList({
         search,
         service,
         topic,
+        business,
         source,
         queue,
         zone,
@@ -207,6 +212,7 @@ export function RequestList({
       service,
       source,
       topic,
+      business,
       queue,
       zone,
       order,
@@ -252,6 +258,7 @@ export function RequestList({
     action: RequestAction,
     targetZone?: string,
     confirmed = false,
+    extra: Record<string, unknown> = {},
   ) {
     if (busy) return;
     setBusy(r.id);
@@ -267,6 +274,7 @@ export function RequestList({
           reason: reasons[r.id] ?? "",
           confirmed,
           ...(targetZone ? { zoneId: targetZone } : {}),
+          ...extra,
         }),
       });
       const data = await res.json();
@@ -384,6 +392,7 @@ export function RequestList({
             setSearch("");
             setService("all");
             setTopic("all");
+            setBusiness("all");
             setSource("all");
             setQueue("all");
             setZone("all");
@@ -397,7 +406,9 @@ export function RequestList({
         <details data-queue-filters>
           <summary>
             서비스·구역·정렬·표시 건수
-            {[service, source, queue, zone].some((v) => v !== "all")
+            {[service, source, queue, zone, topic, business].some(
+              (v) => v !== "all",
+            )
               ? " · 세부 필터 적용 중"
               : ""}
           </summary>
@@ -412,7 +423,22 @@ export function RequestList({
             />
             처리 이력 포함 · 최근 90일
           </label>
-          <label htmlFor="queue-service">서비스</label>
+          <label htmlFor="queue-business">담당 업무</label>
+          <select
+            id="queue-business"
+            value={business}
+            onChange={(e) => {
+              setBusiness(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="all">전체 담당 업무</option>
+            {BUSINESS_AREAS.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.label}
+              </option>
+            ))}
+          </select>
           <label htmlFor="queue-topic">상담·요청 유형</label>
           <select
             id="queue-topic"
@@ -431,6 +457,7 @@ export function RequestList({
           </select>
           <select
             id="queue-service"
+            aria-label="서비스"
             value={service}
             onChange={(e) => {
               setService(e.target.value);
@@ -824,6 +851,19 @@ export function RequestList({
                 )}
                 {r.note && <p>여객의 말: {r.note}</p>}
                 {r.reason && <p>안내한 이유: {r.reason}</p>}
+                {r.resolution && (
+                  <RequestResolutionView resolution={r.resolution} />
+                )}
+                {current && open && (mine || isDesk) && (
+                  <BusinessHandling
+                    key={`${r.id}-${r.businessId ?? ""}`}
+                    request={r}
+                    busy={!!busy}
+                    onAction={(action, extra) =>
+                      act(r, action, undefined, false, extra)
+                    }
+                  />
+                )}
                 {current && open && (
                   <RequestAlertStatus
                     id={r.id}
@@ -852,6 +892,11 @@ export function RequestList({
                   />
                 )}
                 {next &&
+                  !(
+                    current &&
+                    next.action === "complete" &&
+                    supportTopic(r.topicId)?.mode === "referral"
+                  ) &&
                   !r.pendingPlaceId &&
                   (r.state === "received" || mine) && (
                     <button
@@ -977,30 +1022,33 @@ export function RequestList({
                             {history[r.id].map((h) => (
                               <li key={h.version}>
                                 {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
-                                {h.action === "operator_cancel"
-                                  ? "운영자 확인 후 종료"
-                                  : h.action.startsWith("pickup_")
-                                    ? ({
-                                        pickup_changed: "만날 곳 수정",
-                                        pickup_requested: "위치 변경 요청",
-                                        pickup_withdrawn: "위치 변경 요청 철회",
-                                        pickup_accepted: "위치 변경 수락",
-                                        pickup_rejected: "위치 변경 거절",
-                                      }[h.action] ?? "위치 변경 처리")
-                                    : h.action === "baseline"
-                                      ? "이전 버전 기준 상태"
-                                      : h.action === "transfer"
-                                        ? "담당 인계"
-                                        : h.action === "resource_assign"
-                                          ? "장비 배차"
-                                          : h.action === "resource_release"
-                                            ? "장비 배차 해제"
-                                            : h.action === "privacy_erased"
-                                              ? "상세 보관 종료"
-                                              : requestStateLabel({
-                                                  ...r,
-                                                  state: h.state,
-                                                })}
+                                {h.action === "classify_business"
+                                  ? "담당 업무 분류 변경"
+                                  : h.action === "operator_cancel"
+                                    ? "운영자 확인 후 종료"
+                                    : h.action.startsWith("pickup_")
+                                      ? ({
+                                          pickup_changed: "만날 곳 수정",
+                                          pickup_requested: "위치 변경 요청",
+                                          pickup_withdrawn:
+                                            "위치 변경 요청 철회",
+                                          pickup_accepted: "위치 변경 수락",
+                                          pickup_rejected: "위치 변경 거절",
+                                        }[h.action] ?? "위치 변경 처리")
+                                      : h.action === "baseline"
+                                        ? "이전 버전 기준 상태"
+                                        : h.action === "transfer"
+                                          ? "담당 인계"
+                                          : h.action === "resource_assign"
+                                            ? "장비 배차"
+                                            : h.action === "resource_release"
+                                              ? "장비 배차 해제"
+                                              : h.action === "privacy_erased"
+                                                ? "상세 보관 종료"
+                                                : requestStateLabel({
+                                                    ...r,
+                                                    state: h.state,
+                                                  })}
                                 {h.assignedZone &&
                                   ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
                                 {h.actorZone &&

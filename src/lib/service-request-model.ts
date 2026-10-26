@@ -1,4 +1,5 @@
 // Shared display model. No database or secrets in this browser-safe module.
+import type { RequestResolution } from "./request-resolution";
 export const SERVICE_TYPES = ["guidance", "robot", "mobility"] as const;
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 export const REQUEST_STATES = [
@@ -78,6 +79,7 @@ export interface ServiceRequestView {
   topicId?: string | null;
   businessId?: string | null;
   destinationId?: string | null;
+  resolution?: RequestResolution;
 }
 export type RequestAction =
   | "assign"
@@ -88,6 +90,7 @@ export type RequestAction =
   | "unavailable"
   | "reopen"
   | "transfer"
+  | "classify_business"
   | "accept_place"
   | "reject_place"
   | "operator_cancel";
