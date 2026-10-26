@@ -9,6 +9,9 @@ import type { RequestAlert } from "@/lib/request-alert-model";
 import type { DispatchResource } from "@/lib/resource-model";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { labelOf } from "@/lib/catalog";
+import { supportTopic, SERVICE_CATALOG } from "@/lib/service-catalog";
+import { businessOf } from "@/lib/operating-profile";
+import { placeOf } from "@/lib/airport";
 import {
   nextRequestAction,
   requestStateLabel,
@@ -58,6 +61,11 @@ export function RequestList({
     }
   }
   const [rows, setRows] = useState<ServiceRequestView[]>([]);
+  const [moreMetrics, setMoreMetrics] = useState(false);
+  const [selection, setSelection] = useState<{
+    id: string;
+    query: string;
+  } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -70,6 +78,7 @@ export function RequestList({
     [source, setSource] = useState("all"),
     [queue, setQueue] = useState("all"),
     [zone, setZone] = useState("all");
+  const [topic, setTopic] = useState("all");
   const [order, setOrder] = useState("priority"),
     [pageSize, setPageSize] = useState(50);
   const knownQuery = useRef("");
@@ -88,6 +97,7 @@ export function RequestList({
       scope: filter,
       search,
       service,
+      topic,
       source,
       queue,
       zone,
@@ -104,6 +114,7 @@ export function RequestList({
         scope: filter,
         search,
         service,
+        topic,
         source,
         queue,
         zone,
@@ -195,6 +206,7 @@ export function RequestList({
       search,
       service,
       source,
+      topic,
       queue,
       zone,
       order,
@@ -275,38 +287,60 @@ export function RequestList({
     ? rows.filter((r) => OPEN_REQUEST_STATES.includes(r.state))
     : [];
   const visible = pageReady ? rows : [];
+  const selected =
+    selection?.query === requestUrl
+      ? visible.find((r) => r.id === selection.id)
+      : undefined;
+  const detailId = selected?.id ?? visible[0]?.id;
+  useEffect(() => {
+    if (selected) {
+      const h = document
+        .getElementById("request-detail-" + selected.id)
+        ?.querySelector("h2");
+      h?.focus({ preventScroll: true });
+    }
+  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <section>
-      <Link className="btn" href="/staff/resources">
-        장비 현황 · 배차
-      </Link>
-      {ready && <ResourceAvailability resources={resources} />}
-      {isDesk && (
-        <Link className="btn" href="/staff/alerts">
-          알림 운영 현황
+    <section
+      className={
+        "work-requests" +
+        (selected ? " has-selection" : "") +
+        (moreMetrics ? " metrics-expanded" : "")
+      }
+    >
+      <details className="work-preferences">
+        <summary>알림·장비·접수 설정</summary>
+        <Link className="btn" href="/staff/resources">
+          장비 현황 · 배차
         </Link>
-      )}
-      {isDesk && (
-        <Link className="btn btn-primary" href="/staff/requests/new">
-          여객 대신 새 요청 접수
-        </Link>
-      )}
-      <PushSettings />
-      <p>
-        현재 근무 구역: <strong>{zoneLabels[zoneId] ?? zoneId}</strong>
-      </p>
-      <div className="dx-actions">
-        <button
-          className="btn"
-          onClick={() => void toggleSound()}
-          aria-pressed={sound}
-        >
-          {sound ? "화면 내 소리 알림 켜짐" : "화면 내 소리 알림 켜기"}
-        </button>
-        <button className="btn btn-ghost" onClick={() => void load()}>
-          새로 확인
-        </button>
-      </div>
+        {ready && <ResourceAvailability resources={resources} />}
+        {isDesk && (
+          <Link className="btn" href="/staff/alerts">
+            알림 운영 현황
+          </Link>
+        )}
+        {isDesk && (
+          <Link className="btn btn-primary" href="/staff/requests/new">
+            여객 대신 새 요청 접수
+          </Link>
+        )}
+        <PushSettings />
+        <p>
+          현재 근무 구역: <strong>{zoneLabels[zoneId] ?? zoneId}</strong>
+        </p>
+        <div className="dx-actions">
+          <button
+            className="btn"
+            onClick={() => void toggleSound()}
+            aria-pressed={sound}
+          >
+            {sound ? "화면 내 소리 알림 켜짐" : "화면 내 소리 알림 켜기"}
+          </button>
+          <button className="btn btn-ghost" onClick={() => void load()}>
+            새로 확인
+          </button>
+        </div>
+      </details>
       {error && (
         <p role="alert" className="error-note">
           {error}
@@ -317,17 +351,7 @@ export function RequestList({
           ? `현재 페이지 · 진행 중 ${open.length}건 · 미배정 ${rows.filter((r) => r.state === "received").length}건`
           : "불러오는 중…"}
       </p>
-      <label className="dx-option">
-        <input
-          type="checkbox"
-          checked={showHistory}
-          onChange={(e) => {
-            setShowHistory(e.target.checked);
-            setOffset(0);
-          }}
-        />
-        처리 이력 포함 · 최근 90일
-      </label>
+
       <p>
         기존 호출·이동지원과 새 통합 요청을 함께 확인합니다. 검색·필터는 전체
         대상에 적용됩니다.
@@ -359,6 +383,7 @@ export function RequestList({
             setDraft("");
             setSearch("");
             setService("all");
+            setTopic("all");
             setSource("all");
             setQueue("all");
             setZone("all");
@@ -376,7 +401,34 @@ export function RequestList({
               ? " · 세부 필터 적용 중"
               : ""}
           </summary>
+          <label className="dx-option">
+            <input
+              type="checkbox"
+              checked={showHistory}
+              onChange={(e) => {
+                setShowHistory(e.target.checked);
+                setOffset(0);
+              }}
+            />
+            처리 이력 포함 · 최근 90일
+          </label>
           <label htmlFor="queue-service">서비스</label>
+          <label htmlFor="queue-topic">상담·요청 유형</label>
+          <select
+            id="queue-topic"
+            value={topic}
+            onChange={(e) => {
+              setTopic(e.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="all">전체 상담·요청 유형</option>
+            {SERVICE_CATALOG.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
           <select
             id="queue-service"
             value={service}
@@ -471,26 +523,6 @@ export function RequestList({
           </select>
         </details>
       </form>
-      <div className="dx-actions">
-        <button
-          className="btn"
-          disabled={!pageReady || offset === 0}
-          onClick={() => setOffset(Math.max(0, offset - pageSize))}
-        >
-          이전 목록
-        </button>
-        <span>
-          검색·필터 결과 {total}건 중 {visible.length === 0 ? 0 : offset + 1}–
-          {visible.length === 0 ? 0 : Math.min(offset + visible.length, total)}
-        </span>
-        <button
-          className="btn"
-          disabled={!pageReady || offset + rows.length >= total}
-          onClick={() => setOffset(offset + pageSize)}
-        >
-          다음 목록
-        </button>
-      </div>
       {summary && (
         <dl className="dx-summary">
           <div>
@@ -554,21 +586,34 @@ export function RequestList({
           </div>
         </dl>
       )}
-      <label htmlFor="request-filter">보여 줄 요청</label>
-      <select
-        id="request-filter"
-        value={filter}
-        onChange={(e) => {
-          setFilter(e.target.value);
-          setOffset(0);
-        }}
-      >
-        <option value="all">전체</option>
-        <option value="waiting">미배정</option>
-        <option value="location">위치 변경 확인 대기</option>
-        <option value="attention">확인 지연</option>
-        <option value="mine">내 구역 담당</option>
-      </select>
+      <div className="work-scope-control">
+        <label htmlFor="request-filter">보여 줄 요청</label>
+        <select
+          id="request-filter"
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
+            setOffset(0);
+          }}
+        >
+          <option value="all">전체</option>
+          <option value="waiting">미배정</option>
+          <option value="location">위치 변경 확인 대기</option>
+          <option value="attention">확인 지연</option>
+          <option value="mine">내 구역 담당</option>
+        </select>
+        {summary && (
+          <button
+            className="btn btn-ghost work-metrics-toggle"
+            type="button"
+            aria-expanded={moreMetrics}
+            onClick={() => setMoreMetrics((v) => !v)}
+          >
+            {moreMetrics ? "추가 운영 지표 접기" : "추가 운영 지표 보기"}
+          </button>
+        )}
+      </div>
+
       <p className="fine">
         화면 내 소리 알림은 현재 표시되는 목록의 새 접수를 대상으로 합니다.
       </p>
@@ -578,279 +623,401 @@ export function RequestList({
           목록은 최대 200건을 표시합니다. 미처리 요청을 먼저 확인해 주세요.
         </p>
       )}
-      <ul className="dx-request-list">
-        {visible.map((r) => {
-          const next = nextRequestAction(r);
-          const current = r.queue !== "call" && r.queue !== "assist";
-          const mine = r.assignedZone === zoneId;
-          const open = OPEN_REQUEST_STATES.includes(r.state);
-          return (
-            <li key={r.id} data-request-id={r.id} className="dx-card">
-              <h2>{SERVICE_LABEL[r.service]}</h2>
-              {historicalConflicts[r.id] > 0 && (
-                <p role="note" className="dx-notice">
-                  과거 중복 접수 확인 대상 · 같은 등록·서비스로 진행 중인 기록{" "}
-                  {historicalConflicts[r.id]}건. 기존 기록은 보존했습니다.
-                  안내데스크에서 실제 지원 여부를 확인해 주세요.
-                </p>
-              )}
-              {!current && (
-                <p>
-                  <strong>
-                    {r.queue === "call" ? "이전 직원 호출" : "이전 이동지원"}
-                  </strong>
-                </p>
-              )}
-              <p>
-                <strong>{requestStateLabel(r)}</strong> ·{" "}
-                {new Date(r.createdAt).toLocaleTimeString("ko-KR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-              <p>
-                <strong>만날 곳: {r.place}</strong>
-              </p>
-              {r.assignedZone && (
-                <p>담당 구역: {zoneLabels[r.assignedZone] ?? r.assignedZone}</p>
-              )}
-              {r.pendingPlaceId && (
-                <div className="dx-notice">
+      <div className="work-master-detail">
+        <div className="work-master">
+          <h2 id="work-list-title" tabIndex={-1}>
+            요청 목록
+          </h2>
+          <div className="work-table-wrap">
+            <table className="work-request-table">
+              <thead>
+                <tr>
+                  <th scope="col">접수·업무</th>
+                  <th scope="col">만날 곳</th>
+                  <th scope="col">상태·담당</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((r) => (
+                  <tr
+                    key={r.id}
+                    className={detailId === r.id ? "selected" : ""}
+                  >
+                    <td>
+                      <button
+                        type="button"
+                        data-select-request={r.id}
+                        aria-controls={"request-detail-" + r.id}
+                        aria-pressed={detailId === r.id}
+                        onClick={() =>
+                          setSelection({ id: r.id, query: requestUrl })
+                        }
+                      >
+                        <strong>{SERVICE_LABEL[r.service]}</strong>
+                        <span>
+                          {new Date(r.createdAt).toLocaleTimeString("ko-KR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}{" "}
+                          · {r.id.slice(0, 8)}
+                        </span>
+                      </button>
+                    </td>
+                    <td>{r.place}</td>
+                    <td>
+                      <strong>{requestStateLabel(r)}</strong>
+                      <span>
+                        {r.assignedZone
+                          ? (zoneLabels[r.assignedZone] ?? r.assignedZone)
+                          : "미배정"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="dx-actions">
+            <button
+              className="btn"
+              disabled={!pageReady || offset === 0}
+              onClick={() => setOffset(Math.max(0, offset - pageSize))}
+            >
+              이전 목록
+            </button>
+            <span>
+              검색·필터 결과 {total}건 중{" "}
+              {visible.length === 0 ? 0 : offset + 1}–
+              {visible.length === 0
+                ? 0
+                : Math.min(offset + visible.length, total)}
+            </span>
+            <button
+              className="btn"
+              disabled={!pageReady || offset + rows.length >= total}
+              onClick={() => setOffset(offset + pageSize)}
+            >
+              다음 목록
+            </button>
+          </div>
+        </div>
+        <ul className="dx-request-list work-details">
+          {visible.map((r) => {
+            const next = nextRequestAction(r);
+            const current = r.queue !== "call" && r.queue !== "assist";
+            const mine = r.assignedZone === zoneId;
+            const open = OPEN_REQUEST_STATES.includes(r.state);
+            return (
+              <li
+                key={r.id}
+                id={"request-detail-" + r.id}
+                data-request-id={r.id}
+                className={
+                  "dx-card work-detail" +
+                  (r.id === detailId ? " is-current" : "")
+                }
+              >
+                <button
+                  type="button"
+                  className="btn btn-ghost work-back"
+                  onClick={() => {
+                    setSelection(null);
+                    requestAnimationFrame(() =>
+                      document.getElementById("work-list-title")?.focus(),
+                    );
+                  }}
+                >
+                  요청 목록으로
+                </button>
+                <h2 tabIndex={-1}>{SERVICE_LABEL[r.service]}</h2>
+                {r.topicId && (
+                  <p className="public-topic-note">
+                    {supportTopic(r.topicId)?.label}
+                  </p>
+                )}
+                {r.businessId && (
+                  <p>담당 연결 참고 업무: {businessOf(r.businessId)?.label}</p>
+                )}
+                {r.destinationId && (
+                  <p>
+                    <strong>목적지: {placeOf(r.destinationId)?.label}</strong>
+                  </p>
+                )}
+                {historicalConflicts[r.id] > 0 && (
+                  <p role="note" className="dx-notice">
+                    과거 중복 접수 확인 대상 · 같은 등록·서비스로 진행 중인 기록{" "}
+                    {historicalConflicts[r.id]}건. 기존 기록은 보존했습니다.
+                    안내데스크에서 실제 지원 여부를 확인해 주세요.
+                  </p>
+                )}
+                {!current && (
                   <p>
                     <strong>
-                      위치 변경 확인 대기: {r.place} → {r.pendingPlace}
+                      {r.queue === "call" ? "이전 직원 호출" : "이전 이동지원"}
                     </strong>
                   </p>
-                  <p>
-                    확인 전에는 이동·도착·지원 시작 단계를 진행할 수 없습니다.
-                    위치 수락 시 담당과 배차를 유지하고 배정 단계로 돌아갑니다.
-                  </p>
-                  {(mine || isDesk) && (
-                    <>
-                      <button
-                        className="btn"
-                        disabled={!!busy}
-                        onClick={() => void act(r, "accept_place")}
-                      >
-                        새 만날 곳 수락
-                      </button>
-                      <button
-                        className="btn btn-ghost"
-                        disabled={!!busy || !(reasons[r.id] ?? "").trim()}
-                        onClick={() => void act(r, "reject_place")}
-                      >
-                        사유 기록 후 위치 변경 거절
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-              <p>
-                {r.party}명 ·{" "}
-                {r.source === "preregistered"
-                  ? "사전등록 연결"
-                  : r.source === "kiosk"
-                    ? "키오스크 접수"
-                    : r.source === "assisted"
-                      ? "직원 대리 접수"
-                      : "현장 웹 접수"}{" "}
-                · {r.lang === "en" ? "영어 안내" : "한국어 안내"}
-              </p>
-              {r.choices.length > 0 && (
-                <ul>
-                  {r.choices.map((c) => (
-                    <li key={c}>{labelOf(c)}</li>
-                  ))}
-                </ul>
-              )}
-              {r.note && <p>여객의 말: {r.note}</p>}
-              {r.reason && <p>안내한 이유: {r.reason}</p>}
-              {current && open && (
-                <RequestAlertStatus
-                  id={r.id}
-                  alert={alerts[r.id]}
-                  pushEnabled={pushEnabled}
-                  zoneLabels={zoneLabels}
-                  onChanged={async () => {
-                    await load();
-                  }}
-                />
-              )}
-              {r.service === "robot" && (
-                <p className="fine">
-                  로봇 출발·도착은 이 화면에서 바꾸는 모의 상태입니다.
-                </p>
-              )}
-              {current && open && r.service !== "guidance" && (
-                <ResourceDispatch
-                  request={r}
-                  resources={resources}
-                  canEdit={(isDesk || mine) && !r.pendingPlaceId}
-                  onChanged={async () => {
-                    await load();
-                    if (history[r.id]) await loadHistory(r.id);
-                  }}
-                />
-              )}
-              {next &&
-                !r.pendingPlaceId &&
-                (r.state === "received" || mine) && (
-                  <button
-                    className="btn btn-primary"
-                    disabled={!!busy}
-                    onClick={() => void act(r, next.action)}
-                  >
-                    {next.label}
-                  </button>
                 )}
-              {open && r.assignedZone && !mine && (
-                <p>다른 구역에서 맡은 요청입니다.</p>
-              )}
-              {open && (mine || isDesk) && (current || isDesk) && (
-                <div className="dx-ending">
-                  <label htmlFor={`reason-${r.id}`}>
-                    {current
-                      ? "처리 사유 · 여객에게도 전달됩니다"
-                      : "운영자 종료 사유 · 직원 이력에 기록합니다"}
-                  </label>
-                  <textarea
-                    id={`reason-${r.id}`}
-                    maxLength={120}
-                    value={reasons[r.id] ?? ""}
-                    onChange={(e) =>
-                      setReasons({ ...reasons, [r.id]: e.target.value })
-                    }
+                <p>
+                  <strong>{requestStateLabel(r)}</strong> ·{" "}
+                  {new Date(r.createdAt).toLocaleTimeString("ko-KR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <p>
+                  <strong>만날 곳: {r.place}</strong>
+                </p>
+                {r.assignedZone && (
+                  <p>
+                    담당 구역: {zoneLabels[r.assignedZone] ?? r.assignedZone}
+                  </p>
+                )}
+                {r.pendingPlaceId && (
+                  <div className="dx-notice">
+                    <p>
+                      <strong>
+                        위치 변경 확인 대기: {r.place} → {r.pendingPlace}
+                      </strong>
+                    </p>
+                    <p>
+                      확인 전에는 이동·도착·지원 시작 단계를 진행할 수 없습니다.
+                      위치 수락 시 담당과 배차를 유지하고 배정 단계로
+                      돌아갑니다.
+                    </p>
+                    {(mine || isDesk) && (
+                      <>
+                        <button
+                          className="btn"
+                          disabled={!!busy}
+                          onClick={() => void act(r, "accept_place")}
+                        >
+                          새 만날 곳 수락
+                        </button>
+                        <button
+                          className="btn btn-ghost"
+                          disabled={!!busy || !(reasons[r.id] ?? "").trim()}
+                          onClick={() => void act(r, "reject_place")}
+                        >
+                          사유 기록 후 위치 변경 거절
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+                <p>
+                  {r.party}명 ·{" "}
+                  {r.source === "preregistered"
+                    ? "사전등록 연결"
+                    : r.source === "kiosk"
+                      ? "키오스크 접수"
+                      : r.source === "assisted"
+                        ? "직원 대리 접수"
+                        : "현장 웹 접수"}{" "}
+                  · {r.lang === "en" ? "영어 안내" : "한국어 안내"}
+                </p>
+                {r.choices.length > 0 && (
+                  <ul>
+                    {r.choices.map((c) => (
+                      <li key={c}>{labelOf(c)}</li>
+                    ))}
+                  </ul>
+                )}
+                {r.note && <p>여객의 말: {r.note}</p>}
+                {r.reason && <p>안내한 이유: {r.reason}</p>}
+                {current && open && (
+                  <RequestAlertStatus
+                    id={r.id}
+                    alert={alerts[r.id]}
+                    pushEnabled={pushEnabled}
+                    zoneLabels={zoneLabels}
+                    onChanged={async () => {
+                      await load();
+                    }}
                   />
-                  {current && (
+                )}
+                {r.service === "robot" && (
+                  <p className="fine">
+                    로봇 출발·도착은 이 화면에서 바꾸는 모의 상태입니다.
+                  </p>
+                )}
+                {current && open && r.service !== "guidance" && (
+                  <ResourceDispatch
+                    request={r}
+                    resources={resources}
+                    canEdit={(isDesk || mine) && !r.pendingPlaceId}
+                    onChanged={async () => {
+                      await load();
+                      if (history[r.id]) await loadHistory(r.id);
+                    }}
+                  />
+                )}
+                {next &&
+                  !r.pendingPlaceId &&
+                  (r.state === "received" || mine) && (
                     <button
-                      className="btn btn-ghost"
-                      disabled={!!busy || !(reasons[r.id] ?? "").trim()}
-                      onClick={() => void act(r, "unavailable")}
+                      className="btn btn-primary"
+                      disabled={!!busy}
+                      onClick={() => void act(r, next.action)}
                     >
-                      지원 불가로 안내
+                      {next.label}
                     </button>
                   )}
-                  {isDesk && (
-                    <OperatorClose
-                      version={r.version}
-                      disabled={!!busy || !(reasons[r.id] ?? "").trim()}
-                      onClose={() =>
-                        void act(r, "operator_cancel", undefined, true)
-                      }
-                    />
-                  )}
-                </div>
-              )}
-              {current &&
-                isDesk &&
-                !r.pendingPlaceId &&
-                ["assigned", "en_route", "arrived"].includes(r.state) && (
-                  <button
-                    className="btn btn-ghost"
-                    disabled={!!busy}
-                    onClick={() => void act(r, "reopen")}
-                  >
-                    배정 해제 · 다시 접수
-                  </button>
+                {open && r.assignedZone && !mine && (
+                  <p>다른 구역에서 맡은 요청입니다.</p>
                 )}
-              {current && isDesk && open && (
-                <div className="dx-ending">
-                  <label htmlFor={`target-${r.id}`}>
-                    담당 구역 지정 · 교대 인계
-                  </label>
-                  <select
-                    id={`target-${r.id}`}
-                    value={targets[r.id] ?? ""}
-                    onChange={(e) =>
-                      setTargets((old) => ({ ...old, [r.id]: e.target.value }))
-                    }
-                  >
-                    <option value="">구역을 선택하세요</option>
-                    {dispatchZones.map((z) => (
-                      <option key={z.id} value={z.id}>
-                        {z.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    className="btn"
-                    disabled={
-                      !!busy ||
-                      !targets[r.id] ||
-                      (r.state !== "received" && !(reasons[r.id] ?? "").trim())
-                    }
-                    onClick={() =>
-                      void act(
-                        r,
-                        r.state === "received" ? "assign" : "transfer",
-                        targets[r.id],
-                      )
-                    }
-                  >
-                    {r.state === "received"
-                      ? "선택 구역에 배정"
-                      : "사유 기록 후 담당 인계"}
-                  </button>
-                </div>
-              )}
-              {
-                <div className="dx-ending">
-                  <button
-                    className="btn btn-ghost"
-                    onClick={() => void loadHistory(r.id)}
-                  >
-                    처리·인계 이력 확인
-                  </button>
-                  {history[r.id] &&
-                    (history[r.id].length === 0 ? (
-                      <p className="fine">
-                        이전 처리의 시간별 이력은 수집되지 않았습니다. 운영자
-                        종료는 이번 버전부터 기록합니다.
-                      </p>
-                    ) : (
-                      <ol>
-                        {history[r.id].map((h) => (
-                          <li key={h.version}>
-                            {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
-                            {h.action === "operator_cancel"
-                              ? "운영자 확인 후 종료"
-                              : h.action.startsWith("pickup_")
-                                ? ({
-                                    pickup_changed: "만날 곳 수정",
-                                    pickup_requested: "위치 변경 요청",
-                                    pickup_withdrawn: "위치 변경 요청 철회",
-                                    pickup_accepted: "위치 변경 수락",
-                                    pickup_rejected: "위치 변경 거절",
-                                  }[h.action] ?? "위치 변경 처리")
-                                : h.action === "baseline"
-                                  ? "이전 버전 기준 상태"
-                                  : h.action === "transfer"
-                                    ? "담당 인계"
-                                    : h.action === "resource_assign"
-                                      ? "장비 배차"
-                                      : h.action === "resource_release"
-                                        ? "장비 배차 해제"
-                                        : h.action === "privacy_erased"
-                                          ? "상세 보관 종료"
-                                          : requestStateLabel({
-                                              ...r,
-                                              state: h.state,
-                                            })}
-                            {h.assignedZone &&
-                              ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
-                            {h.actorZone &&
-                              ` · 처리 ${zoneLabels[h.actorZone] ?? h.actorZone}`}
-                            {h.reason && ` · ${h.reason}`}
-                          </li>
+                <details className="work-secondary-actions">
+                  <summary>사유 입력·지원 불가·인계·이력</summary>
+                  {open && (mine || isDesk) && (current || isDesk) && (
+                    <div className="dx-ending">
+                      <label htmlFor={`reason-${r.id}`}>
+                        {current
+                          ? "처리 사유 · 여객에게도 전달됩니다"
+                          : "운영자 종료 사유 · 직원 이력에 기록합니다"}
+                      </label>
+                      <textarea
+                        id={`reason-${r.id}`}
+                        maxLength={120}
+                        value={reasons[r.id] ?? ""}
+                        onChange={(e) =>
+                          setReasons({ ...reasons, [r.id]: e.target.value })
+                        }
+                      />
+                      {current && (
+                        <button
+                          className="btn btn-ghost"
+                          disabled={!!busy || !(reasons[r.id] ?? "").trim()}
+                          onClick={() => void act(r, "unavailable")}
+                        >
+                          지원 불가로 안내
+                        </button>
+                      )}
+                      {isDesk && (
+                        <OperatorClose
+                          version={r.version}
+                          disabled={!!busy || !(reasons[r.id] ?? "").trim()}
+                          onClose={() =>
+                            void act(r, "operator_cancel", undefined, true)
+                          }
+                        />
+                      )}
+                    </div>
+                  )}
+                  {current &&
+                    isDesk &&
+                    !r.pendingPlaceId &&
+                    ["assigned", "en_route", "arrived"].includes(r.state) && (
+                      <button
+                        className="btn btn-ghost"
+                        disabled={!!busy}
+                        onClick={() => void act(r, "reopen")}
+                      >
+                        배정 해제 · 다시 접수
+                      </button>
+                    )}
+                  {current && isDesk && open && (
+                    <div className="dx-ending">
+                      <label htmlFor={`target-${r.id}`}>
+                        담당 구역 지정 · 교대 인계
+                      </label>
+                      <select
+                        id={`target-${r.id}`}
+                        value={targets[r.id] ?? ""}
+                        onChange={(e) =>
+                          setTargets((old) => ({
+                            ...old,
+                            [r.id]: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">구역을 선택하세요</option>
+                        {dispatchZones.map((z) => (
+                          <option key={z.id} value={z.id}>
+                            {z.label}
+                          </option>
                         ))}
-                      </ol>
-                    ))}
-                </div>
-              }
-            </li>
-          );
-        })}
-      </ul>
+                      </select>
+                      <button
+                        className="btn"
+                        disabled={
+                          !!busy ||
+                          !targets[r.id] ||
+                          (r.state !== "received" &&
+                            !(reasons[r.id] ?? "").trim())
+                        }
+                        onClick={() =>
+                          void act(
+                            r,
+                            r.state === "received" ? "assign" : "transfer",
+                            targets[r.id],
+                          )
+                        }
+                      >
+                        {r.state === "received"
+                          ? "선택 구역에 배정"
+                          : "사유 기록 후 담당 인계"}
+                      </button>
+                    </div>
+                  )}
+                  {
+                    <div className="dx-ending">
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => void loadHistory(r.id)}
+                      >
+                        처리·인계 이력 확인
+                      </button>
+                      {history[r.id] &&
+                        (history[r.id].length === 0 ? (
+                          <p className="fine">
+                            이전 처리의 시간별 이력은 수집되지 않았습니다.
+                            운영자 종료는 이번 버전부터 기록합니다.
+                          </p>
+                        ) : (
+                          <ol>
+                            {history[r.id].map((h) => (
+                              <li key={h.version}>
+                                {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
+                                {h.action === "operator_cancel"
+                                  ? "운영자 확인 후 종료"
+                                  : h.action.startsWith("pickup_")
+                                    ? ({
+                                        pickup_changed: "만날 곳 수정",
+                                        pickup_requested: "위치 변경 요청",
+                                        pickup_withdrawn: "위치 변경 요청 철회",
+                                        pickup_accepted: "위치 변경 수락",
+                                        pickup_rejected: "위치 변경 거절",
+                                      }[h.action] ?? "위치 변경 처리")
+                                    : h.action === "baseline"
+                                      ? "이전 버전 기준 상태"
+                                      : h.action === "transfer"
+                                        ? "담당 인계"
+                                        : h.action === "resource_assign"
+                                          ? "장비 배차"
+                                          : h.action === "resource_release"
+                                            ? "장비 배차 해제"
+                                            : h.action === "privacy_erased"
+                                              ? "상세 보관 종료"
+                                              : requestStateLabel({
+                                                  ...r,
+                                                  state: h.state,
+                                                })}
+                                {h.assignedZone &&
+                                  ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
+                                {h.actorZone &&
+                                  ` · 처리 ${zoneLabels[h.actorZone] ?? h.actorZone}`}
+                                {h.reason && ` · ${h.reason}`}
+                              </li>
+                            ))}
+                          </ol>
+                        ))}
+                    </div>
+                  }
+                </details>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </section>
   );
 }

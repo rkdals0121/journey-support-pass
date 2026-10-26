@@ -43,7 +43,7 @@ async function main() {
     await page.goto(base + "/services");
     check(
       "all twelve business areas are discoverable",
-      await page.$$eval("article", (es) => es.length === 12),
+      await page.$$eval(".business-reference details", (es) => es.length === 12),
     );
     check(
       "four business groups are separated",
@@ -68,7 +68,7 @@ async function main() {
       await page.$eval(
         "main",
         (e) =>
-          e.lang === "en" &&
+          e.closest("[lang]")?.getAttribute("lang") === "en" &&
           e.textContent?.includes("Records management") &&
           e.textContent?.includes("Shuttle services"),
       ),
@@ -83,15 +83,14 @@ async function main() {
       ),
     );
     await page.goto(base + "/services");
+    await page.click("#cleaning-t2 summary");
     await page.click("#cleaning-t2 a");
     await page.waitForSelector("#dx-note");
     check(
-      "chosen business reaches the editable request message",
+      "chosen business is shown separately from the free-text message",
       await page.$eval(
         "#dx-note",
-        (e) =>
-          (e as HTMLTextAreaElement).value ===
-          "T2 환경미화 관련 상담을 요청합니다.",
+        (e) => (e as HTMLTextAreaElement).value === "",
       ),
     );
     check(
@@ -132,8 +131,8 @@ async function main() {
       return r.json();
     }, receipt);
     check(
-      "business message and arrivals pickup survive acceptance",
-      request.request.note === "T2 환경미화 관련 상담을 요청합니다." &&
+      "structured business and arrivals pickup survive acceptance",
+      request.request.businessId === "cleaning-t2" &&
         request.request.placeId === "t2-arrivals-demo",
     );
     const staff = await browser.newPage();

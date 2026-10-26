@@ -78,7 +78,7 @@ export default async function BookingDemo({ searchParams }: { searchParams: Prom
       <section className="booking-link">
         <h1>{t.linkTitle}</h1>
         <p>{t.linkBody}</p>
-        <Link className="btn btn-primary" href={`/register?via=booking${q}`}>
+        <Link className="btn btn-primary" href={`/prepare?via=booking${q}`}>
           {t.linkButton}
           <ArrowRight size={22} aria-hidden="true" />
         </Link>

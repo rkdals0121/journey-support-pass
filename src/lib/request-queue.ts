@@ -1,4 +1,5 @@
 import { PLACES } from "./airport";
+import { SERVICE_CATALOG } from "./service-catalog";
 export interface QueueOptions {
   history?: boolean;
   offset?: number;
@@ -10,6 +11,7 @@ export interface QueueOptions {
   scope?: string;
   zone?: string;
   order?: string;
+  topic?: string;
 }
 export function attentionPredicate(now: "$1" | "$2") {
   return `((state='received' and created_at<=${now}::timestamptz-interval '10 minutes') or (state in ('assigned','en_route','arrived','serving') and updated_at<=${now}::timestamptz-interval '30 minutes'))`;
@@ -22,6 +24,7 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
     throw new Error("검색어는 80자 이내의 텍스트로 적어 주세요");
   const allowed: Record<string, string[]> = {
     service: ["all", "guidance", "robot", "mobility"],
+    topic: ["all", ...SERVICE_CATALOG.map((t) => t.id)],
     source: ["all", "web", "preregistered", "kiosk", "assisted"],
     queue: ["all", "integrated", "call", "assist"],
     scope: ["all", "waiting", "mine", "location", "attention"],
@@ -68,6 +71,8 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
       conditions.push(`${key}=${bind(options[key])}`);
   if (options.zone && options.zone !== "all")
     conditions.push(`assigned_zone=${bind(options.zone)}`);
+  if (options.topic && options.topic !== "all")
+    conditions.push(`topic_id=${bind(options.topic)}`);
   if (options.scope === "mine")
     conditions.push(`assigned_zone=${bind(zoneId)}`);
   if (options.scope === "waiting") conditions.push("state='received'");

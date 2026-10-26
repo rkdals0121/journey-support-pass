@@ -69,6 +69,115 @@ beforeEach(async () => {
   );
 });
 describe("DX independent and pre-registered requests", () => {
+  it("stores structured enquiry type and terminal-specific business without changing the passenger note", async () => {
+    const r = await create(1, {
+      topicId: "facility",
+      placeId: "t2-arrivals-demo",
+    });
+    expect(r.status).toBe(200);
+    expect(get(r)).toMatchObject({
+      topicId: "facility",
+      businessId: "cleaning-t2",
+      note: body().note,
+    });
+    const listed = await listServiceRequests(db, desk, now);
+    expect(
+      (listed.body as { requests: ServiceRequestView[] }).requests[0],
+    ).toMatchObject({ topicId: "facility", businessId: "cleaning-t2" });
+    expect(
+      (await listServiceRequests(db, desk, now, { topic: "facility" })).body,
+    ).toMatchObject({ total: 1 });
+    expect(
+      (await listServiceRequests(db, desk, now, { topic: "mobility" })).body,
+    ).toMatchObject({ total: 0 });
+    expect(
+      (await listServiceRequests(db, desk, now, { topic: "injected" })).status,
+    ).toBe(400);
+  });
+  it("rejects unknown or incompatible structured request types", async () => {
+    expect((await create(1, { topicId: "not-real" })).status).toBe(400);
+    expect(
+      (await create(2, { topicId: "facility", service: "robot" })).status,
+    ).toBe(400);
+    expect((await create(3, { businessId: "unknown" })).status).toBe(400);
+  });
+  it("only saves valid mobility destinations within a terminal and security boundary", async () => {
+    expect(
+      (
+        await create(1, {
+          service: "mobility",
+          topicId: "mobility",
+          placeId: "t1-info",
+          destinationId: "t2-help",
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await create(2, {
+          service: "mobility",
+          placeId: "t1-info",
+          destinationId: "t1-center",
+        })
+      ).status,
+    ).toBe(400);
+    expect((await create(3, { destinationId: "cc-103" })).status).toBe(400);
+    const r = await create(4, {
+      service: "mobility",
+      topicId: "mobility",
+      placeId: "t2-help",
+      destinationId: "t2-arrivals-demo",
+    });
+    expect(r.status).toBe(200);
+    expect(get(r).destinationId).toBe("t2-arrivals-demo");
+  });
+  it("clears destination when the pickup is changed and erases metadata after retention", async () => {
+    const r = await create(1, {
+      service: "mobility",
+      topicId: "mobility",
+      placeId: "cc-center",
+      destinationId: "cc-103",
+    });
+    expect(get(r).destinationId).toBe("cc-103");
+    await db.query(
+      "update service_requests set place_id='cc-108' where id=$1",
+      [get(r).id],
+    );
+    expect(
+      get(await serviceRequestStatus(db, receipt(1), now)).destinationId,
+    ).toBeUndefined();
+    await expireServiceRequests(
+      db,
+      new Date(now.getTime() + REQUEST_TTL_MS + 1),
+    );
+    expect(
+      (
+        await db.query(
+          "select topic_id,business_id,destination_id from service_requests where id=$1",
+          [get(r).id],
+        )
+      )[0],
+    ).toEqual({ topic_id: null, business_id: null, destination_id: null });
+  });
+  it("erases structured destination and topic when linked details are cleared", async () => {
+    const r = await create(1, {
+      service: "mobility",
+      topicId: "mobility",
+      placeId: "cc-center",
+      destinationId: "cc-103",
+    });
+    await db.query("update service_requests set place_id='' where id=$1", [
+      get(r).id,
+    ]);
+    expect(
+      (
+        await db.query(
+          "select topic_id,business_id,destination_id from service_requests where id=$1",
+          [get(r).id],
+        )
+      )[0],
+    ).toEqual({ topic_id: null, business_id: null, destination_id: null });
+  });
   it("accepts without flight, documents or pre-registration and hides the receipt hash", async () => {
     const r = await create();
     expect(r.status).toBe(200);

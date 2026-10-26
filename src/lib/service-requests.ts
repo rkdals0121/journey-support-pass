@@ -18,6 +18,8 @@ import { closeStaleAssist } from "./assist";
 import { alertSnapshots, maintainAlertQueue } from "./request-alerts";
 import { pushConfig } from "./staff-push";
 import { resourceSnapshot } from "./dispatch-resources";
+import { supportTopic } from "./service-catalog";
+import { businessOf, pilotDestinations } from "./operating-profile";
 import { queueQuery, type QueueOptions } from "./request-queue";
 import {
   isServiceClaimConflict,
@@ -61,6 +63,9 @@ interface Row {
   version: number;
   pending_place_id?: string | null;
   pending_place_at?: Date | null;
+  topic_id?: string | null;
+  business_id?: string | null;
+  destination_id?: string | null;
 }
 function view(r: Row): ServiceRequestView {
   const place = placeOf(r.place_id);
@@ -87,6 +92,9 @@ function view(r: Row): ServiceRequestView {
     pendingPlace: placeOf(r.pending_place_id ?? "")?.label ?? "",
     pendingPlaceEn: placeOf(r.pending_place_id ?? "")?.labelEn ?? "",
     pendingPlaceRequestedAt: r.pending_place_at?.toISOString() ?? null,
+    ...(r.topic_id ? { topicId: r.topic_id } : {}),
+    ...(r.business_id ? { businessId: r.business_id } : {}),
+    ...(r.destination_id ? { destinationId: r.destination_id } : {}),
   };
 }
 async function receiptRow(db: Db, receipt: unknown): Promise<Row | undefined> {
@@ -125,6 +133,45 @@ export async function createServiceRequest(
         : null,
   );
   if (!place) return fail(400, "현재 위치를 골라 주세요");
+  const topic =
+    body.topicId === undefined || body.topicId === ""
+      ? undefined
+      : supportTopic(body.topicId);
+  if (
+    body.topicId !== undefined &&
+    body.topicId !== "" &&
+    (!topic || topic.service !== body.service)
+  )
+    return fail(400, "선택한 서비스와 상담 유형을 확인해 주세요");
+  let business =
+    body.businessId === undefined || body.businessId === ""
+      ? undefined
+      : businessOf(body.businessId);
+  if (body.businessId !== undefined && body.businessId !== "" && !business)
+    return fail(400, "담당 업무를 확인해 주세요");
+  if (topic) {
+    let id: string =
+      topic.id === "other" && business ? business.id : topic.business;
+    if (topic.id === "facility")
+      id = place.area === "T2" ? "cleaning-t2" : "cleaning-t1";
+    if (topic.id === "traffic")
+      id = place.area === "T2" ? "traffic-t2" : "traffic-t1";
+    business = businessOf(id);
+  }
+  const destination =
+    body.destinationId === undefined || body.destinationId === ""
+      ? null
+      : body.destinationId;
+  if (
+    destination !== null &&
+    (body.service !== "mobility" ||
+      typeof destination !== "string" ||
+      !pilotDestinations(place.id).some((p) => p.id === destination))
+  )
+    return fail(
+      400,
+      "목적지는 같은 터미널·보안 구역 안의 지점으로 확인해 주세요",
+    );
   if (
     typeof body.party !== "number" ||
     !Number.isInteger(body.party) ||
@@ -182,8 +229,8 @@ export async function createServiceRequest(
  insert into service_request_limits(bucket,window_at,used)
  values($13,$14,1) on conflict(bucket,window_at) do update set used=service_request_limits.used+1
  where service_request_limits.used<20 returning used
- ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action)
- select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12,'created' from quota
+ ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action,topic_id,business_id,destination_id)
+ select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12,'created',$15,$16,$17 from quota
  on conflict do nothing returning *`,
       [
         hash(body.receipt),
@@ -200,6 +247,9 @@ export async function createServiceRequest(
         device,
         ipPart(device),
         new Date(Math.floor(now.getTime() / (10 * 60 * 1000)) * 10 * 60 * 1000),
+        topic?.id ?? null,
+        business?.id ?? null,
+        destination,
       ],
     )
     .catch((error) => {

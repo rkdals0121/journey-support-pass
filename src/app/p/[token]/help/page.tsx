@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { currentSession } from "@/lib/session-server";
 import { helpService, kioskReturn } from "@/lib/help-entry";
 import { HelpFlow } from "../../../help/HelpFlow";
+import { PublicShell } from "@/app/components/PublicShell";
 export const dynamic = "force-dynamic";
 export default async function RegisteredHelp({
   params,
@@ -14,6 +15,7 @@ export default async function RegisteredHelp({
     returnTo?: string;
     fresh?: string;
     resume?: string;
+    lang?:string;
   }>;
 }) {
   const { token } = await params;
@@ -31,14 +33,16 @@ export default async function RegisteredHelp({
   const found = await lookupPass(await getDb(), token, new Date());
   if (found.kind !== "ok")
     return <HelpFlow lang="ko" registrationError {...shared} />;
-  return (
+  const lang=q.lang==="en"?"en":q.lang==="ko"?"ko":found.journey.lang;
+  const flow=(
     <HelpFlow
       key={token}
-      lang={found.journey.lang}
+      lang={lang}
       {...shared}
       registrationToken={token}
       savedChoices={found.journey.choices}
       savedParty={found.journey.extra.party ?? 1}
     />
   );
+  return session?.isKiosk?flow:<PublicShell lang={lang}><div className="public-request-layout request-solo">{flow}</div></PublicShell>;
 }

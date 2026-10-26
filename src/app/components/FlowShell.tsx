@@ -6,15 +6,24 @@ import type { Prefs } from "@/lib/catalog";
 import { textOf, type Lang } from "@/lib/i18n";
 import { useFocusTrap } from "./useFocusTrap";
 import { useSpeech } from "./useSpeech";
-import { resetViewSettings, SCALES, setViewSettings, useViewSettings } from "./viewSettings";
+import {
+  resetViewSettings,
+  SCALES,
+  setViewSettings,
+  useViewSettings,
+} from "./viewSettings";
 
 const SETTLE_MS = 500;
 // 마지막으로 사람이 화면을 누른 시각. 화면이 "누름 때문에" 바뀌었는지 가리는 데 쓴다.
 let lastTapAt = 0;
 if (typeof window !== "undefined") {
-  window.addEventListener("pointerdown", (e) => {
-    if (e.isTrusted) lastTapAt = Date.now();
-  }, true);
+  window.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.isTrusted) lastTapAt = Date.now();
+    },
+    true,
+  );
 }
 
 interface Props {
@@ -38,6 +47,8 @@ interface Props {
   /** 버튼을 화면 아래에 붙이지 않고 내용 끝에 둔다. 글이 길면 끝까지 읽어야 버튼이 나오는 동의 화면에 쓴다. */
   ctaAfterContent?: boolean;
   children: React.ReactNode;
+  desktopSteps?: { label: string; current: boolean; done: boolean }[];
+  desktopSummary?: React.ReactNode;
 }
 
 /**
@@ -50,7 +61,22 @@ interface Props {
 // 이 페이지에서 화면 틀을 한 번이라도 그렸는지. 처음 연 화면에서만 초점을 옮기지 않는다.
 let shellShown = false;
 
-export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, onBack, onHome, progress, cta, ctaAfterContent, children }: Props) {
+export function FlowShell({
+  lang,
+  prefs,
+  kiosk,
+  screenKey,
+  speakText,
+  speakKey,
+  onBack,
+  onHome,
+  progress,
+  cta,
+  ctaAfterContent,
+  children,
+  desktopSteps,
+  desktopSummary,
+}: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang, prefs.slow);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -117,7 +143,8 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
     const bar = barRef.current;
     if (!bar || typeof ResizeObserver === "undefined") return;
     const root = document.documentElement;
-    const apply = () => root.style.setProperty("--bar-real", `${bar.offsetHeight}px`);
+    const apply = () =>
+      root.style.setProperty("--bar-real", `${bar.offsetHeight}px`);
     apply();
     const watcher = new ResizeObserver(apply);
     watcher.observe(bar);
@@ -162,17 +189,23 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
       // 설정 창 위에 다른 창(「계속 이용하시겠어요?」, 직원 부르기)이 떠 있으면 그 창의 Esc 다. 밑에 깔린 설정 창을 닫지 않는다.
       // 닫으면 초점이 위 창 뒤의 「설정」 단추로 빠져, 키보드로 쓰는 여객이 위 창에서 길을 잃는다.
       const modals = [...document.querySelectorAll('[aria-modal="true"]')];
-      if (modals.length > 0 && modals[modals.length - 1] !== sheetRef.current) return;
+      if (modals.length > 0 && modals[modals.length - 1] !== sheetRef.current)
+        return;
       setSettingsOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [settingsOpen]);
 
-  const changed = view.scale !== null || view.picture !== null || view.voice !== null;
+  const changed =
+    view.scale !== null || view.picture !== null || view.voice !== null;
 
   return (
-    <div className="flow" lang={lang} onClickCapture={swallowEarly}>
+    <div
+      className={desktopSteps ? "flow flow-pretrip" : "flow"}
+      lang={lang}
+      onClickCapture={swallowEarly}
+    >
       <header className="flow-bar" ref={barRef}>
         <div className="flow-bar-side">
           <button className="bar-btn" onClick={onBack} disabled={!onBack}>
@@ -183,7 +216,11 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
             <House size={20} aria-hidden="true" />
             <span>{t.home}</span>
           </button>
-          <button className="bar-btn" onClick={() => setSettingsOpen(true)} aria-haspopup="dialog">
+          <button
+            className="bar-btn"
+            onClick={() => setSettingsOpen(true)}
+            aria-haspopup="dialog"
+          >
             <Settings size={20} aria-hidden="true" />
             <span>{t.settings}</span>
           </button>
@@ -195,7 +232,11 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
             aria-label={speaking ? t.listenStop : t.listen}
             aria-pressed={speaking}
           >
-            {speaking ? <VolumeX size={22} aria-hidden="true" /> : <Volume2 size={22} aria-hidden="true" />}
+            {speaking ? (
+              <VolumeX size={22} aria-hidden="true" />
+            ) : (
+              <Volume2 size={22} aria-hidden="true" />
+            )}
           </button>
         )}
       </header>
@@ -207,28 +248,70 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
               <i key={i} className={i < progress.n ? "on" : ""} />
             ))}
           </div>
-          <span className="step-count" aria-live="polite" aria-label={t.stepOf(progress.n, progress.total, progress.name)}>
+          <span
+            className="step-count"
+            aria-live="polite"
+            aria-label={t.stepOf(progress.n, progress.total, progress.name)}
+          >
             <b>{progress.name}</b> {progress.n}/{progress.total}
           </span>
         </div>
       )}
 
-      <div className="flow-body" ref={bodyRef}>
-        {children}
-      </div>
+      <div className="flow-workspace">
+        {desktopSteps && (
+          <aside className="flow-desktop-steps">
+            <p>{lang === "en" ? "PRE-REGISTRATION" : "여행 전 사전등록"}</p>
+            <h2>
+              {lang === "en" ? "Your registration" : "필요한 도움 미리 등록"}
+            </h2>
+            <ol>
+              {desktopSteps.map((s, i) => (
+                <li
+                  key={i}
+                  aria-current={s.current ? "step" : undefined}
+                  className={s.done ? "done" : ""}
+                >
+                  <span>{s.done ? "✓" : i + 1}</span>
+                  {s.label}
+                </li>
+              ))}
+            </ol>
+          </aside>
+        )}
+        <div className="flow-form-area">
+          <div className="flow-body" ref={bodyRef}>
+            {children}
+          </div>
 
-      {cta && (
-        <div className={`flow-cta ${ctaAfterContent ? "cta-after" : ""}`}>
-          <div className="flow-cta-inner">{cta}</div>
+          {cta && (
+            <div className={`flow-cta ${ctaAfterContent ? "cta-after" : ""}`}>
+              <div className="flow-cta-inner">{cta}</div>
+            </div>
+          )}
         </div>
-      )}
+        {desktopSummary && (
+          <aside className="flow-desktop-summary">{desktopSummary}</aside>
+        )}
+      </div>
 
       {settingsOpen && (
         <div className="sheet-backdrop" onClick={() => setSettingsOpen(false)}>
-          <div ref={sheetRef} className="sheet-box settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={sheetRef}
+            className="sheet-box settings"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 id="settings-title">{t.settingsTitle}</h2>
 
-            <div className="settings-group" role="radiogroup" aria-label={t.sizeLabel}>
+            <div
+              className="settings-group"
+              role="radiogroup"
+              aria-label={t.sizeLabel}
+            >
               <span className="settings-label">{t.sizeLabel}</span>
               <div className="size-pick">
                 {SCALES.map((s, i) => (
@@ -241,7 +324,10 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
                     aria-label={t.sizes[i]}
                   >
                     {/* 글자 "가"를 그 크기대로 보여준다. 눌러 보기 전에 얼마나 커지는지 알 수 있다. */}
-                    <b style={{ fontSize: `${0.875 + i * 0.3}rem` }} aria-hidden="true">
+                    <b
+                      style={{ fontSize: `${0.875 + i * 0.3}rem` }}
+                      aria-hidden="true"
+                    >
                       {lang === "en" ? "A" : "가"}
                     </b>
                     <span aria-hidden="true">{t.sizes[i]}</span>
@@ -251,12 +337,22 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
             </div>
 
             <div className="settings-group">
-              <button className="switch" role="switch" aria-checked={picture} onClick={() => setViewSettings({ picture: !picture })}>
+              <button
+                className="switch"
+                role="switch"
+                aria-checked={picture}
+                onClick={() => setViewSettings({ picture: !picture })}
+              >
                 <span>{t.pictureToggle}</span>
                 <i aria-hidden="true" />
               </button>
               {supported && (
-                <button className="switch" role="switch" aria-checked={voice} onClick={() => setViewSettings({ voice: !voice })}>
+                <button
+                  className="switch"
+                  role="switch"
+                  aria-checked={voice}
+                  onClick={() => setViewSettings({ voice: !voice })}
+                >
                   <span>{t.voiceToggle}</span>
                   <i aria-hidden="true" />
                 </button>
@@ -265,7 +361,11 @@ export function FlowShell({ lang, prefs, kiosk, screenKey, speakText, speakKey, 
 
             <p className="fine">{t.settingsNote}</p>
             <div className="sheet-actions">
-              <button ref={closeRef} className="btn btn-primary" onClick={() => setSettingsOpen(false)}>
+              <button
+                ref={closeRef}
+                className="btn btn-primary"
+                onClick={() => setSettingsOpen(false)}
+              >
                 {t.settingsDone}
               </button>
               {changed && (
