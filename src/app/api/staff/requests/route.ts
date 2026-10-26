@@ -14,6 +14,14 @@ export async function GET(request: Request) {
   const result = await listServiceRequests(db, await currentSession(now), now, {
     history: q.get("history") === "1",
     offset: Number(q.get("offset") ?? 0),
+    limit: Number(q.get("limit") ?? 200),
+    search: q.get("search") ?? "",
+    service: q.get("service") ?? "all",
+    source: q.get("source") ?? "all",
+    queue: q.get("queue") ?? "all",
+    scope: q.get("scope") ?? "all",
+    zone: q.get("zone") ?? "all",
+    order: q.get("order") ?? "newest",
   });
   if (result.status === 200)
     after(async () => {

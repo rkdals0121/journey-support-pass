@@ -18,6 +18,7 @@ import { closeStaleAssist } from "./assist";
 import { alertSnapshots, maintainAlertQueue } from "./request-alerts";
 import { pushConfig } from "./staff-push";
 import { resourceSnapshot } from "./dispatch-resources";
+import { queueQuery, type QueueOptions } from "./request-queue";
 import {
   isServiceClaimConflict,
   serviceClaimConflict,
@@ -425,7 +426,7 @@ export async function listServiceRequests(
   db: Db,
   s: Session | null,
   now: Date,
-  options: { history?: boolean; offset?: number } = {},
+  options: QueueOptions = {},
 ): Promise<ApiResult> {
   const denied = staffDenied(s);
   if (denied) return denied;
@@ -433,23 +434,20 @@ export async function listServiceRequests(
   await closeStale(db, now);
   await closeStaleAssist(db, now);
   await maintainAlertQueue(db, now);
-  const offset = Math.max(
-    0,
-    Math.min(100000, Number.isInteger(options.offset) ? options.offset! : 0),
-  );
-  const condition = options.history
-    ? "created_at >= $2 and $1::timestamptz is not null"
-    : "expires_at>$1 and (state in ('received','assigned','en_route','arrived','serving') or ended_at>$2)";
-  const since = options.history
-    ? new Date(now.getTime() - 90 * 86400000)
-    : new Date(now.getTime() - 30 * 60000);
+  let query: ReturnType<typeof queueQuery>;
+  try {
+    query = queueQuery(options, s!.zoneId, now);
+  } catch (error) {
+    return fail(400, (error as Error).message);
+  }
+  const { condition, ordering, params, offset, limit } = query;
   const rows = await db.query<Row>(
-    `select * from request_work_ledger where ${condition} order by (state in ('received','assigned','en_route','arrived','serving')) desc,created_at desc,id limit 200 offset $3`,
-    [now, since, offset],
+    `select * from request_work_ledger where ${condition} order by ${ordering} limit ${limit} offset $${params.length + 1}`,
+    [...params, offset],
   );
   const [count] = await db.query<{ total: number }>(
     `select count(*)::int as total from request_work_ledger where ${condition}`,
-    [now, since],
+    params,
   );
   const summary = await operationalSummary(
     db,
@@ -486,6 +484,7 @@ export async function listServiceRequests(
     ),
     total: count.total,
     offset,
+    limit,
     zoneId: s!.zoneId,
     isDesk: s!.isDesk,
     summary,

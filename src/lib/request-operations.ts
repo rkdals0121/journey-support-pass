@@ -5,6 +5,7 @@ import { ok, fail } from "./api/dto";
 import { closeStale } from "./calls";
 import { closeStaleAssist } from "./assist";
 import { isUuid } from "./registrations";
+import { attentionPredicate } from "./request-queue";
 import type { OperationalSummary } from "./service-request-model";
 
 export async function operationalSummary(
@@ -24,7 +25,7 @@ export async function operationalSummary(
  count(*) filter(where state='cancelled')::int as cancelled,
  count(*) filter(where state='unavailable')::int as unavailable,
  count(*) filter(where state='expired')::int as expired,
- count(*) filter(where (state='received' and created_at <= $2::timestamptz-interval '10 minutes') or (state in ('assigned','en_route','arrived','serving') and updated_at <= $2::timestamptz-interval '30 minutes'))::int as "awaitingAttention",
+ count(*) filter(where ${attentionPredicate("$2")})::int as "awaitingAttention",
  (percentile_cont(.5) within group(order by extract(epoch from (accepted_at-created_at))) filter(where accepted_at is not null))::int as "medianAcceptSec",
  (percentile_cont(.5) within group(order by extract(epoch from (arrived_at-accepted_at))) filter(where arrived_at is not null and accepted_at is not null))::int as "medianArrivalSec"
  from request_work_ledger where created_at >= $1`,
