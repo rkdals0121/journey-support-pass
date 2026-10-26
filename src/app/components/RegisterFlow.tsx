@@ -4,6 +4,7 @@ import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, Minus, Moni
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   BRANCHES,
+  labelOf,
   branchesOf,
   groupsOfBranch,
   GROUP_EN,
@@ -660,6 +661,43 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       onBack={back}
       onHome={() => onExit(lang)}
       progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
+      desktopSteps={
+        mode === "web"
+          ? ORDER.map((k, i) => ({
+              label: stepName(k),
+              current: i === step,
+              done: i < step,
+            }))
+          : undefined
+      }
+      desktopSummary={
+        mode === "web" ? (
+          <>
+            <span className="public-eyebrow">
+              {lang === "en" ? "YOUR SAVED NEEDS" : "지금까지 선택한 내용"}
+            </span>
+            <h2>{lang === "en" ? "Registration summary" : "작성 내용 요약"}</h2>
+            {choices.length ? (
+              <ul>
+                {choices.map((c) => (
+                  <li key={c}>{labelOf(c, lang)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                {lang === "en"
+                  ? "Your selections will appear here."
+                  : "선택한 필요 정보가 여기에 표시돼요."}
+              </p>
+            )}
+            <p className="fine">
+              {lang === "en"
+                ? "Review and edit before you submit. Registration does not confirm assistance."
+                : "최종 확인 단계에서 수정할 수 있어요. 사전등록은 서비스 예약 확정이 아니에요."}
+            </p>
+          </>
+        ) : undefined
+      }
       // 키오스크의 항공편 화면에서는 편을 고를 때까지 「다음」을 치워 둔다. 화면 글자판과 도시 목록이 버튼에 가려지지 않는다.
       cta={kiosk && kind === "flight" && !flight ? undefined : cta}
       ctaAfterContent={kind === "consent"}

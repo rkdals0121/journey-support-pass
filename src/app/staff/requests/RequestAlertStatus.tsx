@@ -54,26 +54,29 @@ export function RequestAlertStatus({
           접수 확인 · 배정 아님
         </button>
       )}
-      <p className="fine">
-        접수 확인은 직원이 내용을 확인했다는 기록입니다. 담당 배정·출동과는
-        별도입니다.
-      </p>
-      {!pushEnabled && (
-        <p>백그라운드 푸시 설정이 없습니다. 화면에서 접수를 확인해 주세요.</p>
-      )}
-      {alert.targets === 0 ? (
-        <p className="fine">접수 당시 등록된 알림 기기 없음</p>
-      ) : (
+      <details className="work-alert-details">
+        <summary>알림 전달 상세</summary>
         <p className="fine">
-          푸시 서버 접수 {alert.accepted}건 · 브라우저 수신 확인{" "}
-          {alert.received}건 · 대기/재시도 {alert.queued}건 · 발송 실패{" "}
-          {alert.failed}건 · 종료 {alert.stopped}건
+          접수 확인은 직원이 내용을 확인했다는 기록입니다. 담당 배정·출동과는
+          별도입니다.
         </p>
-      )}
-      <p className="fine">
-        푸시 서버 접수만으로 기기 수신을 보장하지 않습니다. 재시도는 직원 화면
-        조회 또는 재시도 API 실행 시 처리됩니다.
-      </p>
+        {!pushEnabled && (
+          <p>백그라운드 푸시 설정이 없습니다. 화면에서 접수를 확인해 주세요.</p>
+        )}
+        {alert.targets === 0 ? (
+          <p className="fine">접수 당시 등록된 알림 기기 없음</p>
+        ) : (
+          <p className="fine">
+            푸시 서버 접수 {alert.accepted}건 · 브라우저 수신 확인{" "}
+            {alert.received}건 · 대기/재시도 {alert.queued}건 · 발송 실패{" "}
+            {alert.failed}건 · 종료 {alert.stopped}건
+          </p>
+        )}
+        <p className="fine">
+          푸시 서버 접수만으로 기기 수신을 보장하지 않습니다. 재시도는 직원 화면
+          조회 또는 재시도 API 실행 시 처리됩니다.
+        </p>
+      </details>
       {error && <p role="alert">{error}</p>}
     </div>
   );

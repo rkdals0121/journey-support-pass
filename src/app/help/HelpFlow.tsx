@@ -17,6 +17,12 @@ import { IdleGuard } from "../components/IdleGuard";
 import { ReceiptQr } from "./ReceiptQr";
 import { PickupChange } from "./PickupChange";
 import { useSpeech } from "../components/useSpeech";
+import { supportTopic, topicMatchesService } from "@/lib/service-catalog";
+import {
+  businessOf,
+  pilotDestinations,
+  BUSINESS_AREAS,
+} from "@/lib/operating-profile";
 
 const STORAGE = "jsp-dx-receipt-v1";
 const STORAGE_SCOPE = "jsp-dx-receipt-registration-v1";
@@ -67,6 +73,8 @@ export function HelpFlow({
   initialReceipt,
   initialService = "guidance",
   initialNote = "",
+  initialTopic,
+  initialBusiness,
   returnTo,
   freshShared = false,
   checkExisting = false,
@@ -83,6 +91,8 @@ export function HelpFlow({
   initialReceipt?: string;
   initialService?: ServiceType;
   initialNote?: string;
+  initialTopic?: string;
+  initialBusiness?: string;
   returnTo?: string;
   freshShared?: boolean;
   checkExisting?: boolean;
@@ -94,6 +104,9 @@ export function HelpFlow({
   const [choices, setChoices] = useState(savedChoices);
   const [party, setParty] = useState(savedParty);
   const [note, setNote] = useState(initialNote);
+  const [topicId, setTopicId] = useState(initialTopic);
+  const [businessId, setBusinessId] = useState(initialBusiness);
+  const [destinationId, setDestinationId] = useState("");
   const [consent, setConsent] = useState(false);
   const [review, setReview] = useState(false);
   const [request, setRequest] = useState<ServiceRequestView | null>(null);
@@ -106,6 +119,8 @@ export function HelpFlow({
   const freshConsumed = useRef(false);
   const speech = useSpeech(lang);
   const tr = (ko: string, english: string) => (en ? english : ko);
+  const topic = supportTopic(topicId),
+    referral = topic?.mode === "referral";
   const applyRequest = useCallback(
     (r: ServiceRequestView) =>
       setRequest((old) =>
@@ -270,13 +285,16 @@ export function HelpFlow({
               receipt: key,
               placeId,
               service,
-              choices,
-              party,
+              choices: referral ? [] : choices,
+              party: referral ? 1 : party,
               note,
               lang,
               consent,
               registrationToken,
               assisted,
+              ...(topicId ? { topicId } : {}),
+              ...(businessId ? { businessId } : {}),
+              ...(destinationId ? { destinationId } : {}),
             },
             ctrl.signal,
           ),
@@ -359,7 +377,11 @@ export function HelpFlow({
     ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
     : `${tr("지금 도움 요청하기", "Request help now")}. ${tr("현재 위치와 필요한 도움을 확인해 주세요. 사전등록은 서비스 예약 확정이 아닙니다.", "Confirm your pickup point and assistance. Pre-registration is not a confirmed service booking.")}`;
   return (
-    <main className={`page dx-page ${large ? "dx-large" : ""}`} lang={lang}>
+    <main
+      id="public-main"
+      className={`page dx-page ${large ? "dx-large" : ""}`}
+      lang={lang}
+    >
       <div className="dx-toolbar">
         <Link
           href={returnTo ?? (en ? "/?lang=en" : "/")}
@@ -403,10 +425,23 @@ export function HelpFlow({
         )}
       </div>
       <h1>
-        {assisted
-          ? tr("여객 대신 도움 접수", "Request help on behalf of a passenger")
-          : tr("지금 도움 요청하기", "Request help now")}
+        {request
+          ? tr("내 요청 처리 현황", "My request status")
+          : assisted
+            ? tr("여객 대신 도움 접수", "Request help on behalf of a passenger")
+            : tr("지금 도움 요청하기", "Request help now")}
       </h1>
+      {!request && (supportTopic(topicId) || businessOf(businessId)) && (
+        <p className="public-topic-note">
+          {supportTopic(topicId)
+            ? en
+              ? supportTopic(topicId)!.en
+              : supportTopic(topicId)!.label
+            : en
+              ? businessOf(businessId)!.en
+              : businessOf(businessId)!.label}
+        </p>
+      )}
       {!sharedDevice && (
         <p>
           <Link href={en ? "/services?lang=en" : "/services"}>
@@ -480,6 +515,30 @@ export function HelpFlow({
                 )}
           </p>
           {request.note && <p>{request.note}</p>}
+          {request.topicId && (
+            <p>
+              {tr("상담 유형", "Enquiry type")}:{" "}
+              {en
+                ? supportTopic(request.topicId)?.en
+                : supportTopic(request.topicId)?.label}
+            </p>
+          )}
+          {request.businessId && (
+            <p>
+              {tr("담당 연결 참고 업무", "Service responsibility")}:{" "}
+              {en
+                ? businessOf(request.businessId)?.en
+                : businessOf(request.businessId)?.label}
+            </p>
+          )}
+          {request.destinationId && (
+            <p>
+              {tr("목적지", "Destination")}:{" "}
+              {en
+                ? placeOf(request.destinationId)?.labelEn
+                : placeOf(request.destinationId)?.label}
+            </p>
+          )}
           {request.reason && (
             <p role="status">
               {tr("안내: ", "Message: ")}
@@ -590,11 +649,29 @@ export function HelpFlow({
               <h2>{tr("요청 전 확인", "Review your request")}</h2>
               <p>{en ? SERVICE_EN[service] : SERVICE_LABEL[service]}</p>
               <p>{en ? currentPlace?.labelEn : currentPlace?.label}</p>
-              <p>
-                {party}
-                {tr("명", " people")}
-              </p>
-              {choices.length > 0 && (
+              {destinationId && (
+                <p>
+                  {tr("목적지", "Destination")}:{" "}
+                  {en
+                    ? placeOf(destinationId)?.labelEn
+                    : placeOf(destinationId)?.label}
+                </p>
+              )}
+              {topicId && (
+                <p>
+                  {tr("상담 유형", "Enquiry type")}:{" "}
+                  {en
+                    ? supportTopic(topicId)?.en
+                    : supportTopic(topicId)?.label}
+                </p>
+              )}
+              {!referral && (
+                <p>
+                  {party}
+                  {tr("명", " people")}
+                </p>
+              )}
+              {!referral && choices.length > 0 && (
                 <ul>
                   {choices.map((c) => (
                     <li key={c}>{labelOf(c, lang)}</li>
@@ -636,14 +713,24 @@ export function HelpFlow({
               }}
             >
               <label htmlFor="dx-place">
-                {tr("지금 어디에 계신가요?", "Where are you now?")}
+                {topic?.id === "facility"
+                  ? tr("불편한 시설이 있는 지점", "Location of the facility")
+                  : referral
+                    ? tr(
+                        "상담받을 곳을 알려주세요",
+                        "Where can staff assist you?",
+                      )
+                    : tr("지금 어디에 계신가요?", "Where are you now?")}
               </label>
               <select
                 id="dx-place"
                 disabled={lockedPlace}
                 required
                 value={placeId}
-                onChange={(e) => setPlaceId(e.target.value)}
+                onChange={(e) => {
+                  setPlaceId(e.target.value);
+                  setDestinationId("");
+                }}
               >
                 <option value="">
                   {tr(
@@ -663,64 +750,139 @@ export function HelpFlow({
                   "Demo pickup points. Choose where you are, not your destination gate.",
                 )}
               </p>
-              <fieldset>
-                <legend>
-                  {tr(
-                    "어떤 도움이 필요한가요?",
-                    "What assistance do you need?",
-                  )}
-                </legend>
-                {SERVICE_TYPES.map((type) => (
-                  <label className="dx-option" key={type}>
-                    <input
-                      type="radio"
-                      name="service"
-                      value={type}
-                      checked={service === type}
-                      onChange={() => setService(type)}
-                    />
-                    {en ? SERVICE_EN[type] : SERVICE_LABEL[type]}
-                  </label>
-                ))}
-              </fieldset>
-              <fieldset>
-                <legend>
-                  {tr(
-                    "안내할 때 참고해 주세요 · 선택",
-                    "Helpful to know · optional",
-                  )}
-                </legend>
-                {Array.from(new Set([...savedChoices, ...supportCodes])).map(
-                  (code) => (
-                    <label className="dx-option" key={code}>
+              {!topic && (
+                <fieldset>
+                  <legend>
+                    {tr(
+                      "어떤 도움이 필요한가요?",
+                      "What assistance do you need?",
+                    )}
+                  </legend>
+                  {SERVICE_TYPES.map((type) => (
+                    <label className="dx-option" key={type}>
                       <input
-                        type="checkbox"
-                        checked={choices.includes(code)}
-                        onChange={() =>
-                          setChoices((current) =>
-                            current.includes(code)
-                              ? current.filter((c) => c !== code)
-                              : [...current, code],
-                          )
-                        }
+                        type="radio"
+                        name="service"
+                        value={type}
+                        checked={service === type}
+                        onChange={() => {
+                          setService(type);
+                          if (topicId && !topicMatchesService(topicId, type)) {
+                            setTopicId(undefined);
+                            setBusinessId(undefined);
+                          }
+                          if (type !== "mobility") setDestinationId("");
+                        }}
                       />
-                      {labelOf(code, lang)}
+                      {en ? SERVICE_EN[type] : SERVICE_LABEL[type]}
                     </label>
-                  ),
-                )}
-              </fieldset>
-              <label htmlFor="dx-party">
-                {tr("함께 도움받을 인원", "Number of people needing help")}
-              </label>
-              <input
-                id="dx-party"
-                type="number"
-                min="1"
-                max="20"
-                required
-                value={party}
-                onChange={(e) => setParty(Number(e.target.value))}
-              />
+                  ))}
+                </fieldset>
+              )}
+              {topic && (
+                <p className="fine">
+                  {tr("선택한 서비스", "Selected service")}:{" "}
+                  {en ? topic.en : topic.label} ·{" "}
+                  <Link href={en ? "/services?lang=en" : "/services"}>
+                    {tr("서비스 변경", "Change service")}
+                  </Link>
+                </p>
+              )}
+              {topic?.id === "other" && (
+                <>
+                  <label htmlFor="dx-business">
+                    {tr("문의할 업무 · 선택", "Department · optional")}
+                  </label>
+                  <select
+                    id="dx-business"
+                    value={businessId ?? ""}
+                    onChange={(e) => setBusinessId(e.target.value || undefined)}
+                  >
+                    <option value="">
+                      {tr(
+                        "직원이 함께 확인해 주세요",
+                        "Ask staff to identify the department",
+                      )}
+                    </option>
+                    {BUSINESS_AREAS.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {en ? b.en : b.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+              {service === "mobility" && (
+                <>
+                  <label htmlFor="dx-destination">
+                    {tr("가고 싶은 곳 · 선택", "Destination · optional")}
+                  </label>
+                  <select
+                    id="dx-destination"
+                    value={destinationId}
+                    onChange={(e) => setDestinationId(e.target.value)}
+                  >
+                    <option value="">
+                      {tr("담당자와 상담해 정할게요", "Confirm with staff")}
+                    </option>
+                    {pilotDestinations(placeId).map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {en ? p.labelEn : p.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="fine">
+                    {tr(
+                      "같은 터미널·보안 구역 안의 시연 지점입니다. 실제 이동은 담당자가 확인해요.",
+                      "Demo destinations within the same terminal and security area. Staff confirm actual travel.",
+                    )}
+                  </p>
+                </>
+              )}
+              {!referral && (
+                <fieldset>
+                  <legend>
+                    {tr(
+                      "안내할 때 참고해 주세요 · 선택",
+                      "Helpful to know · optional",
+                    )}
+                  </legend>
+                  {Array.from(new Set([...savedChoices, ...supportCodes])).map(
+                    (code) => (
+                      <label className="dx-option" key={code}>
+                        <input
+                          type="checkbox"
+                          checked={choices.includes(code)}
+                          onChange={() =>
+                            setChoices((current) =>
+                              current.includes(code)
+                                ? current.filter((c) => c !== code)
+                                : [...current, code],
+                            )
+                          }
+                        />
+                        {labelOf(code, lang)}
+                      </label>
+                    ),
+                  )}
+                </fieldset>
+              )}
+              {!referral && (
+                <>
+                  <label htmlFor="dx-party">
+                    {tr("함께 도움받을 인원", "Number of people needing help")}
+                  </label>
+                  <input
+                    id="dx-party"
+                    type="number"
+                    min="1"
+                    max="20"
+                    required
+                    value={party}
+                    onChange={(e) => setParty(Number(e.target.value))}
+                  />
+                </>
+              )}
               <label htmlFor="dx-note">
                 {tr(
                   "추가 말씀 · 선택, 200자 이내",

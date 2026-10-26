@@ -75,6 +75,9 @@ export interface ServiceRequestView {
   pendingPlace?: string;
   pendingPlaceEn?: string;
   pendingPlaceRequestedAt?: string | null;
+  topicId?: string | null;
+  businessId?: string | null;
+  destinationId?: string | null;
 }
 export type RequestAction =
   | "assign"

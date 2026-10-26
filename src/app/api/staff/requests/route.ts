@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     limit: Number(q.get("limit") ?? 200),
     search: q.get("search") ?? "",
     service: q.get("service") ?? "all",
+    topic: q.get("topic") ?? "all",
     source: q.get("source") ?? "all",
     queue: q.get("queue") ?? "all",
     scope: q.get("scope") ?? "all",

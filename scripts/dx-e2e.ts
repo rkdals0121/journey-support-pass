@@ -110,6 +110,8 @@ async function main() {
         "116번 탑승구 앞",
       ),
     );
+    await staff.$eval(".work-preferences", (e) => e.setAttribute("open", ""));
+    await staff.$eval(".work-alert-details", (e) => e.setAttribute("open", ""));
     check(
       "unconfigured push clearly falls back to foreground alerts",
       (await staff.evaluate(() => document.body.innerText)).includes(
