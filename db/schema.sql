@@ -268,10 +268,17 @@ drop trigger if exists remember_request_registration on assist_requests;
 create trigger remember_request_registration before insert or update on assist_requests for each row execute function remember_request_registration_link();
 
 -- One operational read model; source records remain authoritative and are never copied twice.
+alter table service_requests add column if not exists pending_place_id text;
+alter table service_requests add column if not exists pending_place_at timestamptz;
+alter table service_requests drop constraint if exists service_requests_pending_place_check;
+alter table service_requests add constraint service_requests_pending_place_check check(
+ (pending_place_id is null)=(pending_place_at is null) and
+ (pending_place_id is null or state in ('assigned','en_route','arrived'))
+);
 create or replace view request_work_ledger as
 select id::text,id as source_id,'integrated'::text as queue,registration_id,service,state,place_id,choices,party,note,lang,source,
  assigned_zone,reason,created_at,updated_at,expires_at,version::double precision as version,
- accepted_at,arrived_at,started_at,ended_at,registration_linked
+ accepted_at,arrived_at,started_at,ended_at,registration_linked,pending_place_id,pending_place_at
 from service_requests
 union all
 select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
@@ -281,7 +288,7 @@ select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
  c.place_id,coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),'kiosk',
  c.accepted_zone,''::text,c.created_at,coalesce(c.ended_at,c.accepted_at,c.created_at),c.created_at+interval '24 hours',
  (extract(epoch from c.created_at)*10000+case when c.ended_at is not null then 2 when c.accepted_at is not null then 1 else 0 end)::double precision,
- c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked
+ c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked,null::text,null::timestamptz
 from calls c left join registrations r on r.id=c.registration_id and r.status in ('active','pending')
 union all
 select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
@@ -290,7 +297,7 @@ select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
  case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,''::text,a.created_at,
  coalesce(a.ended_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
  (extract(epoch from a.created_at)*10000+case a.state when 'received' then 0 when 'assigned' then 1 when 'moving' then 2 else 3 end)::double precision,
- a.assigned_at,null::timestamptz,null::timestamptz,a.ended_at,a.registration_linked
+ a.assigned_at,null::timestamptz,null::timestamptz,a.ended_at,a.registration_linked,null::text,null::timestamptz
 from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');
 
 -- Internal pilot inventory. No physical device is provisioned or commanded here.
@@ -325,6 +332,7 @@ begin
  if job.version<>p_version then return 'stale'; end if;
  if not p_desk and job.assigned_zone is distinct from p_actor then return 'forbidden'; end if;
  if job.state<>'assigned' then return 'stage'; end if;
+ if job.pending_place_id is not null then return 'location_pending'; end if;
  if job.service not in ('robot','mobility') then return 'kind'; end if;
  if p_resource is not null then
   if gear.kind<>job.service then return 'kind'; end if;

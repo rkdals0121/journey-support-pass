@@ -186,7 +186,10 @@ export function RequestList({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "처리하지 못했습니다");
+      if (!res.ok) {
+        if(res.status===409)await load();
+        throw new Error(data.error ?? "처리하지 못했습니다");
+      }
       await load();
       if (history[r.id]) await loadHistory(r.id);
     } catch (e) {
@@ -200,6 +203,7 @@ export function RequestList({
     (r) =>
       filter === "all" ||
       (filter === "mine" && r.assignedZone === zoneId) ||
+      (filter === "location" && !!r.pendingPlaceId) ||
       (filter === "waiting" && r.state === "received"),
   );
   return (
@@ -350,6 +354,7 @@ export function RequestList({
       >
         <option value="all">전체</option>
         <option value="waiting">미배정</option>
+        <option value="location">위치 변경 확인 대기</option>
         <option value="mine">내 구역 담당</option>
       </select>
       {ready && visible.length === 0 && <p>표시할 요청이 없습니다.</p>}
@@ -394,6 +399,37 @@ export function RequestList({
               {r.assignedZone && (
                 <p>담당 구역: {zoneLabels[r.assignedZone] ?? r.assignedZone}</p>
               )}
+              {r.pendingPlaceId && (
+                <div className="dx-notice">
+                  <p>
+                    <strong>
+                      위치 변경 확인 대기: {r.place} → {r.pendingPlace}
+                    </strong>
+                  </p>
+                  <p>
+                    확인 전에는 이동·도착·지원 시작 단계를 진행할 수 없습니다.
+                    위치 수락 시 담당과 배차를 유지하고 배정 단계로 돌아갑니다.
+                  </p>
+                  {(mine || isDesk) && (
+                    <>
+                      <button
+                        className="btn"
+                        disabled={!!busy}
+                        onClick={() => void act(r, "accept_place")}
+                      >
+                        새 만날 곳 수락
+                      </button>
+                      <button
+                        className="btn btn-ghost"
+                        disabled={!!busy || !(reasons[r.id] ?? "").trim()}
+                        onClick={() => void act(r, "reject_place")}
+                      >
+                        사유 기록 후 위치 변경 거절
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
               <p>
                 {r.party}명 ·{" "}
                 {r.source === "preregistered"
@@ -434,29 +470,31 @@ export function RequestList({
                 <ResourceDispatch
                   request={r}
                   resources={resources}
-                  canEdit={isDesk || mine}
+                  canEdit={(isDesk || mine) && !r.pendingPlaceId}
                   onChanged={async () => {
                     await load();
                     if (history[r.id]) await loadHistory(r.id);
                   }}
                 />
               )}
-              {next && (r.state === "received" || mine) && (
-                <button
-                  className="btn btn-primary"
-                  disabled={!!busy}
-                  onClick={() => void act(r, next.action)}
-                >
-                  {next.label}
-                </button>
-              )}
+              {next &&
+                !r.pendingPlaceId &&
+                (r.state === "received" || mine) && (
+                  <button
+                    className="btn btn-primary"
+                    disabled={!!busy}
+                    onClick={() => void act(r, next.action)}
+                  >
+                    {next.label}
+                  </button>
+                )}
               {open && r.assignedZone && !mine && (
                 <p>다른 구역에서 맡은 요청입니다.</p>
               )}
               {current && open && (mine || isDesk) && (
                 <div className="dx-ending">
                   <label htmlFor={`reason-${r.id}`}>
-                    처리 사유 · 지원 불가 시 여객에게 전달됩니다
+                    처리 사유 · 지원 불가·위치 변경 거절 시 여객에게 전달됩니다
                   </label>
                   <textarea
                     id={`reason-${r.id}`}
@@ -477,6 +515,7 @@ export function RequestList({
               )}
               {current &&
                 isDesk &&
+                !r.pendingPlaceId &&
                 ["assigned", "en_route", "arrived"].includes(r.state) && (
                   <button
                     className="btn btn-ghost"
@@ -539,20 +578,28 @@ export function RequestList({
                       {history[r.id].map((h) => (
                         <li key={h.version}>
                           {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
-                          {h.action === "baseline"
-                            ? "이전 버전 기준 상태"
-                            : h.action === "transfer"
-                              ? "담당 인계"
-                              : h.action === "resource_assign"
-                                ? "장비 배차"
-                                : h.action === "resource_release"
-                                  ? "장비 배차 해제"
-                                  : h.action === "privacy_erased"
-                                    ? "상세 보관 종료"
-                                    : requestStateLabel({
-                                        ...r,
-                                        state: h.state,
-                                      })}
+                          {h.action.startsWith("pickup_")
+                            ? ({
+                                pickup_changed: "만날 곳 수정",
+                                pickup_requested: "위치 변경 요청",
+                                pickup_withdrawn: "위치 변경 요청 철회",
+                                pickup_accepted: "위치 변경 수락",
+                                pickup_rejected: "위치 변경 거절",
+                              }[h.action] ?? "위치 변경 처리")
+                            : h.action === "baseline"
+                              ? "이전 버전 기준 상태"
+                              : h.action === "transfer"
+                                ? "담당 인계"
+                                : h.action === "resource_assign"
+                                  ? "장비 배차"
+                                  : h.action === "resource_release"
+                                    ? "장비 배차 해제"
+                                    : h.action === "privacy_erased"
+                                      ? "상세 보관 종료"
+                                      : requestStateLabel({
+                                          ...r,
+                                          state: h.state,
+                                        })}
                           {h.assignedZone &&
                             ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
                           {h.actorZone &&

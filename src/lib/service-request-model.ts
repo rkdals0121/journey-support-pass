@@ -71,6 +71,10 @@ export interface ServiceRequestView {
   assignedZone: string | null;
   reason: string;
   version: number;
+  pendingPlaceId?: string | null;
+  pendingPlace?: string;
+  pendingPlaceEn?: string;
+  pendingPlaceRequestedAt?: string | null;
 }
 export type RequestAction =
   | "assign"
@@ -80,7 +84,9 @@ export type RequestAction =
   | "complete"
   | "unavailable"
   | "reopen"
-  | "transfer";
+  | "transfer"
+  | "accept_place"
+  | "reject_place";
 export const NEXT_REQUEST_ACTION: Partial<
   Record<RequestState, { action: RequestAction; label: string }>
 > = {

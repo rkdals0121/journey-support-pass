@@ -54,6 +54,8 @@ interface Row {
   updated_at: Date;
   expires_at: Date;
   version: number;
+  pending_place_id?: string | null;
+  pending_place_at?: Date | null;
 }
 function view(r: Row): ServiceRequestView {
   const place = placeOf(r.place_id);
@@ -76,6 +78,10 @@ function view(r: Row): ServiceRequestView {
     updatedAt: r.updated_at.toISOString(),
     expiresAt: r.expires_at.toISOString(),
     version: r.version,
+    pendingPlaceId: r.pending_place_id ?? null,
+    pendingPlace: placeOf(r.pending_place_id ?? "")?.label ?? "",
+    pendingPlaceEn: placeOf(r.pending_place_id ?? "")?.labelEn ?? "",
+    pendingPlaceRequestedAt: r.pending_place_at?.toISOString() ?? null,
   };
 }
 async function receiptRow(db: Db, receipt: unknown): Promise<Row | undefined> {
@@ -243,7 +249,7 @@ export async function cancelServiceRequest(
   if (r.expires_at <= now) return fail(410, "보관 기간이 끝난 요청입니다");
   if (r.state === "cancelled") return ok({ request: view(r) });
   const rows = await db.query<Row>(
-    `update service_requests set state='cancelled',ended_at=$2,updated_at=$2,version=version+1,last_action='cancel',last_actor_zone=null,last_action_reason=''
+    `update service_requests set state='cancelled',ended_at=$2,updated_at=$2,version=version+1,last_action='cancel',last_actor_zone=null,last_action_reason='',pending_place_id=null,pending_place_at=null
  where id=$1 and state in ('received','assigned','en_route','arrived') returning *`,
     [r.id, now],
   );
@@ -254,6 +260,158 @@ export async function cancelServiceRequest(
         "지원이 시작되었거나 끝난 요청입니다. 현장 직원에게 말씀해 주세요",
       );
 }
+/** Capability holders may correct an unassigned pickup or ask the assigned team to confirm it. */
+export async function changeRequestPlace(
+  db: Db,
+  session: Session | null,
+  body: Record<string, unknown>,
+  now: Date,
+): Promise<ApiResult> {
+  await expireServiceRequests(db, now);
+  const r = await receiptRow(db, body.receipt);
+  if (!r) return fail(404, "요청을 찾을 수 없습니다", "request_missing");
+  if (r.expires_at <= now)
+    return fail(410, "요청의 보관 기간이 끝났습니다", "request_expired");
+  if (!Number.isInteger(body.version) || Number(body.version) < 0)
+    return fail(400, "요청 상태를 다시 확인해 주세요", "request_version");
+  if (!["received", "assigned", "en_route", "arrived"].includes(r.state))
+    return fail(
+      409,
+      "지원이 시작되었거나 끝난 요청입니다. 현장 직원에게 위치를 알려 주세요",
+      "location_stage",
+    );
+  const action = body.action ?? "request";
+  if (action !== "request" && action !== "withdraw")
+    return fail(400, "위치 변경 작업을 확인해 주세요", "location_action");
+  let target: string | null = null;
+  if (action === "request") {
+    const place = placeOf(typeof body.placeId === "string" ? body.placeId : "");
+    if (!place)
+      return fail(
+        400,
+        "목록에서 새 만날 곳을 선택해 주세요",
+        "location_invalid",
+      );
+    if (session?.isKiosk && session.placeId !== place.id)
+      return fail(
+        403,
+        "이 키오스크의 설치 위치는 변경할 수 없습니다",
+        "location_locked",
+      );
+    target = place.id;
+    if (
+      r.pending_place_id === target ||
+      (!r.pending_place_id && r.place_id === target)
+    )
+      return ok({ request: view(r) });
+    if (r.pending_place_id && target === r.place_id)
+      return fail(
+        400,
+        "현재 만날 곳을 유지하려면 위치 변경 요청을 철회해 주세요",
+        "location_withdraw",
+      );
+  } else if (!r.pending_place_id) return ok({ request: view(r) });
+  if (r.version !== body.version)
+    return fail(
+      409,
+      "요청 상태가 바뀌었습니다. 최신 위치를 확인해 주세요",
+      "request_stale",
+    );
+  const immediate = action === "request" && r.state === "received";
+  const event =
+    action === "withdraw"
+      ? "pickup_withdrawn"
+      : immediate
+        ? "pickup_changed"
+        : "pickup_requested";
+  const detail =
+    action === "withdraw"
+      ? "위치 변경 요청 철회"
+      : "만날 곳: " +
+        (placeOf(r.place_id)?.label ?? r.place_id) +
+        " → " +
+        placeOf(target!)!.label;
+  const rows = await db.query<Row>(
+    `
+    update service_requests set
+     place_id=case when $4 then $3 else place_id end,
+     pending_place_id=case when $5='request' and not $4 then $3 else null end,
+     pending_place_at=case when $5='request' and not $4 then $6 else null end,
+     updated_at=$6,version=version+1,reason='',
+     last_action=$7,last_actor_zone=null,last_action_reason=$8
+    where id=$1 and version=$2 and state=$9 and expires_at>$6 returning *`,
+    [r.id, r.version, target, immediate, action, now, event, detail, r.state],
+  );
+  return rows[0]
+    ? ok({ request: view(rows[0]) })
+    : fail(
+        409,
+        "요청 상태가 바뀌었습니다. 다시 확인해 주세요",
+        "request_stale",
+      );
+}
+
+async function decideRequestPlace(
+  db: Db,
+  s: Session,
+  r: Row,
+  action: "accept_place" | "reject_place",
+  reason: unknown,
+  now: Date,
+): Promise<ApiResult> {
+  if (!s.isDesk && r.assigned_zone !== s.zoneId)
+    return fail(403, "담당 구역 또는 안내데스크에서 확인해 주세요");
+  if (
+    !r.pending_place_id ||
+    !["assigned", "en_route", "arrived"].includes(r.state)
+  )
+    return fail(409, "확인 대기 중인 위치 변경 요청이 없습니다");
+  const accept = action === "accept_place";
+  if (
+    !accept &&
+    (typeof reason !== "string" || !reason.trim() || reason.length > 120)
+  )
+    return fail(
+      400,
+      "위치 변경을 받을 수 없는 사유를 120자 이내로 적어 주세요",
+    );
+  const detail = accept
+    ? "만날 곳 변경 확인: " +
+      (placeOf(r.place_id)?.label ?? r.place_id) +
+      " → " +
+      placeOf(r.pending_place_id)!.label
+    : "만날 곳 변경 거절: " + String(reason).trim();
+  const publicReason = accept
+    ? "담당자가 새 만날 곳을 확인했습니다 / Staff confirmed your new pickup point."
+    : "위치 변경 불가 / Pickup change declined: " + String(reason).trim();
+  const rows = await db.query<Row>(
+    `
+    update service_requests set
+     place_id=case when $3 then pending_place_id else place_id end,
+     state=case when $3 then 'assigned' else state end,
+     arrived_at=case when $3 then null else arrived_at end,
+     started_at=case when $3 then null else started_at end,
+     pending_place_id=null,pending_place_at=null,updated_at=$4,version=version+1,
+     reason=$5,last_action=$6,last_actor_zone=$7,last_action_reason=$8
+    where id=$1 and version=$2 and state=$9 and pending_place_id=$10 returning *`,
+    [
+      r.id,
+      r.version,
+      accept,
+      now,
+      publicReason,
+      accept ? "pickup_accepted" : "pickup_rejected",
+      s.zoneId,
+      detail,
+      r.state,
+      r.pending_place_id,
+    ],
+  );
+  return rows[0]
+    ? ok({ request: view(rows[0]) })
+    : fail(409, "위치 변경 상태가 바뀌었습니다. 다시 확인해 주세요");
+}
+
 function staffDenied(s: Session | null): ApiResult | null {
   if (!s || s.isKiosk) return fail(401, "직원 로그인이 필요합니다");
   if (s.needsZone) return fail(409, "근무 구역을 먼저 골라 주세요");
@@ -372,6 +530,13 @@ export async function actOnServiceRequest(
   if (!r) return fail(404, "요청을 찾을 수 없습니다");
   if (r.version !== body.version)
     return fail(409, "요청 상태가 바뀌었습니다. 최신 내용을 확인해 주세요");
+  if (action === "accept_place" || action === "reject_place")
+    return decideRequestPlace(db, s!, r, action, body.reason, now);
+  if (
+    r.pending_place_id &&
+    ["travel", "arrive", "serve", "reopen"].includes(action)
+  )
+    return fail(409, "여객의 위치 변경 요청을 먼저 확인해 주세요");
   let next: RequestState;
   let assignedZone = s!.zoneId;
   if (body.zoneId !== undefined) {
@@ -441,6 +606,8 @@ export async function actOnServiceRequest(
     `update service_requests set state=$3,updated_at=$4,version=version+1,
  assigned_zone=case when $8='transfer' then $5 when $3='received' then null when $3='assigned' then $5 else assigned_zone end,
  resource_id=case when $3='received' then null else resource_id end,
+ pending_place_id=case when $3 in ('done','unavailable') then null else pending_place_id end,
+ pending_place_at=case when $3 in ('done','unavailable') then null else pending_place_at end,
  accepted_at=case when $8='transfer' then accepted_at when $3='received' then null when $3='assigned' then $4 else accepted_at end,
  arrived_at=case when $8='transfer' then arrived_at when $3='received' then null when $3='arrived' then $4 else arrived_at end,
  started_at=case when $8='transfer' then started_at when $3='serving' then $4 else started_at end,
@@ -523,8 +690,9 @@ export async function registeredRequestProgress(
     state: RequestState;
     created_at: Date;
     updated_at: Date;
+    location_change_pending: boolean;
   }>(
-    "select service,state,created_at,updated_at from request_work_ledger where registration_id=$1 and expires_at>$2 order by created_at desc limit 10",
+    "select service,state,created_at,updated_at,pending_place_id is not null as location_change_pending from request_work_ledger where registration_id=$1 and expires_at>$2 order by created_at desc limit 10",
     [found.journey.registrationId, now],
   );
   return ok({
@@ -533,6 +701,7 @@ export async function registeredRequestProgress(
       state: r.state,
       createdAt: r.created_at.toISOString(),
       updatedAt: r.updated_at.toISOString(),
+      locationChangePending: r.location_change_pending,
     })),
   });
 }
