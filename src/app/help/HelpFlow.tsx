@@ -15,6 +15,7 @@ import {
 import { textOf } from "@/lib/i18n";
 import { IdleGuard } from "../components/IdleGuard";
 import { ReceiptQr } from "./ReceiptQr";
+import { PickupChange } from "./PickupChange";
 import { useSpeech } from "../components/useSpeech";
 
 const STORAGE = "jsp-dx-receipt-v1";
@@ -479,10 +480,25 @@ export function HelpFlow({
           {OPEN_REQUEST_STATES.includes(request.state) && (
             <p>
               {tr(
-                "담당자가 확인하기 전에는 배정·도착 시간이 확정되지 않습니다. 위치가 달라졌으면 취소 후 새 위치로 요청해 주세요.",
-                "Assignment and arrival time are not confirmed until accepted. If your location changes, cancel and request from the new point.",
+                request.state === "serving"
+                  ? "지원이 시작되었습니다. 위치나 만날 곳이 바뀌면 현장 직원에게 직접 알려 주세요."
+                  : "배정·도착 시간은 확정 약속이 아닙니다. 위치가 달라졌다면 아래에서 만날 곳 변경을 요청해 주세요.",
+                request.state === "serving"
+                  ? "Assistance has started. Tell the staff member directly if your location changes."
+                  : "Assignment and arrival times are not a promise. If you moved, use the pickup change options below.",
               )}
             </p>
+          )}
+          {receipt && (
+            <PickupChange
+              request={request}
+              receipt={receipt}
+              en={en}
+              sharedDevice={sharedDevice}
+              disabled={busy}
+              onChanged={applyRequest}
+              onRefresh={refresh}
+            />
           )}
           {request.service === "robot" && (
             <p>

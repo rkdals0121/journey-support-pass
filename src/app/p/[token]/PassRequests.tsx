@@ -12,6 +12,7 @@ type Progress = {
   state: RequestState;
   createdAt: string;
   updatedAt: string;
+  locationChangePending?:boolean;
 };
 export function PassRequests({
   token,
@@ -100,6 +101,7 @@ export function PassRequests({
               {lang === "en" ? SERVICE_EN[r.service] : SERVICE_LABEL[r.service]}
             </strong>{" "}
             · {requestStateLabel(r, lang)}
+            {r.locationChangePending&&<strong> · {lang==="en"?"Pickup change awaiting confirmation":"위치 변경 확인 대기"}</strong>}
             <br />
             <small>
               {new Date(r.updatedAt).toLocaleString(
