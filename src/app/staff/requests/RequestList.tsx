@@ -13,6 +13,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { labelOf } from "@/lib/catalog";
 import { supportTopic, SERVICE_CATALOG } from "@/lib/service-catalog";
 import { businessOf, BUSINESS_AREAS } from "@/lib/operating-profile";
+import {
+  UNCLASSIFIED_BUSINESS,
+  businessFilterLabel,
+} from "@/lib/business-overview-model";
 import { placeOf } from "@/lib/airport";
 import {
   nextRequestAction,
@@ -27,9 +31,13 @@ import {
 export function RequestList({
   zoneId,
   isDesk,
+  initialBusiness = "all",
+  initialScope = "all",
 }: {
   zoneId: string;
   isDesk: boolean;
+  initialBusiness?: string;
+  initialScope?: string;
 }) {
   const [summary, setSummary] = useState<OperationalSummary | null>(null);
   const [resources, setResources] = useState<DispatchResource[]>([]);
@@ -73,7 +81,7 @@ export function RequestList({
   const [ready, setReady] = useState(false);
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [sound, setSound] = useState(false);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(initialScope);
   const [draft, setDraft] = useState(""),
     [search, setSearch] = useState("");
   const [service, setService] = useState("all"),
@@ -81,7 +89,7 @@ export function RequestList({
     [queue, setQueue] = useState("all"),
     [zone, setZone] = useState("all");
   const [topic, setTopic] = useState("all");
-  const [business, setBusiness] = useState("all");
+  const [business, setBusiness] = useState(initialBusiness);
   const [order, setOrder] = useState("priority"),
     [pageSize, setPageSize] = useState(50);
   const knownQuery = useRef("");
@@ -406,6 +414,7 @@ export function RequestList({
         <details data-queue-filters>
           <summary>
             서비스·구역·정렬·표시 건수
+            {business !== "all" ? ` · ${businessFilterLabel(business)}` : ""}
             {[service, source, queue, zone, topic, business].some(
               (v) => v !== "all",
             )
@@ -433,6 +442,7 @@ export function RequestList({
             }}
           >
             <option value="all">전체 담당 업무</option>
+            <option value={UNCLASSIFIED_BUSINESS}>미분류·이전 요청</option>
             {BUSINESS_AREAS.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.label}
@@ -624,6 +634,7 @@ export function RequestList({
           }}
         >
           <option value="all">전체</option>
+          <option value="active">진행 중</option>
           <option value="waiting">미배정</option>
           <option value="location">위치 변경 확인 대기</option>
           <option value="attention">확인 지연</option>

@@ -28,7 +28,11 @@ export function StaffFrame({
       ? [
           { href: "/staff/alerts", label: "알림 운영", Icon: Bell },
           { href: "/staff/desk", label: "안내데스크", Icon: ClipboardCheck },
-          { href: "/staff/desk/stats", label: "운영 현황", Icon: ChartColumn },
+          {
+            href: "/staff/overview",
+            label: "통합 운영 현황",
+            Icon: ChartColumn,
+          },
         ]
       : []),
     { href: "/staff/legacy", label: "이전 요청·인계", Icon: ArrowLeftRight },

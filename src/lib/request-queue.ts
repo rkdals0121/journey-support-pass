@@ -1,6 +1,7 @@
 import { PLACES } from "./airport";
 import { SERVICE_CATALOG } from "./service-catalog";
 import { BUSINESS_AREAS } from "./operating-profile";
+import { UNCLASSIFIED_BUSINESS } from "./business-overview-model";
 export interface QueueOptions {
   history?: boolean;
   offset?: number;
@@ -27,10 +28,14 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
   const allowed: Record<string, string[]> = {
     service: ["all", "guidance", "robot", "mobility"],
     topic: ["all", ...SERVICE_CATALOG.map((t) => t.id)],
-    business: ["all", ...BUSINESS_AREAS.map((b) => b.id)],
+    business: [
+      "all",
+      UNCLASSIFIED_BUSINESS,
+      ...BUSINESS_AREAS.map((b) => b.id),
+    ],
     source: ["all", "web", "preregistered", "kiosk", "assisted"],
     queue: ["all", "integrated", "call", "assist"],
-    scope: ["all", "waiting", "mine", "location", "attention"],
+    scope: ["all", "active", "waiting", "mine", "location", "attention"],
     order: ["newest", "oldest", "priority"],
   };
   for (const [name, values] of Object.entries(allowed)) {
@@ -77,10 +82,15 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
   if (options.topic && options.topic !== "all")
     conditions.push(`topic_id=${bind(options.topic)}`);
   if (options.business && options.business !== "all")
-    conditions.push(`business_id=${bind(options.business)}`);
+    conditions.push(
+      options.business === UNCLASSIFIED_BUSINESS
+        ? `(business_id is null or not(business_id=any(${bind(BUSINESS_AREAS.map((b) => b.id))}::text[])))`
+        : `business_id=${bind(options.business)}`,
+    );
   if (options.scope === "mine")
     conditions.push(`assigned_zone=${bind(zoneId)}`);
   if (options.scope === "waiting") conditions.push("state='received'");
+  if (options.scope === "active") conditions.push(active);
   if (options.scope === "location")
     conditions.push("pending_place_id is not null");
   if (options.scope === "attention") conditions.push(attentionPredicate("$1"));

@@ -37,10 +37,12 @@ export function StaffNav({ isDesk }: { isDesk: boolean }) {
             on: path === "/staff/desk",
           },
           {
-            href: "/staff/desk/stats",
-            label: "오늘 현황",
+            href: "/staff/overview",
+            label: "운영 현황",
             Icon: BarChart3,
-            on: path.startsWith("/staff/desk/stats"),
+            on:
+              path.startsWith("/staff/overview") ||
+              path.startsWith("/staff/desk/stats"),
           },
         ]
       : []),
