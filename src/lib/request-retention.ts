@@ -1,6 +1,9 @@
 import type { Db } from "./db";
 export const REQUEST_TTL_MS = 24 * 60 * 60 * 1000;
 export async function expireServiceRequests(db: Db, now: Date) {
+  const legacyDetailsCutoff=new Date(now.getTime()-REQUEST_TTL_MS);
+  await db.query("update calls set operator_reason='' where operator_reason<>'' and created_at<=$1",[legacyDetailsCutoff]);
+  await db.query("update assist_requests set operator_reason='' where operator_reason<>'' and created_at<=$1",[legacyDetailsCutoff]);
   await db.query(
     "delete from request_push_subscriptions where expires_at <= $1",
     [now],

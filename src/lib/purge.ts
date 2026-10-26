@@ -35,13 +35,13 @@ export async function eraseRegistration(
     "update calls set ended_at = $2, end_kind = 'cancelled' where registration_id = $1 and ended_at is null",
     [id, now],
   );
-  await db.query("update calls set registration_id = null where registration_id = $1", [id]);
+  await db.query("update calls set registration_id = null,operator_reason='' where registration_id = $1", [id]);
   // 끝나지 않은 이동지원 요청도 닫고 연결을 끊는다.
   await db.query(
     "update assist_requests set state = 'cancelled', ended_at = $2 where registration_id = $1 and state in ('received','assigned','moving')",
     [id, now],
   );
-  await db.query("update assist_requests set registration_id = null where registration_id = $1", [id]);
+  await db.query("update assist_requests set registration_id = null,operator_reason='' where registration_id = $1", [id]);
   await db.query("update access_logs set registration_id = null where registration_id = $1", [id]);
   await db.query(
     `update registrations set name = null, flight_date = null, flight_no = null, needs = '{}', categories = '{}',
@@ -75,6 +75,7 @@ export async function purge(
   const logs = await db.query("delete from access_logs where at < $1 returning id", [logCutoff]);
   await db.query("delete from events where at < $1", [logCutoff]);
   await db.query("delete from calls where created_at < $1", [logCutoff]);
+  await db.query("delete from assist_requests where created_at<$1 and state in ('done','cancelled')",[logCutoff]);
   await db.query("delete from flight_polls where polled_at < $1", [logCutoff]);
   await db.query("delete from flights where sched_at < $1", [
     new Date(now.getTime() - FLIGHT_RETENTION_DAYS * 24 * HOUR),

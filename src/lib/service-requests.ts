@@ -8,7 +8,11 @@ import { isUuid } from "./registrations";
 import { knownCodes } from "./catalog";
 import { lookupPass } from "./api/public";
 import { getZone } from "./zones";
-import { operationalSummary, legacyWorkAction } from "./request-operations";
+import {
+  operationalSummary,
+  legacyWorkAction,
+  legacyRequestHistory,
+} from "./request-operations";
 import { closeStale } from "./calls";
 import { closeStaleAssist } from "./assist";
 import { alertSnapshots, maintainAlertQueue } from "./request-alerts";
@@ -574,6 +578,20 @@ export async function actOnServiceRequest(
     if (!["assigned", "en_route", "arrived"].includes(r.state))
       return fail(409, "이 상태에서는 재배정할 수 없습니다");
     next = "received";
+  } else if (action === "operator_cancel") {
+    if (!s!.isDesk || s!.exp <= now.getTime())
+      return fail(403, "운영자 종료는 안내데스크에서 확인합니다");
+    if (!OPEN_REQUEST_STATES.includes(r.state))
+      return fail(409, "이미 끝난 요청입니다");
+    if (body.confirmed !== true)
+      return fail(400, "실제 지원 여부를 현장에서 확인한 뒤 종료해 주세요");
+    if (
+      typeof body.reason !== "string" ||
+      !body.reason.trim() ||
+      body.reason.length > 120
+    )
+      return fail(400, "종료 사유를 120자 이내로 적어 주세요");
+    next = "cancelled";
   } else if (action === "unavailable") {
     if (!OPEN_REQUEST_STATES.includes(r.state))
       return fail(409, "이미 끝난 요청입니다");
@@ -606,14 +624,14 @@ export async function actOnServiceRequest(
     `update service_requests set state=$3,updated_at=$4,version=version+1,
  assigned_zone=case when $8='transfer' then $5 when $3='received' then null when $3='assigned' then $5 else assigned_zone end,
  resource_id=case when $3='received' then null else resource_id end,
- pending_place_id=case when $3 in ('done','unavailable') then null else pending_place_id end,
- pending_place_at=case when $3 in ('done','unavailable') then null else pending_place_at end,
+ pending_place_id=case when $3 in ('done','unavailable','cancelled') then null else pending_place_id end,
+ pending_place_at=case when $3 in ('done','unavailable','cancelled') then null else pending_place_at end,
  accepted_at=case when $8='transfer' then accepted_at when $3='received' then null when $3='assigned' then $4 else accepted_at end,
  arrived_at=case when $8='transfer' then arrived_at when $3='received' then null when $3='arrived' then $4 else arrived_at end,
  started_at=case when $8='transfer' then started_at when $3='serving' then $4 else started_at end,
- ended_at=case when $3 in ('done','unavailable') then $4 else ended_at end,
- reason=case when $3='unavailable' then $6 else '' end,
- last_action=$8,last_actor_zone=$9,last_action_reason=case when $8 in ('transfer','unavailable','reopen') then $6 else '' end
+ ended_at=case when $3 in ('done','unavailable','cancelled') then $4 else ended_at end,
+ reason=case when $3 in ('unavailable','cancelled') then $6 else '' end,
+ last_action=$8,last_actor_zone=$9,last_action_reason=case when $8 in ('transfer','unavailable','reopen','operator_cancel') then $6 else '' end
  where id=$1 and version=$2 and state=$7 returning *`,
     [
       id,
@@ -640,6 +658,8 @@ export async function serviceRequestHistory(
 ): Promise<ApiResult> {
   const denied = staffDenied(s);
   if (denied) return denied;
+  if (id.startsWith("call:") || id.startsWith("assist:"))
+    return legacyRequestHistory(db, s!, id, now);
   if (!isUuid(id)) return fail(400, "통합 요청 번호를 확인해 주세요");
   await expireServiceRequests(db, now);
   const [row] = await db.query("select id from service_requests where id=$1", [

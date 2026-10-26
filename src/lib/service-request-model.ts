@@ -86,7 +86,8 @@ export type RequestAction =
   | "reopen"
   | "transfer"
   | "accept_place"
-  | "reject_place";
+  | "reject_place"
+  | "operator_cancel";
 export const NEXT_REQUEST_ACTION: Partial<
   Record<RequestState, { action: RequestAction; label: string }>
 > = {
