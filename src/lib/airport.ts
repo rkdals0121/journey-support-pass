@@ -165,6 +165,12 @@ export const PLACES: Place[] = [
     landside: true,
   }),
   place("t2-help", "T2", 250, "제2여객터미널 3층 헬프데스크", "Terminal 2, 3F Help Desk", "desk-t1", { landside: true }),
+  place("t1-arrivals-demo", "T1", 25, "제1여객터미널 1층 도착장 만남 지점 · 시연", "Terminal 1, 1F arrivals meeting point · demo", "desk-t1", {
+    landside: true, level: 1,
+  }),
+  place("t2-arrivals-demo", "T2", 250, "제2여객터미널 1층 도착장 만남 지점 · 시연", "Terminal 2, 1F arrivals meeting point · demo", "desk-t1", {
+    landside: true, level: 1,
+  }),
 
   place("t1-west", "T1", 10, "제1여객터미널 면세구역 서편 (10번 탑승구 앞)", "Terminal 1 airside, near Gate 10", "t1-w"),
   place("t1-center", "T1", 25, "제1여객터미널 면세구역 중앙 (25번 탑승구 앞)", "Terminal 1 airside, near Gate 25", "t1-c"),

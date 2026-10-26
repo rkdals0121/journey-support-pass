@@ -66,6 +66,7 @@ export function HelpFlow({
   assisted = false,
   initialReceipt,
   initialService = "guidance",
+  initialNote = "",
   returnTo,
   freshShared = false,
   checkExisting = false,
@@ -81,6 +82,7 @@ export function HelpFlow({
   assisted?: boolean;
   initialReceipt?: string;
   initialService?: ServiceType;
+  initialNote?: string;
   returnTo?: string;
   freshShared?: boolean;
   checkExisting?: boolean;
@@ -91,7 +93,7 @@ export function HelpFlow({
   const [service, setService] = useState<ServiceType>(initialService);
   const [choices, setChoices] = useState(savedChoices);
   const [party, setParty] = useState(savedParty);
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(initialNote);
   const [consent, setConsent] = useState(false);
   const [review, setReview] = useState(false);
   const [request, setRequest] = useState<ServiceRequestView | null>(null);
@@ -405,6 +407,13 @@ export function HelpFlow({
           ? tr("여객 대신 도움 접수", "Request help on behalf of a passenger")
           : tr("지금 도움 요청하기", "Request help now")}
       </h1>
+      {!sharedDevice && (
+        <p>
+          <Link href={en ? "/services?lang=en" : "/services"}>
+            {tr("서비스·담당 업무 안내", "Service directory")}
+          </Link>
+        </p>
+      )}
       <p className="dx-notice">
         {tr(
           "시연용 접수입니다. 실제 직원·로봇·차량이 출동하지 않습니다. 실제 도움이 필요하면 가까운 안내데스크에 말씀해 주세요.",

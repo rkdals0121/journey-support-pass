@@ -121,9 +121,12 @@ describe("키오스크 자리", () => {
     }
   });
 
-  it("셔틀트레인 도착층만 지하 1층이고 나머지는 탑승구 층이다", () => {
+  it("셔틀 도착층·도착장 시연 지점·탑승구의 층을 구분한다", () => {
     expect(at("cc-train")).toMatchObject({ area: "CONCOURSE", x: 0, level: -1, landside: false, zoneId: "cc-center" });
-    for (const p of PLACES.filter((p) => p.id !== "cc-train")) expect(p.level, p.id).toBe(GATE_LEVEL);
+    for (const id of ["t1-arrivals-demo", "t2-arrivals-demo"])
+      expect(at(id)).toMatchObject({ level: 1, landside: true, zoneId: "desk-t1" });
+    for (const p of PLACES.filter((p) => p.id !== "cc-train" && !p.id.endsWith("-arrivals-demo")))
+      expect(p.level, p.id).toBe(GATE_LEVEL);
   });
 
   it("자리마다 영어 이름이 있다", () => {
