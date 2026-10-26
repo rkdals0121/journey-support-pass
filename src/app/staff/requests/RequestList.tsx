@@ -4,6 +4,7 @@ import { PushSettings } from "./PushSettings";
 import { ResourceDispatch } from "./ResourceDispatch";
 import { ResourceAvailability } from "@/app/components/ResourceAvailability";
 import { RequestAlertStatus } from "./RequestAlertStatus";
+import { OperatorClose } from "./OperatorClose";
 import type { RequestAlert } from "@/lib/request-alert-model";
 import type { DispatchResource } from "@/lib/resource-model";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -169,6 +170,7 @@ export function RequestList({
     r: ServiceRequestView,
     action: RequestAction,
     targetZone?: string,
+    confirmed = false,
   ) {
     if (busy) return;
     setBusy(r.id);
@@ -182,12 +184,13 @@ export function RequestList({
           version: r.version,
           action,
           reason: reasons[r.id] ?? "",
+          confirmed,
           ...(targetZone ? { zoneId: targetZone } : {}),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        if(res.status===409)await load();
+        if (res.status === 409) await load();
         throw new Error(data.error ?? "처리하지 못했습니다");
       }
       await load();
@@ -491,10 +494,12 @@ export function RequestList({
               {open && r.assignedZone && !mine && (
                 <p>다른 구역에서 맡은 요청입니다.</p>
               )}
-              {current && open && (mine || isDesk) && (
+              {open && (mine || isDesk) && (current || isDesk) && (
                 <div className="dx-ending">
                   <label htmlFor={`reason-${r.id}`}>
-                    처리 사유 · 지원 불가·위치 변경 거절 시 여객에게 전달됩니다
+                    {current
+                      ? "처리 사유 · 여객에게도 전달됩니다"
+                      : "운영자 종료 사유 · 직원 이력에 기록합니다"}
                   </label>
                   <textarea
                     id={`reason-${r.id}`}
@@ -504,13 +509,24 @@ export function RequestList({
                       setReasons({ ...reasons, [r.id]: e.target.value })
                     }
                   />
-                  <button
-                    className="btn btn-ghost"
-                    disabled={!!busy || !(reasons[r.id] ?? "").trim()}
-                    onClick={() => void act(r, "unavailable")}
-                  >
-                    지원 불가로 안내
-                  </button>
+                  {current && (
+                    <button
+                      className="btn btn-ghost"
+                      disabled={!!busy || !(reasons[r.id] ?? "").trim()}
+                      onClick={() => void act(r, "unavailable")}
+                    >
+                      지원 불가로 안내
+                    </button>
+                  )}
+                  {isDesk && (
+                    <OperatorClose
+                      version={r.version}
+                      disabled={!!busy || !(reasons[r.id] ?? "").trim()}
+                      onClose={() =>
+                        void act(r, "operator_cancel", undefined, true)
+                      }
+                    />
+                  )}
                 </div>
               )}
               {current &&
@@ -565,7 +581,7 @@ export function RequestList({
                   </button>
                 </div>
               )}
-              {current && (
+              {
                 <div className="dx-ending">
                   <button
                     className="btn btn-ghost"
@@ -573,44 +589,52 @@ export function RequestList({
                   >
                     처리·인계 이력 확인
                   </button>
-                  {history[r.id] && (
-                    <ol>
-                      {history[r.id].map((h) => (
-                        <li key={h.version}>
-                          {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
-                          {h.action.startsWith("pickup_")
-                            ? ({
-                                pickup_changed: "만날 곳 수정",
-                                pickup_requested: "위치 변경 요청",
-                                pickup_withdrawn: "위치 변경 요청 철회",
-                                pickup_accepted: "위치 변경 수락",
-                                pickup_rejected: "위치 변경 거절",
-                              }[h.action] ?? "위치 변경 처리")
-                            : h.action === "baseline"
-                              ? "이전 버전 기준 상태"
-                              : h.action === "transfer"
-                                ? "담당 인계"
-                                : h.action === "resource_assign"
-                                  ? "장비 배차"
-                                  : h.action === "resource_release"
-                                    ? "장비 배차 해제"
-                                    : h.action === "privacy_erased"
-                                      ? "상세 보관 종료"
-                                      : requestStateLabel({
-                                          ...r,
-                                          state: h.state,
-                                        })}
-                          {h.assignedZone &&
-                            ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
-                          {h.actorZone &&
-                            ` · 처리 ${zoneLabels[h.actorZone] ?? h.actorZone}`}
-                          {h.reason && ` · ${h.reason}`}
-                        </li>
-                      ))}
-                    </ol>
-                  )}
+                  {history[r.id] &&
+                    (history[r.id].length === 0 ? (
+                      <p className="fine">
+                        이전 처리의 시간별 이력은 수집되지 않았습니다. 운영자
+                        종료는 이번 버전부터 기록합니다.
+                      </p>
+                    ) : (
+                      <ol>
+                        {history[r.id].map((h) => (
+                          <li key={h.version}>
+                            {new Date(h.at).toLocaleTimeString("ko-KR")} ·{" "}
+                            {h.action === "operator_cancel"
+                              ? "운영자 확인 후 종료"
+                              : h.action.startsWith("pickup_")
+                                ? ({
+                                    pickup_changed: "만날 곳 수정",
+                                    pickup_requested: "위치 변경 요청",
+                                    pickup_withdrawn: "위치 변경 요청 철회",
+                                    pickup_accepted: "위치 변경 수락",
+                                    pickup_rejected: "위치 변경 거절",
+                                  }[h.action] ?? "위치 변경 처리")
+                                : h.action === "baseline"
+                                  ? "이전 버전 기준 상태"
+                                  : h.action === "transfer"
+                                    ? "담당 인계"
+                                    : h.action === "resource_assign"
+                                      ? "장비 배차"
+                                      : h.action === "resource_release"
+                                        ? "장비 배차 해제"
+                                        : h.action === "privacy_erased"
+                                          ? "상세 보관 종료"
+                                          : requestStateLabel({
+                                              ...r,
+                                              state: h.state,
+                                            })}
+                            {h.assignedZone &&
+                              ` · 담당 ${zoneLabels[h.assignedZone] ?? h.assignedZone}`}
+                            {h.actorZone &&
+                              ` · 처리 ${zoneLabels[h.actorZone] ?? h.actorZone}`}
+                            {h.reason && ` · ${h.reason}`}
+                          </li>
+                        ))}
+                      </ol>
+                    ))}
                 </div>
-              )}
+              }
             </li>
           );
         })}

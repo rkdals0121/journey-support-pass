@@ -268,6 +268,23 @@ drop trigger if exists remember_request_registration on assist_requests;
 create trigger remember_request_registration before insert or update on assist_requests for each row execute function remember_request_registration_link();
 
 -- One operational read model; source records remain authoritative and are never copied twice.
+alter table calls add column if not exists work_version bigint not null default 0;
+alter table assist_requests add column if not exists work_version bigint not null default 0;
+alter table calls add column if not exists operator_reason text not null default '';
+alter table assist_requests add column if not exists operator_reason text not null default '';
+alter table calls add column if not exists operator_actor_zone text;
+alter table assist_requests add column if not exists operator_actor_zone text;
+alter table calls add column if not exists operator_closed_version bigint;
+alter table assist_requests add column if not exists operator_closed_version bigint;
+create or replace function increment_legacy_work_version() returns trigger language plpgsql as $$
+begin
+ if NEW is distinct from OLD then NEW.work_version:=OLD.work_version+1; end if;
+ return NEW;
+end $$;
+drop trigger if exists update_legacy_work_version on calls;
+create trigger update_legacy_work_version before update on calls for each row execute function increment_legacy_work_version();
+drop trigger if exists update_legacy_work_version on assist_requests;
+create trigger update_legacy_work_version before update on assist_requests for each row execute function increment_legacy_work_version();
 alter table service_requests add column if not exists pending_place_id text;
 alter table service_requests add column if not exists pending_place_at timestamptz;
 alter table service_requests drop constraint if exists service_requests_pending_place_check;
@@ -286,17 +303,17 @@ select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
  when c.end_kind='done' then 'done'
  when c.end_kind='expired' then 'expired' else 'cancelled' end,
  c.place_id,coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),'kiosk',
- c.accepted_zone,''::text,c.created_at,coalesce(c.ended_at,c.accepted_at,c.created_at),c.created_at+interval '24 hours',
- (extract(epoch from c.created_at)*10000+case when c.ended_at is not null then 2 when c.accepted_at is not null then 1 else 0 end)::double precision,
+ c.accepted_zone,c.operator_reason,c.created_at,coalesce(c.ended_at,c.accepted_at,c.created_at),c.created_at+interval '24 hours',
+ c.work_version::double precision,
  c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked,null::text,null::timestamptz
 from calls c left join registrations r on r.id=c.registration_id and r.status in ('active','pending')
 union all
 select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
  case when a.state='moving' then 'serving' when a.end_kind='expired' then 'expired' else a.state end,
  coalesce(a.place_id,''),coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),
- case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,''::text,a.created_at,
+ case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,a.operator_reason,a.created_at,
  coalesce(a.ended_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
- (extract(epoch from a.created_at)*10000+case a.state when 'received' then 0 when 'assigned' then 1 when 'moving' then 2 else 3 end)::double precision,
+ a.work_version::double precision,
  a.assigned_at,null::timestamptz,null::timestamptz,a.ended_at,a.registration_linked,null::text,null::timestamptz
 from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');
 
