@@ -1,5 +1,6 @@
 import { PLACES } from "./airport";
 import { SERVICE_CATALOG } from "./service-catalog";
+import { BUSINESS_AREAS } from "./operating-profile";
 export interface QueueOptions {
   history?: boolean;
   offset?: number;
@@ -12,6 +13,7 @@ export interface QueueOptions {
   zone?: string;
   order?: string;
   topic?: string;
+  business?: string;
 }
 export function attentionPredicate(now: "$1" | "$2") {
   return `((state='received' and created_at<=${now}::timestamptz-interval '10 minutes') or (state in ('assigned','en_route','arrived','serving') and updated_at<=${now}::timestamptz-interval '30 minutes'))`;
@@ -25,6 +27,7 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
   const allowed: Record<string, string[]> = {
     service: ["all", "guidance", "robot", "mobility"],
     topic: ["all", ...SERVICE_CATALOG.map((t) => t.id)],
+    business: ["all", ...BUSINESS_AREAS.map((b) => b.id)],
     source: ["all", "web", "preregistered", "kiosk", "assisted"],
     queue: ["all", "integrated", "call", "assist"],
     scope: ["all", "waiting", "mine", "location", "attention"],
@@ -73,6 +76,8 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
     conditions.push(`assigned_zone=${bind(options.zone)}`);
   if (options.topic && options.topic !== "all")
     conditions.push(`topic_id=${bind(options.topic)}`);
+  if (options.business && options.business !== "all")
+    conditions.push(`business_id=${bind(options.business)}`);
   if (options.scope === "mine")
     conditions.push(`assigned_zone=${bind(zoneId)}`);
   if (options.scope === "waiting") conditions.push("state='received'");

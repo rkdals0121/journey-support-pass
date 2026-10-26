@@ -296,10 +296,21 @@ alter table service_requests add constraint service_requests_pending_place_check
 alter table service_requests add column if not exists topic_id text;
 alter table service_requests add column if not exists business_id text;
 alter table service_requests add column if not exists destination_id text;
+alter table service_requests add column if not exists resolution_kind text;
+alter table service_requests add column if not exists resolution_business_id text;
+alter table service_requests add column if not exists resolution_message text not null default '';
+alter table service_requests drop constraint if exists service_requests_resolution_check;
+alter table service_requests add constraint service_requests_resolution_check check (
+ (resolution_kind is null and resolution_business_id is null and resolution_message='') or
+ (resolution_kind is not null and resolution_kind in ('advice','referral','handoff','resolved') and state='done' and length(trim(resolution_message)) between 1 and 240)
+);
 create or replace function reset_request_destination() returns trigger as $$
 begin
  if new.place_id is distinct from old.place_id then new.destination_id=null; end if;
- if new.place_id='' then new.topic_id=null; new.business_id=null; new.destination_id=null; end if;
+ if new.place_id='' then
+  new.topic_id=null; new.business_id=null; new.destination_id=null;
+  new.resolution_kind=null; new.resolution_business_id=null; new.resolution_message='';
+ end if;
  return new;
 end; $$ language plpgsql;
 drop trigger if exists reset_request_destination_trigger on service_requests;
@@ -308,7 +319,7 @@ for each row execute function reset_request_destination();
 create or replace view request_work_ledger as
 select id::text,id as source_id,'integrated'::text as queue,registration_id,service,state,place_id,choices,party,note,lang,source,
  assigned_zone,reason,created_at,updated_at,expires_at,version::double precision as version,
- accepted_at,arrived_at,started_at,ended_at,registration_linked,pending_place_id,pending_place_at,topic_id,business_id,destination_id
+ accepted_at,arrived_at,started_at,ended_at,registration_linked,pending_place_id,pending_place_at,topic_id,business_id,destination_id,resolution_kind,resolution_business_id,resolution_message
 from service_requests
 union all
 select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
@@ -318,7 +329,7 @@ select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
  c.place_id,coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),'kiosk',
  c.accepted_zone,c.operator_reason,c.created_at,coalesce(c.ended_at,c.accepted_at,c.created_at),c.created_at+interval '24 hours',
  c.work_version::double precision,
- c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text
+ c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text,null::text,null::text,''::text
 from calls c left join registrations r on r.id=c.registration_id and r.status in ('active','pending')
 union all
 select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
@@ -327,7 +338,7 @@ select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
  case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,a.operator_reason,a.created_at,
  coalesce(a.ended_at,a.moving_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
  a.work_version::double precision,
- a.assigned_at,null::timestamptz,a.moving_at,a.ended_at,a.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text
+ a.assigned_at,null::timestamptz,a.moving_at,a.ended_at,a.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text,null::text,null::text,''::text
 from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');
 
 -- Internal pilot inventory. No physical device is provisioned or commanded here.

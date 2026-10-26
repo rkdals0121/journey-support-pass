@@ -212,3 +212,16 @@
  .staff-workspace .dx-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.work-requests .dx-actions{gap:.5rem}.staff-workspace .work-requests>form{display:flex;flex-wrap:wrap}
 }
 @media(prefers-reduced-motion:reduce){.public-service-card{transition:none}}
+.business-handling{border-top:1px solid var(--line);padding-top:1rem}
+.business-handling details{margin:.5rem 0}
+.business-handling summary{cursor:pointer;color:var(--green-press);font-weight:700}
+.business-handling form{display:grid;gap:.65rem;padding:1rem 0;min-width:0}
+.business-handling form h3{margin:.25rem 0;font-size:1.15rem}
+.business-handling input:not([type=checkbox]),.business-handling select,.business-handling textarea{width:100%;min-width:0}
+.business-handling textarea{min-height:7rem}
+.business-confirm{display:flex;align-items:flex-start;gap:.7rem;line-height:1.6}
+.business-confirm input{flex:none;margin-top:.4rem}
+.request-resolution{padding:1rem;border-left:4px solid var(--green);background:var(--mint-2);border-radius:.4rem;min-width:0}
+.request-resolution h3{font-size:1.1rem;margin:.15rem 0 .7rem}
+.request-resolution p{margin:.5rem 0}
+.request-resolution-message{white-space:pre-wrap;overflow-wrap:anywhere}

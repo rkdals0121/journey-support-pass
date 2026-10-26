@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     search: q.get("search") ?? "",
     service: q.get("service") ?? "all",
     topic: q.get("topic") ?? "all",
+    business: q.get("business") ?? "all",
     source: q.get("source") ?? "all",
     queue: q.get("queue") ?? "all",
     scope: q.get("scope") ?? "all",
