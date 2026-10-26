@@ -31,6 +31,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         <p className="fine">{lang === "en" ? "Registration saves your needs. It does not confirm a staff, robot or vehicle booking." : "사전등록은 필요한 도움을 미리 알려 두는 기능입니다. 직원·로봇·차량의 예약 확정은 아닙니다."}</p>
       </section>
       <PassArt label={t.passNo} />
+      <p className="assist"><Link href={lang === "en" ? "/services?lang=en" : "/services"}>{lang === "en" ? "Explore airport services and support" : "공항 서비스·담당 업무 살펴보기"}</Link></p>
 
       <ol className="steps-list">
         <li>

@@ -3498,3 +3498,10 @@ a.call-btn,a.svc-card {text-decoration:none;}
 .dx-summary div {background:var(--surface);border:1px solid var(--line-strong);border-radius:.75rem;padding:.75rem;}
 .dx-summary dt {font-size:.85rem;}
 .dx-summary dd {font-size:1.2rem;font-weight:700;margin:.3rem 0 0;}
+.dx-business-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0;}
+.dx-business-grid .dx-card {margin:0;min-width:0;overflow-wrap:anywhere;}
+.dx-business-grid ul {padding-left:1.2rem;}
+.dx-page details.dx-card {margin-bottom:.75rem;}
+.dx-page details summary {font-weight:700;cursor:pointer;min-height:44px;padding:.5rem 0;}
+.dx-page .dx-summary dd {overflow-wrap:anywhere;}
+@media(max-width:600px){.dx-business-grid{grid-template-columns:1fr;}}

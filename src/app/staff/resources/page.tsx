@@ -17,6 +17,9 @@ export default async function ResourcesPage() {
           통합 요청으로 돌아가기
         </Link>
         <ResourceBoard isDesk={s.isDesk} />
+        <p>
+          <Link href="/staff/operations">운영 시간·구역·장비 가용 기준</Link>
+        </p>
       </main>
       <StaffNav isDesk={s.isDesk} />
     </>
