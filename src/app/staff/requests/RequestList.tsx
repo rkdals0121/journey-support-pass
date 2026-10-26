@@ -368,10 +368,6 @@ export function RequestList({
           : "불러오는 중…"}
       </p>
 
-      <p>
-        기존 호출·이동지원과 새 통합 요청을 함께 확인합니다. 검색·필터는 전체
-        대상에 적용됩니다.
-      </p>
       <form
         className="dx-card"
         onSubmit={(e) => {
@@ -652,9 +648,6 @@ export function RequestList({
         )}
       </div>
 
-      <p className="fine">
-        화면 내 소리 알림은 현재 표시되는 목록의 새 접수를 대상으로 합니다.
-      </p>
       {pageReady && visible.length === 0 && <p>표시할 요청이 없습니다.</p>}
       {rows.length >= 200 && (
         <p role="status">

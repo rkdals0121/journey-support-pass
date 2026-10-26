@@ -1,6 +1,12 @@
 "use client";
 
-import { Bot, ChevronLeft, ClipboardPen, Navigation, Stethoscope } from "lucide-react";
+import {
+  Bot,
+  ChevronLeft,
+  ClipboardPen,
+  Navigation,
+  Stethoscope,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ErrorNote } from "../components/Alert";
@@ -14,7 +20,13 @@ interface PlaceOption {
 
 const AUTOPRINT_KEY = "jsp:kiosk:autoprint";
 
-export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; currentPlace: PlaceOption | null }) {
+export function KioskSetup({
+  places,
+  currentPlace,
+}: {
+  places: PlaceOption[];
+  currentPlace: PlaceOption | null;
+}) {
   const [code, setCode] = useState("");
   const [use, setUse] = useState<"register" | "guide" | "entry">("entry");
   const [placeId, setPlaceId] = useState("");
@@ -25,7 +37,11 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
   const [reserve, setReserve] = useState(false);
 
   useEffect(() => {
-    setReserve(new URLSearchParams(window.location.search).get("reserve") === "1");
+    setReserve(
+      new URLSearchParams(window.location.search).get("reserve") === "1",
+    );
+    const purpose = new URLSearchParams(window.location.search).get("use");
+    if (purpose === "entry" || purpose === "guide") setUse(purpose);
     try {
       setAutoPrint(localStorage.getItem(AUTOPRINT_KEY) === "1");
     } catch {
@@ -34,7 +50,9 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
   }, []);
 
   // 쓰임새에 맞는 자리만 보여준다. 입구 키오스크와 등록 키오스크는 보안검색 전에, 안내 키오스크는 그 뒤에 놓인다.
-  const shown = places.filter((p) => (use === "guide" ? !p.landside : p.landside));
+  const shown = places.filter((p) =>
+    use === "guide" ? !p.landside : p.landside,
+  );
   useEffect(() => {
     if (!shown.some((p) => p.id === placeId)) setPlaceId("");
   }, [use]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -72,15 +90,18 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
   return (
     <form onSubmit={submit}>
       <Brand />
-      <h1>키오스크 설치</h1>
-      <p className="muted">이 기기를 공항 키오스크로 씁니다. 설치는 직원이 한 번만 하면 됩니다.</p>
+      <h1>현장 기기 설치</h1>
+      <p className="muted">직원용 설치 코드로 기기를 연결하세요.</p>
 
       {currentPlace && (
         <div className="setup-now">
           <span>
             지금 설치된 자리: <b>{currentPlace.label}</b>
           </span>
-          <Link className="btn btn-inline" href={currentPlace.landside ? "/kiosk/entry" : "/kiosk/guide"}>
+          <Link
+            className="btn btn-inline"
+            href={currentPlace.landside ? "/kiosk/entry" : "/kiosk/guide"}
+          >
             {currentPlace.landside ? "입구 안내로봇 열기" : "안내 화면 열기"}
           </Link>
         </div>
@@ -89,26 +110,41 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
       <fieldset className="setup-use">
         <legend>쓰임새</legend>
         <label className={use === "entry" ? "on" : ""}>
-          <input type="radio" name="use" checked={use === "entry"} onChange={() => setUse("entry")} />
+          <input
+            type="radio"
+            name="use"
+            checked={use === "entry"}
+            onChange={() => setUse("entry")}
+          />
           <Bot size={22} aria-hidden="true" />
           <span>
             <b>공항 입구 안내로봇</b>
-            <small>여객이 탑승권을 찍으면 고른 도움을 확인하고, 등록하지 않은 여객은 그 자리에서 등록합니다</small>
+            <small>탑승권 확인 · 필요한 도움 · 서비스 연결</small>
           </span>
         </label>
         <label className={use === "guide" ? "on" : ""}>
-          <input type="radio" name="use" checked={use === "guide"} onChange={() => setUse("guide")} />
+          <input
+            type="radio"
+            name="use"
+            checked={use === "guide"}
+            onChange={() => setUse("guide")}
+          />
           <Navigation size={22} aria-hidden="true" />
           <span>
             <b>안내 키오스크 (출국심사 뒤)</b>
-            <small>여객이 탑승권을 대면 미리 등록한 내용을 보여 주고(그 자리에서 고칠 수 있음) 탑승구 가는 길과 시설을 맞춤으로 보여줍니다</small>
+            <small>탑승구·편의시설 맞춤 안내</small>
           </span>
         </label>
         {/* 등록 키오스크(스티커 인쇄)는 주 흐름에서 뺐다. 등록은 예매 완료 화면의 링크로 하고, 현장은 안내데스크가 대신 등록한다.
             예비로 두려면 ?reserve=1 로 연다(시연·비교용). */}
         {reserve && (
           <label className={use === "register" ? "on" : ""}>
-            <input type="radio" name="use" checked={use === "register"} onChange={() => setUse("register")} />
+            <input
+              type="radio"
+              name="use"
+              checked={use === "register"}
+              onChange={() => setUse("register")}
+            />
             <ClipboardPen size={22} aria-hidden="true" />
             <span>
               <b>등록 키오스크 (예비)</b>
@@ -119,7 +155,12 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
       </fieldset>
 
       <label htmlFor="place">놓을 자리</label>
-      <select id="place" value={placeId} onChange={(e) => setPlaceId(e.target.value)} required>
+      <select
+        id="place"
+        value={placeId}
+        onChange={(e) => setPlaceId(e.target.value)}
+        required
+      >
         <option value="">자리를 골라 주세요</option>
         {shown.map((p) => (
           <option key={p.id} value={p.id}>
@@ -127,12 +168,20 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
           </option>
         ))}
       </select>
-      <p className="hint">자리 목록과 그 자리에서의 길 안내는 시연용 모의 자료입니다.</p>
+      <p className="hint">
+        자리 목록과 그 자리에서의 길 안내는 시연용 모의 자료입니다.
+      </p>
 
       {use === "register" && (
         <label className="check">
-          <input type="checkbox" checked={autoPrint} onChange={(e) => setAutoPrint(e.target.checked)} />
-          <span>스티커 프린터가 연결되어 있습니다 (등록을 마치면 바로 인쇄)</span>
+          <input
+            type="checkbox"
+            checked={autoPrint}
+            onChange={(e) => setAutoPrint(e.target.checked)}
+          />
+          <span>
+            스티커 프린터가 연결되어 있습니다 (등록을 마치면 바로 인쇄)
+          </span>
         </label>
       )}
 
@@ -148,13 +197,20 @@ export function KioskSetup({ places, currentPlace }: { places: PlaceOption[]; cu
         onChange={(e) => setCode(e.target.value)}
       />
       {error && <ErrorNote>{error}</ErrorNote>}
-      <button className="btn btn-primary" disabled={busy || !code.trim() || !placeId}>
+      <button
+        className="btn btn-primary"
+        disabled={busy || !code.trim() || !placeId}
+      >
         {busy ? "확인하는 중…" : "이 기기를 키오스크로 쓰기"}
       </button>
-      {currentPlace && <Link className="btn btn-ghost" href="/help">이 위치에서 통합 도움 접수 열기</Link>}
+      {currentPlace && (
+        <Link className="btn btn-ghost" href="/help">
+          이 위치에서 통합 도움 접수 열기
+        </Link>
+      )}
       <Link className="home-staff" href="/check">
-        <Stethoscope size={16} aria-hidden="true" />
-        이 기기 점검하기 (카메라·소리·인터넷)
+        <Stethoscope size={16} aria-hidden="true" />이 기기 점검하기
+        (카메라·소리·인터넷)
       </Link>
       <Link className="home-staff" href="/">
         <ChevronLeft size={16} aria-hidden="true" />

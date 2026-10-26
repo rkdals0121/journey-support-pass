@@ -80,6 +80,7 @@ export function HelpFlow({
   returnTo,
   freshShared = false,
   checkExisting = false,
+  embedded = false,
 }: {
   lang: "ko" | "en";
   initialPlace?: string;
@@ -98,8 +99,14 @@ export function HelpFlow({
   returnTo?: string;
   freshShared?: boolean;
   checkExisting?: boolean;
+  embedded?: boolean;
 }) {
   const [lang, setLang] = useState(initialLang);
+  // The public header changes the URL locale without remounting this form.
+  // Keep the form's language in sync while retaining its draft and receipt.
+  useEffect(() => {
+    if (embedded) setLang(initialLang);
+  }, [embedded, initialLang]);
   const en = lang === "en";
   const [placeId, setPlaceId] = useState(placeOf(initialPlace)?.id ?? "");
   const [service, setService] = useState<ServiceType>(initialService);
@@ -390,37 +397,43 @@ export function HelpFlow({
       className={`page dx-page ${large ? "dx-large" : ""}`}
       lang={lang}
     >
-      <div className="dx-toolbar">
-        <Link
-          href={returnTo ?? registrationHome ?? (en ? "/?lang=en" : "/")}
-          onClick={() => {
-            if (sharedDevice) {
-              try {
-                sessionStorage.removeItem(STORAGE);
-                sessionStorage.removeItem(STORAGE_SCOPE);
-              } catch {}
-            }
-          }}
-        >
-          {returnTo
-            ? tr("안내 화면으로", "Back to kiosk")
-            : registrationHome
-              ? tr("내 등록으로", "My registration")
-              : tr("처음으로", "Home")}
-        </Link>
-        <button
-          className="btn btn-ghost"
-          onClick={() => setLang(en ? "ko" : "en")}
-        >
-          {en ? "한국어" : "English"}
-        </button>
-        <button
-          className="btn btn-ghost"
-          aria-pressed={large}
-          onClick={() => setLarge(!large)}
-        >
-          {tr("큰 글씨", "Large text")}
-        </button>
+      <div className={`dx-toolbar${embedded ? " dx-toolbar-embedded" : ""}`}>
+        {(!embedded || registrationHome) && (
+          <Link
+            href={returnTo ?? registrationHome ?? (en ? "/?lang=en" : "/")}
+            onClick={() => {
+              if (sharedDevice) {
+                try {
+                  sessionStorage.removeItem(STORAGE);
+                  sessionStorage.removeItem(STORAGE_SCOPE);
+                } catch {}
+              }
+            }}
+          >
+            {returnTo
+              ? tr("안내 화면으로", "Back to kiosk")
+              : registrationHome
+                ? tr("내 등록으로", "My registration")
+                : tr("처음으로", "Home")}
+          </Link>
+        )}
+        {!embedded && (
+          <>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setLang(en ? "ko" : "en")}
+            >
+              {en ? "한국어" : "English"}
+            </button>
+            <button
+              className="btn btn-ghost"
+              aria-pressed={large}
+              onClick={() => setLarge(!large)}
+            >
+              {tr("큰 글씨", "Large text")}
+            </button>
+          </>
+        )}
         {speech.supported && (
           <button
             className="btn btn-ghost"
@@ -452,17 +465,10 @@ export function HelpFlow({
               : businessOf(businessId)!.label}
         </p>
       )}
-      {!sharedDevice && (
-        <p>
-          <Link href={en ? "/services?lang=en" : "/services"}>
-            {tr("서비스·담당 업무 안내", "Service directory")}
-          </Link>
-        </p>
-      )}
       <p className="dx-notice">
         {tr(
-          "시연용 접수입니다. 실제 직원·로봇·차량이 출동하지 않습니다. 실제 도움이 필요하면 가까운 안내데스크에 말씀해 주세요.",
-          "Demonstration only. No real staff, robot or vehicle is dispatched. For actual help, contact the nearest information desk.",
+          "시연용 접수 · 실제 출동은 하지 않습니다.",
+          "Demo request · no real assistance is dispatched.",
         )}
       </p>
       {error && (
@@ -826,8 +832,6 @@ export function HelpFlow({
               )}
               {topic && (
                 <p className="fine">
-                  {tr("선택한 서비스", "Selected service")}:{" "}
-                  {en ? topic.en : topic.label} ·{" "}
                   <Link href={en ? "/services?lang=en" : "/services"}>
                     {tr("서비스 변경", "Change service")}
                   </Link>

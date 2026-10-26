@@ -9,7 +9,7 @@ export default async function KioskPage() {
   const session = await currentSession();
   const current = session?.isKiosk ? placeOf(session.placeId) : null;
   return (
-    <div className="dark-screen">
+    <div className="device-setup">
       <main className="page">
         <KioskSetup
           places={PLACES.map((p) => ({ id: p.id, label: p.label, landside: p.landside }))}

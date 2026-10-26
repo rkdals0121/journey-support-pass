@@ -3189,21 +3189,10 @@ html[data-picture] .route > li::before {
   transform: scaleX(-1);
 }
 
-/* ── 안내로봇 키오스크: 파란 바탕과 로봇(참고 그림 "탑승권으로 깨우는 공항 도우미") ──
-   키오스크 화면에만 쓴다. 색 이름은 그대로 두고 값만 파랑으로 바꿔, 누르는 것·고른 것이 모두 파랗게 보인다. */
+/* ── 안내로봇 키오스크: 공통 초록·민트 테마와 로봇 ── */
 .robot-theme {
-  --green: #2459c9;
-  --green-press: #1b45a0;
-  --mint: #e2ecff;
-  --mint-2: #f0f5ff;
-  --ink: #0f2350;
-  --ink-2: #183374;
-  --ink-soft: #2a4a8f;
-  --line: #d6e1f5;
-  --line-strong: #9fb5dc;
-  --bg: #eef4ff;
   min-height: 100dvh;
-  background: linear-gradient(180deg, #dce9ff 0%, #f3f7ff 45%, #ffffff 100%);
+  background: var(--mint-2);
 }
 .robot-stage {
   display: flex;
@@ -3284,7 +3273,7 @@ html[data-picture] .route > li::before {
 .robot-panel {
   padding: 1.25rem 1.25rem 1.5rem;
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #1d4fbf 0%, #3a7df0 100%);
+  background: var(--green-press);
   box-shadow: var(--shadow-2);
 }
 .robot-title {

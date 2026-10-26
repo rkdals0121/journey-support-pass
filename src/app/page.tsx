@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, MapPin, ChevronRight, Check, Plane } from "lucide-react";
+import {
+  ArrowRight,
+  MapPin,
+  ChevronRight,
+  Plane,
+  Monitor,
+  Bot,
+} from "lucide-react";
 import { PublicShell } from "./components/PublicShell";
 import { ServiceDirectory } from "./components/ServiceDirectory";
 import { MyRequestPanel } from "./components/MyRequestPanel";
@@ -18,9 +25,7 @@ export default async function Home({
           <section className="portal-intro">
             <span className="public-eyebrow">
               <MapPin size={17} aria-hidden="true" />
-              {en
-                ? "AIRPORT SUPPORT, CONNECTED"
-                : "공항에서 필요한 도움을 연결합니다"}
+              {en ? "AIRPORT SUPPORT, CONNECTED" : "인천공항 통합 지원"}
             </span>
             <h1>
               {en ? (
@@ -39,8 +44,8 @@ export default async function Home({
             </h1>
             <p>
               {en
-                ? "Find a service, request help and follow staff progress. You can start without pre-registration."
-                : "서비스를 찾고, 도움을 요청하고, 담당자의 처리까지 확인하세요. 사전등록 없이도 바로 시작할 수 있어요."}
+                ? "Request assistance and follow its progress."
+                : "필요한 도움을 요청하고, 처리 현황을 확인하세요."}
             </p>
             <div className="portal-hero-actions">
               <Link className="public-button" href={"/help" + q}>
@@ -52,16 +57,31 @@ export default async function Home({
                 <ChevronRight size={18} aria-hidden="true" />
               </Link>
             </div>
-            <p className="portal-trust">
-              <Check size={16} aria-hidden="true" />
-              {en
-                ? "Pre-registration is optional · staff confirmation required"
-                : "사전등록 없이 접수 · 담당자 확인 후 지원"}
-            </p>
           </section>
           <MyRequestPanel lang={lang} />
         </div>
         <ServiceDirectory lang={lang} compact />
+        <section
+          className="portal-device-link"
+          aria-label={en ? "Airport devices" : "공항 현장 기기"}
+        >
+          <span className="device-link-icon">
+            <Monitor aria-hidden="true" />
+            <Bot aria-hidden="true" />
+          </span>
+          <div>
+            <h2>{en ? "Kiosk & guide robot" : "키오스크 · 안내로봇"}</h2>
+            <p>
+              {en
+                ? "Explore the airport device screens."
+                : "공항 현장 화면을 살펴보세요."}
+            </p>
+          </div>
+          <Link href={"/devices" + q}>
+            {en ? "View screens" : "화면 보기"}
+            <ArrowRight size={18} aria-hidden="true" />
+          </Link>
+        </section>
         <section className="portal-before">
           <div>
             <span className="public-eyebrow">

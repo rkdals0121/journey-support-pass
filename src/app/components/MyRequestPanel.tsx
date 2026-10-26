@@ -70,7 +70,7 @@ export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
   }, [en]);
   return (
     <aside
-      className="my-request-panel"
+      className={`my-request-panel${!request && !loading && !error ? " is-empty" : ""}`}
       aria-label={en ? "My request" : "내 요청"}
     >
       <div className="public-eyebrow">
@@ -84,7 +84,7 @@ export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
             : "요청한 도움을 한눈에"
           : en
             ? "Check your request"
-            : "접수한 도움을 확인하세요"}
+            : "요청 진행 현황"}
       </h2>
       {loading ? (
         <p role="status">{en ? "Checking…" : "확인 중…"}</p>
@@ -100,17 +100,12 @@ export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
               lang={lang}
             />
           )}
-          <p className="public-caption">
-            {en
-              ? "Status updates as staff process your request."
-              : "담당자가 처리하면 진행 상태가 여기에 반영돼요."}
-          </p>
         </>
       ) : (
         <p>
           {en
-            ? "Requests made in this tab will appear here. You can also continue with your saved request link."
-            : "이 탭에서 접수한 요청을 이어서 확인할 수 있어요. 저장한 요청 링크로도 확인할 수 있어요."}
+            ? "Your requests in this tab appear here."
+            : "이 탭에서 접수한 요청이 여기에 표시돼요."}
         </p>
       )}
       {error && (

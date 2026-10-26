@@ -4,7 +4,6 @@ import { helpService, kioskReturn } from "@/lib/help-entry";
 import { businessOf } from "@/lib/operating-profile";
 import { supportTopic } from "@/lib/service-catalog";
 import { PublicShell } from "../components/PublicShell";
-import { MyRequestPanel } from "../components/MyRequestPanel";
 export default async function HelpPage({
   searchParams,
 }: {
@@ -39,6 +38,7 @@ export default async function HelpPage({
       returnTo={session?.isKiosk ? kioskReturn(q.returnTo) : undefined}
       freshShared={session?.isKiosk === true && q.fresh === "1"}
       checkExisting={q.resume === "1"}
+      embedded={!session?.isKiosk}
     />
   );
   if (session?.isKiosk) return flow;
@@ -81,7 +81,6 @@ export default async function HelpPage({
           )}
         </aside>
         {flow}
-        <MyRequestPanel lang={lang} />
       </div>
     </PublicShell>
   );
