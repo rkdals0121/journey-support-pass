@@ -1,0 +1,261 @@
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+import {
+  Navigation,
+  ArrowRight,
+  MapPin,
+  Clock,
+  Accessibility,
+} from "lucide-react";
+import { PlaceFinder } from "../components/PlaceFinder";
+import {
+  placeOf,
+  GATE_PICKUP_POINTS,
+  routeToGate,
+  nearestFacilities,
+  routeOptionsOf,
+  type Route,
+  type FacilityKind,
+} from "@/lib/airport";
+import { textOf } from "@/lib/i18n";
+export function NavigationFlow({ en }: { en: boolean }) {
+  const t = (ko: string, english: string) => (en ? english : ko),
+    labels = textOf(en ? "en" : "ko").facility;
+  const [place, setPlace] = useState(""),
+    [kind, setKind] = useState("gate"),
+    [gate, setGate] = useState(""),
+    [stepFree, setStepFree] = useState(true),
+    [result, setResult] = useState<{ title: string; route: Route } | null>(
+      null,
+    ),
+    [error, setError] = useState("");
+  function find() {
+    setResult(null);
+    setError("");
+    const from = placeOf(place);
+    if (!from) {
+      setError(
+        t(
+          "현재 위치 후보를 먼저 확인해 주세요.",
+          "Confirm your current location first.",
+        ),
+      );
+      return;
+    }
+    const opts = routeOptionsOf(stepFree ? ["mov_no_stairs"] : []);
+    if (kind === "gate") {
+      const target = GATE_PICKUP_POINTS.find((p) => p.gate === Number(gate));
+      if (!/^\d{1,3}$/.test(gate) || !target) {
+        setError(
+          t(
+            "지원하는 게이트 번호를 입력해 주세요.",
+            "Enter a supported gate number.",
+          ),
+        );
+        return;
+      }
+      const route = routeToGate(from, target.place.area, Number(gate), opts);
+      if (route)
+        setResult({ title: t(`${gate}번 탑승구`, `Gate ${gate}`), route });
+      else
+        setError(
+          t(
+            "현재 위치에서는 안내 가능한 연결 경로가 없어요. 아래 현장 안내를 이용해 주세요.",
+            "No mapped route from this location. Request on-site guidance below.",
+          ),
+        );
+    } else {
+      const near = nearestFacilities(from, opts).find((f) => f.kind === kind);
+      if (near)
+        setResult({
+          title: `${labels[kind as FacilityKind]} · ${near.nearGate}${t("번 부근", " nearby")}`,
+          route: near.route,
+        });
+      else
+        setError(
+          t(
+            "이 위치에서 확인된 시설 경로가 없어요.",
+            "No facility route is available from this location.",
+          ),
+        );
+    }
+  }
+  return (
+    <main id="public-main" className="service-workspace">
+      <header className="service-heading">
+        <span className="service-kicker">
+          <Navigation aria-hidden="true" />
+          {t("바로 이용하는 안내", "SELF-SERVICE DIRECTIONS")}
+        </span>
+        <h1>{t("어디로 가시나요?", "Where are you heading?")}</h1>
+        <p>
+          {t(
+            "현재 위치와 목적지를 고르면 이동 경로가 나와요.",
+            "Choose your location and destination for directions.",
+          )}
+        </p>
+        <span className="service-demo-label">
+          {t("시연 지도 기준", "Prototype map")}
+        </span>
+      </header>
+      <div className="service-form-layout">
+        <form
+          className="service-form-card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            find();
+          }}
+        >
+          <section className="request-section">
+            <h2>
+              <span>1</span>
+              {t("출발 위치", "Start location")}
+            </h2>
+            <PlaceFinder
+              id="nav-place"
+              value={place}
+              onChange={(id) => {
+                setPlace(id);
+                setResult(null);
+              }}
+              en={en}
+            />
+          </section>
+          <section className="request-section">
+            <h2>
+              <span>2</span>
+              {t("목적지", "Destination")}
+            </h2>
+            <label htmlFor="nav-kind">{t("찾을 곳", "Destination type")}</label>
+            <select
+              id="nav-kind"
+              value={kind}
+              onChange={(e) => {
+                setKind(e.target.value);
+                setResult(null);
+              }}
+            >
+              <option value="gate">{t("탑승구", "Boarding gate")}</option>
+              {Object.entries(labels).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            {kind === "gate" && (
+              <>
+                <label htmlFor="nav-gate">
+                  {t("탑승구 번호", "Gate number")}
+                </label>
+                <input
+                  id="nav-gate"
+                  inputMode="numeric"
+                  maxLength={3}
+                  value={gate}
+                  onChange={(e) => {
+                    setGate(e.target.value);
+                    setResult(null);
+                  }}
+                  required
+                  placeholder="130"
+                />
+              </>
+            )}
+            <label className="request-check">
+              <input
+                type="checkbox"
+                checked={stepFree}
+                onChange={(e) => {
+                  setStepFree(e.target.checked);
+                  setResult(null);
+                }}
+              />
+              <Accessibility aria-hidden="true" />
+              {t("계단 없는 경로", "Step-free route")}
+            </label>
+          </section>
+          {error && (
+            <p className="error-note" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="public-button" type="submit">
+            {t("경로 보기", "Show route")}
+            <ArrowRight aria-hidden="true" />
+          </button>
+        </form>
+        <aside
+          className="service-route-result"
+          aria-label={t("경로 결과", "Route result")}
+          aria-live="polite"
+        >
+          {result ? (
+            <>
+              <span className="service-kicker">
+                {t("이동 경로", "YOUR ROUTE")}
+              </span>
+              <h2>{result.title}</h2>
+              <div className="route-metrics">
+                <span>
+                  <Clock aria-hidden="true" />
+                  {t(
+                    `약 ${result.route.minutes}분`,
+                    `About ${result.route.minutes} min`,
+                  )}
+                </span>
+                <span>{Math.round(result.route.meters)}m</span>
+              </div>
+              <ol className="journey-route-steps">
+                <li>
+                  <MapPin aria-hidden="true" />
+                  {en ? placeOf(place)?.labelEn : placeOf(place)?.label}
+                </li>
+                {result.route.steps.map((s, i) => (
+                  <li key={i}>
+                    {s.kind === "walk"
+                      ? t(
+                          `${s.towardGate}번 방향으로 ${Math.round(s.meters)}m 이동`,
+                          `Walk ${Math.round(s.meters)}m towards gate ${s.towardGate}`,
+                        )
+                      : s.kind === "shuttle"
+                        ? t("셔틀트레인 이용", "Take the shuttle train")
+                        : t(
+                            `${s.kind === "elevator" ? "엘리베이터" : "에스컬레이터"}로 ${s.fromLevel}층 → ${s.toLevel}층`,
+                            `Take the ${s.kind} from level ${s.fromLevel} to ${s.toLevel}`,
+                          )}
+                  </li>
+                ))}
+                <li>{result.title}</li>
+              </ol>
+              <p className="service-muted">
+                {t(
+                  "거리·시간은 시연 지도 기준 추정치예요.",
+                  "Estimated using the prototype map.",
+                )}
+              </p>
+            </>
+          ) : (
+            <div className="route-empty">
+              <Navigation aria-hidden="true" />
+              <h2>{t("나에게 맞는 경로", "Your route")}</h2>
+              <p>
+                {t(
+                  "출발 위치와 목적지를 선택해 주세요.",
+                  "Choose your start and destination.",
+                )}
+              </p>
+            </div>
+          )}
+          <Link
+            className="public-text-link"
+            href={`/help?topic=guidance${place ? "&place=" + place : ""}${en ? "&lang=en" : ""}`}
+          >
+            {t("현장 안내 지원 요청", "Request on-site guidance")}
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </aside>
+      </div>
+    </main>
+  );
+}

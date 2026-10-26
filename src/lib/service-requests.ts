@@ -19,6 +19,7 @@ import { alertSnapshots, maintainAlertQueue } from "./request-alerts";
 import { pushConfig } from "./staff-push";
 import { resourceSnapshot } from "./dispatch-resources";
 import { supportTopic } from "./service-catalog";
+import { parseServiceDetails, type ServiceDetails } from "./service-tasks";
 import { businessOf, pilotDestinations } from "./operating-profile";
 import {
   parseResolution,
@@ -69,6 +70,7 @@ interface Row {
   version: number;
   pending_place_id?: string | null;
   pending_place_at?: Date | null;
+  service_details?: ServiceDetails | Record<string, never>;
   topic_id?: string | null;
   business_id?: string | null;
   destination_id?: string | null;
@@ -101,6 +103,9 @@ function view(r: Row): ServiceRequestView {
     pendingPlace: placeOf(r.pending_place_id ?? "")?.label ?? "",
     pendingPlaceEn: placeOf(r.pending_place_id ?? "")?.labelEn ?? "",
     pendingPlaceRequestedAt: r.pending_place_at?.toISOString() ?? null,
+    ...(r.service_details && "task" in r.service_details
+      ? { serviceDetails: r.service_details as ServiceDetails }
+      : {}),
     ...(r.topic_id ? { topicId: r.topic_id } : {}),
     ...(r.business_id ? { businessId: r.business_id } : {}),
     ...(r.destination_id ? { destinationId: r.destination_id } : {}),
@@ -176,6 +181,13 @@ export async function createServiceRequest(
       id = place.area === "T2" ? "traffic-t2" : "traffic-t1";
     business = businessOf(id);
   }
+  const details =
+    body.serviceDetails === undefined
+      ? undefined
+      : parseServiceDetails(body.serviceDetails, topic?.id, now);
+  if (typeof details === "string") return fail(400, details);
+  if (details?.task === "facility-access")
+    business = businessOf("passenger-terminal");
   const destination =
     body.destinationId === undefined || body.destinationId === ""
       ? null
@@ -247,8 +259,8 @@ export async function createServiceRequest(
  insert into service_request_limits(bucket,window_at,used)
  values($13,$14,1) on conflict(bucket,window_at) do update set used=service_request_limits.used+1
  where service_request_limits.used<20 returning used
- ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action,topic_id,business_id,destination_id)
- select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12,'created',$15,$16,$17 from quota
+ ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action,topic_id,business_id,destination_id,service_details)
+ select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12,'created',$15,$16,$17,$18::jsonb from quota
  on conflict do nothing returning *`,
       [
         hash(body.receipt),
@@ -268,6 +280,7 @@ export async function createServiceRequest(
         topic?.id ?? null,
         business?.id ?? null,
         destination,
+        JSON.stringify(details ?? {}),
       ],
     )
     .catch((error) => {
@@ -364,6 +377,15 @@ export async function changeRequestPlace(
         400,
         "목록에서 새 만날 곳을 선택해 주세요",
         "location_invalid",
+      );
+    if (
+      ["facility", "traffic"].includes(r.topic_id ?? "") &&
+      place.area !== placeOf(r.place_id)?.area
+    )
+      return fail(
+        400,
+        "담당 터미널이 달라지는 신고는 현재 요청을 취소하고 새로 접수해 주세요",
+        "location_business_changed",
       );
     if (session?.isKiosk && session.placeId !== place.id)
       return fail(

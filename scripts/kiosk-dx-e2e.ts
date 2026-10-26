@@ -107,7 +107,7 @@ async function main() {
       creates === 0,
     );
     await click(kiosk, "이 내용으로 요청 접수");
-    await kiosk.waitForSelector('h2[role="status"]');
+    await kiosk.waitForSelector('[role="status"].request-state-pill');
     const receipt = await kiosk.evaluate(() =>
       sessionStorage.getItem("jsp-dx-receipt-v1"),
     );
@@ -121,7 +121,7 @@ async function main() {
       !new URL(kiosk.url()).searchParams.has("fresh"),
     );
     await kiosk.reload({ waitUntil: "networkidle0" });
-    await kiosk.waitForSelector('h2[role="status"]');
+    await kiosk.waitForSelector('[role="status"].request-state-pill');
     check(
       "reload restores the shared-screen request",
       (await kiosk.evaluate(() =>
@@ -149,8 +149,8 @@ async function main() {
     check("staff assignment succeeds", assigned.status === 200);
     await kiosk.waitForFunction(
       () =>
-        document.querySelector('h2[role="status"]')?.textContent ===
-        "담당자 배정",
+        document.querySelector('[role="status"].request-state-pill')
+          ?.textContent === "담당자 배정",
     );
     check("shared kiosk receives the staff state", true);
     await click(kiosk, "접수는 유지하고 화면 비우기");
@@ -172,13 +172,11 @@ async function main() {
     await kiosk.goto(base + "/help?resume=1&returnTo=%2Fkiosk%2Fentry", {
       waitUntil: "networkidle0",
     });
-    await kiosk.waitForSelector("#dx-place");
+    await kiosk.waitForSelector(".request-empty-state");
     check(
       "status lookup without a saved request explains the empty state",
       await kiosk.evaluate(() =>
-        document.body.innerText.includes(
-          "이 기기에 연결된 접수 내역이 없습니다",
-        ),
+        document.body.innerText.includes("이 탭에 접수 내역이 없어요"),
       ),
     );
     const flights = await kiosk.evaluate(
@@ -230,7 +228,7 @@ async function main() {
     await kiosk.click('input[type="checkbox"][required]');
     await kiosk.click('button[type="submit"]');
     await click(kiosk, "이 내용으로 요청 접수");
-    await kiosk.waitForSelector('h2[role="status"]');
+    await kiosk.waitForSelector('[role="status"].request-state-pill');
     const linkedReceipt = await kiosk.evaluate(() =>
       sessionStorage.getItem("jsp-dx-receipt-v1"),
     );
@@ -239,7 +237,7 @@ async function main() {
         `/p/${reg.body.token}/help?service=mobility&returnTo=%2Fkiosk%2Fentry&fresh=1`,
       { waitUntil: "networkidle0" },
     );
-    await kiosk.waitForSelector('h2[role="status"]');
+    await kiosk.waitForSelector('[role="status"].request-state-pill');
     check(
       "same passenger can reopen without losing their request",
       (await kiosk.evaluate(() =>
@@ -267,7 +265,7 @@ async function main() {
       await kiosk.evaluate(
         () =>
           sessionStorage.getItem("jsp-dx-receipt-v1") === null &&
-          !document.querySelector('h2[role="status"]'),
+          !document.querySelector('[role="status"].request-state-pill'),
       ),
     );
     check(

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { taskOf, serviceDetailsLines } from "@/lib/service-tasks";
 import { PushSettings } from "./PushSettings";
 import { ResourceDispatch } from "./ResourceDispatch";
 import { ResourceAvailability } from "@/app/components/ResourceAvailability";
@@ -20,6 +21,7 @@ import {
 import { placeOf } from "@/lib/airport";
 import {
   nextRequestAction,
+  requestServiceLabel,
   requestStateLabel,
   OPEN_REQUEST_STATES,
   SERVICE_LABEL,
@@ -684,7 +686,7 @@ export function RequestList({
                           setSelection({ id: r.id, query: requestUrl })
                         }
                       >
-                        <strong>{SERVICE_LABEL[r.service]}</strong>
+                        <strong>{requestServiceLabel(r)}</strong>
                         <span>
                           {new Date(r.createdAt).toLocaleTimeString("ko-KR", {
                             hour: "2-digit",
@@ -760,14 +762,27 @@ export function RequestList({
                 >
                   요청 목록으로
                 </button>
-                <h2 tabIndex={-1}>{SERVICE_LABEL[r.service]}</h2>
+                <h2 tabIndex={-1}>
+                  {taskOf(r.serviceDetails?.task)?.label ??
+                    SERVICE_LABEL[r.service]}
+                </h2>
+                {r.serviceDetails && (
+                  <dl className="service-detail-list">
+                    {serviceDetailsLines(r.serviceDetails).map((f) => (
+                      <div key={f.label}>
+                        <dt>{f.label}</dt>
+                        <dd>{f.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
                 {r.topicId && (
                   <p className="public-topic-note">
                     {supportTopic(r.topicId)?.label}
                   </p>
                 )}
                 {r.businessId && (
-                  <p>담당 연결 참고 업무: {businessOf(r.businessId)?.label}</p>
+                  <p>처리 담당 업무: {businessOf(r.businessId)?.label}</p>
                 )}
                 {r.destinationId && (
                   <p>

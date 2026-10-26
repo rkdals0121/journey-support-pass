@@ -25,6 +25,8 @@ export default async function HelpPage({
     lang = q.lang === "en" ? "en" : "ko";
   const flow = (
     <HelpFlow
+      key={q.topic ?? "generic"}
+      freshPrivate={!session?.isKiosk && q.fresh === "1"}
       lang={q.lang === "en" ? "en" : "ko"}
       initialPlace={
         session?.isKiosk ? (session.placeId ?? "") : (q.place ?? "")
@@ -42,46 +44,5 @@ export default async function HelpPage({
     />
   );
   if (session?.isKiosk) return flow;
-  return (
-    <PublicShell lang={lang}>
-      <div className="public-request-layout">
-        <aside className="request-guide">
-          <span className="public-eyebrow">
-            {lang === "en" ? "ON-SITE SUPPORT" : "현장 도움 요청"}
-          </span>
-          <h2>
-            {topic
-              ? lang === "en"
-                ? topic.en
-                : topic.label
-              : lang === "en"
-                ? "Connect with support"
-                : "필요한 도움을 연결해요"}
-          </h2>
-          <ol>
-            <li>{lang === "en" ? "Choose support" : "필요한 도움 선택"}</li>
-            <li>
-              {lang === "en"
-                ? "Confirm your location"
-                : "만날 곳·필요 정보 확인"}
-            </li>
-            <li>{lang === "en" ? "Review and send" : "내용 확인 후 접수"}</li>
-          </ol>
-          <p>
-            {lang === "en"
-              ? "Staff review your request before assistance is assigned."
-              : "접수 후 담당자가 내용을 확인하고 지원 방법을 안내해요."}
-          </p>
-          {topic?.mode === "referral" && (
-            <p>
-              {lang === "en"
-                ? "This is a staff enquiry, not an automatic application to another department."
-                : "담당 창구 연결을 위한 상담 요청이에요. 다른 부서의 정식 접수가 자동 완료되는 것은 아니에요."}
-            </p>
-          )}
-        </aside>
-        {flow}
-      </div>
-    </PublicShell>
-  );
+  return <PublicShell lang={lang}>{flow}</PublicShell>;
 }

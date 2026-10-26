@@ -115,7 +115,7 @@ export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
       )}
       <Link
         className="public-button public-button-secondary"
-        href={"/help?resume=1" + (en ? "&lang=en" : "")}
+        href={"/requests" + (en ? "?lang=en" : "")}
       >
         {en ? "View request" : "내 요청 확인"}
         <ArrowRight size={18} aria-hidden="true" />

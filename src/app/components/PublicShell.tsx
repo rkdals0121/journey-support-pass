@@ -36,7 +36,7 @@ export function PublicShell({
   const items = [
     ["/services", en ? "Find a service" : "서비스 찾기"],
     ["/help", en ? "Request help" : "현장 도움 요청"],
-    ["/help?resume=1", en ? "My request" : "내 요청 확인"],
+    ["/requests", en ? "My request" : "내 요청 확인"],
     ["/prepare", en ? "Before you travel" : "여행 전 사전등록"],
     ["/devices", en ? "Kiosk & robot" : "키오스크·로봇"],
   ];
