@@ -120,6 +120,10 @@ export function HelpFlow({
   const freshConsumed = useRef(false);
   const speech = useSpeech(lang);
   const tr = (ko: string, english: string) => (en ? english : ko);
+  const registrationHome =
+    registrationToken && !sharedDevice && !registrationError
+      ? `/p/${registrationToken}`
+      : undefined;
   const topic = supportTopic(topicId),
     referral = topic?.mode === "referral";
   const applyRequest = useCallback(
@@ -293,7 +297,9 @@ export function HelpFlow({
               consent,
               registrationToken,
               assisted,
-              ...(topicId ? { topicId } : {}),
+              // Generic and saved-registration entries still belong to the selected service's task.
+              // Preserve explicit business-only legacy links rather than overwriting their owner.
+              topicId: topicId ?? (!businessId ? service : undefined),
               ...(businessId ? { businessId } : {}),
               ...(destinationId ? { destinationId } : {}),
             },
@@ -385,7 +391,7 @@ export function HelpFlow({
     >
       <div className="dx-toolbar">
         <Link
-          href={returnTo ?? (en ? "/?lang=en" : "/")}
+          href={returnTo ?? registrationHome ?? (en ? "/?lang=en" : "/")}
           onClick={() => {
             if (sharedDevice) {
               try {
@@ -397,7 +403,9 @@ export function HelpFlow({
         >
           {returnTo
             ? tr("안내 화면으로", "Back to kiosk")
-            : tr("처음으로", "Home")}
+            : registrationHome
+              ? tr("내 등록으로", "My registration")
+              : tr("처음으로", "Home")}
         </Link>
         <button
           className="btn btn-ghost"
@@ -664,12 +672,12 @@ export function HelpFlow({
                     : placeOf(destinationId)?.label}
                 </p>
               )}
-              {topicId && (
+              {(topicId || !businessId) && (
                 <p>
                   {tr("상담 유형", "Enquiry type")}:{" "}
                   {en
-                    ? supportTopic(topicId)?.en
-                    : supportTopic(topicId)?.label}
+                    ? supportTopic(topicId ?? service)?.en
+                    : supportTopic(topicId ?? service)?.label}
                 </p>
               )}
               {!referral && (

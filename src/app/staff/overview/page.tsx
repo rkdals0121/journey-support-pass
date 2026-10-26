@@ -19,6 +19,7 @@ export default async function OverviewPage() {
             <p>접수 경로를 함께 보고, 담당 업무별로 처리합니다 · 모의 시연</p>
           </div>
           <div className="workspace-page-tools">
+            <Link href="/staff/demo">시연 준비</Link>
             <Link className="btn btn-primary" href="/staff/requests">
               요청 처리
             </Link>

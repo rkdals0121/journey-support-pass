@@ -15,7 +15,7 @@ export default async function RegisteredHelp({
     returnTo?: string;
     fresh?: string;
     resume?: string;
-    lang?:string;
+    lang?: string;
   }>;
 }) {
   const { token } = await params;
@@ -33,8 +33,9 @@ export default async function RegisteredHelp({
   const found = await lookupPass(await getDb(), token, new Date());
   if (found.kind !== "ok")
     return <HelpFlow lang="ko" registrationError {...shared} />;
-  const lang=q.lang==="en"?"en":q.lang==="ko"?"ko":found.journey.lang;
-  const flow=(
+  const lang =
+    q.lang === "en" ? "en" : q.lang === "ko" ? "ko" : found.journey.lang;
+  const flow = (
     <HelpFlow
       key={token}
       lang={lang}
@@ -42,7 +43,14 @@ export default async function RegisteredHelp({
       registrationToken={token}
       savedChoices={found.journey.choices}
       savedParty={found.journey.extra.party ?? 1}
+      initialNote={found.journey.extra.note ?? ""}
     />
   );
-  return session?.isKiosk?flow:<PublicShell lang={lang}><div className="public-request-layout request-solo">{flow}</div></PublicShell>;
+  return session?.isKiosk ? (
+    flow
+  ) : (
+    <PublicShell lang={lang}>
+      <div className="public-request-layout request-solo">{flow}</div>
+    </PublicShell>
+  );
 }
