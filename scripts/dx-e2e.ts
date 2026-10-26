@@ -203,7 +203,7 @@ async function main() {
     check(
       "English request form",
       (await page.evaluate(() => document.body.innerText)).includes(
-        "Where are you now?",
+        "What can you see nearby?",
       ),
     );
     await page.select("#dx-place", "t1-info");

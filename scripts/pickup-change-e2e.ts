@@ -113,6 +113,8 @@ async function main() {
       200,
     );
     await desk.goto(base + "/staff/requests", { waitUntil: "networkidle0" });
+    await desk.waitForSelector(`[data-select-request="${id}"]`);
+    await desk.click(`[data-select-request="${id}"]`);
     await desk.waitForSelector(`[data-request-id="${id}"]`);
     await click(desk, "제가 맡겠습니다", id);
     await passenger.waitForFunction(
@@ -198,6 +200,9 @@ async function main() {
       {},
       id,
     );
+    await desk.$eval(`[data-request-id="${id}"] .work-secondary-actions`, (e) =>
+      e.setAttribute("open", ""),
+    );
     await desk.type(
       `#reason-${id}`,
       "다른 구역으로 변경은 안내데스크 확인이 필요합니다",
@@ -229,7 +234,7 @@ async function main() {
       (await current()).placeId === "t1-info" &&
         !(await current()).pendingPlaceId,
     );
-    await desk.reload({waitUntil:"networkidle0"});
+    await desk.reload({ waitUntil: "networkidle0" });
     await click(desk, "현장 도착", id);
     await click(desk, "지원 시작", id);
     await passenger.waitForFunction(
