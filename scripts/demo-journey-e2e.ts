@@ -214,7 +214,12 @@ async function main() {
     await shot(passenger, "03-saved-registration");
     await click(passenger, ".dx-pass-help", "사전등록 내용으로 지금 도움 요청");
     await passenger.waitForSelector("#dx-place");
-    await passenger.select("#dx-place", "cc-center");
+    await passenger.type("#dx-place-search", "116");
+    await click(
+      passenger,
+      '[data-confirm-place="cc-center"]',
+      "이곳에서 만날게요",
+    );
     await passenger.click('input[name="service"][value="mobility"]');
     await passenger.select("#dx-destination", "cc-130");
     check(
@@ -503,7 +508,7 @@ async function main() {
     check("no browser runtime errors", errors.length === 0);
     console.log(`Full demo journey checks: ${checks.length} passed`);
   } catch (error) {
-    for (const [i, p] of (await browser.pages()).entries()) {
+    for (const [i, p] of (await browser.pages().catch(() => [])).entries()) {
       await p
         .screenshot({ path: `${out}/failure-${i}.png`, fullPage: true })
         .catch(() => {});

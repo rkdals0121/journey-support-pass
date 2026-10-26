@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { PLACES } from "@/lib/airport";
+import { PlaceFinder } from "../components/PlaceFinder";
 import type { ServiceRequestView } from "@/lib/service-request-model";
 export function PickupChange({
   request: r,
@@ -117,21 +117,17 @@ export function PickupChange({
         </p>
       ) : (
         <>
-          <label htmlFor="pickup-change-place">
-            {tr("새로 만날 곳", "New pickup point")}
-          </label>
-          <select
+          <PlaceFinder
             id="pickup-change-place"
             value={selected}
+            onChange={setSelected}
+            en={en}
             disabled={disabled || busy}
-            onChange={(e) => setSelected(e.target.value)}
-          >
-            {PLACES.map((p) => (
-              <option key={p.id} value={p.id}>
-                {en ? p.labelEn : p.label}
-              </option>
-            ))}
-          </select>
+            label={tr(
+              "새로 만날 곳 주변에 무엇이 보이나요?",
+              "What can you see near your new pickup point?",
+            )}
+          />
           <p className="fine">
             {r.state === "received"
               ? tr(

@@ -1,4 +1,4 @@
-import { PLACES } from "./airport";
+import { PICKUP_PLACES } from "./airport";
 import { SERVICE_CATALOG } from "./service-catalog";
 import { BUSINESS_AREAS } from "./operating-profile";
 import { UNCLASSIFIED_BUSINESS } from "./business-overview-model";
@@ -96,7 +96,7 @@ export function queueQuery(options: QueueOptions, zoneId: string, now: Date) {
   if (options.scope === "attention") conditions.push(attentionPredicate("$1"));
   if (search) {
     const folded = search.toLocaleLowerCase("en");
-    const places = PLACES.filter((p) =>
+    const places = PICKUP_PLACES.filter((p) =>
       [p.id, p.label, p.labelEn].some((text) =>
         text.toLocaleLowerCase("en").includes(folded),
       ),

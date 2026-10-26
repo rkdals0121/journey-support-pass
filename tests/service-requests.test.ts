@@ -69,6 +69,23 @@ beforeEach(async () => {
   );
 });
 describe("DX independent and pre-registered requests", () => {
+  it("accepts a confirmed gate clue as an exact pilot pickup and finds it in staff search", async () => {
+    const r = await create(1, {
+      placeId: "gate-127",
+      service: "mobility",
+      topicId: "mobility",
+    });
+    expect(r.status).toBe(200);
+    expect(get(r)).toMatchObject({
+      placeId: "gate-127",
+      businessId: "shuttle",
+    });
+    expect(get(r).place).toContain("127번");
+    expect(
+      (await listServiceRequests(db, desk, now, { search: "127번" })).body,
+    ).toMatchObject({ total: 1 });
+    expect((await create(2, { placeId: "gate-999" })).status).toBe(400);
+  });
   it("stores structured enquiry type and terminal-specific business without changing the passenger note", async () => {
     const r = await create(1, {
       topicId: "facility",

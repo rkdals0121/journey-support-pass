@@ -193,8 +193,83 @@ export const PLACES: Place[] = [
   place("t2-286", "T2", 286, "제2여객터미널 면세구역 동편 끝 (286번 탑승구 앞)", "Terminal 2 airside, near Gate 286", "t2-eend"),
 ];
 
+// Gate-number pickup points use the same pilot map and staff bands as the existing named points.
+// Keep PLACES as the short preset list used by installed kiosks and operating-profile examples.
+const PRESET_GATES: Record<number, string> = {
+  10: "t1-west",
+  25: "t1-center",
+  41: "t1-east",
+  103: "cc-103",
+  108: "cc-108",
+  116: "cc-center",
+  125: "cc-125",
+  130: "cc-130",
+  212: "t2-212",
+  220: "t2-west",
+  250: "t2-center",
+  278: "t2-east",
+  286: "t2-286",
+};
+function gateZone(area: Area, gate: number) {
+  if (area === "T1") return gate <= 14 ? "t1-w" : gate <= 36 ? "t1-c" : "t1-e";
+  if (area === "CONCOURSE")
+    return gate <= 106 || gate >= 127
+      ? "cc-end"
+      : gate <= 110 || gate >= 123
+        ? "cc-mid"
+        : "cc-center";
+  return gate <= 218
+    ? "t2-wend"
+    : gate <= 224
+      ? "t2-wam"
+      : gate <= 275
+        ? "t2-mid"
+        : gate <= 280
+          ? "t2-eam"
+          : "t2-eend";
+}
+export const GATE_PICKUP_POINTS: { gate: number; place: Place }[] = (
+  Object.keys(AREAS) as Area[]
+).flatMap((area) => {
+  const [first, last] = AREAS[area].gates;
+  return Array.from({ length: last - first + 1 }, (_, i) => {
+    const gate = first + i,
+      preset = PLACES.find((p) => p.id === PRESET_GATES[gate]);
+    const ko =
+        area === "T1"
+          ? "제1여객터미널"
+          : area === "T2"
+            ? "제2여객터미널"
+            : "탑승동",
+      en =
+        area === "CONCOURSE"
+          ? "Concourse"
+          : area === "T1"
+            ? "Terminal 1"
+            : "Terminal 2";
+    return {
+      gate,
+      place:
+        preset ??
+        place(
+          `gate-${gate}`,
+          area,
+          gate,
+          `${ko} 3층 ${gate}번 탑승구 앞 · 시연`,
+          `${en} 3F, Gate ${gate} · demo`,
+          gateZone(area, gate),
+        ),
+    };
+  });
+});
+export const PICKUP_PLACES: Place[] = [
+  ...PLACES,
+  ...GATE_PICKUP_POINTS.map((g) => g.place).filter(
+    (p) => !PLACES.some((n) => n.id === p.id),
+  ),
+];
 export function placeOf(id: string | null | undefined): Place | null {
-  return PLACES.find((p) => p.id === id) ?? null;
+  return PICKUP_PLACES.find((p) => p.id === id) ?? null;
 }
 
 // ── 길 계산 ──

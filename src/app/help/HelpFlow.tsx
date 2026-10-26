@@ -16,6 +16,7 @@ import { textOf } from "@/lib/i18n";
 import { IdleGuard } from "../components/IdleGuard";
 import { ReceiptQr } from "./ReceiptQr";
 import { PickupChange } from "./PickupChange";
+import { PlaceFinder } from "../components/PlaceFinder";
 import { RequestResolutionView } from "../components/RequestResolutionView";
 import { useSpeech } from "../components/useSpeech";
 import { supportTopic, topicMatchesService } from "@/lib/service-catalog";
@@ -29,7 +30,7 @@ const STORAGE = "jsp-dx-receipt-v1";
 const STORAGE_SCOPE = "jsp-dx-receipt-registration-v1";
 const supportCodes = [
   "mov_no_stairs",
-  "mov_wheelchair",
+  "mov_wheelchair_own",
   "gd_large",
   "gd_voice",
   "gd_easy",
@@ -724,47 +725,76 @@ export function HelpFlow({
               className="dx-card"
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!placeOf(placeId)) {
+                  setError(
+                    tr(
+                      "현재 계신 곳의 후보를 확인하고 선택해 주세요.",
+                      "Confirm and select your current location.",
+                    ),
+                  );
+                  document.getElementById("dx-place-search")?.focus();
+                  return;
+                }
+                setError("");
                 setReview(true);
               }}
             >
-              <label htmlFor="dx-place">
-                {topic?.id === "facility"
-                  ? tr("불편한 시설이 있는 지점", "Location of the facility")
-                  : referral
-                    ? tr(
-                        "상담받을 곳을 알려주세요",
-                        "Where can staff assist you?",
-                      )
-                    : tr("지금 어디에 계신가요?", "Where are you now?")}
-              </label>
-              <select
-                id="dx-place"
-                disabled={lockedPlace}
-                required
-                value={placeId}
-                onChange={(e) => {
-                  setPlaceId(e.target.value);
-                  setDestinationId("");
-                }}
-              >
-                <option value="">
-                  {tr(
-                    "현재 위치를 골라 주세요",
-                    "Choose your current pickup point",
-                  )}
-                </option>
-                {PLACES.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {en ? p.labelEn : p.label}
-                  </option>
-                ))}
-              </select>
-              <p className="fine">
-                {tr(
-                  "위치 목록은 시연용입니다. 탑승구 목적지가 아니라 현재 계신 곳을 고르세요.",
-                  "Demo pickup points. Choose where you are, not your destination gate.",
-                )}
-              </p>
+              {lockedPlace ? (
+                <>
+                  <label htmlFor="dx-place">
+                    {tr("이 기기의 현재 위치", "This kiosk's location")}
+                  </label>
+                  <select
+                    id="dx-place"
+                    disabled={lockedPlace}
+                    required
+                    value={placeId}
+                    onChange={(e) => {
+                      setPlaceId(e.target.value);
+                      setDestinationId("");
+                    }}
+                  >
+                    <option value="">
+                      {tr(
+                        "현재 위치를 골라 주세요",
+                        "Choose your current pickup point",
+                      )}
+                    </option>
+                    {PLACES.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {en ? p.labelEn : p.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="fine">
+                    {tr(
+                      "위치 목록은 시연용입니다. 탑승구 목적지가 아니라 현재 계신 곳을 고르세요.",
+                      "Demo pickup points. Choose where you are, not your destination gate.",
+                    )}
+                  </p>
+                </>
+              ) : (
+                <PlaceFinder
+                  id="dx-place"
+                  value={placeId}
+                  en={en}
+                  disabled={busy}
+                  photos={!sharedDevice}
+                  label={
+                    topic?.id === "facility"
+                      ? tr(
+                          "불편한 시설 주변에 무엇이 보이나요?",
+                          "What can you see near the facility?",
+                        )
+                      : undefined
+                  }
+                  onChange={(id) => {
+                    setPlaceId(id);
+                    setDestinationId("");
+                    if (id) setError("");
+                  }}
+                />
+              )}
               {!topic && (
                 <fieldset>
                   <legend>
