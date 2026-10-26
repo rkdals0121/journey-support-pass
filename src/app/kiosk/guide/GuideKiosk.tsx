@@ -1,6 +1,17 @@
 "use client";
 
-import { ArrowRight, ChevronRight, ClipboardList, Frown, Info, Keyboard, Meh, Navigation, Pencil, Smile, Sunrise, Ticket } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronRight,
+  ClipboardList,
+  Frown,
+  Keyboard,
+  Meh,
+  Navigation,
+  Pencil,
+  Smile,
+  Sunrise,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
@@ -9,7 +20,18 @@ import { textOf, type Lang } from "@/lib/i18n";
 import { extractToken, PASS_NO_LENGTH } from "@/lib/pass-format";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { FlowShell } from "../../components/FlowShell";
-import { FlightBoard, closeText, departureText, destOf, paceText, routeLines, RouteSteps, RouteSummary, targetTitle, type RouteTarget } from "../../components/GuideParts";
+import {
+  FlightBoard,
+  closeText,
+  departureText,
+  destOf,
+  paceText,
+  routeLines,
+  RouteSteps,
+  RouteSummary,
+  targetTitle,
+  type RouteTarget,
+} from "../../components/GuideParts";
 import { IdleGuard } from "../../components/IdleGuard";
 import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
@@ -19,10 +41,14 @@ import { RegisterFlow } from "../../components/RegisterFlow";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
 import { Brand } from "../../components/Sunflower";
-import { Robot } from "../../components/Robot";
+import Link from "next/link";
+import { kioskHelpHref } from "@/lib/help-entry";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
-import { resetViewSettings, useViewSettings } from "../../components/viewSettings";
+import {
+  resetViewSettings,
+  useViewSettings,
+} from "../../components/viewSettings";
 
 interface Props {
   placeLabel: string;
@@ -43,7 +69,14 @@ type View =
   | { kind: "survey" }
   | { kind: "thanks" };
 
-const NO_PREFS: Prefs = { large: false, voice: false, picture: false, easy: false, slow: false, wantsStaff: false };
+const NO_PREFS: Prefs = {
+  large: false,
+  voice: false,
+  picture: false,
+  easy: false,
+  slow: false,
+  wantsStaff: false,
+};
 const THANKS_MS = 3500;
 const ERROR_SHOW_MS = 6000;
 // 안내를 끝낸 여객이 QR 을 아직 카메라 앞에 들고 있어도 곧바로 다시 열리지 않게, 방금 끝낸 패스는 잠시 읽지 않는다.
@@ -59,7 +92,13 @@ const KIOSK_SETUP = "/kiosk";
  * 체크인할 때 전자토큰이 탑승권에 저장되고, 키오스크는 탑승권 바코드로 등록을 찾는다.
  * 한 페이지 안에서 처음 화면 → 등록 내용 확인(고치기) → 안내 → 끝내기 → 처음 화면으로 돈다. 끝내면 앞사람의 내용은 화면에서 지운다.
  */
-export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, idleAnswerSec }: Props) {
+export function GuideKiosk({
+  placeLabel,
+  placeLabelEn,
+  refreshSec,
+  idleAskSec,
+  idleAnswerSec,
+}: Props) {
   useRobotTheme();
   const [view, setView] = useState<View>({ kind: "scan" });
   const [token, setToken] = useState<string | null>(null);
@@ -94,7 +133,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   useEffect(() => {
     const touch = () => {
       const now = Date.now();
-      if (emptyCall.current && !emptyCall.current.left && now - lastTouch.current >= idleAskSec * 1000) {
+      if (
+        emptyCall.current &&
+        !emptyCall.current.left &&
+        now - lastTouch.current >= idleAskSec * 1000
+      ) {
         emptyCall.current.left = true;
         // 부른 사람이 떠난 뒤의 첫 누름이다(다음 사람). 그 사람이 무엇을 고르기 전에, 떠난 사람이 바꿔 둔 소리·글자 크기·언어를 지운다.
         // 안내를 열 때 지우면 다음 사람이 그사이 고른 언어와 소리까지 지워진다.
@@ -104,15 +147,28 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       lastTouch.current = now;
     };
     // 화면의 단추보다 먼저 듣는다(capture). 안내를 여는 누름(여섯째 숫자)이 단추에 닿기 전에 그 앞의 빈 시간을 잰다.
-    const events = ["pointerdown", "keydown", "touchstart", "wheel", "click"] as const;
-    events.forEach((e) => window.addEventListener(e, touch, { capture: true, passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, touch, { capture: true }));
+    const events = [
+      "pointerdown",
+      "keydown",
+      "touchstart",
+      "wheel",
+      "click",
+    ] as const;
+    events.forEach((e) =>
+      window.addEventListener(e, touch, { capture: true, passive: true }),
+    );
+    return () =>
+      events.forEach((e) =>
+        window.removeEventListener(e, touch, { capture: true }),
+      );
   }, [idleAskSec]);
   // 빈 화면에서 부른 사람이 at(안내를 연 누름이나 QR 을 찍은 때)까지 떠나 있었는지.
   const callerLeft = useCallback(
     (at: number) => {
       const c = emptyCall.current;
-      return c !== null && (c.left || at - lastTouch.current >= idleAskSec * 1000);
+      return (
+        c !== null && (c.left || at - lastTouch.current >= idleAskSec * 1000)
+      );
     },
     [idleAskSec],
   );
@@ -162,7 +218,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const openCtrl = useRef<AbortController | null>(null);
 
   const reset = useCallback(() => {
-    if (tokenRef.current) justEnded.current = { token: tokenRef.current, at: Date.now() };
+    if (tokenRef.current)
+      justEnded.current = { token: tokenRef.current, at: Date.now() };
     // 앞사람의 QR·번호를 확인하던 요청은 끊고, 늦게 온 답도 버린다. 끊지 않으면 답이 오지 않는 요청 하나에
     // 「확인하는 중」이 남아 다음 여객이 QR 을 보여 주거나 번호를 눌러도 열리지 않는다.
     // 늦게 온 답을 쓰면 떠난 여객의 안내가 다음 사람 앞에 열린다.
@@ -266,7 +323,12 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         return;
       }
       const ended = justEnded.current;
-      if (ended && ended.token === scanned && Date.now() - ended.at < SAME_PASS_GUARD_MS) return;
+      if (
+        ended &&
+        ended.token === scanned &&
+        Date.now() - ended.at < SAME_PASS_GUARD_MS
+      )
+        return;
       void open({ scanned: text });
     },
     [open, startLang],
@@ -274,7 +336,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
 
   // 여섯 자리를 다 누르면 바로 연다. 버튼을 한 번 더 누르지 않아도 된다.
   useEffect(() => {
-    if (view.kind === "number" && digits.length === PASS_NO_LENGTH) void open({ passNo: digits });
+    if (view.kind === "number" && digits.length === PASS_NO_LENGTH)
+      void open({ passNo: digits });
   }, [digits, view.kind, open]);
 
   // 다시 받기에 두 번 연달아 실패하면(약 1분) 연결이 끊긴 것으로 보고 화면에 알린다.
@@ -288,7 +351,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
 
   // 안내를 보는 동안 탑승구와 남은 시간을 다시 받는다. 탑승구가 바뀌면 길도 바뀐다.
   // 안내와 길 화면을 오가도 시계를 새로 시작하지 않는다. 30초보다 자주 오가면 한 번도 다시 받지 못하기 때문이다.
-  const viewing = view.kind === "home" || view.kind === "route" || view.kind === "saved";
+  const viewing =
+    view.kind === "home" || view.kind === "route" || view.kind === "saved";
   useEffect(() => {
     if (!token || !viewing) return;
     let alive = true;
@@ -334,8 +398,16 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   // (화면에 개인 정보가 없어 물을 것이 없다). 직원 호출이 진행 중이면 부른 여객이 기다리는 중일 수 있어 두지 않는다.
   // 번호 화면을 열어 둔 채 떠난 것도 되돌린다. 남겨 두면 카메라가 꺼져 다음 사람이 QR 을 대도 열리지 않는다.
   const leftover =
-    viewSettings.scale !== null || viewSettings.picture !== null || viewSettings.voice !== null || startLang !== "ko" || view.kind === "number";
-  const quietIdle = !guide && (view.kind === "scan" || (view.kind === "number" && digits === "")) && leftover && !callActive;
+    viewSettings.scale !== null ||
+    viewSettings.picture !== null ||
+    viewSettings.voice !== null ||
+    startLang !== "ko" ||
+    view.kind === "number";
+  const quietIdle =
+    !guide &&
+    (view.kind === "scan" || (view.kind === "number" && digits === "")) &&
+    leftover &&
+    !callActive;
   useEffect(() => {
     if (!quietIdle) return;
     const limit = (idleAskSec + idleAnswerSec) * 1000;
@@ -357,7 +429,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "survey", value, adapted: guide ? isAdapted(guide.choices) : false }),
+        body: JSON.stringify({
+          kind: "survey",
+          value,
+          adapted: guide ? isAdapted(guide.choices) : false,
+        }),
         keepalive: true,
       }).catch(() => {});
     }
@@ -374,14 +450,29 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const call = (
     <div className="call-dock">
       <div className="call-dock-inner">
-        <StaffCall lang={lang} t={t} big={prefs.wantsStaff || guide?.routeNote === "other_terminal"} token={token} screen="guide" session={sessionSeq.current} onActive={onCallActive} onPress={onCallPress} say={voiceOn ? speak : undefined} />
+        <StaffCall
+          lang={lang}
+          t={t}
+          big={prefs.wantsStaff || guide?.routeNote === "other_terminal"}
+          token={token}
+          screen="guide"
+          session={sessionSeq.current}
+          onActive={onCallActive}
+          onPress={onCallPress}
+          say={voiceOn ? speak : undefined}
+        />
       </div>
     </div>
   );
   const idle = (
     <IdleGuard
       t={t}
-      enabled={view.kind !== "scan" && view.kind !== "thanks" && !(view.kind === "number" && digits === "") && !ownCall}
+      enabled={
+        view.kind !== "scan" &&
+        view.kind !== "thanks" &&
+        !(view.kind === "number" && digits === "") &&
+        !ownCall
+      }
       askSec={idleAskSec}
       answerSec={idleAnswerSec}
       onTimeout={reset}
@@ -415,11 +506,16 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
             <h1>{t.numberTitle}</h1>
             <p className="lead">{t.numberHint}</p>
             <p className="sr-only" role="status">
-              {lang === "en" ? `${digits.length} of ${PASS_NO_LENGTH} digits` : `${PASS_NO_LENGTH}자리 중 ${digits.length}자리`}
+              {lang === "en"
+                ? `${digits.length} of ${PASS_NO_LENGTH} digits`
+                : `${PASS_NO_LENGTH}자리 중 ${digits.length}자리`}
             </p>
             <div className="code-boxes" role="group" aria-label={t.passNo}>
               {Array.from({ length: PASS_NO_LENGTH }, (_, i) => (
-                <span key={i} className={`num ${digits[i] ? "filled" : ""} ${i === 2 ? "gap" : ""}`}>
+                <span
+                  key={i}
+                  className={`num ${digits[i] ? "filled" : ""} ${i === 2 ? "gap" : ""}`}
+                >
                   {digits[i] ?? ""}
                 </span>
               ))}
@@ -439,7 +535,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
               ) : null}
             </div>
             <NumPad
-              onKey={(k) => setDigits((d) => (d.length < PASS_NO_LENGTH && !busy ? d + k : d))}
+              onKey={(k) =>
+                setDigits((d) =>
+                  d.length < PASS_NO_LENGTH && !busy ? d + k : d,
+                )
+              }
               onErase={() => setDigits((d) => d.slice(0, -1))}
               eraseLabel={t.erase}
             />
@@ -451,49 +551,90 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     }
     return (
       <>
-        <FlowShell lang={lang} prefs={prefs} kiosk screenKey="scan" speakText={`${t.scanTitle}. ${t.scanBody}`}>
+        <FlowShell
+          lang={lang}
+          prefs={prefs}
+          kiosk
+          screenKey="scan"
+          speakText={`${t.scanTitle}. ${t.scanBody}`}
+        >
           <div className="kiosk-head">
             <Brand />
-            <button className="lang-switch" onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))} lang={startLang === "en" ? "ko" : "en"}>
+            <button
+              className="lang-switch"
+              onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))}
+              lang={startLang === "en" ? "ko" : "en"}
+            >
               {t.otherLang}
             </button>
           </div>
-          <div className="scan-layout">
-            <div>
-              {/* 공항 입구 안내로봇과 같은 로봇. 탑승권을 대면 깨어나 길을 알려 준다. */}
-              <div className="robot-stage robot-stage-left">
-                <Robot mood="sleep" size={150} />
-                <p className="robot-bubble">{t.guideRobot}</p>
-              </div>
+          <div className="kiosk-scan-surface">
+            <section className="kiosk-welcome-copy">
+              <span className="service-kicker">
+                {lang === "en"
+                  ? "PERSONALISED AIRPORT GUIDE"
+                  : "나에게 맞는 공항 안내"}
+              </span>
               <h1>
-                <Ticket size={32} aria-hidden="true" /> {t.scanTitle}
+                {lang === "en" ? (
+                  <>
+                    Your boarding pass,
+                    <br />
+                    your airport guide.
+                  </>
+                ) : (
+                  <>
+                    탑승권으로
+                    <br />
+                    편안하게 시작하세요.
+                  </>
+                )}
               </h1>
-              <p className="lead">{t.scanBody}</p>
-              <ListenStart t={t} />
-              {error && <ErrorNote>{error}</ErrorNote>}
-              <div className="scan-alt">
-                <span>{t.scanOr}</span>
-                <button className="btn" onClick={() => setView({ kind: "number" })}>
-                  <Keyboard size={22} aria-hidden="true" />
+              <p>
+                {lang === "en"
+                  ? "Hold the code on your boarding pass to the camera."
+                  : "종이·모바일 탑승권의 코드를 카메라에 보여 주세요."}
+              </p>
+              <div className="kiosk-scan-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setView({ kind: "number" })}
+                >
+                  <Keyboard aria-hidden="true" />
                   {t.scanNumber}
                 </button>
+                <Link
+                  className="btn"
+                  href={kioskHelpHref(null, lang, "guidance", "/kiosk/guide")}
+                >
+                  {lang === "en"
+                    ? "Use airport services"
+                    : "탑승권 없이 서비스 이용"}
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+                <ListenStart t={t} />
               </div>
-              <div className="info-row quiet">
-                <span className="bubble bubble-sun">
-                  <Info size={22} aria-hidden="true" />
-                </span>
-                <div>
-                  <strong>{t.noPassTitle}</strong>
-                  <span>{t.noPassBody}</span>
-                </div>
-              </div>
+              {error && <ErrorNote>{error}</ErrorNote>}
+            </section>
+            <div className="kiosk-scan-camera">
+              <Scanner
+                onScan={onScan}
+                paused={busy}
+                prefer="user"
+                text={{
+                  starting: t.camStarting,
+                  ready: t.camReady,
+                  read: t.camRead,
+                  none: t.camNone,
+                  switchCamera: t.camSwitch,
+                }}
+              />
+              <p className="kiosk-scan-caption">
+                {lang === "en"
+                  ? "Place the boarding pass code inside the frame."
+                  : "탑승권의 코드 부분을 화면 안에 맞춰 주세요."}
+              </p>
             </div>
-            <Scanner
-              onScan={onScan}
-              paused={busy}
-              prefer="user"
-              text={{ starting: t.camStarting, ready: t.camReady, read: t.camRead, none: t.camNone, switchCamera: t.camSwitch }}
-            />
           </div>
           <p className="kiosk-foot">{here}</p>
         </FlowShell>
@@ -511,11 +652,19 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           prefs={prefs}
           kiosk
           screenKey="saved"
-          speakText={[t.savedTitle, `${guide.flight.flightNo}, ${destOf(guide.flight, lang)}`, savedNeedsText(guide.choices, guide.extra, lang, t), t.savedAsk].join(". ")}
+          speakText={[
+            t.savedTitle,
+            `${guide.flight.flightNo}, ${destOf(guide.flight, lang)}`,
+            savedNeedsText(guide.choices, guide.extra, lang, t),
+            t.savedAsk,
+          ].join(". ")}
           onHome={reset}
           cta={
             <>
-              <button className="btn btn-primary" onClick={() => setView({ kind: "home" })}>
+              <button
+                className="btn btn-primary"
+                onClick={() => setView({ kind: "home" })}
+              >
                 {t.savedKeep}
                 <ArrowRight size={24} aria-hidden="true" />
               </button>
@@ -531,7 +680,12 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           </p>
           <h1>{t.savedAsk}</h1>
           <FlightBoard flight={guide.flight} t={t} lang={lang} />
-          <SavedNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
+          <SavedNeeds
+            choices={guide.choices}
+            extra={guide.extra}
+            lang={lang}
+            t={t}
+          />
         </FlowShell>
         {call}
         {idle}
@@ -604,7 +758,14 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   if (view.kind === "thanks") {
     return (
       <>
-        <FlowShell lang={lang} prefs={prefs} kiosk screenKey="thanks" speakText={t.thanks} onHome={reset}>
+        <FlowShell
+          lang={lang}
+          prefs={prefs}
+          kiosk
+          screenKey="thanks"
+          speakText={t.thanks}
+          onHome={reset}
+        >
           <div className="empty" role="status">
             <span className="bubble bubble-sun">
               <Sunrise size={32} aria-hidden="true" />
@@ -637,7 +798,9 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     const route =
       target.type === "gate"
         ? guide.gateRoute
-        : (guide.facilities.find((f) => f.kind === target.kind && f.nearGate === target.nearGate)?.route ?? null);
+        : (guide.facilities.find(
+            (f) => f.kind === target.kind && f.nearGate === target.nearGate,
+          )?.route ?? null);
     // 탑승구가 바뀌어 보던 길이 없어졌으면 첫 화면으로 돌려보낸다. 거기에 바뀐 탑승구가 나온다.
     if (!route || (target.type === "gate" && flight.gate !== target.gate)) {
       return (
@@ -655,7 +818,11 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           prefs={prefs}
           kiosk
           screenKey={`route-${target.type === "gate" ? target.gate : `${target.kind}-${target.nearGate}`}`}
-          speakText={[title, t.routeSummary(route.minutes, route.meters), ...routeLines(route, target, t)].join(". ")}
+          speakText={[
+            title,
+            t.routeSummary(route.minutes, route.meters),
+            ...routeLines(route, target, t),
+          ].join(". ")}
           onBack={() => setView({ kind: "home" })}
           onHome={reset}
         >
@@ -664,12 +831,18 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
             <RouteSummary route={route} t={t} />
           </p>
           {target.type === "gate" && guide.pace && (
-            <p className={`pace pace-${guide.pace}`} role={guide.pace === "late" ? "alert" : undefined}>
+            <p
+              className={`pace pace-${guide.pace}`}
+              role={guide.pace === "late" ? "alert" : undefined}
+            >
               {closeText(flight, t)} · {paceText(guide.pace, t)}
             </p>
           )}
           <RouteSteps route={route} target={target} from={here} t={t} />
-          <button className="btn finish-btn" onClick={() => setView({ kind: "home" })}>
+          <button
+            className="btn finish-btn"
+            onClick={() => setView({ kind: "home" })}
+          >
             {t.guideBack}
           </button>
           <p className="fine">{t.mock}</p>
@@ -684,7 +857,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
   const chosen = guide.facilities.filter((f) => f.chosen);
   const others = guide.facilities.filter((f) => !f.chosen);
   // 탑승구 층이 아닌 시설(4층 라운지)은 층을 붙인다. 붙이지 않으면 "26번 탑승구 옆"만 보고 같은 층에서 찾는다.
-  const floorOf = (f: GuideFacility) => (f.level !== GATE_LEVEL ? t.level(f.level) : "");
+  const floorOf = (f: GuideFacility) =>
+    f.level !== GATE_LEVEL ? t.level(f.level) : "";
   const speakHome = [
     t.guideHello,
     `${flight.flightNo}, ${destOf(flight, lang)}`,
@@ -694,8 +868,12 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     // 화면의 항공편 판처럼 탑승 중이면 그것부터 알린다.
     flight.boardingNow && flight.close === "open" ? t.boardingNow : "",
     closeText(flight, t),
-    flight.prevGate !== null && flight.gate !== null ? t.gateChanged(flight.prevGate, flight.gate) : "",
-    guide.gateRoute ? `${t.toGateShort}, ${t.routeSummary(guide.gateRoute.minutes, guide.gateRoute.meters)}. ${paceText(guide.pace, t)}` : noteText,
+    flight.prevGate !== null && flight.gate !== null
+      ? t.gateChanged(flight.prevGate, flight.gate)
+      : "",
+    guide.gateRoute
+      ? `${t.toGateShort}, ${t.routeSummary(guide.gateRoute.minutes, guide.gateRoute.meters)}. ${paceText(guide.pace, t)}`
+      : noteText,
     chosen.length > 0
       ? `${t.myPlaces}: ${chosen.map((f) => [t.facility[f.kind], t.routeSummary(f.route.minutes, f.route.meters), floorOf(f)].filter(Boolean).join(", ")).join(". ")}`
       : "",
@@ -707,7 +885,17 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
     <button
       key={`${f.kind}-${f.nearGate}`}
       className={`tile ${f.chosen ? "tile-chosen" : ""}`}
-      onClick={() => setView({ kind: "route", target: { type: "facility", kind: f.kind, nearGate: f.nearGate, level: f.level } })}
+      onClick={() =>
+        setView({
+          kind: "route",
+          target: {
+            type: "facility",
+            kind: f.kind,
+            nearGate: f.nearGate,
+            level: f.level,
+          },
+        })
+      }
     >
       <span className="tile-ico">
         <FacilityIcon kind={f.kind} size={30} />
@@ -715,7 +903,8 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
       <span className="tile-text">
         <strong>{t.facility[f.kind]}</strong>
         <span>
-          {t.routeSummary(f.route.minutes, f.route.meters)} · {t.nearGate(f.nearGate)}
+          {t.routeSummary(f.route.minutes, f.route.meters)} ·{" "}
+          {t.nearGate(f.nearGate)}
           {floorOf(f) && ` · ${floorOf(f)}`}
         </span>
       </span>
@@ -739,17 +928,31 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
         <h1 className="kicker">{t.guideHello}</h1>
         {edited && <Banner role="status">{t.editSaved}</Banner>}
         <FlightBoard flight={flight} t={t} lang={lang} />
-        {offlineNow ? <Banner role="status">{t.kioskOffline}</Banner> : guide.poll.stale && <Banner role="status">{t.stale}</Banner>}
+        {offlineNow ? (
+          <Banner role="status">{t.kioskOffline}</Banner>
+        ) : (
+          guide.poll.stale && <Banner role="status">{t.stale}</Banner>
+        )}
 
         {guide.gateRoute && flight.gate !== null ? (
-          <button className={`gate-go pace-${guide.pace ?? "ok"}`} onClick={() => setView({ kind: "route", target: { type: "gate", gate: flight.gate as number } })}>
+          <button
+            className={`gate-go pace-${guide.pace ?? "ok"}`}
+            onClick={() =>
+              setView({
+                kind: "route",
+                target: { type: "gate", gate: flight.gate as number },
+              })
+            }
+          >
             <span className="gate-go-ico">
               <Navigation size={32} aria-hidden="true" />
             </span>
             <span className="gate-go-text">
               <strong>{t.toGate(flight.gate)}</strong>
               <RouteSummary route={guide.gateRoute} t={t} />
-              {guide.pace && <span className="gate-go-pace">{paceText(guide.pace, t)}</span>}
+              {guide.pace && (
+                <span className="gate-go-pace">{paceText(guide.pace, t)}</span>
+              )}
             </span>
             <ChevronRight size={28} aria-hidden="true" />
           </button>
@@ -775,7 +978,10 @@ export function GuideKiosk({ placeLabel, placeLabelEn, refreshSec, idleAskSec, i
           <ClipboardList size={22} aria-hidden="true" />
           {t.savedTitle}
         </button>
-        <button className="btn finish-btn" onClick={() => setView({ kind: "survey" })}>
+        <button
+          className="btn finish-btn"
+          onClick={() => setView({ kind: "survey" })}
+        >
           {t.finish}
         </button>
         <p className="fine">

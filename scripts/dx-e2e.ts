@@ -40,7 +40,7 @@ async function main() {
     const passengerContext = await browser.createBrowserContext();
     const staffContext = await browser.createBrowserContext();
     const page = await passengerContext.newPage();
-    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 });
     const staff = await staffContext.newPage();
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(String(e)));
@@ -62,8 +62,8 @@ async function main() {
       (e as HTMLInputElement).click(),
     );
     await page.click('button[type="submit"]');
-    await page.waitForFunction(() =>
-      document.body.innerText.includes("요청 전 확인"),
+    await page.waitForFunction(
+      () => !!document.querySelector(".request-review-card"),
     );
     await page.screenshot({
       path: path.join(output, "01-review.png"),
@@ -75,12 +75,15 @@ async function main() {
         ?.click();
     });
     await page.waitForFunction(
-      () => !!document.querySelector('h2[role="status"]'),
+      () => !!document.querySelector('[role="status"].request-state-pill'),
       { timeout: 60000 },
     );
     check(
       "unregistered passenger submits without flight or documents",
-      await page.$eval('h2[role="status"]', (e) => e.textContent === "접수됨"),
+      await page.$eval(
+        '[role="status"].request-state-pill',
+        (e) => e.textContent === "접수됨",
+      ),
     );
     await page.screenshot({
       path: path.join(output, "02-received.png"),
@@ -172,7 +175,9 @@ async function main() {
       await new Promise((resolve) => setTimeout(resolve, 650));
     }
     await page.waitForFunction(
-      () => document.querySelector('h2[role="status"]')?.textContent === "완료",
+      () =>
+        document.querySelector('[role="status"].request-state-pill')
+          ?.textContent === "완료",
       { timeout: 15000 },
     );
     check(
@@ -187,7 +192,10 @@ async function main() {
     await page.reload({ waitUntil: "networkidle0" });
     check(
       "receipt restores after reload",
-      await page.$eval('h2[role="status"]', (e) => e.textContent === "완료"),
+      await page.$eval(
+        '[role="status"].request-state-pill',
+        (e) => e.textContent === "완료",
+      ),
     );
     await page.evaluate(() =>
       Array.from(document.querySelectorAll("button"))
@@ -203,7 +211,7 @@ async function main() {
     check(
       "English request form",
       (await page.evaluate(() => document.body.innerText)).includes(
-        "What can you see nearby?",
+        "Service option",
       ),
     );
     await page.select("#dx-place", "t1-info");
@@ -211,10 +219,10 @@ async function main() {
     await page.click('button[type="submit"]');
     await page.evaluate(() =>
       Array.from(document.querySelectorAll("button"))
-        .find((b) => b.textContent === "Send this request")
+        .find((b) => b.textContent === "Submit request")
         ?.click(),
     );
-    await page.waitForSelector('h2[role="status"]');
+    await page.waitForSelector('[role="status"].request-state-pill');
     page.on("dialog", (d) => void d.accept());
     await page.evaluate(() =>
       Array.from(document.querySelectorAll("button"))
@@ -223,8 +231,8 @@ async function main() {
     );
     await page.waitForFunction(
       () =>
-        document.querySelector('h2[role="status"]')?.textContent ===
-        "Cancelled",
+        document.querySelector('[role="status"].request-state-pill')
+          ?.textContent === "Cancelled",
     );
     check("passenger cancels a new request", true);
     // Pre-registration is still available and can feed the same new queue.
@@ -256,9 +264,7 @@ async function main() {
     check(
       "saved needs are loaded in linked flow",
       await page.$eval('input[type="checkbox"]', () =>
-        document.body.innerText.includes(
-          "사전등록의 필요한 도움을 불러왔습니다",
-        ),
+        document.body.innerText.includes("사전등록 내용 연결됨"),
       ),
     );
     check(
@@ -276,11 +282,11 @@ async function main() {
         .find((b) => b.textContent === "이 내용으로 요청 접수")
         ?.click(),
     );
-    await page.waitForSelector('h2[role="status"]');
+    await page.waitForSelector('[role="status"].request-state-pill');
     check(
       "pre-registered request joins integrated processing",
       (await page.evaluate(() => document.body.innerText)).includes(
-        "사전등록 내용을 연결한 요청",
+        "요청 내용",
       ),
     );
     // Layout and automated accessibility checks on both major screens.

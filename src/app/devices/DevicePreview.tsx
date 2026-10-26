@@ -30,7 +30,7 @@ export function DevicePreview({
   }, [screen]);
   const t = (ko: string, enText: string) => (en ? enText : ko);
   return (
-    <main className="device-preview" lang={lang}>
+    <main className={`device-preview ${robot ? "robot-preview" : "kiosk-preview"}`} lang={lang}>
       <div className="device-preview-status">
         <Link href={"/devices" + (en ? "?lang=en" : "")}>
           <ArrowLeft aria-hidden="true" />

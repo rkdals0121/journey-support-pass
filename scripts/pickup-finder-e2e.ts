@@ -147,6 +147,7 @@ async function main() {
     );
     await p.click('[data-confirm-place="gate-127"]');
     await p.select("#dx-destination", "cc-130");
+    await p.click("[data-request-next]");
     await p.click("button[type=submit]");
     await p.waitForFunction(() =>
       Array.from(document.querySelectorAll("button")).some(
@@ -180,11 +181,13 @@ async function main() {
         !JSON.stringify(payload).includes("base64"),
     );
     receipt = payload.receipt;
-    await p.waitForSelector('h2[role="status"]');
+    await p.waitForSelector('[role="status"].request-state-pill');
     check(
       "the temporary photo preview is removed after moving to request status",
       (await p.$('img[src^="blob:"]')) === null,
     );
+    await p.click(".request-location-tools>summary");
+    await p.click(".request-location-tools .place-confirmed button");
     await p.type("#pickup-change-place-search", "125번 게이트");
     await p.waitForSelector('[data-confirm-place="cc-125"]');
     await p.click('[data-confirm-place="cc-125"]');

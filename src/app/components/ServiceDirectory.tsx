@@ -80,7 +80,7 @@ export function ServiceDirectory({
           {[
             ["all", en ? "All services" : "전체"],
             ["request", en ? "Support requests" : "도움 요청"],
-            ["referral", en ? "Enquiries & referrals" : "상담·담당 연결"],
+            ["referral", en ? "Reports & work orders" : "신고·업무 접수"],
             ["simulation", en ? "Simulation" : "모의 체험"],
           ].map(([v, label]) => (
             <button
@@ -121,8 +121,8 @@ export function ServiceDirectory({
                       : "모의 시연"
                     : s.mode === "referral"
                       ? en
-                        ? "Staff referral"
-                        : "담당 연결 상담"
+                        ? "Work order"
+                        : "업무 접수"
                       : en
                         ? "Request support"
                         : "도움 요청"}
@@ -134,15 +134,21 @@ export function ServiceDirectory({
                 href={topicLink(s.id, lang)}
                 aria-label={`${en ? s.en : s.label} · ${en ? "Request support" : "도움 요청"}`}
               >
-                {s.mode === "referral"
+                {s.id === "guidance"
                   ? en
-                    ? "Ask staff"
-                    : compact
-                      ? "상담하기"
-                      : "직원 상담 요청"
-                  : en
-                    ? "Start request"
-                    : "요청하기"}
+                    ? "Find a route"
+                    : "경로 찾기"
+                  : s.id === "facility"
+                    ? en
+                      ? "Submit a report"
+                      : "신고·요청하기"
+                    : s.id === "lost-property"
+                      ? en
+                        ? "Report an item"
+                        : "분실·습득 신고"
+                      : en
+                        ? "Use service"
+                        : "서비스 이용"}
                 <ArrowUpRight size={18} aria-hidden="true" />
               </Link>
             </article>

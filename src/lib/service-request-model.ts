@@ -1,5 +1,6 @@
 // Shared display model. No database or secrets in this browser-safe module.
 import type { RequestResolution } from "./request-resolution";
+import { taskOf } from "./service-tasks";
 export const SERVICE_TYPES = ["guidance", "robot", "mobility"] as const;
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 export const REQUEST_STATES = [
@@ -76,6 +77,7 @@ export interface ServiceRequestView {
   pendingPlace?: string;
   pendingPlaceEn?: string;
   pendingPlaceRequestedAt?: string | null;
+  serviceDetails?: import("./service-tasks").ServiceDetails;
   topicId?: string | null;
   businessId?: string | null;
   destinationId?: string | null;
@@ -116,10 +118,13 @@ export interface RequestSummary {
 }
 
 export function nextRequestAction(
-  r: Pick<ServiceRequestView, "service" | "state" | "queue">,
+  r: Pick<ServiceRequestView, "service" | "state" | "queue" | "serviceDetails">,
 ) {
   if (r.service === "guidance" && r.state === "assigned")
-    return { action: "serve" as const, label: "응대 시작" };
+    return {
+      action: "serve" as const,
+      label: r.serviceDetails ? "처리 시작" : "응대 시작",
+    };
   if (r.queue === "assist" && r.state === "assigned")
     return { action: "travel" as const, label: "이동지원 시작" };
   const next = NEXT_REQUEST_ACTION[r.state];
@@ -128,6 +133,16 @@ export function nextRequestAction(
   if (next && r.service === "mobility" && r.state === "arrived")
     return { ...next, label: "이동지원 시작" };
   return next;
+}
+export function requestServiceLabel(
+  r: Pick<ServiceRequestView, "service" | "serviceDetails">,
+  lang: "ko" | "en" = "ko",
+) {
+  const task = taskOf(r.serviceDetails?.task);
+  return (
+    (lang === "en" ? task?.en : task?.label) ??
+    (lang === "en" ? SERVICE_EN[r.service] : SERVICE_LABEL[r.service])
+  );
 }
 export function requestStateLabel(
   r: Pick<ServiceRequestView, "service" | "state">,

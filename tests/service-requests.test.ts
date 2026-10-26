@@ -3,6 +3,7 @@ import {
   createServiceRequest,
   serviceRequestStatus,
   cancelServiceRequest,
+  changeRequestPlace,
   listServiceRequests,
   actOnServiceRequest,
   expireServiceRequests,
@@ -69,6 +70,108 @@ beforeEach(async () => {
   );
 });
 describe("DX independent and pre-registered requests", () => {
+  it("keeps regional work orders from silently moving to a different terminal team", async () => {
+    const r = get(
+      await create(1, {
+        topicId: "facility",
+        serviceDetails: {
+          task: "cleaning",
+          fields: { facility: "화장실", issue: "청소" },
+        },
+      }),
+    );
+    expect(
+      (
+        await changeRequestPlace(
+          db,
+          null,
+          {
+            receipt: receipt(1),
+            version: r.version,
+            action: "request",
+            placeId: "t2-center",
+          },
+          now,
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      get(await serviceRequestStatus(db, receipt(1), now)).businessId,
+    ).toBe("cleaning-t1");
+  });
+  it("persists a T2 cleaning work order in receipt and staff queue, then records completion", async () => {
+    const details = {
+      task: "cleaning",
+      fields: { facility: "화장실", issue: "바닥 오염" },
+    };
+    const created = await create(1, {
+      placeId: "t2-center",
+      topicId: "facility",
+      serviceDetails: details,
+    });
+    expect(created.status).toBe(200);
+    let r = get(created);
+    expect(r.businessId).toBe("cleaning-t2");
+    expect(
+      get(await serviceRequestStatus(db, receipt(1), now)).serviceDetails,
+    ).toEqual(details);
+    const queue = await listServiceRequests(db, desk, now, {
+      business: "cleaning-t2",
+    });
+    expect(
+      (queue.body as { requests: ServiceRequestView[] }).requests[0]
+        .serviceDetails,
+    ).toEqual(details);
+    r = get(await act(r, "assign", desk));
+    r = get(await act(r, "serve", desk));
+    r = get(
+      await act(r, "complete", desk, {
+        resolution: {
+          kind: "resolved",
+          businessId: "cleaning-t2",
+          message: "현장 청소 완료",
+          confirmed: true,
+        },
+      }),
+    );
+    expect(r.state).toBe("done");
+    expect(r.serviceDetails).toEqual(details);
+  });
+  it("validates task ownership and clears work-order fields at retention expiry", async () => {
+    expect(
+      (
+        await create(1, {
+          topicId: "traffic",
+          serviceDetails: {
+            task: "cleaning",
+            fields: { facility: "화장실", issue: "청소" },
+          },
+        })
+      ).status,
+    ).toBe(400);
+    await create(2, {
+      topicId: "lost-property",
+      serviceDetails: {
+        task: "lost-item",
+        fields: {
+          item: "phone",
+          appearance: "검정",
+          eventTime: "2026-10-25T13:00",
+        },
+      },
+    });
+    await expireServiceRequests(
+      db,
+      new Date(now.getTime() + REQUEST_TTL_MS + 1),
+    );
+    expect(
+      (
+        await db.query<{ service_details: unknown }>(
+          "select service_details from service_requests where receipt_hash is not null",
+        )
+      )[0].service_details,
+    ).toEqual({});
+  });
   it("accepts a confirmed gate clue as an exact pilot pickup and finds it in staff search", async () => {
     const r = await create(1, {
       placeId: "gate-127",

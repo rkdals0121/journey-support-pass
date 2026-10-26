@@ -27,8 +27,8 @@ export default async function ServicesPage({
           </h1>
           <p>
             {en
-              ? "Choose by your situation. Staff will help confirm the right support or referral."
-              : "지금 겪고 있는 상황으로 서비스를 고르세요. 담당자가 지원 방법과 연결할 업무를 확인해요."}
+              ? "Choose a service to view a route or submit a work order."
+              : "경로 안내는 바로 확인하고, 현장 지원·신고는 필요한 내용을 입력해 접수하세요."}
           </p>
         </div>
         <ServiceDirectory lang={lang} />
@@ -61,8 +61,8 @@ export default async function ServicesPage({
                       href={"/help?topic=other&service=guidance&business=" + b.id + (en ? "&lang=en" : "")}
                     >
                       {en
-                        ? "Ask staff about this business"
-                        : "이 업무 직원 상담 요청"}
+                        ? "Create a service request"
+                        : "이 업무 요청 작성"}
                     </Link>
                   )}
                 </details>

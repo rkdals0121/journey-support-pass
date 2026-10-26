@@ -291,7 +291,7 @@ export function EntryKiosk({
     screen = shell(
       "sleep",
       `${t.entrySleep} ${t.entrySleepHint}`,
-      <div className="robot-home">
+      <div className="robot-home robot-portrait">
         <div className="robot-panel">
           <p className="robot-title">{t.entryTitle}</p>
           <h1 className="sr-only">{t.entrySleep}</h1>

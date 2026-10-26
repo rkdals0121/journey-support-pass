@@ -119,8 +119,8 @@ async function main() {
     await click(desk, "제가 맡겠습니다", id);
     await passenger.waitForFunction(
       () =>
-        document.querySelector('h2[role="status"]')?.textContent ===
-        "담당자 배정",
+        document.querySelector('[role="status"].request-state-pill')
+          ?.textContent === "담당자 배정",
     );
     await passenger.select("#pickup-change-place", "t1-info");
     await click(passenger, "위치 변경 요청 보내기");
@@ -187,8 +187,8 @@ async function main() {
     await click(desk, "로봇 출발 · 모의", id);
     await passenger.waitForFunction(
       () =>
-        document.querySelector('h2[role="status"]')?.textContent ===
-        "로봇 이동 중 · 모의",
+        document.querySelector('[role="status"].request-state-pill')
+          ?.textContent === "로봇 이동 중 · 모의",
     );
     await passenger.select("#pickup-change-place", "cc-108");
     await click(passenger, "위치 변경 요청 보내기");
@@ -239,7 +239,8 @@ async function main() {
     await click(desk, "지원 시작", id);
     await passenger.waitForFunction(
       () =>
-        document.querySelector('h2[role="status"]')?.textContent === "지원 중",
+        document.querySelector('[role="status"].request-state-pill')
+          ?.textContent === "지원 중",
     );
     check(
       "started assistance gives a staff-contact path instead of an unusable change form",
