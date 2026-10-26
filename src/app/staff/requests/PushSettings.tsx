@@ -15,7 +15,7 @@ export function PushSettings() {
       ) {
         if (live)
           setStatus(
-            "이 브라우저는 백그라운드 알림을 지원하지 않습니다. 화면 내 알림을 이용해 주세요.",
+            "이 브라우저는 백그라운드 알림을 지원하지 않습니다. 아이폰은 Safari에서 홈 화면에 추가한 뒤 아이콘으로 열어 주세요. 그 밖의 기기는 화면 내 알림을 이용해 주세요.",
           );
         return;
       }
@@ -69,6 +69,11 @@ export function PushSettings() {
     if (busy) return;
     setBusy(true);
     try {
+      // iOS requires the permission prompt to directly follow the button gesture.
+      if (!active && (await Notification.requestPermission()) !== "granted")
+        throw new Error(
+          "알림 권한이 허용되지 않았습니다. 브라우저 설정에서 변경할 수 있습니다.",
+        );
       const registration = await navigator.serviceWorker.register(
         "/staff/staff-request-sw.js",
         { scope: "/staff/" },
@@ -91,11 +96,6 @@ export function PushSettings() {
         setActive(false);
         setStatus("이 기기의 브라우저 알림을 껐습니다.");
       } else {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted")
-          throw new Error(
-            "알림 권한이 허용되지 않았습니다. 브라우저 설정에서 변경할 수 있습니다.",
-          );
         if (!registration.active)
           await new Promise<void>((resolve, reject) => {
             const worker = registration.installing ?? registration.waiting;
@@ -169,8 +169,8 @@ export function PushSettings() {
       </p>
       <p className="muted">
         발송은 최초 시도를 포함해 최대 4회 시도하며, 접수 10분이 지나거나 직원이
-        확인·배정하면 남은 발송을 중단합니다. 자동 재시도 예약은 별도 운영
-        설정이 필요합니다.
+        확인·배정하면 남은 발송을 중단합니다. 화면을 닫은 동안에는 약 5분
+        간격의 예약 실행으로 재시도하며, 실행 지연 시 알림이 만료될 수 있습니다.
       </p>
     </div>
   );
