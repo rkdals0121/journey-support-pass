@@ -1,6 +1,14 @@
 import { placeOf, PLACES } from "../airport";
-import { claimAttempt, forgetAttempt, logAccess, login, sessionDeviceKey, type Session } from "../auth";
+import {
+  claimAttempt,
+  forgetAttempt,
+  logAccess,
+  login,
+  sessionDeviceKey,
+  type Session,
+} from "../auth";
 import { cancelCall, createCall, getCallAt } from "../calls";
+import { claimAware, serviceClaimConflict } from "../service-claims";
 import { cleanExtra, isAdapted } from "../catalog";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
@@ -17,7 +25,13 @@ const NEED_KIOSK = "키오스크로 설정된 기기에서만 쓸 수 있습니�
 
 /** 키오스크를 놓을 수 있는 자리. 설치 화면이 고르게 한다. */
 export function placesHandler(): ApiResult {
-  return ok({ places: PLACES.map((p) => ({ id: p.id, label: p.label, landside: p.landside })) });
+  return ok({
+    places: PLACES.map((p) => ({
+      id: p.id,
+      label: p.label,
+      landside: p.landside,
+    })),
+  });
 }
 
 /** 키오스크 설치. 설치 코드와 놓을 자리를 받아 그 기기를 키오스크로 만든다. */
@@ -33,9 +47,14 @@ export async function kioskLoginHandler(
   if (!place) return fail(400, "키오스크를 놓을 자리를 골라 주세요");
   const res = await login(db, code, device, now, { placeId: place.id });
   if (!res.ok) {
-    return res.reason === "locked" ? fail(429, "잠시 후 다시 시도해 주세요") : fail(401, "설치 코드가 맞지 않습니다");
+    return res.reason === "locked"
+      ? fail(429, "잠시 후 다시 시도해 주세요")
+      : fail(401, "설치 코드가 맞지 않습니다");
   }
-  return { ...ok({ placeId: place.id, placeLabel: place.label }), token: res.token };
+  return {
+    ...ok({ placeId: place.id, placeLabel: place.label }),
+    token: res.token,
+  };
 }
 
 /**
@@ -63,8 +82,18 @@ export async function resolveHandler(
     if (!passNo) return fail(400, "고유 일련 번호 여섯 자리를 넣어 주세요");
     // 먼저 "틀림"으로 적고 센다. 한꺼번에 많이 보내 잠금을 피하지 못하게 한다(claimAttempt).
     // 기기는 설치(로그인)마다 따로 센다. 같은 기종 태블릿 두 대가 서로를 잠그지 않게 한다(sessionDeviceKey).
-    const attempt = await claimAttempt(db, sessionDeviceKey(device, session), "number_fail", now, session.zoneId);
-    if (attempt.locked) return fail(429, "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요");
+    const attempt = await claimAttempt(
+      db,
+      sessionDeviceKey(device, session),
+      "number_fail",
+      now,
+      session.zoneId,
+    );
+    if (attempt.locked)
+      return fail(
+        429,
+        "번호를 여러 번 잘못 넣었습니다. 잠시 후 다시 해 주세요",
+      );
     const res = await resolvePassNo(db, passNo);
     // 없는 번호면 적어 둔 "틀림"이 그대로 남는다.
     if (res.kind !== "active") return fail(404, NOT_A_PASS);
@@ -72,8 +101,14 @@ export async function resolveHandler(
     const journey = await getJourney(db, res.registrationId, now);
     // 출발했지만 아직 지워지지 않은 패스의 번호도 없는 번호와 똑같이 답한다. 번호로는 끝난 패스가 있었는지 알려 주지 않는다.
     // 여객의 잘못이 아니므로 틀린 횟수로는 세지 않는다(위에서 이미 지웠다).
-    if (!journey || isJourneyOver(journey, now, await lastRealPoll(db))) return fail(404, NOT_A_PASS);
-    found = { kind: "ok", journey, passNo: res.pass.passNo, token: res.pass.token };
+    if (!journey || isJourneyOver(journey, now, await lastRealPoll(db)))
+      return fail(404, NOT_A_PASS);
+    found = {
+      kind: "ok",
+      journey,
+      passNo: res.pass.passNo,
+      token: res.pass.token,
+    };
   }
   if (found.kind === "none") return fail(404, NOT_A_PASS);
   if (found.kind === "ended") return fail(410, PASS_ENDED);
@@ -91,7 +126,10 @@ export async function resolveHandler(
   }
   const poll = pollState(await lastSuccessfulPoll(db), now);
   // QR 값(token)은 스티커를 다시 뽑을 때 쓴다. 확인된 기기에만 돌려준다.
-  return ok({ token: found.token, guide: buildGuide(found.journey, found.passNo, place, poll) });
+  return ok({
+    token: found.token,
+    guide: buildGuide(found.journey, found.passNo, place, poll),
+  });
 }
 
 /**
@@ -102,23 +140,52 @@ export async function resolveHandler(
 export async function updateNeedsHandler(
   db: Db,
   session: Session | null,
-  body: { token?: unknown; choices?: unknown; party?: unknown; strollers?: unknown; note?: unknown },
+  body: {
+    token?: unknown;
+    choices?: unknown;
+    party?: unknown;
+    strollers?: unknown;
+    note?: unknown;
+  },
   device: string,
   now: Date,
 ): Promise<ApiResult> {
   if (!session) return fail(401, "로그인이 필요합니다");
   if (!session.isKiosk) return fail(403, NEED_KIOSK);
-  const found = await lookupPass(db, typeof body.token === "string" ? body.token : "", now);
+  const found = await lookupPass(
+    db,
+    typeof body.token === "string" ? body.token : "",
+    now,
+  );
   if (found.kind === "none") return fail(404, NOT_A_PASS);
   if (found.kind === "ended") return fail(410, PASS_ENDED);
   const choices = Array.isArray(body.choices) ? body.choices : [];
-  const res = await updateNeeds(db, found.journey.registrationId, choices, cleanExtra(body));
+  const res = await updateNeeds(
+    db,
+    found.journey.registrationId,
+    choices,
+    cleanExtra(body),
+  );
   if (!res.ok) return fail(400, res.error);
-  await logAccess(db, { at: now, zoneId: session.zoneId, deviceKey: device, action: "edit", registrationId: found.journey.registrationId });
+  await logAccess(db, {
+    at: now,
+    zoneId: session.zoneId,
+    deviceKey: device,
+    action: "edit",
+    registrationId: found.journey.registrationId,
+  });
   const journey = await getJourney(db, found.journey.registrationId, now);
   if (!journey) return fail(410, PASS_ENDED);
   const poll = pollState(await lastSuccessfulPoll(db), now);
-  return ok({ guide: buildGuide(journey, found.passNo, placeOf(session.placeId), poll, now) });
+  return ok({
+    guide: buildGuide(
+      journey,
+      found.passNo,
+      placeOf(session.placeId),
+      poll,
+      now,
+    ),
+  });
 }
 
 /** 여객이 「직원 부르기」를 눌렀다. 패스를 찍은 뒤라면 그 패스를 붙여, 직원이 고른 항목을 보고 오게 한다. */
@@ -133,19 +200,36 @@ export async function callHandler(
   // 로그인은 했지만 키오스크가 아니거나 자리가 없는 기기는 그대로 403 이다.
   if (!session) return fail(401, "로그인이 필요합니다");
   if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
-  const found = typeof body.token === "string" && body.token ? await lookupPass(db, body.token, now) : null;
-  const call = await createCall(
-    db,
-    session.placeId,
-    found?.kind === "ok" ? found.journey.registrationId : null,
-    body.screen === "register" ? "register" : "guide",
-    now,
+  const found =
+    typeof body.token === "string" && body.token
+      ? await lookupPass(db, body.token, now)
+      : null;
+  const placeId = session.placeId;
+  const result = await claimAware(() =>
+    createCall(
+      db,
+      placeId,
+      found?.kind === "ok" ? found.journey.registrationId : null,
+      body.screen === "register" ? "register" : "guide",
+      now,
+    ),
   );
-  if (!call) return fail(400, "이 키오스크의 자리를 찾을 수 없습니다. 다시 설치해 주세요");
+  if ("conflict" in result) return serviceClaimConflict();
+  const call = result.value;
+  if (!call)
+    return fail(
+      400,
+      "이 키오스크의 자리를 찾을 수 없습니다. 다시 설치해 주세요",
+    );
   return ok({ id: call.id, state: call.state });
 }
 
-export async function callStateHandler(db: Db, session: Session | null, id: string, now?: Date): Promise<ApiResult> {
+export async function callStateHandler(
+  db: Db,
+  session: Session | null,
+  id: string,
+  now?: Date,
+): Promise<ApiResult> {
   if (!session) return fail(401, "로그인이 필요합니다");
   if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
   const call = await getCallAt(db, id, session.placeId, now);
@@ -153,7 +237,12 @@ export async function callStateHandler(db: Db, session: Session | null, id: stri
   return ok({ id: call.id, state: call.state });
 }
 
-export async function callCancelHandler(db: Db, session: Session | null, id: string, now: Date): Promise<ApiResult> {
+export async function callCancelHandler(
+  db: Db,
+  session: Session | null,
+  id: string,
+  now: Date,
+): Promise<ApiResult> {
   if (!session) return fail(401, "로그인이 필요합니다");
   if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
   await cancelCall(db, id, session.placeId, now);

@@ -31,6 +31,7 @@ class RequestError extends Error {
   constructor(
     message: string,
     public status: number,
+    public code: string = "",
   ) {
     super(message);
   }
@@ -48,6 +49,7 @@ async function post(path: string, body: unknown, signal?: AbortSignal) {
     throw new RequestError(
       result.error ?? "요청을 처리하지 못했습니다 / Request failed",
       response.status,
+      typeof result.code === "string" ? result.code : "",
     );
   return result.request as ServiceRequestView;
 }
@@ -281,9 +283,11 @@ export function HelpFlow({
       }
     } catch (e) {
       setError(
-        e instanceof Error
-          ? e.message
-          : tr("연결을 확인해 주세요", "Check your connection"),
+        en && e instanceof RequestError && e.code === "duplicate_service"
+          ? "A request for this service is already active for your registration. Ask staff to check the existing request."
+          : e instanceof Error
+            ? e.message
+            : tr("연결을 확인해 주세요", "Check your connection"),
       );
     } finally {
       inFlight.current = false;

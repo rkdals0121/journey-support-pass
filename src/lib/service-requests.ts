@@ -11,9 +11,14 @@ import { getZone } from "./zones";
 import { operationalSummary, legacyWorkAction } from "./request-operations";
 import { closeStale } from "./calls";
 import { closeStaleAssist } from "./assist";
-import { alertSnapshots,maintainAlertQueue } from "./request-alerts";
+import { alertSnapshots, maintainAlertQueue } from "./request-alerts";
 import { pushConfig } from "./staff-push";
 import { resourceSnapshot } from "./dispatch-resources";
+import {
+  isServiceClaimConflict,
+  serviceClaimConflict,
+  historicalServiceConflicts,
+} from "./service-claims";
 import { fail, ok, type ApiResult } from "./api/dto";
 import {
   OPEN_REQUEST_STATES,
@@ -150,11 +155,7 @@ export async function createServiceRequest(
       "select id from request_work_ledger where registration_id=$1 and service=$2 and queue<>'integrated' and state in ('received','assigned','en_route','arrived','serving')",
       [registrationId, body.service],
     );
-    if (previousLegacy.length)
-      return fail(
-        409,
-        "같은 사전등록으로 진행 중인 이전 요청이 있습니다. 직원에게 기존 접수 상태를 확인해 주세요",
-      );
+    if (previousLegacy.length) return serviceClaimConflict();
   }
   const source = session?.isKiosk
     ? "kiosk"
@@ -164,31 +165,37 @@ export async function createServiceRequest(
         ? "preregistered"
         : "web";
   // Database claim avoids a check-then-insert race across concurrent server instances.
-  const rows = await db.query<Row>(
-    `with quota as (
+  const rows = await db
+    .query<Row>(
+      `with quota as (
  insert into service_request_limits(bucket,window_at,used)
  values($13,$14,1) on conflict(bucket,window_at) do update set used=service_request_limits.used+1
  where service_request_limits.used<20 returning used
  ) insert into service_requests(receipt_hash,registration_id,service,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action)
  select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12,'created' from quota
  on conflict do nothing returning *`,
-    [
-      hash(body.receipt),
-      registrationId,
-      body.service,
-      place.id,
-      choices,
-      party,
-      body.note.trim(),
-      body.lang === "en" ? "en" : "ko",
-      source,
-      now,
-      new Date(now.getTime() + REQUEST_TTL_MS),
-      device,
-      ipPart(device),
-      new Date(Math.floor(now.getTime() / (10 * 60 * 1000)) * 10 * 60 * 1000),
-    ],
-  );
+      [
+        hash(body.receipt),
+        registrationId,
+        body.service,
+        place.id,
+        choices,
+        party,
+        body.note.trim(),
+        body.lang === "en" ? "en" : "ko",
+        source,
+        now,
+        new Date(now.getTime() + REQUEST_TTL_MS),
+        device,
+        ipPart(device),
+        new Date(Math.floor(now.getTime() / (10 * 60 * 1000)) * 10 * 60 * 1000),
+      ],
+    )
+    .catch((error) => {
+      if (isServiceClaimConflict(error)) return null;
+      throw error;
+    });
+  if (rows === null) return serviceClaimConflict();
   if (!rows[0]) {
     const retry = await receiptRow(db, body.receipt);
     if (retry) return ok({ request: view(retry) });
@@ -263,7 +270,7 @@ export async function listServiceRequests(
   await expireServiceRequests(db, now);
   await closeStale(db, now);
   await closeStaleAssist(db, now);
-  await maintainAlertQueue(db,now);
+  await maintainAlertQueue(db, now);
   const offset = Math.max(
     0,
     Math.min(100000, Number.isInteger(options.offset) ? options.offset! : 0),
@@ -321,8 +328,15 @@ export async function listServiceRequests(
     isDesk: s!.isDesk,
     summary,
     resources: await resourceSnapshot(db),
-    alerts: await alertSnapshots(db,rows.filter(r=>r.queue==="integrated").map(r=>r.id)),
-    pushEnabled:pushConfig().enabled,
+    alerts: await alertSnapshots(
+      db,
+      rows.filter((r) => r.queue === "integrated").map((r) => r.id),
+    ),
+    pushEnabled: pushConfig().enabled,
+    historicalConflicts: await historicalServiceConflicts(
+      db,
+      rows.map((r) => r.id),
+    ),
     dispatchZones: await db.query(
       "select id,label from zones where active and not is_kiosk and not is_common order by label",
     ),

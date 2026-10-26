@@ -29,6 +29,9 @@ export function RequestList({
   const [resources, setResources] = useState<DispatchResource[]>([]);
   const [alerts, setAlerts] = useState<Record<string, RequestAlert>>({});
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [historicalConflicts, setHistoricalConflicts] = useState<
+    Record<string, number>
+  >({});
   const [zoneLabels, setZoneLabels] = useState<Record<string, string>>({});
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
@@ -117,6 +120,7 @@ export function RequestList({
         setResources(data.resources ?? []);
         setAlerts(data.alerts ?? {});
         setPushEnabled(data.pushEnabled === true);
+        setHistoricalConflicts(data.historicalConflicts ?? {});
         setZoneLabels(data.zoneLabels ?? {});
         setReady(true);
         setError("");
@@ -363,6 +367,13 @@ export function RequestList({
           return (
             <li key={r.id} data-request-id={r.id} className="dx-card">
               <h2>{SERVICE_LABEL[r.service]}</h2>
+              {historicalConflicts[r.id] > 0 && (
+                <p role="note" className="dx-notice">
+                  과거 중복 접수 확인 대상 · 같은 등록·서비스로 진행 중인 기록{" "}
+                  {historicalConflicts[r.id]}건. 기존 기록은 보존했습니다.
+                  안내데스크에서 실제 지원 여부를 확인해 주세요.
+                </p>
+              )}
               {!current && (
                 <p>
                   <strong>

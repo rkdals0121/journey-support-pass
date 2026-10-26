@@ -382,3 +382,75 @@ end $$;
 drop trigger if exists enqueue_request_alert_trigger on service_requests;
 create trigger enqueue_request_alert_trigger after insert on service_requests
  for each row execute function enqueue_request_alert();
+
+-- One live request for a registration/service across new and retained writers.
+-- A null owner quarantines pre-existing duplicates until all of them close.
+-- exec() keeps this backfill and trigger installation in one transaction.
+lock table service_requests,calls,assist_requests in share row exclusive mode;
+create table if not exists active_service_claims (
+ registration_id uuid not null references registrations(id) on delete cascade,
+ service text not null check(service in ('guidance','robot','mobility')),
+ owner_id text,
+ primary key(registration_id,service)
+);
+insert into active_service_claims(registration_id,service,owner_id)
+ select registration_id,service,case when count(*)=1 then min(id) else null end
+ from request_work_ledger where registration_id is not null
+ and state in ('received','assigned','en_route','arrived','serving')
+ group by registration_id,service on conflict do nothing;
+
+create or replace function maintain_active_service_claim() returns trigger language plpgsql as $$
+declare
+ old_reg uuid; new_reg uuid; old_service text; new_service text;
+ old_live boolean:=false; new_live boolean:=false; owner text; prefix text;
+begin
+ prefix:=case TG_TABLE_NAME when 'calls' then 'call:' when 'assist_requests' then 'assist:' else '' end;
+ if TG_OP<>'INSERT' then
+  old_reg:=OLD.registration_id;
+  if TG_TABLE_NAME='calls' then old_service:='guidance'; old_live:=OLD.ended_at is null;
+  elsif TG_TABLE_NAME='assist_requests' then old_service:='mobility';old_live:=OLD.state in ('received','assigned','moving');
+  else old_service:=OLD.service;old_live:=OLD.state in ('received','assigned','en_route','arrived','serving');
+  end if;
+  owner:=prefix||OLD.id::text;
+ end if;
+ if TG_OP<>'DELETE' then
+  new_reg:=NEW.registration_id;
+  if TG_TABLE_NAME='calls' then new_service:='guidance';new_live:=NEW.ended_at is null;
+  elsif TG_TABLE_NAME='assist_requests' then new_service:='mobility';new_live:=NEW.state in ('received','assigned','moving');
+  else new_service:=NEW.service;new_live:=NEW.state in ('received','assigned','en_route','arrived','serving');
+  end if;
+ end if;
+ if (old_reg is not null or new_reg is not null) and
+  (old_live<>new_live or new_reg is distinct from old_reg or new_service is distinct from old_service) then
+  -- A kiosk may replace its waiting passenger; lock old/new keys in the same order.
+  perform 1 from active_service_claims c where
+   (c.registration_id=old_reg and c.service=old_service) or
+   (c.registration_id=new_reg and c.service=new_service)
+   order by c.registration_id,c.service for update;
+ end if;
+ if old_reg is not null and old_live and
+  (not new_live or new_reg is distinct from old_reg or new_service is distinct from old_service) then
+  -- Serializes concurrent closure of quarantined historic duplicates.
+  perform 1 from active_service_claims where registration_id=old_reg and service=old_service for update;
+  delete from active_service_claims c where c.registration_id=old_reg and c.service=old_service
+   and (c.owner_id=owner or (c.owner_id is null and not exists(
+    select 1 from request_work_ledger w where w.registration_id=old_reg and w.service=old_service
+    and w.state in ('received','assigned','en_route','arrived','serving')
+   )));
+ end if;
+ if new_reg is not null and new_live and
+  (not old_live or new_reg is distinct from old_reg or new_service is distinct from old_service) then
+  insert into active_service_claims(registration_id,service,owner_id)
+   values(new_reg,new_service,prefix||NEW.id::text);
+ end if;
+ if TG_OP='DELETE' then return OLD; else return NEW; end if;
+end $$;
+drop trigger if exists active_service_claim_trigger on service_requests;
+create trigger active_service_claim_trigger after insert or update or delete on service_requests
+ for each row execute function maintain_active_service_claim();
+drop trigger if exists active_service_claim_trigger on calls;
+create trigger active_service_claim_trigger after insert or update or delete on calls
+ for each row execute function maintain_active_service_claim();
+drop trigger if exists active_service_claim_trigger on assist_requests;
+create trigger active_service_claim_trigger after insert or update or delete on assist_requests
+ for each row execute function maintain_active_service_claim();
