@@ -27,6 +27,7 @@ const child = spawn(
       VERCEL: "",
       DATA_MODE: "mock",
       ICN_API_KEY: "",
+      EXTERNAL_CONNECTION_MODE: "",
       CRON_SECRET: "dx-local-check-only",
       SESSION_SECRET: "dx-local-check-only-session-not-for-deployment",
       BASE_URL: "http://localhost:3100",

@@ -12,7 +12,7 @@ describe("스키마", () => {
     db = await createTestDb();
   });
 
-  it("기존 표를 보존하고 공통 접수 잠금까지 17개 표를 만든다", async () => {
+  it("기존 표와 시험 연동 대기열을 포함한 18개 표를 만든다", async () => {
     const rows = await db.query<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public' and table_type='BASE TABLE'",
     );
@@ -25,6 +25,7 @@ describe("스키마", () => {
       "events",
       "flight_polls",
       "flights",
+      "integration_jobs",
       "passes",
       "registrations",
       "request_alert_deliveries",

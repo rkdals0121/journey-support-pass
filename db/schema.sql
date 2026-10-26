@@ -197,6 +197,21 @@ create table if not exists service_requests (
  expires_at timestamptz not null, version int not null default 0,
  device_key text not null
 );
+-- Sandbox outbox only. Vendor protocols and live commands require a separate adapter.
+create table if not exists integration_jobs (
+ id uuid primary key default gen_random_uuid(),
+ request_id uuid not null references service_requests(id) on delete cascade,
+ channel text not null check(channel in ('agency','robot','mobility')),
+ state text not null default 'pending' check(state in ('pending','sending','acknowledged','in_progress','completed','failed','stopped')),
+ resource_id uuid, request_version int not null, created_by_zone text not null,
+ external_id text, attempts int not null default 0, sequence bigint not null default 0,
+ last_error text not null default '', version int not null default 0,
+ created_at timestamptz not null, updated_at timestamptz not null,
+ next_attempt_at timestamptz not null, lease_until timestamptz,
+ unique(request_id,channel)
+);
+create index if not exists integration_jobs_due on integration_jobs(state,next_attempt_at);
+alter table integration_jobs add column if not exists request_version int not null default -1;
 create index if not exists service_requests_open on service_requests (state, created_at);
 create index if not exists service_requests_device on service_requests (device_key, created_at);
 -- One active request per pre-registration; a second browser cannot create a duplicate.
