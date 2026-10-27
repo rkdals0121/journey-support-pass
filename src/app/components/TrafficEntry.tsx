@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 export function TrafficEntry({
   en,
   info,
@@ -15,6 +16,19 @@ export function TrafficEntry({
 }) {
   return (
     <main id="public-main" className="booking-lookup traffic-entry">
+      {/* 모든 화면 같은 자리의 「이전」. 안내 화면이면 고르는 화면으로, 고르는 화면이면 앞 화면으로. */}
+      <button
+        type="button"
+        className="request-back"
+        onClick={() => {
+          if (info) onBack();
+          else if (window.history.length > 1) window.history.back();
+          else window.location.assign("/services" + (en ? "?lang=en" : ""));
+        }}
+      >
+        <ArrowLeft aria-hidden="true" />
+        {en ? "Back" : "이전"}
+      </button>
       <h1>{en ? "Transport and parking" : "교통·주차 지원"}</h1>
       {!info ? (
         <div className="traffic-intent-options">

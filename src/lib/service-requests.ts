@@ -223,7 +223,7 @@ export async function createServiceRequest(
       !reportLocationLabel(details.fields))
   )
     return fail(400, "신고할 터미널·층·상세 위치를 확인해 주세요");
-  if (details?.task === "facility-access")
+  if (details?.task === "facility-access" || details?.task === "facility-inspection")
     business = businessOf("passenger-terminal");
   const destination =
     body.destinationId === undefined || body.destinationId === ""
