@@ -46,7 +46,7 @@ export function DevicePreview({
       <header className="device-preview-header">
         <span className="device-brand">
           <Sunflower />
-          분(分)실
+          공항 이용 지원
         </span>
         <span>
           {robot

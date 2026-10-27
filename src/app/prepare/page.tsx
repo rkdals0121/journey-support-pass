@@ -37,7 +37,7 @@ export default async function PreparePage({
         <Link className="public-logo" href="/prepare">
           <Sunflower />
           <span>
-            분(分)실
+            공항 이용 지원
             <small>
               {en
                 ? "Prepare for your airport visit"

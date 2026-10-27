@@ -50,7 +50,7 @@ export function PublicShell({
           <Link href={"/" + suffix} className="public-logo">
             <Sunflower />
             <span>
-              분(分)실<small>Journey Support Pass</small>
+              공항 이용 지원<small>Journey Support Pass</small>
             </span>
           </Link>
           <div className="public-tools">
@@ -107,7 +107,7 @@ export function PublicShell({
       <footer className="public-footer">
         <div>
           <span className="public-footer-brand">
-            분(分)실 · Journey Support Pass
+            공항 이용 지원 · Journey Support Pass
           </span>
           <p className="public-caption">
             {en
