@@ -46,9 +46,7 @@ async function main() {
       const engine = (
         window as unknown as {
           axe: {
-            run: (
-              o: unknown,
-            ) => Promise<{
+            run: (o: unknown) => Promise<{
               violations: {
                 id: string;
                 impact: string;
@@ -166,7 +164,13 @@ async function main() {
         (await device.$$(".task-action-link")).length === 6,
     );
     await axe(device, "installed kiosk");
-    check("kiosk services and voice control fit without scrolling", await device.$eval(".kiosk-task-utilities", e => e.getBoundingClientRect().bottom <= innerHeight));
+    check(
+      "kiosk services and voice control fit without scrolling",
+      await device.$eval(
+        ".kiosk-task-utilities",
+        (e) => e.getBoundingClientRect().bottom <= innerHeight,
+      ),
+    );
     await device.screenshot({
       path: out + "/installed-kiosk-1280.png",
       fullPage: true,
@@ -187,7 +191,14 @@ async function main() {
     );
     await device.type("#nav-gate", "127");
     await device.click(".field-task-tools button");
-    check("field text size control stays usable without horizontal overflow", await device.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1 && document.documentElement.style.getPropertyValue("--scale") === "1.25"));
+    check(
+      "field text size control stays usable without horizontal overflow",
+      await device.evaluate(
+        () =>
+          document.documentElement.scrollWidth <= innerWidth + 1 &&
+          document.documentElement.style.getPropertyValue("--scale") === "1.25",
+      ),
+    );
     await device.click(".field-task-tools button");
     await device.click('button[type="submit"]');
     await device.waitForSelector(
@@ -197,6 +208,23 @@ async function main() {
       "installed kiosk calculates an actual route",
       await device.$eval(".service-route-result", (e) =>
         e.textContent?.includes("127"),
+      ),
+    );
+    check(
+      "route result receives keyboard focus",
+      await device.$eval(
+        ".service-route-result h2",
+        (e) => e === document.activeElement,
+      ),
+    );
+    check(
+      "on-site guidance retains installed device return path",
+      await device.$eval(
+        ".service-route-result a",
+        (e) =>
+          new URL((e as HTMLAnchorElement).href).searchParams.get(
+            "returnTo",
+          ) === "/kiosk/guide",
       ),
     );
     await device.screenshot({
