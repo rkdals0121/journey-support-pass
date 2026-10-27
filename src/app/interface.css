@@ -175,6 +175,14 @@
   padding: 1.5rem;
   border-left: 3px solid var(--green);
 }
+.airport-portal-links {
+  display: grid;
+  gap: 0.75rem;
+}
+.airport-stamp-link {
+  background: #fdf3dc;
+  border-left-color: #d9a441;
+}
 .airport-prepare-link h2,
 .airport-portal-support .my-request-panel h2 {
   font-size: 1.0625rem;
