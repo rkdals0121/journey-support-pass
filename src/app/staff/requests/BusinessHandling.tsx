@@ -23,7 +23,9 @@ export function BusinessHandling({
 }) {
   const [businessId, setBusinessId] = useState(request.businessId ?? "");
   const [reason, setReason] = useState("");
-  const [kind, setKind] = useState<ResolutionKind>("advice");
+  const [kind, setKind] = useState<ResolutionKind>(
+    request.serviceDetails?.task ? "resolved" : "advice",
+  );
   const [resultBusiness, setResultBusiness] = useState(
     request.businessId ?? "",
   );

@@ -6,6 +6,7 @@ import "./globals.css";
 import "./redesign.css";
 import "./service-flow.css";
 import "./staff-console.css";
+import "./airport-design.css";
 
 // 본문은 Pretendard, 숫자(탑승구·시각·편명·번호)는 공항 표지판처럼 굵고 좁은 Barlow Condensed.
 const num = Barlow_Condensed({
@@ -16,8 +17,8 @@ const num = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "Journey Support Pass",
-  description: "인천공항 교통약자 지원 등록",
+  title: "공항 이용 지원 | Airport Assist",
+  description: "공항 길 찾기, 현장 도움 요청과 처리 현황 확인",
   robots: { index: false, follow: false },
 };
 

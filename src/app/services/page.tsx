@@ -8,6 +8,7 @@ import {
 } from "@/lib/operating-profile";
 import { PublicShell } from "../components/PublicShell";
 import { ServiceDirectory } from "../components/ServiceDirectory";
+import { PortalSupport } from "../components/PortalSupport";
 export default async function ServicesPage({
   searchParams,
 }: {
@@ -17,22 +18,13 @@ export default async function ServicesPage({
     lang = en ? "en" : "ko";
   return (
     <PublicShell lang={lang}>
-      <main id="public-main" className="portal-main">
-        <div className="public-page-heading">
-          <p className="public-eyebrow">
-            {en ? "AIRPORT SERVICE DIRECTORY" : "서비스 찾기"}
-          </p>
-          <h1>
-            {en ? "Find the help you need" : "필요한 도움부터 찾아보세요"}
-          </h1>
-          <p>
-            {en
-              ? "Choose a service to view a route or submit a work order."
-              : "경로 안내는 바로 확인하고, 현장 지원·신고는 필요한 내용을 입력해 접수하세요."}
-          </p>
-        </div>
-        <ServiceDirectory lang={lang} />
-        <section className="business-reference">
+      <main id="public-main" className="airport-portal">
+        <ServiceDirectory lang={lang} portal />
+        <PortalSupport lang={lang} />
+        <details className="business-reference airport-business-reference">
+          <summary>
+            {en ? "Business responsibilities" : "담당 업무 전체 보기"}
+          </summary>
           <h2>{en ? "Business responsibilities" : "담당 업무 전체 보기"}</h2>
           <p className="public-caption">
             {en
@@ -58,11 +50,13 @@ export default async function ServicesPage({
                   </ul>
                   {b.access !== "internal" && (
                     <Link
-                      href={"/help?topic=other&service=guidance&business=" + b.id + (en ? "&lang=en" : "")}
+                      href={
+                        "/help?topic=other&service=guidance&business=" +
+                        b.id +
+                        (en ? "&lang=en" : "")
+                      }
                     >
-                      {en
-                        ? "Create a service request"
-                        : "이 업무 요청 작성"}
+                      {en ? "Create a service request" : "이 업무 요청 작성"}
                     </Link>
                   )}
                 </details>
@@ -76,7 +70,7 @@ export default async function ServicesPage({
                 : "업무 범위 출처 · 공식 사업현황"}
             </a>
           </p>
-        </section>
+        </details>
       </main>
     </PublicShell>
   );

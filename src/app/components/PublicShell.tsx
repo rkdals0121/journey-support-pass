@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, Type } from "lucide-react";
 import { Sunflower } from "./Sunflower";
 import { useViewSettings, setViewSettings } from "./viewSettings";
 export function PublicShell({
@@ -41,7 +41,7 @@ export function PublicShell({
     ["/devices", en ? "Kiosk & robot" : "키오스크·로봇"],
   ];
   return (
-    <div className="public-site" lang={lang}>
+    <div className="public-site airport-site" lang={lang}>
       <a className="public-skip" href="#public-main">
         {en ? "Skip to content" : "본문 바로가기"}
       </a>
@@ -55,14 +55,15 @@ export function PublicShell({
           </Link>
           <div className="public-tools">
             <Link href={languageHref} hrefLang={en ? "ko" : "en"}>
-              {en ? "한국어" : "English"}
+              {en ? "한국어" : "EN"}
             </Link>
             <button
               type="button"
               aria-pressed={large}
+              aria-label={en ? "Larger text" : "글자 크게"}
               onClick={() => setViewSettings({ scale: large ? 1 : 1.25 })}
             >
-              {en ? "Larger text" : "글자 크게"}
+              <Type size={19} aria-hidden="true" />
             </button>
             <button
               className="public-menu-toggle"
@@ -84,6 +85,7 @@ export function PublicShell({
           {items.map(([href, label]) => (
             <Link
               key={href}
+              onClick={() => setMenu(false)}
               href={
                 href +
                 (en ? (href.includes("?") ? "&lang=en" : "?lang=en") : "")
@@ -110,9 +112,7 @@ export function PublicShell({
             공항 이용 지원 · Journey Support Pass
           </span>
           <p className="public-caption">
-            {en
-              ? "Contest prototype"
-              : "공모전 시제품"}
+            {en ? "Contest prototype" : "공모전 시제품"}
           </p>
         </div>
         <div className="public-footer-links">
@@ -122,7 +122,9 @@ export function PublicShell({
           <Link href={"/demo/booking" + suffix}>
             {en ? "Booking connection demo" : "예매 연결 시연"}
           </Link>
-          <Link href={"/devices" + suffix}>{en ? "Kiosk & robot" : "키오스크·로봇"}</Link>
+          <Link href={"/devices" + suffix}>
+            {en ? "Kiosk & robot" : "키오스크·로봇"}
+          </Link>
           <Link href="/staff">
             {en ? "Staff workspace" : "직원 업무 화면"}
             <ArrowUpRight size={14} aria-hidden="true" />
