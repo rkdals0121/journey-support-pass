@@ -4,6 +4,9 @@ import { currentSession } from "@/lib/session-server";
 import { helpService, kioskReturn } from "@/lib/help-entry";
 import { HelpFlow } from "../../../help/HelpFlow";
 import { PublicShell } from "@/app/components/PublicShell";
+import { FieldTaskShell } from "@/app/components/FieldTaskShell";
+import { placeOf } from "@/lib/airport";
+import { prefsOf } from "@/lib/catalog";
 export const dynamic = "force-dynamic";
 export default async function RegisteredHelp({
   params,
@@ -31,8 +34,12 @@ export default async function RegisteredHelp({
     checkExisting: q.resume === "1",
   };
   const found = await lookupPass(await getDb(), token, new Date());
-  if (found.kind !== "ok")
-    return <HelpFlow lang="ko" registrationError {...shared} />;
+  const place = session?.isKiosk ? placeOf(session.placeId) : undefined;
+  if (found.kind !== "ok") {
+    const lang = q.lang === "en" ? "en" : "ko";
+    const fallback = <HelpFlow lang={lang} registrationError {...shared} />;
+    return session?.isKiosk ? <FieldTaskShell en={lang === "en"} returnTo={kioskReturn(q.returnTo) ?? (place?.landside ? "/kiosk/entry" : "/kiosk/guide")} place={lang === "en" ? (place?.labelEn ?? "") : (place?.label ?? "")}>{fallback}</FieldTaskShell> : <PublicShell lang={lang}>{fallback}</PublicShell>;
+  }
   const lang =
     q.lang === "en" ? "en" : q.lang === "ko" ? "ko" : found.journey.lang;
   const flow = (
@@ -47,7 +54,7 @@ export default async function RegisteredHelp({
     />
   );
   return session?.isKiosk ? (
-    flow
+    <FieldTaskShell en={lang === "en"} returnTo={kioskReturn(q.returnTo) ?? (place?.landside ? "/kiosk/entry" : "/kiosk/guide")} place={lang === "en" ? (place?.labelEn ?? "") : (place?.label ?? "")} defaultLarge={prefsOf(found.journey.choices).large}>{flow}</FieldTaskShell>
   ) : (
     <PublicShell lang={lang}>
       <div className="public-request-layout request-solo">{flow}</div>

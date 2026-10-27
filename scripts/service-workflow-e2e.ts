@@ -12,7 +12,7 @@ async function main() {
     headless: true,
     protocolTimeout: 30000,
   });
-  const out = ".e2e-shots/service-workflows";
+  const out = process.env.SERVICE_CHECK_OUTPUT ?? ".e2e-shots/service-workflows";
   fs.mkdirSync(out, { recursive: true });
   const checks: string[] = [],
     errors: string[] = [];

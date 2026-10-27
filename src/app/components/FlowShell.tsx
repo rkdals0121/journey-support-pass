@@ -6,6 +6,7 @@ import type { Prefs } from "@/lib/catalog";
 import { textOf, type Lang } from "@/lib/i18n";
 import { useFocusTrap } from "./useFocusTrap";
 import { useSpeech } from "./useSpeech";
+import { Brand } from "./Sunflower";
 import {
   resetViewSettings,
   SCALES,
@@ -49,6 +50,9 @@ interface Props {
   children: React.ReactNode;
   desktopSteps?: { label: string; current: boolean; done: boolean }[];
   desktopSummary?: React.ReactNode;
+  onStepSelect?: (index: number) => void;
+  serviceHome?: boolean;
+  headerTools?: React.ReactNode;
 }
 
 /**
@@ -76,6 +80,9 @@ export function FlowShell({
   children,
   desktopSteps,
   desktopSummary,
+  onStepSelect,
+  serviceHome = false,
+  headerTools,
 }: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang, prefs.slow);
@@ -93,6 +100,10 @@ export function FlowShell({
     settleUntil.current = now - lastTapAt < SETTLE_MS ? now + SETTLE_MS : 0;
   }, [screenKey]);
   const swallowEarly = (e: React.MouseEvent) => {
+    // 중복 제출 방지는 다음·동의 버튼에만 적용한다. 메뉴, 완료 단계 수정,
+    // 탑승권 열기까지 막으면 새 화면이 잠깐 먹통처럼 느껴진다.
+    if (!(e.target instanceof Element) || !e.target.closest(".flow-cta button"))
+      return;
     // 사람이 실제로 누른 것만 본다(화면 점검 프로그램이 코드로 누르는 것은 막지 않는다).
     if (e.nativeEvent.isTrusted && Date.now() < settleUntil.current) {
       e.preventDefault();
@@ -202,20 +213,29 @@ export function FlowShell({
 
   return (
     <div
-      className={desktopSteps ? "flow flow-pretrip" : "flow"}
+      className={
+        (desktopSteps ? "flow flow-pretrip" : "flow") +
+        (serviceHome ? " flow-service-home" : "")
+      }
+      data-screen={screenKey}
       lang={lang}
       onClickCapture={swallowEarly}
     >
       <header className="flow-bar" ref={barRef}>
+        {serviceHome && <Brand />}
         <div className="flow-bar-side">
-          <button className="bar-btn" onClick={onBack} disabled={!onBack}>
-            <ChevronLeft size={22} aria-hidden="true" />
-            <span>{t.back}</span>
-          </button>
-          <button className="bar-btn" onClick={onHome} disabled={!onHome}>
-            <House size={20} aria-hidden="true" />
-            <span>{t.home}</span>
-          </button>
+          {!serviceHome && (
+            <>
+              <button className="bar-btn" onClick={onBack} disabled={!onBack}>
+                <ChevronLeft size={22} aria-hidden="true" />
+                <span>{t.back}</span>
+              </button>
+              <button className="bar-btn" onClick={onHome} disabled={!onHome}>
+                <House size={20} aria-hidden="true" />
+                <span>{t.home}</span>
+              </button>
+            </>
+          )}
           <button
             className="bar-btn"
             onClick={() => setSettingsOpen(true)}
@@ -224,6 +244,7 @@ export function FlowShell({
             <Settings size={20} aria-hidden="true" />
             <span>{t.settings}</span>
           </button>
+          {headerTools}
         </div>
         {supported && (
           <button
@@ -272,8 +293,18 @@ export function FlowShell({
                   aria-current={s.current ? "step" : undefined}
                   className={s.done ? "done" : ""}
                 >
-                  <span>{s.done ? "✓" : i + 1}</span>
-                  {s.label}
+                  {s.done && onStepSelect ? (
+                    <button type="button" onClick={() => onStepSelect(i)}>
+                      <span>✓</span>
+                      {s.label}
+                      <small>{lang === "en" ? "Edit" : "수정"}</small>
+                    </button>
+                  ) : (
+                    <>
+                      <span>{i + 1}</span>
+                      {s.label}
+                    </>
+                  )}
                 </li>
               ))}
             </ol>

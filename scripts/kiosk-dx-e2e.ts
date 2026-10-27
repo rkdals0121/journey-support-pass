@@ -78,13 +78,15 @@ async function main() {
         creates++;
     });
     await kiosk.goto(base + "/kiosk");
+    const setup = await kiosk.evaluate(async codes => (await fetch("/api/admin/setup", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer dx-local-check-only" }, body: JSON.stringify({ codes }) })).status, Object.fromEntries(seeds.map(z => [z.id, z.code])));
+    assert.equal(setup, 200);
     const installed = await api(kiosk, "/api/kiosk/login", {
       code: seeds.find((z) => z.isKiosk)!.code,
       placeId: "t1-info",
     });
     check("kiosk installation", installed.status === 200);
     await kiosk.goto(base + "/kiosk/entry", { waitUntil: "networkidle0" });
-    await click(kiosk, "탑승권 없이 도움 요청하기");
+    await kiosk.click(".call-btn");
     await kiosk.waitForSelector("#dx-place");
     check(
       "boarding pass is optional at the entrance robot",
@@ -99,7 +101,6 @@ async function main() {
           (e as HTMLSelectElement).disabled,
       ),
     );
-    await kiosk.type("#dx-note", "앞사람 표시 확인용");
     await kiosk.click('input[type="checkbox"][required]');
     await kiosk.click('button[type="submit"]');
     check(
@@ -179,11 +180,14 @@ async function main() {
         document.body.innerText.includes("이 탭에 접수 내역이 없어요"),
       ),
     );
-    const flights = await kiosk.evaluate(
-      async () => await (await fetch("/api/flights/search?q=MK127")).json(),
-    );
-    const f = flights.flights[0];
-    const reg = await api(kiosk, "/api/registrations", {
+    const passengerContext = await browser.createBrowserContext();
+    const passenger = await passengerContext.newPage();
+    await passenger.goto(base + "/prepare/booking");
+    const booking = await api(passenger, "/api/booking/lookup", { airline: "demo", reference: "DEMO01", surname: "KIM" });
+    assert.equal(booking.status, 200);
+    const f = booking.body.handoff.flight;
+    const reg = await api(passenger, "/api/registrations", {
+      bookingContext: booking.body.handoff.context,
       flightDate: f.flightDate,
       flightNo: f.flightNo,
       choices: ["mov_no_stairs", "gd_large"],
@@ -194,6 +198,7 @@ async function main() {
     });
     check("registration remains available", reg.status === 200);
     await kiosk.goto(base + "/kiosk/guide", { waitUntil: "networkidle0" });
+    await kiosk.click(".kiosk-personalise > summary");
     await click(kiosk, "고유 일련 번호 누르기");
     for (const digit of reg.body.passNo)
       await kiosk.evaluate(
@@ -213,18 +218,7 @@ async function main() {
       "guide kiosk links the scanned registration",
       new URL(kiosk.url()).pathname === `/p/${reg.body.token}/help`,
     );
-    check(
-      "guide entry reuses needs and party",
-      (await kiosk.$eval(
-        "#dx-party",
-        (e) => (e as HTMLInputElement).value === "3",
-      )) &&
-        (await kiosk.evaluate(
-          () =>
-            document.querySelectorAll('input[type="checkbox"]:checked')
-              .length >= 2,
-        )),
-    );
+    check("registered needs are not asked again in the short guidance flow", !(await kiosk.$("#dx-party")));
     await kiosk.click('input[type="checkbox"][required]');
     await kiosk.click('button[type="submit"]');
     await click(kiosk, "이 내용으로 요청 접수");
@@ -232,6 +226,8 @@ async function main() {
     const linkedReceipt = await kiosk.evaluate(() =>
       sessionStorage.getItem("jsp-dx-receipt-v1"),
     );
+    const linked = await api(kiosk, "/api/requests/status", { receipt: linkedReceipt });
+    check("guide entry reuses saved needs and party in the actual request", linked.body.request.party === 3 && linked.body.request.choices.includes("mov_no_stairs") && linked.body.request.choices.includes("gd_large"));
     await kiosk.goto(
       base +
         `/p/${reg.body.token}/help?service=mobility&returnTo=%2Fkiosk%2Fentry&fresh=1`,
@@ -245,7 +241,8 @@ async function main() {
       )) === linkedReceipt,
     );
     await api(kiosk, "/api/requests/cancel", { receipt: linkedReceipt });
-    const another = await api(kiosk, "/api/registrations", {
+    const another = await api(passenger, "/api/registrations", {
+      bookingContext: booking.body.handoff.context,
       flightDate: f.flightDate,
       flightNo: f.flightNo,
       choices: [],

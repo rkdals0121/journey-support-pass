@@ -1,14 +1,42 @@
 import { PublicShell } from "../components/PublicShell";
 import { NavigationFlow } from "./NavigationFlow";
+import { currentSession } from "@/lib/session-server";
+import { placeOf } from "@/lib/airport";
+import { kioskReturn } from "@/lib/help-entry";
+import { FieldTaskShell } from "../components/FieldTaskShell";
+import { config } from "@/lib/config";
 export default async function Navigate({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; gate?: string; returnTo?: string }>;
 }) {
-  const en = (await searchParams).lang === "en";
-  return (
-    <PublicShell lang={en ? "en" : "ko"}>
-      <NavigationFlow en={en} />
-    </PublicShell>
+  const q = await searchParams;
+  const en = q.lang === "en";
+  const session = await currentSession();
+  const place = session?.isKiosk ? placeOf(session.placeId) : undefined;
+  const returnTo =
+    kioskReturn(q.returnTo) ??
+    (place?.landside ? "/kiosk/entry" : "/kiosk/guide");
+  const flow = (
+    <NavigationFlow
+      en={en}
+      initialGate={q.gate && /^\d{1,3}$/.test(q.gate) ? q.gate : ""}
+      initialPlace={place?.id ?? ""}
+      fixedPlace={!!place}
+      returnTo={returnTo}
+      idleAskSec={config.idleAskSec}
+      idleAnswerSec={config.idleAnswerSec}
+    />
   );
+  if (place)
+    return (
+      <FieldTaskShell
+        en={en}
+        returnTo={returnTo}
+        place={en ? place.labelEn : place.label}
+      >
+        {flow}
+      </FieldTaskShell>
+    );
+  return <PublicShell lang={en ? "en" : "ko"}>{flow}</PublicShell>;
 }

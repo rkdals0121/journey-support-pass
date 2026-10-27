@@ -7,6 +7,7 @@ import { ResourceAvailability } from "@/app/components/ResourceAvailability";
 import { RequestAlertStatus } from "./RequestAlertStatus";
 import { OperatorClose } from "./OperatorClose";
 import { BusinessHandling } from "./BusinessHandling";
+import { RequestCards } from "./RequestCards";
 import { RequestResolutionView } from "@/app/components/RequestResolutionView";
 import type { RequestAlert } from "@/lib/request-alert-model";
 import type { DispatchResource } from "@/lib/resource-model";
@@ -34,7 +35,7 @@ export function RequestList({
   zoneId,
   isDesk,
   initialBusiness = "all",
-  initialScope = "all",
+  initialScope = "active",
 }: {
   zoneId: string;
   isDesk: boolean;
@@ -309,7 +310,7 @@ export function RequestList({
     setSource("all");
     setQueue("all");
     setZone("all");
-    setFilter("all");
+    setFilter("active");
     setOrder("priority");
     setOffset(0);
   }
@@ -333,6 +334,8 @@ export function RequestList({
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className={"work-requests" + (selected ? " has-selection" : "")}>
+      <div className="work-contextbar"><p>근무 구역 <strong>{zoneLabels[zoneId] ?? "확인 중"}</strong></p><button type="button" onClick={() => void load()}>새로고침</button></div>
+      {summary && <p className="work-today">오늘 접수 <strong>{summary.total}</strong>건 <span>·</span> 완료 <strong>{summary.done}</strong>건 <span>·</span> 확인 지연 <strong>{summary.awaitingAttention}</strong>건</p>}
       <details className="work-preferences">
         <summary>알림·설정</summary>
         <Link className="btn" href="/staff/resources">
@@ -471,7 +474,7 @@ export function RequestList({
           source !== "all" ||
           queue !== "all" ||
           zone !== "all" ||
-          filter !== "all" ||
+          filter !== "active" ||
           showHistory ||
           order !== "priority") && (
           <button
@@ -634,12 +637,12 @@ export function RequestList({
       <div className="work-scope-control">
         <div className="work-scope-tabs" role="group" aria-label="요청 범위">
           {[
-            ["all", "전체"],
+            ["active", "미처리 전체"],
             ["waiting", "미배정"],
-            ["active", "진행 중"],
             ["mine", "내 구역"],
             ["location", "위치 변경"],
             ["attention", "확인 지연"],
+            ["all", "전체·완료"],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -665,7 +668,7 @@ export function RequestList({
           }}
         >
           <option value="all">전체 요청</option>
-          <option value="active">진행 중</option>
+          <option value="active">미처리 전체</option>
           <option value="waiting">미배정</option>
           <option value="location">위치 변경 확인 대기</option>
           <option value="attention">확인 지연</option>
@@ -686,6 +689,7 @@ export function RequestList({
             요청 목록{" "}
             <span className="work-result-count">{pageReady ? total : "—"}</span>
           </h2>
+          <RequestCards rows={visible} selectedId={selected?.id} zoneLabels={zoneLabels} onSelect={id => setSelection({ id, query: requestUrl })} ready={pageReady} onReset={resetFilters} />
           <div className="work-table-wrap">
             <table className="work-request-table">
               <thead>

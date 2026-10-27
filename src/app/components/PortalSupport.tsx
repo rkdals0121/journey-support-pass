@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { MyRequestPanel } from "./MyRequestPanel";
-export function PortalSupport({ lang = "ko" }: { lang?: "ko" | "en" }) {
+export function PortalSupport({ lang = "ko", showRequests = true, showPrepare = true }: { lang?: "ko" | "en"; showRequests?: boolean; showPrepare?: boolean }) {
   const en = lang === "en";
   return (
     <section
@@ -9,7 +9,7 @@ export function PortalSupport({ lang = "ko" }: { lang?: "ko" | "en" }) {
       aria-label={en ? "Your journey" : "여행과 요청 관리"}
     >
       <div className="airport-portal-links">
-        <Link
+        {showPrepare && <Link
           className="airport-prepare-link"
           href={"/prepare" + (en ? "?lang=en" : "")}
         >
@@ -24,7 +24,7 @@ export function PortalSupport({ lang = "ko" }: { lang?: "ko" | "en" }) {
             </p>
           </div>
           <ArrowUpRight size={22} aria-hidden="true" />
-        </Link>
+        </Link>}
         {/* 스탬프북은 한국어 화면만 있다. */}
         <Link className="airport-prepare-link airport-stamp-link" href="/stamp">
           <div>
@@ -40,7 +40,7 @@ export function PortalSupport({ lang = "ko" }: { lang?: "ko" | "en" }) {
           <ArrowUpRight size={22} aria-hidden="true" />
         </Link>
       </div>
-      <MyRequestPanel lang={lang} />
+      {showRequests && <MyRequestPanel lang={lang} />}
     </section>
   );
 }

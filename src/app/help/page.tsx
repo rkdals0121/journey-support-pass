@@ -5,6 +5,8 @@ import { businessOf } from "@/lib/operating-profile";
 import { supportTopic } from "@/lib/service-catalog";
 import { PublicShell } from "../components/PublicShell";
 import { redirect } from "next/navigation";
+import { FieldTaskShell } from "../components/FieldTaskShell";
+import { placeOf } from "@/lib/airport";
 export default async function HelpPage({
   searchParams,
 }: {
@@ -20,7 +22,8 @@ export default async function HelpPage({
   }>;
 }) {
   const q = await searchParams;
-  if (q.topic === "lost-property") redirect("/services/lost-property" + (q.lang === "en" ? "?lang=en" : ""));
+  if (q.topic === "lost-property")
+    redirect("/services/lost-property" + (q.lang === "en" ? "?lang=en" : ""));
   const session = await currentSession();
   const business = businessOf(q.business);
   const topic = supportTopic(q.topic),
@@ -45,6 +48,20 @@ export default async function HelpPage({
       embedded={!session?.isKiosk}
     />
   );
-  if (session?.isKiosk) return flow;
+  if (session?.isKiosk) {
+    const place = placeOf(session.placeId);
+    return (
+      <FieldTaskShell
+        en={lang === "en"}
+        returnTo={
+          kioskReturn(q.returnTo) ??
+          (place?.landside ? "/kiosk/entry" : "/kiosk/guide")
+        }
+        place={lang === "en" ? (place?.labelEn ?? "") : (place?.label ?? "")}
+      >
+        {flow}
+      </FieldTaskShell>
+    );
+  }
   return <PublicShell lang={lang}>{flow}</PublicShell>;
 }
