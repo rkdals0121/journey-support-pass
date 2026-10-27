@@ -51,7 +51,7 @@ export function StaffFrame({
         <Link className="public-logo" href="/staff/requests">
           <Sunflower />
           <span>
-            분(分)실<small>직원 통합 운영</small>
+            공항 이용 지원<small>직원 통합 운영</small>
           </span>
         </Link>
         <Link href="/">
