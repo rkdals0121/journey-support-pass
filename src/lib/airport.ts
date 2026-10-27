@@ -7,6 +7,8 @@
 //
 // 이 파일은 브라우저에서도 읽는다. 서버 전용 코드를 가져오지 말 것.
 
+import { LANDSIDE_PLACES } from "./landside-places";
+
 export type Area = "T1" | "CONCOURSE" | "T2";
 export type FacilityKind =
   | "restroom"
@@ -267,6 +269,8 @@ export const PICKUP_PLACES: Place[] = [
   ...GATE_PICKUP_POINTS.map((g) => g.place).filter(
     (p) => !PLACES.some((n) => n.id === p.id),
   ),
+  // 공항 외부: 출입구, 택시·버스 승차장, 주차장 구역(교통·주차 지원). 이름은 공식 안내, 좌표는 지도를 붙일 때 채운다.
+  ...LANDSIDE_PLACES,
 ];
 /** Routing marker for requests that explicitly do not involve meeting a passenger. Not a physical map location. */
 export const NO_MEETING_PLACE = "no-meeting";
