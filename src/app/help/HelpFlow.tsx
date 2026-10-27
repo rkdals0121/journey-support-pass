@@ -1050,7 +1050,13 @@ export function HelpFlow({
                     ) : (
                       <PlaceFinder
                         id="dx-place"
-                        purpose={topic?.id === "other" ? "location" : "pickup"}
+                        purpose={
+                          topic?.id === "other"
+                            ? "location"
+                            : topic?.id === "traffic"
+                              ? "curbside"
+                              : "pickup"
+                        }
                         value={placeId}
                         en={en}
                         photos={!sharedDevice}

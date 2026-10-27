@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, MapPin, Search, X } from "lucide-react";
 import { PICKUP_PLACES, PLACES, placeOf, type Area } from "@/lib/airport";
+import { LANDSIDE, type LandsideKind } from "@/lib/landside-places";
 import {
   matchPlaces,
   type LocationArea,
@@ -33,7 +34,8 @@ export function PlaceFinder({
   disabled?: boolean;
   photos?: boolean;
   label?: string;
-  purpose?: "pickup" | "report" | "location";
+  /** curbside: 교통·주차 지원. 출입구, 택시·버스 승차장, 주차장 구역처럼 공항 밖에서 보이는 표지로 위치를 고른다. */
+  purpose?: "pickup" | "report" | "location" | "curbside";
   showMap?: boolean;
 }) {
   const [query, setQuery] = useState(""),
@@ -55,8 +57,25 @@ export function PlaceFinder({
     area,
     photoText !== null ? "photo" : "search",
   );
+  const curbside = purpose === "curbside";
+  // 공항 외부 위치에서 고르는 곳은 터미널 두 곳뿐이다(탑승동은 보안구역 안이다).
+  const areaChoices = curbside ? areas.filter((a) => a.id !== "CONCOURSE") : areas;
   const quick =
-    area === "all" ? [] : PLACES.filter((p) => p.area === area).slice(0, 3);
+    area === "all"
+      ? []
+      : curbside
+        ? (["taxi", "bus", "parking"] as LandsideKind[])
+            .map((k) => LANDSIDE.find((s) => s.kind === k && s.place.area === area)?.place)
+            .filter((p): p is NonNullable<typeof p> => !!p)
+        : PLACES.filter((p) => p.area === area).slice(0, 3);
+  // 목록에서 직접 고를 때의 묶음. 교통·주차는 공항 외부 위치와 1층·3층 안내데스크만 보인다.
+  const KIND_KO: Record<LandsideKind, [string, string]> = {
+    door: ["1층 출입구", "1F doors"],
+    taxi: ["택시 승차장", "Taxi stands"],
+    bus: ["버스 승차장", "Bus stops"],
+    shuttle: ["셔틀버스", "Shuttle buses"],
+    parking: ["주차장", "Car parks"],
+  };
   function cancel() {
     sequence.current++;
     controller.current?.abort();
@@ -157,8 +176,16 @@ export function PlaceFinder({
       </label>
       <p className="place-finder-hint" id={id + "-hint"}>
         {tr(
-          purpose === "report" ? "시설 근처 게이트 번호나 안내판으로 위치를 선택해 주세요." : "지금 계신 곳의 게이트 번호나 안내판을 찾아보세요.",
-          purpose === "report" ? "Choose the gate or sign nearest the reported facility." : "Use the gate number or sign where you are standing.",
+          purpose === "report"
+            ? "시설 근처 게이트 번호나 안내판으로 위치를 선택해 주세요."
+            : curbside
+              ? "지금 계신 곳의 출입구 번호, 택시·버스 승차장 표지, 주차장 구역 표지를 찾아보세요."
+              : "지금 계신 곳의 게이트 번호나 안내판을 찾아보세요.",
+          purpose === "report"
+            ? "Choose the gate or sign nearest the reported facility."
+            : curbside
+              ? "Use the door number, taxi or bus stand sign, or car park zone sign where you are."
+              : "Use the gate number or sign where you are standing.",
         )}
       </p>
       <div className="place-find-actions">
@@ -171,10 +198,11 @@ export function PlaceFinder({
             maxLength={100}
             value={query}
             disabled={disabled}
-            placeholder={tr(
-              "예: 130, 116번 게이트, 안내데스크",
-              "e.g. 130, Gate 116, information desk",
-            )}
+            placeholder={
+              curbside
+                ? tr("예: 5번 출입구, 6C 택시 승차장, 단기주차장 A구역", "e.g. Door 5, taxi stand 6C, car park Zone A")
+                : tr("예: 130, 116번 게이트, 안내데스크", "e.g. 130, Gate 116, information desk")
+            }
             aria-describedby={id + "-hint"}
             onChange={(e) => edit(e.target.value)}
           />
@@ -199,10 +227,11 @@ export function PlaceFinder({
               capture="environment"
               tabIndex={-1}
               disabled={disabled}
-              aria-label={tr(
-                "주변 게이트·안내판 사진 선택",
-                "Choose a nearby gate or sign photo",
-              )}
+              aria-label={
+                curbside
+                  ? tr("주변 출입구·승차장·주차 구역 표지 사진 선택", "Choose a photo of a nearby door, stand or car park sign")
+                  : tr("주변 게이트·안내판 사진 선택", "Choose a nearby gate or sign photo")
+              }
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 e.target.value = "";
@@ -258,7 +287,7 @@ export function PlaceFinder({
             <legend className="sr-only">
               {tr("터미널", "Terminal")}
             </legend>
-            {areas.map((a) => (
+            {areaChoices.map((a) => (
               <label key={a.id}>
                 <input
                   type="radio"
@@ -340,10 +369,15 @@ export function PlaceFinder({
           </div>
           {hasText && matches.candidates.length === 0 && (
             <p role="status" className="place-search-notice">
-              {tr(
-                "이 단서로 현재 위치를 찾지 못했어요. 매장 사진이라면 옆 게이트 번호나 안내판도 함께 찍어 주세요. 직접 위치를 선택하거나 안내데스크에 사진을 보여주실 수 있어요.",
-                "Could not find a current location from this clue. For a shop, include the nearby gate or sign. You can select manually or show your photo at an information desk.",
-              )}
+              {curbside
+                ? tr(
+                    "이 단서로 현재 위치를 찾지 못했어요. 출입구 번호(예: 5번 출입구), 택시 승차장 표기(예: 6C), 주차장 구역(예: A구역, P1)을 넣거나 아래 목록에서 골라 주세요.",
+                    "Could not find a location from this clue. Enter a door number (Door 5), a taxi stand (6C) or a car park zone (Zone A, P1), or choose from the list below.",
+                  )
+                : tr(
+                    "이 단서로 현재 위치를 찾지 못했어요. 매장 사진이라면 옆 게이트 번호나 안내판도 함께 찍어 주세요. 직접 위치를 선택하거나 안내데스크에 사진을 보여주실 수 있어요.",
+                    "Could not find a current location from this clue. For a shop, include the nearby gate or sign. You can select manually or show your photo at an information desk.",
+                  )}
             </p>
           )}
         </>
@@ -382,7 +416,19 @@ export function PlaceFinder({
           <option value="">
             {tr("현재 위치를 골라 주세요", "Choose your current location")}
           </option>
-          {areas
+          {curbside &&
+            (["T1", "T2"] as const).flatMap((t) =>
+              (Object.keys(KIND_KO) as LandsideKind[]).map((k) => (
+                <optgroup key={`${t}-${k}`} label={`${t === "T1" ? tr("제1터미널", "Terminal 1") : tr("제2터미널", "Terminal 2")} · ${en ? KIND_KO[k][1] : KIND_KO[k][0]}`}>
+                  {LANDSIDE.filter((s) => s.place.area === t && s.kind === k).map(({ place: p }) => (
+                    <option key={p.id} value={p.id}>
+                      {en ? p.labelEn : p.label}
+                    </option>
+                  ))}
+                </optgroup>
+              )),
+            )}
+          {!curbside && areas
             .filter(
               (a): a is { id: Area; ko: string; en: string } => a.id !== "all",
             )
