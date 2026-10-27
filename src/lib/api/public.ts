@@ -1,6 +1,7 @@
 import { placeOf } from "../airport";
 import { forgetAttempt, ipPart, logAccess, type Session } from "../auth";
-import { cleanExtra, isAdapted } from "../catalog";
+import { cleanExtra, isAdapted, validateChoices } from "../catalog";
+import { prepareBookingFlight } from "../booking-demo";
 import { config } from "../config";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
@@ -57,6 +58,7 @@ export async function destinationsHandler(db: Db, now: Date): Promise<ApiResult>
 }
 
 export interface RegisterBody {
+  bookingContext?: unknown;
   flightDate?: unknown;
   flightNo?: unknown;
   choices?: unknown;
@@ -109,6 +111,14 @@ export async function registerHandler(
   };
   let res: Awaited<ReturnType<typeof createRegistration>>;
   try {
+    if (body.bookingContext !== undefined) {
+      if (route !== "web" || body.consent !== true || validateChoices(body.choices)) {
+        await release();
+        return fail(400, "등록 동의와 입력 내용을 확인해 주세요", "booking_context");
+      }
+      const invalid = await prepareBookingFlight(db, body.bookingContext, body.flightDate, body.flightNo, now);
+      if (invalid) { await release(); return invalid; }
+    }
     res = await createRegistration(
     db,
     {

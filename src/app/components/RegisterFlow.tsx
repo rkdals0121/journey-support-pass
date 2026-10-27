@@ -35,6 +35,7 @@ import { DocScan } from "./DocScan";
 import { AlnumPad, Choice } from "./Inputs";
 import { ListenStart } from "./ListenStart";
 import type { Target } from "@/lib/docscan";
+import type { BookingHandoff } from "@/lib/booking-model";
 
 export interface FlightOption {
   airline: string;
@@ -57,6 +58,7 @@ export interface RegisterResult {
 }
 
 interface Props {
+  booking?: BookingHandoff;
   /**
    * 여객 휴대전화(web), 공항 키오스크(kiosk), 안내데스크 직원이 대신 입력(assisted),
    * 안내 키오스크에서 미리 등록한 내용을 고치기(edit). edit 는 항공편·동의·서류를 묻지 않는다.
@@ -150,7 +152,7 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
 }
 
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. 안내 키오스크는 같은 질문으로 등록을 고친다. */
-export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", edit }: Props) {
+export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", edit, booking }: Props) {
   const kiosk = mode !== "web";
   // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
   // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
@@ -184,7 +186,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   // 찾다가 연결이 끊겼을 때 「다시 찾기」로 한 번 더 찾게 한다.
   const [retry, setRetry] = useState(0);
   const [searching, setSearching] = useState(false);
-  const [flight, setFlight] = useState<FlightOption | null>(null);
+  const [flight, setFlight] = useState<FlightOption | null>(mode === "web" ? booking?.flight ?? null : null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.
@@ -394,6 +396,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         body: JSON.stringify({
           flightDate: flight.flightDate,
           flightNo: flight.flightNo,
+          ...(mode === "web" && booking && sameFlight(flight, booking.flight) ? { bookingContext: booking.context } : {}),
           choices,
           party: extra.party,
           strollers: extra.strollers,
@@ -420,7 +423,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       if (!res.ok) {
         const code: unknown = data.code;
         const en =
-          code === "departed"
+          code === "booking_context" || code === "booking_conflict"
+            ? "Demo booking lookup expired or changed. Use Search again to reload your flight."
+            : code === "departed"
             ? t.regErrDeparted
             : code === "date"
               ? t.regErrDate
@@ -703,6 +708,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       ctaAfterContent={kind === "consent"}
     >
       {kicker && <p className="kicker">{kicker}</p>}
+      {mode === "web" && booking && sameFlight(flight, booking.flight) && <p className="booking-provenance" role="note">{lang === "en" ? "Demo booking · fictional flight. " : "시연 예약에서 불러온 가상 항공편입니다. "}<a href={"/prepare/booking" + (lang === "en" ? "?lang=en" : "")}>{lang === "en" ? "Search again (restarts registration)" : "다시 조회 (등록 처음부터)"}</a></p>}
       <h1>{titleOf(kind)}</h1>
       {hint && <p className="lead">{hint}</p>}
 

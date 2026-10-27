@@ -2,12 +2,13 @@ import { ArrowRight, CircleCheck, Info, MessageSquareText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { langOf } from "@/lib/i18n";
+import { addDays, kstDate } from "@/lib/flights/normalize";
 
 export const metadata: Metadata = { title: "예매 완료 화면 (시연)" };
 
 // 제안서 1단계: 항공권 예매가 끝난 화면에 Journey Support Pass 링크와 권유 문구를 둔다.
 // 이 화면은 그 모습을 보여 주는 시연용 모의 화면이다. 실제 항공사나 예약 사이트의 이름과 모양을 쓰지 않는다.
-// 링크에는 여객의 예약 정보를 싣지 않는다(공항은 예약 정보를 받지 않는다). 들어온 접점(via=booking)만 붙여 건수를 따로 센다.
+// 링크에는 예약번호나 이름을 싣지 않는다. 조회 화면에서 가상 시연값만 사용한다.
 // 권유 문구는 우대나 혜택처럼 보이지 않게, 필요한 도움을 미리 알려 두는 곳으로 쉬운 말로 쓴다(제안서).
 const TEXT = {
   ko: {
@@ -19,7 +20,7 @@ const TEXT = {
     dateValue: "예매한 날짜",
     ref: "예약번호",
     pax: "탑승객",
-    paxValue: "성인 1명",
+    paxValue: "KIM · 가상 탑승객 1명",
     linkTitle: "공항에서 필요한 도움이 있으신가요?",
     linkBody: "필요한 도움을 미리 한 번 알려 두면, 공항에서 같은 설명을 되풀이하지 않고 더 편하게 이동하실 수 있습니다. 1~2분이면 됩니다.",
     linkButton: "필요한 도움 미리 알려 두기",
@@ -37,7 +38,7 @@ const TEXT = {
     dateValue: "Your booked date",
     ref: "Booking ref.",
     pax: "Passengers",
-    paxValue: "1 adult",
+    paxValue: "KIM · 1 fictional passenger",
     linkTitle: "Do you need any help at the airport?",
     linkBody: "Tell us once, in advance, what help you need. You will not have to explain it again and again at the airport. It takes a minute or two.",
     linkButton: "Tell us the help you need",
@@ -67,7 +68,7 @@ export default async function BookingDemo({ searchParams }: { searchParams: Prom
           <dt>{t.itinerary}</dt>
           <dd>{t.route}</dd>
           <dt>{t.date}</dt>
-          <dd>{t.dateValue}</dd>
+          <dd>{addDays(kstDate(new Date()), 1)} 18:00 (KST)</dd>
           <dt>{t.ref}</dt>
           <dd className="num">DEMO01</dd>
           <dt>{t.pax}</dt>
@@ -78,7 +79,7 @@ export default async function BookingDemo({ searchParams }: { searchParams: Prom
       <section className="booking-link">
         <h1>{t.linkTitle}</h1>
         <p>{t.linkBody}</p>
-        <Link className="btn btn-primary" href={`/prepare?via=booking${q}`}>
+        <Link className="btn btn-primary" href={`/prepare/booking?via=booking${q}`}>
           {t.linkButton}
           <ArrowRight size={22} aria-hidden="true" />
         </Link>
