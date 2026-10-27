@@ -24,9 +24,7 @@ async function main() {
       const axe = (
         window as unknown as {
           axe: {
-            run: (
-              options: unknown,
-            ) => Promise<{
+            run: (options: unknown) => Promise<{
               violations: {
                 id: string;
                 impact: string;
@@ -84,6 +82,35 @@ async function main() {
         );
         if (!fits) throw new Error(`${name} overflows at ${width}`);
         checks.push(`${name} ${width}px fits`);
+        if (name === "checklist") {
+          const clear = await page.evaluate(() => {
+            const cta = document
+              .querySelector(".flow-cta")
+              ?.getBoundingClientRect();
+            return (
+              !cta ||
+              [...document.querySelectorAll(".choice")].every((e) => {
+                const row = e.getBoundingClientRect();
+                return (
+                  row.bottom <= 0 ||
+                  row.top >= innerHeight ||
+                  cta.top >= innerHeight ||
+                  cta.bottom <= row.top ||
+                  cta.top >= row.bottom
+                );
+              })
+            );
+          });
+          if (!clear)
+            throw new Error(`Checklist action obscures a choice at ${width}px`);
+          checks.push(`checklist ${width}px action does not cover choices`);
+          await page.focus('.choice[role="checkbox"]');
+          await page.keyboard.press("Space");
+          await page.waitForSelector(
+            '.choice[role="checkbox"][aria-checked="true"]',
+          );
+          checks.push(`checklist ${width}px keyboard selection works`);
+        }
       }
     }
     await page.goto(base + "/staff/login");
