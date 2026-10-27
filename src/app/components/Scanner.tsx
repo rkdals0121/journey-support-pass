@@ -19,6 +19,8 @@ interface Props {
    */
   prefer?: "user" | "environment";
   text: { starting: string; ready: string; read: string; none: string; switchCamera: string };
+  /** 사진으로 읽기 버튼 글자. 주지 않으면 탑승권 이미지 읽기. */
+  imageLabel?: string;
 }
 
 interface Detector {
@@ -45,7 +47,7 @@ const cameraKey = (prefer: string) => `jsp:camera:${prefer}`;
 
 // 앱 설치 없이 브라우저 카메라로 읽는다.
 // 기기에 QR 판독 기능(BarcodeDetector)이 있으면 먼저 쓰고, 못 읽으면 같은 장면을 jsQR 로 다시 읽는다.
-export function Scanner({ onScan, paused = false, prefer = "environment", text }: Props) {
+export function Scanner({ onScan, paused = false, prefer = "environment", text, imageLabel }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onScanRef = useRef(onScan);
@@ -313,7 +315,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
         } catch { setImageError(en ? "Could not read this image. Try a JPG or PNG under 20 MB." : "사진을 읽지 못했어요. 20MB 이하 JPG·PNG 사진을 선택해 주세요."); }
         finally { setImageBusy(false); }
       }} />
-      <button type="button" className="btn" disabled={paused || imageBusy} onClick={() => imageInput.current?.click()}>{imageBusy ? (en ? "Reading…" : "읽는 중…") : (en ? "Read boarding pass image" : "탑승권 이미지 읽기")}</button>
+      <button type="button" className="btn" disabled={paused || imageBusy} onClick={() => imageInput.current?.click()}>{imageBusy ? (en ? "Reading…" : "읽는 중…") : imageLabel ?? (en ? "Read boarding pass image" : "탑승권 이미지 읽기")}</button>
       {imageError && <p role="alert">{imageError}</p>}
     </div>
   );
