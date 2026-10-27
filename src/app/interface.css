@@ -1,0 +1,1295 @@
+/* Task-oriented interface. Scope each surface so airport devices, passenger
+   forms and staff tools can evolve independently of their service logic. */
+:root {
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --shadow-1: none;
+  --ui-rule: #d9e1dc;
+  --ui-muted: #59685f;
+}
+.airport-site {
+  background: #fff;
+  --airport-soft: #edf4ef;
+}
+.airport-site .public-header {
+  min-height: 5.25rem;
+  border-top: 3px solid var(--green);
+}
+.airport-site .public-logo {
+  font-size: 1.25rem;
+  letter-spacing: -0.045em;
+}
+.airport-site .public-logo small {
+  color: var(--ui-muted);
+  letter-spacing: 0.025em;
+}
+.airport-site .public-nav {
+  gap: 1.75rem;
+}
+.airport-site .public-nav > a {
+  font-size: 0.9375rem;
+  padding-block: 1.75rem;
+  color: #42534a;
+}
+.airport-site .public-nav > a:hover {
+  color: var(--green);
+}
+.airport-portal {
+  max-width: 76rem;
+  padding: 3.5rem 2.5rem 3rem;
+}
+.airport-entry-hero {
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  margin-bottom: 3rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--ui-rule);
+}
+.airport-entry-copy h1 {
+  font-size: clamp(2rem, 2.8vw, 2.65rem);
+  line-height: 1.35;
+  letter-spacing: -0.045em;
+  font-weight: 700;
+}
+.airport-entry-copy .airport-eyebrow {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  margin-bottom: 0.75rem;
+}
+.airport-entry-intro {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0.875rem 0 0;
+}
+.airport-entry-search {
+  align-self: center;
+}
+.airport-service-search {
+  border-radius: 0.375rem;
+  border: 1px solid #8ba596;
+  max-width: none;
+  padding: 0.375rem;
+}
+.airport-service-search > svg {
+  display: none;
+}
+.airport-service-search input {
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+.airport-service-search > button {
+  border-radius: 0.25rem;
+  width: 3rem;
+  height: 3rem;
+}
+.airport-popular {
+  gap: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+}
+.airport-popular > span {
+  color: var(--ui-muted);
+}
+.airport-popular button {
+  text-decoration: underline;
+  text-decoration-color: #b6c9be;
+  text-underline-offset: 0.3em;
+}
+.airport-directory-top {
+  margin-bottom: 1.25rem;
+}
+.airport-directory-top h2 {
+  font-size: 1.375rem;
+  letter-spacing: -0.025em;
+}
+.airport-service-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 2rem;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.airport-service-grid .airport-service-item {
+  grid-column: auto;
+  grid-row: auto;
+  min-height: 10rem;
+  padding: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--ui-rule);
+  background: transparent;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+.airport-service-grid .airport-service-item:hover {
+  background: #f5f8f6;
+}
+.airport-service-grid .airport-service-item:focus-within {
+  outline-offset: 4px;
+}
+.airport-service-icon {
+  background: transparent;
+  border-radius: 0;
+  width: 2rem;
+  height: 2rem;
+  margin-top: 0.1rem;
+}
+.airport-service-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  stroke-width: 1.6;
+}
+.airport-service-copy h3 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+.airport-service-copy p {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--ui-muted);
+}
+.airport-service-item > a {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  min-width: 1.5rem;
+}
+.airport-demo-tag {
+  padding: 0;
+  background: none;
+  color: #73591d;
+  font-size: 0.75rem;
+}
+.airport-portal-support {
+  border-top: 1px solid var(--ui-rule);
+  padding-top: 1.75rem;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.airport-prepare-link {
+  border-radius: 0.375rem;
+  background: #edf4ef;
+  padding: 1.5rem;
+  border-left: 3px solid var(--green);
+}
+.airport-prepare-link h2,
+.airport-portal-support .my-request-panel h2 {
+  font-size: 1.0625rem;
+}
+.airport-prepare-link p,
+.airport-portal-support .my-request-panel p {
+  font-size: 0.875rem;
+}
+.airport-portal-support .my-request-panel {
+  border: 0;
+  border-radius: 0;
+  padding: 1.5rem 0;
+}
+.airport-site .public-footer {
+  background: #f7f9f7;
+  padding-block: 2rem;
+  border-top: 1px solid var(--ui-rule);
+}
+.airport-site .public-footer-links a {
+  color: #42584a;
+  text-decoration: none;
+}
+.airport-site .public-footer-links a:hover {
+  text-decoration: underline;
+}
+.airport-site .public-button,
+.pretrip-site .public-button {
+  border-radius: 0.375rem;
+  box-shadow: none;
+  font-weight: 650;
+  min-height: 3.25rem;
+}
+.airport-site :is(.service-workspace, .request-experience, .booking-lookup) {
+  max-width: 72rem;
+}
+.airport-site :is(.service-heading, .public-page-heading) h1 {
+  font-size: 2rem;
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+}
+.airport-site :is(.service-heading, .public-page-heading) > p {
+  color: var(--ui-muted);
+  font-size: 1rem;
+}
+.airport-site :is(.service-kicker, .public-eyebrow) {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.airport-site .request-heading {
+  padding-bottom: 1.5rem;
+}
+.airport-site .request-back {
+  border: 0;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0;
+  color: var(--ui-muted);
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+.airport-site .request-stepbar {
+  border-bottom: 1px solid var(--ui-rule);
+  padding-bottom: 1.25rem;
+}
+.airport-site .request-stepbar li {
+  font-size: 0.875rem;
+}
+.airport-site .request-form {
+  gap: 2.5rem;
+}
+.airport-site .request-section {
+  animation: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--ui-rule);
+  background: #fff;
+}
+.airport-site .request-section h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.airport-site .request-section h2 > span {
+  border-radius: 0.25rem;
+  width: 1.65rem;
+  height: 1.65rem;
+  font-size: 0.8125rem;
+  background: var(--mint);
+}
+.airport-site .request-selected-service {
+  padding: 0.75rem 0;
+  margin-bottom: 1.5rem;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid var(--ui-rule);
+}
+.airport-site .request-task-options {
+  gap: 0.625rem;
+}
+.airport-site .request-task-options label {
+  border-radius: 0.375rem;
+  min-height: 3.5rem;
+  font-size: 1rem;
+  padding: 0.875rem 1rem;
+}
+.airport-site .request-task-options label:has(input:checked) {
+  background: #edf5ef;
+  border-color: var(--green);
+}
+.airport-site
+  :is(
+    .request-submit-card,
+    .request-review-card,
+    .request-status-card,
+    .request-order-summary,
+    .service-form-card,
+    .service-route-result
+  ) {
+  border-radius: 0.5rem;
+  box-shadow: none;
+}
+.airport-site .request-submit-card {
+  background: #f5f8f5;
+  border: 0;
+  padding: 1.5rem;
+  border-top: 3px solid #aac3b3;
+}
+.airport-site .request-review-card {
+  padding: 2rem;
+}
+.airport-site .place-finder {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+.airport-site .place-candidates {
+  gap: 0.625rem;
+}
+.airport-site .place-candidate {
+  border-radius: 0.375rem;
+}
+.airport-site .official-map-panel {
+  border-radius: 0.375rem;
+  background: #f5f8f5;
+}
+.airport-site .request-empty-state {
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid var(--ui-rule);
+  padding: 4rem 1rem;
+  background: none;
+}
+.airport-site .request-empty-state > svg {
+  width: 2rem;
+  height: 2rem;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: #809589;
+}
+.airport-site .request-empty-state h2 {
+  font-size: 1.25rem;
+}
+.airport-site .request-empty-state .public-button {
+  margin-top: 1rem;
+}
+.airport-site .my-service-list {
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid var(--ui-rule);
+}
+.airport-site .my-service-request {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto;
+  gap: 0.5rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-rule);
+  border-radius: 0;
+  padding: 1.5rem 0.75rem;
+  box-shadow: none;
+}
+.airport-site .my-service-request .request-state-pill {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  justify-self: start;
+}
+.airport-site .my-service-request h2 {
+  grid-column: 2;
+  margin: 0;
+  font-size: 1.125rem;
+}
+.airport-site .my-service-request > p {
+  grid-column: 2;
+  margin: 0;
+}
+.airport-site .my-service-open {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-self: center;
+}
+.airport-site .traffic-intent {
+  border-radius: 0.375rem;
+  box-shadow: none;
+  border-width: 1px;
+  padding: 1.75rem;
+}
+.airport-site .traffic-information {
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid var(--ui-rule);
+  padding-inline: 0;
+}
+.pretrip-site {
+  background: #fff;
+}
+.pretrip-site .prepare-layout {
+  max-width: 72rem;
+  gap: 5rem;
+  padding-top: 4.5rem;
+}
+.pretrip-site .prepare-intro h1 {
+  font-size: 2.75rem;
+  letter-spacing: -0.045em;
+}
+.pretrip-site .prepare-intro > p {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+.pretrip-site .prepare-steps {
+  border: 0;
+  border-radius: 0;
+  border-left: 1px solid var(--ui-rule);
+  background: transparent;
+  padding-left: 2.5rem;
+}
+.pretrip-site .prepare-step {
+  border-radius: 0;
+  background: none;
+  border: 0;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--ui-rule);
+}
+.pretrip-site .prepare-step h2 {
+  font-size: 1.125rem;
+}
+.pretrip-site .prepare-benefit {
+  border: 0;
+  background: none;
+  padding-inline: 0;
+  font-size: 0.875rem;
+}
+/* Registration: an actual checklist, with compact rows and a clear checked
+   state. Desktop uses a step rail; mobile retains one question per screen. */
+.flow-pretrip {
+  background: #fff;
+}
+.airport-site .request-change-service {
+  margin-left: auto;
+  color: var(--green-press);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-underline-offset: 0.3em;
+}
+.flow-pretrip .read-offer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.flow-pretrip .read-offer .fine {
+  margin: 0;
+  flex: 1 1 14rem;
+}
+.flow-pretrip .read-offer .listen-start {
+  flex: 0 1 auto;
+  width: auto;
+  margin: 0;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+}
+.flow-pretrip .flow-bar {
+  border-bottom: 1px solid var(--ui-rule);
+  background: white;
+}
+.flow-pretrip .flow-progress .progress {
+  display: none;
+}
+.flow-pretrip .flow-progress {
+  justify-content: flex-end;
+  padding-block: 0.875rem;
+}
+.flow-pretrip .flow-workspace {
+  gap: 2rem;
+}
+.flow-pretrip .flow-body {
+  border: 0;
+  border-radius: 0;
+  padding: 1rem 0 2rem;
+  min-height: auto;
+  background: white;
+}
+.flow-pretrip .flow-body h1 {
+  font-size: 1.75rem;
+  letter-spacing: -0.035em;
+  line-height: 1.4;
+}
+.flow-pretrip .flow-body .lead {
+  font-size: 1rem;
+  line-height: 1.65;
+  margin-bottom: 1.5rem;
+}
+.flow-pretrip .flow-body .kicker {
+  font-size: 0.8125rem;
+  color: var(--ui-muted);
+}
+.flow-pretrip .flow-desktop-steps {
+  border-right: 1px solid var(--ui-rule);
+  padding-right: 1.5rem;
+}
+.flow-pretrip .flow-desktop-steps h2 {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.flow-pretrip .flow-desktop-steps li {
+  font-size: 0.875rem;
+  padding: 0.625rem 0;
+}
+.flow-pretrip .flow-desktop-steps li span {
+  width: 1.5rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+  background: #f0f3f1;
+}
+.flow-pretrip .flow-desktop-summary {
+  border: 0;
+  border-top: 2px solid #a3beac;
+  border-radius: 0;
+  background: #f5f8f5;
+  padding: 1.25rem;
+}
+.flow-pretrip .flow-desktop-summary > .public-eyebrow {
+  display: none;
+}
+.flow-pretrip .flow-desktop-summary h2 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+.flow-pretrip .flow-desktop-summary :is(p, li) {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.flow-pretrip .choices {
+  gap: 0;
+  border-top: 1px solid var(--ui-rule);
+}
+.flow-pretrip .choice {
+  border: 0;
+  border-bottom: 1px solid var(--ui-rule);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1rem 0.75rem;
+  min-height: 4rem;
+  font-size: 1rem;
+  background: white;
+}
+.flow-pretrip .choice:hover {
+  background: #f7f9f7;
+  transform: none;
+}
+.flow-pretrip .choice.choice-on {
+  background: #edf5ef;
+  border-bottom-color: #b4ccbc;
+  box-shadow: inset 3px 0 var(--green);
+}
+.flow-pretrip .choice-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0;
+  background: none;
+}
+.flow-pretrip .choice-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.flow-pretrip .choice-mark {
+  border-radius: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+}
+.flow-pretrip .choice-single .choice-mark {
+  border-radius: 50%;
+}
+.flow-pretrip .lang-pick {
+  border-bottom: 1px solid var(--ui-rule);
+  padding-bottom: 0.75rem;
+}
+.flow-pretrip .lang-pick button {
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  min-height: 2.75rem;
+}
+.flow-pretrip .read-offer {
+  margin-bottom: 1.5rem;
+}
+.flow-pretrip .read-offer .listen-start {
+  border-radius: 0.375rem;
+}
+.flow-pretrip .flow-cta {
+  position: static;
+  background: white;
+  border-top: 1px solid var(--ui-rule);
+  padding: 1rem 0;
+  box-shadow: none;
+}
+.flow-pretrip .flow-cta .btn {
+  border-radius: 0.375rem;
+  box-shadow: none;
+}
+/* Staff console: restrained navigation, legible rows, working space rather
+   than a second passenger portal. No cosmetic badges or fabricated metrics. */
+.staff-workspace.airport-workspace {
+  background: #f4f6f5;
+}
+.staff-workspace.airport-workspace .workspace-side {
+  background: #fff;
+  border-right: 1px solid var(--ui-rule);
+  color: #3f5548;
+  padding-inline: 0.875rem;
+}
+.airport-workspace .workspace-brand {
+  color: #193c2b;
+  margin-bottom: 2.25rem;
+}
+.airport-workspace .workspace-brand small {
+  color: var(--ui-muted);
+  letter-spacing: 0.035em;
+}
+.staff-workspace.airport-workspace .workspace-side > p {
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+}
+.staff-workspace.airport-workspace .workspace-side nav a {
+  color: #42554a;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  min-height: 2.75rem;
+  padding-block: 0.625rem;
+  margin-bottom: 0.25rem;
+}
+.staff-workspace.airport-workspace .workspace-side nav a:hover {
+  background: #f2f6f3;
+}
+.staff-workspace.airport-workspace .workspace-side nav a[aria-current="page"] {
+  color: #155239;
+  background: #e7f0e9;
+  box-shadow: inset 3px 0 var(--green);
+  font-weight: 700;
+}
+.staff-workspace.airport-workspace .workspace-header {
+  border-bottom: 1px solid var(--ui-rule);
+  height: 4rem;
+}
+.airport-workspace .workspace-header > a {
+  color: var(--green-press);
+  text-decoration: none;
+  font-size: 0.8125rem;
+}
+.airport-workspace .workspace-header > a:hover {
+  text-decoration: underline;
+}
+.airport-workspace .workspace-context {
+  font-size: 0.8125rem;
+}
+.staff-workspace.airport-workspace .workspace-page-head h1 {
+  font-size: 1.625rem;
+  letter-spacing: -0.035em;
+}
+.staff-workspace.airport-workspace
+  :is(
+    .dx-card,
+    .overview-panel,
+    .overview-workload,
+    .overview-kpi,
+    .integration-card,
+    .resource-card,
+    .work-master,
+    .work-detail
+  ) {
+  border-radius: 0.375rem;
+  box-shadow: none;
+}
+.airport-workspace .btn {
+  border-radius: 0.25rem;
+  box-shadow: none;
+  font-size: 0.875rem;
+}
+.airport-workspace .work-scope-tabs button {
+  font-size: 0.875rem;
+}
+.airport-workspace .work-search input {
+  border-radius: 0.25rem;
+  font-size: 0.9375rem;
+}
+.airport-workspace .work-table-wrap {
+  border-radius: 0;
+}
+.staff-workspace.airport-workspace .work-request-table th {
+  font-size: 0.8125rem;
+  background: #f0f4f1;
+  color: #4a5e51;
+  padding: 0.875rem 1rem;
+}
+.staff-workspace.airport-workspace .work-request-table td {
+  padding: 1rem;
+  font-size: 0.9375rem;
+  border-bottom: 1px solid #e3e9e5;
+}
+.staff-workspace.airport-workspace .work-request-table td button strong {
+  font-size: 0.9375rem;
+}
+.staff-workspace.airport-workspace .work-request-table td span {
+  font-size: 0.8125rem;
+  color: #526658;
+}
+.airport-workspace .work-empty {
+  padding: 3rem 1rem;
+  min-height: 12rem;
+}
+.airport-workspace .work-detail > h2 {
+  font-size: 1.375rem;
+}
+.airport-workspace .work-detail {
+  animation: none;
+}
+.airport-workspace .work-state-badge {
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+}
+.airport-workspace .overview-kpi {
+  border: 0;
+  border-left: 1px solid var(--ui-rule);
+  background: white;
+  padding: 1.25rem;
+}
+.airport-workspace .overview-kpi strong {
+  font-size: 2rem;
+}
+.airport-workspace .overview-kpis {
+  gap: 0;
+  border: 1px solid var(--ui-rule);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+.airport-workspace .overview-kpi:first-child {
+  border-left: 0;
+}
+/* Field displays: touch targets stay large. Kiosk is horizontal; the robot
+   uses its portrait display. Preview lab controls are visually secondary. */
+.device-preview {
+  background: #fff;
+}
+.flow-pretrip .flow-desktop-steps li[aria-current="step"] span {
+  background: var(--green);
+  color: #fff;
+}
+html[data-kiosk] .call-dock {
+  background: #fff;
+  border-bottom: 1px solid var(--ui-rule);
+}
+html[data-kiosk] .call-btn {
+  border: 1px solid #b8cbbf;
+  background: #fff;
+  color: #234f36;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+html[data-kiosk] .call-btn:hover {
+  background: #edf4ef;
+}
+html[data-kiosk] .robot-portrait .robot-scan {
+  border-radius: 0.5rem;
+  box-shadow: none;
+}
+html[data-kiosk] .robot-portrait .robot-actions .lang-switch {
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+html[data-kiosk] .robot-bubble::before {
+  display: none;
+}
+.airport-workspace .overview-table :is(td, th) {
+  padding-block: 0.875rem;
+}
+.airport-workspace .overview-load-bar {
+  height: 0.1875rem;
+}
+.device-preview-status {
+  background: #f0f3f1;
+  color: #53685b;
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--ui-rule);
+}
+.device-preview-status a {
+  color: #42584a;
+}
+.device-preview-header {
+  padding: 1.25rem 2.5rem;
+}
+.device-preview .device-preview-body {
+  max-width: 78rem;
+  padding: 3rem;
+}
+.device-preview .public-button {
+  border-radius: 0.375rem;
+  box-shadow: none;
+  min-height: 4rem;
+  font-size: 1.25rem;
+  padding-inline: 1.75rem;
+}
+.kiosk-preview .device-welcome {
+  grid-template-columns: 1fr 0.85fr;
+  gap: 5rem;
+}
+.kiosk-preview .device-welcome-copy {
+  border: 0;
+  padding: 0;
+}
+.device-preview .device-welcome-copy .public-eyebrow {
+  font-size: 1rem;
+  letter-spacing: 0;
+  margin-bottom: 1rem;
+  color: #4e6d58;
+}
+.kiosk-preview .device-welcome h1 {
+  font-size: clamp(2.75rem, 4.3vw, 4rem);
+  font-weight: 650;
+  letter-spacing: -0.05em;
+  line-height: 1.2;
+}
+.device-preview .device-welcome-copy > p {
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: #53685b;
+  max-width: 30rem;
+}
+.kiosk-preview .device-welcome-visual {
+  border: 0;
+  border-radius: 0;
+  border-left: 1px solid var(--ui-rule);
+  background: transparent;
+  min-height: 22rem;
+  padding-left: 3rem;
+}
+.device-ticket-visual {
+  border: 1px solid #b6cbbd;
+  width: 100%;
+  max-width: 20rem;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  background: #f5f8f5;
+  color: #1c5437;
+  text-align: left;
+  box-shadow: 0 10px 24px #193b2b09;
+}
+.device-ticket-visual > svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  stroke-width: 1.5;
+}
+.device-ticket-visual strong {
+  display: block;
+  margin-top: 1.75rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.035em;
+}
+.device-ticket-visual p {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #526b5b;
+  margin: 0.75rem 0 0;
+}
+.device-preview .device-welcome-visual > span {
+  font-size: 0.875rem;
+  color: var(--ui-muted);
+}
+.device-service-choices button {
+  border-radius: 0.5rem;
+  box-shadow: none;
+  border: 1px solid #b5c8bc;
+  min-height: 7rem;
+  padding: 1.5rem;
+  font-size: 1.375rem;
+  background: white;
+}
+.device-service-choices button:hover {
+  background: #edf4ef;
+  transform: none;
+}
+.device-preview .device-example-card {
+  border-radius: 0.5rem;
+  box-shadow: none;
+  border: 1px solid var(--ui-rule);
+  background: #f4f8f5;
+}
+.device-preview .device-preview-footer {
+  padding-block: 0.875rem;
+}
+.robot-preview {
+  background: #f5f8f5;
+  border: 1px solid var(--ui-rule);
+  border-radius: 0;
+}
+.robot-preview .device-welcome-copy h1 {
+  font-size: 2.5rem;
+  line-height: 1.3;
+  letter-spacing: -0.045em;
+}
+.robot-preview .device-welcome-visual {
+  background: transparent;
+  border: 0;
+  min-height: 13rem;
+}
+.robot-preview .device-preview-header {
+  padding-inline: 1.5rem;
+}
+.robot-preview .device-service-choices button {
+  min-height: 5.5rem;
+  font-size: 1.125rem;
+}
+html[data-kiosk] .flow-bar {
+  background: white;
+  border-bottom: 1px solid var(--ui-rule);
+}
+html[data-kiosk]
+  :is(.kiosk-scan-camera, .svc-card, .easy-tile, .tile, .choice, .btn) {
+  border-radius: 0.5rem;
+  box-shadow: none;
+}
+html[data-kiosk] .kiosk-scan-surface {
+  gap: 2.5rem;
+  align-items: center;
+}
+html[data-kiosk] .kiosk-welcome-copy h1 {
+  line-height: 1.3;
+  letter-spacing: -0.035em;
+}
+html[data-kiosk] .kiosk-welcome-copy {
+  padding-block: 1rem;
+}
+html[data-kiosk] .kiosk-scan-camera {
+  background: white;
+  padding: 1rem;
+  border: 1px solid var(--ui-rule);
+}
+html[data-kiosk] .robot-bubble {
+  border: 0;
+  box-shadow: none;
+  background: none;
+  border-radius: 0;
+}
+html[data-kiosk] .robot-bubble::after {
+  display: none;
+}
+html[data-kiosk] .robot-panel {
+  border: 0;
+  background: #f1f6f2;
+  border-radius: 0.5rem;
+}
+.device-check {
+  max-width: 60rem;
+  background: #fff;
+  padding: 2rem;
+}
+.device-check > h1 {
+  font-size: 2rem;
+  letter-spacing: -0.035em;
+}
+.device-check .dc-item {
+  border-radius: 0;
+  box-shadow: none;
+  border: 0;
+  border-top: 1px solid var(--ui-rule);
+  padding: 1.5rem 0;
+  background: white;
+}
+.device-check .dc-item h2 {
+  font-size: 1.125rem;
+}
+.device-check .dc-mark {
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+}
+.device-check .dc-item > p {
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  max-width: 44rem;
+}
+@media (min-width: 1000px) {
+  .flow-pretrip .flow-workspace {
+    grid-template-columns: 11rem minmax(0, 1fr) 14rem;
+  }
+  .flow-pretrip .flow-bar {
+    padding-inline: 1.5rem;
+  }
+  .flow-pretrip .flow-cta-inner {
+    max-width: none;
+  }
+}
+@media (max-width: 1100px) {
+  .airport-site .public-nav {
+    gap: 1rem;
+  }
+  .airport-site .public-nav > a {
+    font-size: 0.8125rem;
+  }
+  .airport-entry-hero {
+    gap: 2rem;
+  }
+}
+@media (max-width: 760px) {
+  .airport-site .public-header {
+    min-height: 4.5rem;
+    padding-inline: 1.25rem;
+  }
+  .airport-site .public-logo {
+    font-size: 1.0625rem;
+  }
+  .airport-site .public-nav > a {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  .airport-portal {
+    padding: 2rem 1.25rem 2.5rem;
+  }
+  .airport-entry-hero {
+    display: block;
+    padding-bottom: 2rem;
+    margin-bottom: 1.75rem;
+  }
+  .airport-entry-copy h1 {
+    font-size: 1.875rem;
+    letter-spacing: -0.045em;
+  }
+  .airport-entry-copy .airport-eyebrow {
+    font-size: 0.8125rem;
+    margin-bottom: 0.75rem;
+  }
+  .airport-entry-intro {
+    font-size: 0.9375rem;
+    margin-top: 0.75rem;
+  }
+  .airport-entry-search {
+    margin-top: 1.5rem;
+  }
+  .airport-service-search input {
+    font-size: 0.9375rem;
+    padding: 0.5rem;
+  }
+  .airport-service-search > button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .airport-popular {
+    gap: 0.875rem;
+    font-size: 0.75rem;
+  }
+  .airport-popular > span {
+    display: none;
+  }
+  .airport-directory-top {
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .airport-directory-top h2 {
+    font-size: 1.1875rem;
+  }
+  .airport-directory-top > span {
+    display: none;
+  }
+  .airport-service-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .airport-service-grid .airport-service-item {
+    display: flex;
+    min-height: 0;
+    padding: 1.25rem 0;
+    align-items: center;
+    gap: 1rem;
+  }
+  .airport-service-copy h3 {
+    font-size: 1.0625rem;
+    margin-bottom: 0.3rem;
+  }
+  .airport-service-copy p {
+    display: block;
+    font-size: 0.875rem;
+  }
+  .airport-service-icon {
+    width: 2rem;
+    margin-bottom: 0;
+  }
+  .airport-service-item > a {
+    align-self: center;
+    margin-top: 0;
+  }
+  .airport-service-item > a > svg {
+    position: static;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .airport-portal-support {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-top: 1.5rem;
+  }
+  .airport-site .public-footer {
+    padding: 1.5rem 1.25rem;
+  }
+  .airport-site .public-footer-links {
+    gap: 0.75rem 1.25rem;
+  }
+  .airport-site :is(.service-heading, .public-page-heading) h1 {
+    font-size: 1.75rem;
+  }
+  .airport-site :is(.service-heading, .public-page-heading) > p {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+  .airport-site .request-experience {
+    padding: 1.5rem 1.25rem 2.5rem;
+  }
+  .airport-site .request-stepbar {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .airport-site .request-stepbar li {
+    font-size: 0.75rem;
+  }
+  .airport-site .request-section {
+    padding: 1.25rem 0;
+    border-top: 0;
+  }
+  .airport-site .request-section h2 {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+  }
+  .airport-site .request-selected-service {
+    margin-bottom: 1rem;
+  }
+  .airport-site .request-task-options label {
+    font-size: 1rem;
+    min-height: 3.75rem;
+  }
+  .airport-site .request-form {
+    gap: 1rem;
+  }
+  .airport-site .request-submit-card {
+    padding: 1.25rem 0;
+    border: 0;
+    background: none;
+  }
+  .airport-site .request-review-card {
+    padding: 1.5rem 1rem;
+  }
+  .airport-site .my-service-request {
+    grid-template-columns: 1fr auto;
+    padding: 1.25rem 0;
+  }
+  .airport-site .my-service-request .request-state-pill {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0.375rem;
+  }
+  .airport-site .my-service-request h2,
+  .airport-site .my-service-request > p {
+    grid-column: 1 / -1;
+  }
+  .airport-site .my-service-open {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 0.8125rem;
+  }
+  .pretrip-site .prepare-layout {
+    gap: 2.5rem;
+    padding-top: 2rem;
+  }
+  .pretrip-site .prepare-intro h1 {
+    font-size: 2rem;
+  }
+  .pretrip-site .prepare-intro > p {
+    font-size: 1rem;
+  }
+  .pretrip-site .prepare-steps {
+    border-left: 0;
+    border-top: 1px solid var(--ui-rule);
+    padding-left: 0;
+  }
+  .flow-pretrip .flow-bar {
+    padding-inline: 0.75rem;
+  }
+  .flow-pretrip .flow-workspace {
+    padding: 0.25rem 1.25rem 1.5rem;
+  }
+  .flow-pretrip .flow-body {
+    padding: 0.75rem 0 1.5rem;
+  }
+  .flow-pretrip .flow-body h1 {
+    font-size: 1.625rem;
+  }
+  .flow-pretrip .flow-progress {
+    padding-inline: 1.25rem;
+  }
+  .flow-pretrip .choice {
+    min-height: 3.75rem;
+    padding: 1rem 0.5rem;
+  }
+  .flow-pretrip .flow-cta {
+    position: static;
+    bottom: 0;
+    z-index: 5;
+    padding: 0.875rem 0 max(0.875rem, env(safe-area-inset-bottom));
+  }
+  .flow-pretrip .flow-cta-inner {
+    padding: 0;
+  }
+  .flow-pretrip .flow-cta.cta-after {
+    position: static;
+  }
+  .staff-workspace.airport-workspace .workspace-content {
+    padding: 1.5rem 1rem;
+  }
+  .staff-workspace.airport-workspace .workspace-header {
+    padding-inline: 1rem;
+    height: 4.5rem;
+  }
+  .staff-workspace.airport-workspace .work-request-table th {
+    padding: 0.75rem 0.625rem;
+    font-size: 0.75rem;
+  }
+  .staff-workspace.airport-workspace .work-request-table td {
+    padding: 0.875rem 0.625rem;
+    font-size: 0.875rem;
+  }
+  .staff-workspace.airport-workspace .work-request-table td button strong {
+    font-size: 0.875rem;
+  }
+  .staff-workspace.airport-workspace .work-request-table td span {
+    font-size: 0.75rem;
+  }
+  .device-preview .device-preview-body {
+    padding: 2rem 1.25rem;
+  }
+  .kiosk-preview .device-welcome {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .kiosk-preview .device-welcome h1 {
+    font-size: 2.5rem;
+  }
+  .kiosk-preview .device-welcome-visual {
+    border: 0;
+    border-top: 1px solid var(--ui-rule);
+    padding: 1.5rem 0 0;
+    min-height: 0;
+    width: 100%;
+  }
+  .device-ticket-visual {
+    max-width: 22rem;
+    padding: 1.25rem;
+  }
+  .device-ticket-visual strong {
+    margin-top: 1rem;
+    font-size: 1.25rem;
+  }
+  .device-preview .device-welcome-copy > p {
+    font-size: 1rem;
+  }
+  .device-preview .public-button {
+    font-size: 1.125rem;
+    width: 100%;
+    min-height: 3.5rem;
+  }
+  .device-preview .device-service-choices button {
+    font-size: 1.125rem;
+    min-height: 5.5rem;
+  }
+  .robot-preview .device-welcome-copy h1 {
+    font-size: 2rem;
+  }
+  .device-check {
+    padding: 1.5rem 1.25rem;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .airport-service-item,
+  .choice,
+  .device-service-choices button {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .device-preview *,
+  .flow-pretrip * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

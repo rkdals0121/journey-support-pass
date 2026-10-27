@@ -6,7 +6,7 @@ import {
   ArrowRight,
   Accessibility,
   MapPin,
-  QrCode,
+  Ticket,
   Navigation,
   RotateCcw,
 } from "lucide-react";
@@ -30,7 +30,10 @@ export function DevicePreview({
   }, [screen]);
   const t = (ko: string, enText: string) => (en ? enText : ko);
   return (
-    <main className={`device-preview ${robot ? "robot-preview" : "kiosk-preview"}`} lang={lang}>
+    <main
+      className={`device-preview ${robot ? "robot-preview" : "kiosk-preview"}`}
+      lang={lang}
+    >
       <div className="device-preview-status">
         <Link href={"/devices" + (en ? "?lang=en" : "")}>
           <ArrowLeft aria-hidden="true" />
@@ -62,7 +65,7 @@ export function DevicePreview({
           <div className="device-welcome">
             <div className="device-welcome-copy">
               <span className="public-eyebrow">
-                {t("공항 이용, 조금 더 편안하게", "A MORE COMFORTABLE JOURNEY")}
+                {t("공항 이용 안내", "AIRPORT INFORMATION")}
               </span>
               <h1 ref={heading} tabIndex={-1}>
                 {t("어떤 도움이", "How can we")}
@@ -79,7 +82,7 @@ export function DevicePreview({
                 className="public-button"
                 onClick={() => setScreen("services")}
               >
-                {t("화면 시작", "Start preview")}
+                {t("시작하기", "Start")}
                 <ArrowRight aria-hidden="true" />
               </button>
             </div>
@@ -87,7 +90,18 @@ export function DevicePreview({
               {robot ? (
                 <Robot mood="happy" size={360} />
               ) : (
-                <QrCode size={180} aria-hidden="true" />
+                <div className="device-ticket-visual">
+                  <Ticket aria-hidden="true" />
+                  <strong>
+                    {t("탑승권으로 시작", "Start with your boarding pass")}
+                  </strong>
+                  <p>
+                    {t(
+                      "모바일·종이 탑승권의 QR 또는 바코드를 읽어 필요한 도움을 불러옵니다.",
+                      "Scan a QR code or barcode on your mobile or paper boarding pass to retrieve your support needs.",
+                    )}
+                  </p>
+                </div>
               )}
               <span>
                 {t("탑승권 · 지원 패스", "Boarding pass · Support pass")}
@@ -116,7 +130,7 @@ export function DevicePreview({
                   Accessibility,
                   t("이동 도움 요청", "Mobility assistance"),
                 ],
-                ["needs", QrCode, t("필요한 도움 확인", "Review saved needs")],
+                ["needs", Ticket, t("필요한 도움 확인", "Review saved needs")],
               ].map(([id, Icon, label]) => {
                 const I = Icon as typeof Navigation;
                 return (
