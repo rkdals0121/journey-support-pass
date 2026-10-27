@@ -617,7 +617,7 @@ html[data-kiosk] .kiosk-taskhome.kiosk-scan-surface {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: 1.25rem;
+  gap: clamp(1.25rem, 3cqw, 2rem);
   padding: 1.5rem;
 }
 .task-device-preview.robot-preview .device-preview-body > * {
@@ -633,25 +633,29 @@ html[data-kiosk] .kiosk-taskhome.kiosk-scan-surface {
 .task-device-preview.robot-preview .device-booking-entry {
   margin-top: 0;
 }
+.task-device-preview.robot-preview .task-robot-face .robot {
+  width: clamp(11.25rem, 30cqw, 20rem);
+  height: auto;
+}
 .task-device-preview.robot-preview .task-launcher {
   grid-template-columns: 1fr;
   gap: 0.5rem;
 }
 .task-device-preview.robot-preview .task-action {
   flex-direction: row;
-  padding: 1rem;
-  min-height: 0;
+  padding: clamp(1rem, 3cqw, 2rem);
+  min-height: clamp(5rem, 11cqw, 9rem);
   align-items: center;
 }
 .task-device-preview.robot-preview .task-action-link strong {
-  font-size: 1rem;
+  font-size: clamp(1rem, 3cqw, 1.875rem);
 }
 .task-device-preview.robot-preview .task-action-link small {
-  font-size: 0.75rem;
+  font-size: clamp(0.75rem, 2cqw, 1.125rem);
   margin-top: 0.25rem;
 }
 .task-device-preview.robot-preview .kiosk-task-heading h1 {
-  font-size: 1.625rem;
+  font-size: clamp(1.625rem, 4.5cqw, 2.5rem);
 }
 /* Queue: mobile gets a real reading list instead of a compressed desktop table. */
 .work-mobile-list,

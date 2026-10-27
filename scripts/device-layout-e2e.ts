@@ -92,6 +92,14 @@ async function main() {
             () => document.documentElement.scrollWidth <= innerWidth,
           ),
         );
+        if (viewport.width === 1080)
+          check(
+            "portrait monitor has appropriately enlarged action text " + lang,
+            await page.$eval(
+              ".task-action-link strong",
+              (e) => parseFloat(getComputedStyle(e).fontSize) >= 28,
+            ),
+          );
         check(
           "robot retains route and mobility links " + label,
           await page.$$eval(
