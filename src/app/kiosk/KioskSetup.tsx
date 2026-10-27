@@ -18,7 +18,7 @@ interface PlaceOption {
   landside: boolean;
 }
 
-const AUTOPRINT_KEY = "jsp:kiosk:autoprint";
+
 
 export function KioskSetup({
   places,
@@ -30,7 +30,7 @@ export function KioskSetup({
   const [code, setCode] = useState("");
   const [use, setUse] = useState<"register" | "guide" | "entry">("entry");
   const [placeId, setPlaceId] = useState("");
-  const [autoPrint, setAutoPrint] = useState(false);
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // 예비로 둔 등록 키오스크를 고를 수 있게 할지(주소에 ?reserve=1).
@@ -42,11 +42,6 @@ export function KioskSetup({
     );
     const purpose = new URLSearchParams(window.location.search).get("use");
     if (purpose === "entry" || purpose === "guide") setUse(purpose);
-    try {
-      setAutoPrint(localStorage.getItem(AUTOPRINT_KEY) === "1");
-    } catch {
-      // 저장소를 못 쓰면 꺼진 채로 둔다.
-    }
   }, []);
 
   // 쓰임새에 맞는 자리만 보여준다. 입구 키오스크와 등록 키오스크는 보안검색 전에, 안내 키오스크는 그 뒤에 놓인다.
@@ -72,11 +67,6 @@ export function KioskSetup({
         setError(data.error ?? "설치하지 못했습니다");
         setCode("");
         return;
-      }
-      try {
-        localStorage.setItem(AUTOPRINT_KEY, autoPrint ? "1" : "0");
-      } catch {
-        // 기억하지 못하면 등록을 마친 화면의 버튼으로 뽑는다.
       }
       // 쿠키가 바뀌었으므로 화면을 통째로 다시 받는다.
       window.location.replace(`/kiosk/${use}`);
@@ -147,8 +137,8 @@ export function KioskSetup({
             />
             <ClipboardPen size={22} aria-hidden="true" />
             <span>
-              <b>등록 키오스크 (예비)</b>
-              <small>여객이 현장에서 등록하고 QR 스티커를 받습니다</small>
+              <b>탑승권 기반 현장 등록 (예비)</b>
+              <small>기존 탑승권으로 현장에서 지원정보를 연결합니다</small>
             </span>
           </label>
         )}
@@ -171,19 +161,6 @@ export function KioskSetup({
       <p className="hint">
         자리 목록과 그 자리에서의 길 안내는 시연용 모의 자료입니다.
       </p>
-
-      {use === "register" && (
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={autoPrint}
-            onChange={(e) => setAutoPrint(e.target.checked)}
-          />
-          <span>
-            스티커 프린터가 연결되어 있습니다 (등록을 마치면 바로 인쇄)
-          </span>
-        </label>
-      )}
 
       <label htmlFor="code">설치 코드</label>
       <input

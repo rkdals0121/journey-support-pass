@@ -3,6 +3,9 @@ export interface TaskField {
   id: string;
   label: string;
   en: string;
+  placeholder?: string;
+  placeholderEn?: string;
+  legacy?: boolean;
   required?: boolean;
   type?: "text" | "datetime-local";
   options?: { value: string; label: string; en: string }[];
@@ -77,8 +80,10 @@ export const SERVICE_TASKS: ServiceTask[] = [
     fields: [
       {
         id: "facility",
-        label: "시설·장소",
-        en: "Facility / location",
+        label: "시설 이름",
+        en: "Facility name",
+        placeholder: "예: 남자화장실 (위치는 다음 단계에서 선택)",
+        placeholderEn: "e.g. Men's restroom (select location next)",
         required: true,
       },
       { id: "issue", label: "불편한 내용", en: "Issue", required: true },
@@ -94,6 +99,8 @@ export const SERVICE_TASKS: ServiceTask[] = [
         id: "facility",
         label: "시설 이름",
         en: "Facility name",
+        placeholder: "예: 엘리베이터 (위치는 다음 단계에서 선택)",
+        placeholderEn: "e.g. Lift (select location next)",
         required: true,
       },
       {
@@ -120,7 +127,7 @@ export const SERVICE_TASKS: ServiceTask[] = [
         id: "issue",
         label: "필요한 지원",
         en: "Assistance needed",
-        required: true,
+        legacy: true,
       },
     ],
   },

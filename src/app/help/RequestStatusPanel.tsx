@@ -8,7 +8,7 @@ import {
 import { taskOf } from "@/lib/service-tasks";
 import { supportTopic } from "@/lib/service-catalog";
 import { businessOf } from "@/lib/operating-profile";
-import { placeOf } from "@/lib/airport";
+import { placeOf, NO_MEETING_PLACE } from "@/lib/airport";
 import { ServiceDetailsView } from "../components/ServiceDetailsView";
 import { RequestResolutionView } from "../components/RequestResolutionView";
 export function RequestStatusPanel({
@@ -136,7 +136,7 @@ export function RequestStatusPanel({
           <section className="request-status-card">
             <h2>
               <MapPin aria-hidden="true" />
-              {r.topicId === "facility" || r.topicId === "lost-property"
+              {r.placeId === NO_MEETING_PLACE ? t("처리 방식", "Handling") : r.topicId === "facility" || r.topicId === "lost-property"
                 ? t("신고 위치", "Reported location")
                 : t("만날 곳", "Meeting point")}
             </h2>

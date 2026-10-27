@@ -5,11 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GROUPS, itemsOf, SOLO } from "@/lib/catalog";
 import type { GuideDto } from "@/lib/guide";
 import { textOf } from "@/lib/i18n";
-import { extractToken, formatPassNo, PASS_NO_LENGTH } from "@/lib/pass-format";
+import { isBoardingScan, extractToken, formatPassNo, PASS_NO_LENGTH } from "@/lib/pass-format";
 import { ErrorNote } from "../../components/Alert";
 import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { closeText } from "../../components/GuideParts";
-import { PassQr } from "../../components/PassQr";
+
 import { Scanner } from "../../components/Scanner";
 
 const ko = textOf("ko");
@@ -42,12 +42,6 @@ export function DeskFind() {
   const justErased = useRef<{ token: string; at: number } | null>(null);
   const [asking, setAsking] = useState(false);
   const busyRef = useRef(false);
-  // QR 그림을 그리는 조각(qrcode)을 화면을 열 때 미리 받아 둔다. 패스를 찾은 뒤에야 받기 시작하면 QR 칸이 한참 비어 있다.
-  // 받지 못해도 여기서는 알리지 않는다(QR 을 그릴 때 다시 받는다).
-  useEffect(() => {
-    import("qrcode").catch(() => {});
-  }, []);
-
   const open = useCallback(async (body: { scanned: string } | { passNo: string }) => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -86,7 +80,7 @@ export function DeskFind() {
   const onScan = useCallback(
     (text: string) => {
       const scanned = extractToken(text);
-      if (!scanned) return setError("QR은 읽었지만 Journey Support Pass의 QR이 아닙니다.");
+      if (!isBoardingScan(text)) return setError("탑승권의 QR·바코드를 다시 보여 주세요.");
       // 방금 지운 QR 이 아직 카메라 앞에 있으면 다시 찾지 않는다. 찾으면 "등록을 지웠습니다" 알림이 "사용이 끝난 패스" 오류로 바뀐다.
       const gone = justErased.current;
       if (gone && gone.token === scanned && Date.now() - gone.at < 10_000) return;
@@ -151,7 +145,7 @@ export function DeskFind() {
             <X size={22} aria-hidden="true" />
           </button>
         </div>
-        <PassQr token={found.token} passNo={g.passNo} label="고유 일련 번호" />
+        <p className="fine">기존 탑승권의 QR·바코드로 지원정보를 조회합니다.</p>
         <p className="call-flight">
           <PlaneTakeoff size={18} aria-hidden="true" />
           <b className="num">{g.flight.flightNo}</b> {g.flight.destName} · 탑승구 <b className="num">{g.flight.gate ?? "미정"}</b>

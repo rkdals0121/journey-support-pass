@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PLACES, placeOf } from "@/lib/airport";
+import { PLACES, NO_MEETING_PLACE } from "@/lib/airport";
+import { requestPlaceOf as placeOf } from "@/lib/service-locations";
 import { labelOf } from "@/lib/catalog";
 import {
   OPEN_REQUEST_STATES,
@@ -32,8 +33,8 @@ import {
   Volume2,
 } from "lucide-react";
 import { useSpeech } from "../components/useSpeech";
-import { SERVICE_CATALOG, supportTopic } from "@/lib/service-catalog";
-import { pilotDestinations, BUSINESS_AREAS } from "@/lib/operating-profile";
+import { SERVICE_CATALOG, supportTopic, topicLink } from "@/lib/service-catalog";
+import { pilotDestinations } from "@/lib/operating-profile";
 
 const STORAGE = "jsp-dx-receipt-v1";
 const STORAGE_SCOPE = "jsp-dx-receipt-registration-v1";
@@ -119,7 +120,7 @@ export function HelpFlow({
     if (embedded) setLang(initialLang);
   }, [embedded, initialLang]);
   const en = lang === "en";
-  const [placeId, setPlaceId] = useState(placeOf(initialPlace)?.id ?? "");
+  const [placeId, setPlaceId] = useState(initialTopic === "other" ? NO_MEETING_PLACE : placeOf(initialPlace)?.id ?? "");
   const [service, setService] = useState<ServiceType>(initialService);
   const [choices, setChoices] = useState(savedChoices);
   const [party, setParty] = useState(savedParty);
@@ -160,6 +161,8 @@ export function HelpFlow({
       : undefined;
   const topic = supportTopic(topicId),
     referral = topic?.mode === "referral";
+  const needsDetails = service === "robot" && !referral;
+  const lastInputStep = needsDetails ? 2 : 1;
   const applyRequest = useCallback(
     (r: ServiceRequestView) =>
       setRequest((old) =>
@@ -333,7 +336,7 @@ export function HelpFlow({
               receipt: key,
               placeId,
               service,
-              choices: referral ? [] : choices,
+              choices: needsDetails ? choices : [],
               party: referral ? 1 : party,
               note,
               ...(serviceDetails && (topicId || !businessId)
@@ -442,7 +445,7 @@ export function HelpFlow({
     );
     for (const control of controls) if (!control.reportValidity()) return;
     setError("");
-    setInputStep((v) => Math.min(2, v + 1));
+    setInputStep((v) => Math.min(lastInputStep, v + 1));
     document.getElementById("public-main")?.scrollIntoView({ block: "start" });
   }
   const readText = request
@@ -499,7 +502,7 @@ export function HelpFlow({
           onCancel={() => void cancel()}
           onRestart={restart}
         >
-          {receipt && (
+          {receipt && request.placeId !== NO_MEETING_PLACE && request.topicId !== "facility" && (
             <details
               className="request-location-tools"
               open={!!request.pendingPlaceId || undefined}
@@ -681,15 +684,15 @@ export function HelpFlow({
                       </dd>
                     </div>
                   )}
-                  <div>
+                  {!referral && <div>
                     <dt>{tr("인원", "People")}</dt>
                     <dd>{party}</dd>
-                  </div>
+                  </div>}
                 </dl>
                 {serviceDetails && (
                   <ServiceDetailsView details={serviceDetails} en={en} />
                 )}{" "}
-                {choices.length > 0 && (
+                {needsDetails && choices.length > 0 && (
                   <ul>
                     {choices.map((c) => (
                       <li key={c}>{labelOf(c, lang)}</li>
@@ -723,11 +726,12 @@ export function HelpFlow({
               className="request-form"
               noValidate
               data-active-step={inputStep}
+              data-short-flow={!needsDetails}
               onSubmit={(e) => {
                 e.preventDefault();
                 if (
                   window.matchMedia("(max-width:760px)").matches &&
-                  inputStep < 2
+                  inputStep < lastInputStep
                 ) {
                   advanceInput();
                   return;
@@ -790,7 +794,9 @@ export function HelpFlow({
                               value={s.id}
                               checked={(topicId ?? service) === s.id}
                               onChange={() => {
+                                if (s.id === "lost-property") { window.location.assign(topicLink(s.id, lang)); return; }
                                 setService(s.service);
+                                if (placeId === NO_MEETING_PLACE) setPlaceId("");
                                 setTopicId(s.id);
                                 setBusinessId(undefined);
                                 setTaskId("");
@@ -836,7 +842,7 @@ export function HelpFlow({
                         ))}
                       </fieldset>
                       <div className="service-task-fields">
-                        {task.fields.map((f) => (
+                        {task.fields.filter(f => !f.legacy).map((f) => (
                           <div key={f.id}>
                             <label htmlFor={"task-" + f.id}>
                               {en ? f.en : f.label}
@@ -850,6 +856,7 @@ export function HelpFlow({
                                 </span>
                               )}
                             </label>
+                            {f.placeholder && <p className="service-field-example">{en ? f.placeholderEn : f.placeholder}</p>}
                             {f.options ? (
                               <select
                                 id={"task-" + f.id}
@@ -875,6 +882,7 @@ export function HelpFlow({
                               <input
                                 id={"task-" + f.id}
                                 type={f.type ?? "text"}
+                                placeholder={en ? f.placeholderEn : f.placeholder}
                                 maxLength={120}
                                 value={taskFields[f.id] ?? ""}
                                 required={f.required}
@@ -891,31 +899,7 @@ export function HelpFlow({
                       </div>
                     </>
                   )}
-                  {topic?.id === "other" && (
-                    <>
-                      <label htmlFor="dx-business">
-                        {tr("담당 업무 · 선택", "Handling team · optional")}
-                      </label>
-                      <select
-                        id="dx-business"
-                        value={businessId ?? ""}
-                        onChange={(e) =>
-                          setBusinessId(e.target.value || undefined)
-                        }
-                      >
-                        <option value="">
-                          {tr("담당 업무 분류 요청", "Ask for classification")}
-                        </option>
-                        {BUSINESS_AREAS.filter(
-                          (b) => b.access !== "internal",
-                        ).map((b) => (
-                          <option value={b.id} key={b.id}>
-                            {en ? b.en : b.label}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  )}
+                  {topic?.id === "traffic" && <p className="service-field-example">{tr("단순 이용 문의는 ", "For travel information, ")}<a href="tel:15772600">{tr("공항 고객센터 1577-2600", "airport information 1577-2600")}</a> · <a href="https://www.airport.kr/" target="_blank" rel="noreferrer">{tr("공식 교통안내", "Official transport guide")}</a></p>}
                 </section>
                 <section
                   className="request-section"
@@ -928,7 +912,8 @@ export function HelpFlow({
                       ? tr("신고할 위치", "Report location")
                       : tr("현재 위치", "Your location")}
                   </h2>
-                  {lockedPlace ? (
+                  {topic?.id === "other" && <label className="request-check"><input type="checkbox" checked={placeId === NO_MEETING_PLACE} onChange={e => setPlaceId(e.target.checked ? NO_MEETING_PLACE : "")} />{tr("만나지 않음 · 온라인으로 내용 전달", "No meeting · send the request online")}</label>}
+                  {placeId === NO_MEETING_PLACE ? <p>{tr("요청 내용으로 담당자가 업무를 분류합니다.", "Staff will classify your request.")}</p> : lockedPlace ? (
                     <>
                       <label htmlFor="dx-place">
                         {tr("이 기기의 현재 위치", "This kiosk's location")}
@@ -944,6 +929,7 @@ export function HelpFlow({
                   ) : (
                     <PlaceFinder
                       id="dx-place"
+                      purpose={topic?.id === "facility" ? "report" : topic?.id === "other" ? "location" : "pickup"}
                       value={placeId}
                       en={en}
                       photos={!sharedDevice}
@@ -977,7 +963,7 @@ export function HelpFlow({
                     </>
                   )}
                 </section>
-                <section
+                {needsDetails && <section
                   className="request-section"
                   data-request-step="2"
                   onFocusCapture={() => setInputStep(2)}
@@ -1055,7 +1041,7 @@ export function HelpFlow({
                       "Do not enter names, contact details or documents. Details expire after 24 hours.",
                     )}
                   </p>
-                </section>
+                </section>}
               </div>
               <div className="request-mobile-nav">
                 {inputStep > 0 && (
@@ -1070,7 +1056,7 @@ export function HelpFlow({
                     {tr("이전", "Back")}
                   </button>
                 )}
-                {inputStep < 2 && (
+                {inputStep < lastInputStep && (
                   <button
                     type="button"
                     className="public-button"

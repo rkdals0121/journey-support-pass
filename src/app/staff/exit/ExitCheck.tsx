@@ -4,7 +4,7 @@ import { BadgeCheck, CircleAlert, PlaneTakeoff, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExitCheckDto } from "@/lib/api/staff";
 import { textOf } from "@/lib/i18n";
-import { extractToken } from "@/lib/pass-format";
+import { isBoardingScan } from "@/lib/pass-format";
 import { ErrorNote } from "../../components/Alert";
 import { departureText } from "../../components/GuideParts";
 import { Scanner } from "../../components/Scanner";
@@ -64,7 +64,7 @@ export function ExitCheck() {
 
   const onScan = useCallback(
     (text: string) => {
-      if (!extractToken(text)) return setError("QR은 읽었지만 Journey Support Pass의 전자토큰이 아닙니다.");
+      if (!isBoardingScan(text)) return setError("탑승권의 QR·바코드를 다시 보여 주세요.");
       void check(text);
     },
     [check],

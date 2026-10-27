@@ -1,7 +1,8 @@
 import { journeysByIds, isJourneyOver, lastRealPoll } from "./journey";
 import { createHash } from "node:crypto";
 import { kstDate } from "./flights/normalize";
-import { placeOf } from "./airport";
+import { NO_MEETING_PLACE } from "./airport";
+import { requestPlaceOf as placeOf } from "./service-locations";
 import type { Db } from "./db";
 import { ipPart, type Session } from "./auth";
 import { isUuid } from "./registrations";
@@ -149,13 +150,14 @@ export async function createServiceRequest(
   if (!SERVICE_TYPES.includes(body.service as ServiceType))
     return fail(400, "도움 종류를 골라 주세요");
   const place = placeOf(
-    session?.isKiosk
+    body.topicId === "other" && body.placeId === NO_MEETING_PLACE ? NO_MEETING_PLACE : session?.isKiosk
       ? session.placeId
       : typeof body.placeId === "string"
         ? body.placeId
         : null,
   );
   if (!place) return fail(400, "현재 위치를 골라 주세요");
+  if (place.id === NO_MEETING_PLACE && body.topicId !== "other") return fail(400, "이 서비스는 현장 위치가 필요합니다");
   const topic =
     body.topicId === undefined || body.topicId === ""
       ? undefined
@@ -173,8 +175,7 @@ export async function createServiceRequest(
   if (body.businessId !== undefined && body.businessId !== "" && !business)
     return fail(400, "담당 업무를 확인해 주세요");
   if (topic) {
-    let id: string =
-      topic.id === "other" && business ? business.id : topic.business;
+    let id: string = topic.business;
     if (topic.id === "facility")
       id = place.area === "T2" ? "cleaning-t2" : "cleaning-t1";
     if (topic.id === "traffic")
@@ -372,7 +373,7 @@ export async function changeRequestPlace(
   let target: string | null = null;
   if (action === "request") {
     const place = placeOf(typeof body.placeId === "string" ? body.placeId : "");
-    if (!place)
+    if (!place || place.id === NO_MEETING_PLACE || r.place_id === NO_MEETING_PLACE)
       return fail(
         400,
         "목록에서 새 만날 곳을 선택해 주세요",

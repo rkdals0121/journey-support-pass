@@ -1,7 +1,7 @@
 import { CircleSlash, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import QRCode from "qrcode";
+
 import { lookupPass } from "@/lib/api/public";
 import { prefsOf } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
@@ -70,10 +70,6 @@ export default async function PassPage({
   }
 
   const guide = buildGuide(found.journey, found.passNo, null, pollState(await lastSuccessfulPoll(db), now), now);
-  // 체크인했으면 모의 탑승권의 바코드(BP1)를 서버에서 미리 그려 보낸다. 항공사가 주는 탑승권을 흉내 낸 것이고,
-  // 키오스크·우대출구는 이 탑승권으로 등록을 찾는다. 서비스 전용 QR(패스 주소)은 여객에게 보여 주지 않는다.
-  const boarding = found.journey.boarding;
-  const qr = boarding ? await QRCode.toString(boarding, { type: "svg", errorCorrectionLevel: "M", margin: 4 }) : "";
   const prefs = prefsOf(found.journey.choices);
   const early = [
     prefs.large ? 'document.documentElement.style.setProperty("--scale","1.25")' : "",
@@ -88,7 +84,7 @@ export default async function PassPage({
     <>
       {/* 큰 글씨·그림·언어는 화면을 그리기 전에 적용한다. 보통 글씨로 잠깐 보였다가 커지지 않게 한다. */}
       <script dangerouslySetInnerHTML={{ __html: early }} />
-      <PassView token={found.token} initial={guide} qr={qr} isNew={(await searchParams).new === "1"} />
+      <PassView token={found.token} initial={guide} isNew={(await searchParams).new === "1"} />
     </>
   );
 }

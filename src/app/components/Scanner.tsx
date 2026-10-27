@@ -3,6 +3,7 @@
 import { SwitchCamera } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Banner } from "./Alert";
+import { decodeBarcode, loadBarcodeReader, readBoardingImage } from "@/lib/barcode-reader";
 
 interface Props {
   /**
@@ -35,7 +36,7 @@ const HOLD_MAX_MS = 10000;
 const PAUSE_AFTER_SCAN_MS = 1000;
 // jsQR 조각을 못 받아 왔을 때 다시 받아 오는 간격.
 const JSQR_RETRY_MS = 10000;
-const FRAME_MAX = 960;
+const FRAME_MAX = 1440;
 // 가운데를 잘라 읽을 때 짧은 변에서 쓰는 비율. 화면의 겨누는 네모보다 조금 넓다.
 const CENTER_PART = 0.72;
 // 고른 카메라는 쓰임새(화면 쪽 / 뒤쪽)마다 따로 기억한다. 한데 두면 같은 태블릿의 안내데스크 화면에서 뒤쪽 카메라를 고른 뒤
@@ -58,6 +59,10 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
   // 골라 둔 카메라. null 이면 prefer 에 맞는 것을 브라우저가 고른다.
   const [chosen, setChosen] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const imageInput = useRef<HTMLInputElement>(null);
+  const en = !/[가-힣]/.test(text.starting);
 
   onScanRef.current = onScan;
   pausedRef.current = paused;
@@ -83,6 +88,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
     setLive(false);
 
     const emit = (value: string) => {
+      if (stopped || pausedRef.current) return;
       const now = Date.now();
       // 보일 때마다 시각을 새로 적는다. 막힌 QR(지워진 패스 등)을 여객이 계속 들고 있어도 2초마다 다시 확인하지 않는다.
       // 다시 확인하면 오류 글이 깜빡이고 화면이 들썩이며, 읽어 주던 오류 안내도 처음부터 다시 시작된다.
@@ -110,6 +116,10 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
         .catch(() => {});
     };
     void loadJsQr();
+    let multiReady = false;
+    let multiTriedAt = Date.now();
+    const loadMulti = () => { multiTriedAt = Date.now(); void loadBarcodeReader().then(() => { multiReady = true; }).catch(() => {}); };
+    loadMulti();
 
     (async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -163,7 +173,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
         .BarcodeDetector;
       let detector: Detector | null = null;
       try {
-        detector = Native ? new Native({ formats: ["qr_code"] }) : null;
+        detector = Native ? new Native({ formats: ["qr_code", "pdf417", "aztec", "data_matrix", "code_128"] }) : null;
       } catch {
         detector = null;
       }
@@ -174,7 +184,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
       // 여객이 읽히지도 않는 QR 을 계속 들고 서 있지 않도록, 다시 받아 올 때까지 「켜는 중」으로 둔다.
       let canRead = false;
       const showLive = () => {
-        const can = !!detector || !!jsQR;
+        const can = !!detector || !!jsQR || multiReady;
         if (can === canRead) return;
         canRead = can;
         setLive(can);
@@ -199,6 +209,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
         working = true;
         try {
           showLive();
+          if (!multiReady && Date.now() - multiTriedAt >= JSQR_RETRY_MS) loadMulti();
           if (detector) {
             try {
               const found = await detector.detect(video);
@@ -212,7 +223,7 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
           }
           if (!jsQR) {
             if (Date.now() - jsQRTriedAt >= JSQR_RETRY_MS) void loadJsQr();
-            return;
+            if (!multiReady) return;
           }
           // 두 가지로 번갈아 읽는다.
           //  - 가운데만 잘라 원래 해상도로: QR 을 조금 떨어져서 보여 줄 때. QR 이 화면에서 작아도 칸이 뭉개지지 않는다.
@@ -237,8 +248,13 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
           }
           const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
           // 휴대전화 화면이 어두운 바탕(다크 모드)이면 QR 이 뒤집혀 보일 수 있어 양쪽을 다 본다.
-          const code = jsQR(image.data, image.width, image.height, { inversionAttempts: "attemptBoth" });
-          if (code?.data) emit(code.data);
+          const code = jsQR?.(image.data, image.width, image.height, { inversionAttempts: "attemptBoth" });
+          if (code?.data) { emit(code.data); return; }
+          if (!multiReady && Date.now() - multiTriedAt >= JSQR_RETRY_MS) loadMulti();
+          if (multiReady) {
+            const value = await decodeBarcode(image);
+            if (value) emit(value);
+          }
         } catch {
           // 한 장면을 못 읽은 것은 무시한다.
         } finally {
@@ -267,10 +283,10 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
     setChosen(next);
   }
 
-  if (cameraError) return <Banner role="status">{text.none}</Banner>;
-
   return (
     <div className="scan">
+      {cameraError && <Banner role="status">{text.none}</Banner>}
+      {!cameraError && <>
       <div className={`scanner ${mirror ? "mirror" : ""} ${paused ? "paused" : ""}`}>
         <video ref={videoRef} playsInline muted aria-hidden="true" />
         <canvas ref={canvasRef} hidden />
@@ -285,6 +301,20 @@ export function Scanner({ onScan, paused = false, prefer = "environment", text }
         <i className={`scan-dot ${live && !paused ? "on" : ""}`} aria-hidden="true" />
         {paused ? text.read : live ? text.ready : text.starting}
       </p>
+      </>}
+      <input ref={imageInput} type="file" accept="image/*" className="sr-only" aria-label={en ? "Boarding pass image" : "탑승권 이미지"} disabled={paused || imageBusy} onChange={async e => {
+        const file = e.target.files?.[0]; e.target.value = "";
+        if (!file) return;
+        setImageBusy(true); setImageError("");
+        try {
+          const value = await readBoardingImage(file);
+          if (!value) setImageError(en ? "Code not found. Use a clearer image." : "코드를 찾지 못했어요. 선명한 탑승권 사진을 선택해 주세요.");
+          else if (!pausedRef.current) onScanRef.current(value);
+        } catch { setImageError(en ? "Could not read this image. Try a JPG or PNG under 20 MB." : "사진을 읽지 못했어요. 20MB 이하 JPG·PNG 사진을 선택해 주세요."); }
+        finally { setImageBusy(false); }
+      }} />
+      <button type="button" className="btn" disabled={paused || imageBusy} onClick={() => imageInput.current?.click()}>{imageBusy ? (en ? "Reading…" : "읽는 중…") : (en ? "Read boarding pass image" : "탑승권 이미지 읽기")}</button>
+      {imageError && <p role="alert">{imageError}</p>}
     </div>
   );
 }

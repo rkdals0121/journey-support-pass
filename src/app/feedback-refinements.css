@@ -1,0 +1,35 @@
+.place-map {
+  margin: 1rem 0 0.5rem;
+}
+.place-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.place-map figcaption {
+  font-size: 0.72rem;
+  color: #64776a;
+  margin-top: 0.35rem;
+}
+.service-field-example {
+  font-size: 0.8rem;
+  color: #576c5e;
+  line-height: 1.6;
+  margin: 0.25rem 0 0.6rem;
+}
+.boarding-link-panel {
+  margin: 1rem 0;
+  width: 100%;
+}
+.boarding-linked-note {
+  border-left: 3px solid #599375;
+  padding: 0.75rem 1rem;
+  line-height: 1.6;
+  color: #32523e;
+}
+@media (max-width: 760px) {
+  .request-form[data-short-flow="true"][data-active-step="1"]
+    > .request-submit-card {
+    display: block;
+  }
+}

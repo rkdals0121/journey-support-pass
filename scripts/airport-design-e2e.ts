@@ -62,7 +62,7 @@ async function main() {
                     "/help",
                   ) ||
                   new URL((a as HTMLAnchorElement).href).pathname ===
-                    "/navigate",
+                    "/navigate" || new URL((a as HTMLAnchorElement).href).pathname === "/services/lost-property",
               ),
           ),
         );

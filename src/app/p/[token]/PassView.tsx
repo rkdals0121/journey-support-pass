@@ -1,8 +1,9 @@
 "use client";
+import { Scanner } from "../../components/Scanner";
 import {PassRequests} from "./PassRequests";
 import Link from "next/link";
 
-import { BadgeCheck, Circle, CircleCheck, PlaneTakeoff, ScanLine, Ticket, Trash2 } from "lucide-react";
+import { BadgeCheck, Circle, CircleCheck, ScanLine, Ticket, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { prefsOf } from "@/lib/catalog";
 import type { FlightView, GuideDto } from "@/lib/guide";
@@ -14,7 +15,7 @@ import { ConfirmSheet } from "../../components/ConfirmSheet";
 import { FlowShell } from "../../components/FlowShell";
 import { closeText, departureText, destOf, FlightBoard } from "../../components/GuideParts";
 import { SavedNeeds } from "../../components/SavedNeeds";
-import { formatPassNo } from "@/lib/pass-format";
+
 
 const REFRESH_MS = 60_000;
 // 탑승 마감까지 남은 시간을 이 간격으로 다시 센다.
@@ -72,7 +73,8 @@ function ReadyRow({ done, title, body, children }: { done: boolean; title: strin
  * 여객이 따로 QR 을 쓰는 일은 없다(피드백 2). 시제품은 「모의 체크인」 단추로 체크인을 흉내 내고, 그 뒤에 모의 탑승권을 보여 준다.
  * 탑승권의 바코드는 항공사 탑승권을 흉내 낸 것이다. 우대출구와 안내 키오스크가 이 탑승권으로 등록을 찾는다.
  */
-export function PassView({ token, initial, qr, isNew }: { token: string; initial: GuideDto; qr: string; isNew: boolean }) {
+export function PassView({ token, initial, isNew }: { token: string; initial: GuideDto; isNew: boolean }) {
+  const [boardingOpen, setBoardingOpen] = useState(false);
   const [guide, setGuide] = useState(initial);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -221,21 +223,21 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
   }
 
   // 모의 체크인. 실제로는 항공사 체크인 때 전자토큰이 탑승권에 저장된다.
-  async function checkIn() {
+  async function checkIn(scanned: string) {
     if (checkingIn) return;
     setCheckingIn(true);
     setError(null);
     const ctrl = new AbortController();
     const limit = setTimeout(() => ctrl.abort(), 15_000);
     try {
-      const res = await fetch("/api/pass/checkin", {
+      const res = await fetch("/api/pass/boarding-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, scanned }),
         signal: ctrl.signal,
       });
       if (res.status === 410 || res.status === 404) return window.location.reload();
-      if (!res.ok) throw new Error();
+      if (!res.ok) { const data = await res.json(); setError(lang === "en" ? "Could not link this boarding pass. Check the flight and date, or ask staff." : data.error); return; }
       // 체크인하면 탑승권이 생긴다. 탑승권 바코드는 서버가 그려 보내므로 화면을 다시 받는다.
       setGuide((g) => ({ ...g, checkedIn: true }));
       window.location.reload();
@@ -322,11 +324,12 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
         >
           {!guide.checkedIn && (
             <>
-              <button className="btn btn-primary ready-btn" onClick={checkIn} disabled={checkingIn} aria-busy={checkingIn}>
+              <button className="btn btn-primary ready-btn" onClick={() => setBoardingOpen(v => !v)} disabled={checkingIn} aria-busy={checkingIn}>
                 <Ticket size={20} aria-hidden="true" />
-                {t.checkinDemo}
+                {lang === "en" ? "Link existing boarding pass (demo)" : "기존 탑승권 연결 (시연)"}
               </button>
-              <span className="fine">{t.checkinDemoNote}</span>
+              <span className="fine">{lang === "en" ? "Scan the QR or barcode on your existing demo boarding pass." : "기존 시연 탑승권의 QR 또는 바코드를 읽어 지원정보에 연결합니다."}</span>
+              {boardingOpen && <div className="boarding-link-panel"><Scanner paused={checkingIn} onScan={v => void checkIn(v)} text={{ starting: lang === "en" ? "Starting camera…" : "카메라를 켜는 중…", ready: lang === "en" ? "Show the boarding code" : "탑승권 코드를 보여 주세요", read: lang === "en" ? "Linking…" : "연결 중…", none: lang === "en" ? "Use an image if camera access is unavailable." : "카메라를 사용할 수 없으면 탑승권 이미지를 선택해 주세요.", switchCamera: lang === "en" ? "Switch camera" : "카메라 전환" }} /></div>}
             </>
           )}
         </ReadyRow>
@@ -334,34 +337,7 @@ export function PassView({ token, initial, qr, isNew }: { token: string; initial
 
       {guide.checkedIn && (
         <>
-          <h2>{t.boardingTitle}</h2>
-          {/* 시연용 모의 탑승권. 항공사 표시는 넣지 않는다. QR 은 탑승권에 담긴 전자토큰이다. */}
-          <div className="boarding">
-            <div className="boarding-top">
-              <span className="boarding-flight">
-                <PlaneTakeoff size={18} aria-hidden="true" />
-                {flight.flightNo}
-              </span>
-              <b>ICN → {destOf(flight, lang)}</b>
-              <span className="num">{departureText(flight, t)}</span>
-            </div>
-            <div className={guide.proofVerified ? "boarding-badge ok" : "boarding-badge"}>
-              {guide.proofVerified && <BadgeCheck size={20} aria-hidden="true" />}
-              {guide.proofVerified ? t.boardingBadgeOk : t.boardingBadgeNone}
-            </div>
-            {/* 탑승권 바코드. 서비스 전용 QR 이 아니라 항공사 탑승권을 흉내 낸 것이다. 아래 번호는 바코드가 안 읽힐 때 키오스크에 누른다. */}
-            <div className="ticket">
-              <div className="pass-qr">
-                <span className="pass-qr-label">{t.boardingBarcode}</span>
-                <div className="pass-qr-code" role="img" aria-label={t.boardingBarcode} dangerouslySetInnerHTML={{ __html: qr }} />
-                <span className="pass-qr-label">{t.passNo}</span>
-                <span className="sr-only">{guide.passNo.split("").join(" ")}</span>
-                <span className="pass-qr-no num" aria-hidden="true">
-                  {formatPassNo(guide.passNo)}
-                </span>
-              </div>
-            </div>
-          </div>
+          <p className="boarding-linked-note">{lang === "en" ? "Support information is linked to your existing boarding pass. Show its QR or barcode at the kiosk." : "기존 탑승권에 지원정보가 연결됐어요. 키오스크에서 그 탑승권의 QR 또는 바코드를 보여 주세요."}</p>
           {guide.proofVerified && (
             <div className="info-row quiet">
               <span className="bubble bubble-sun">

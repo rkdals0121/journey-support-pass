@@ -12,7 +12,7 @@ export default async function ExitPage() {
     <>
       <main className="page has-nav">
         <h1>교통약자 우대출구</h1>
-        <p className="muted">여객의 모바일 탑승권 QR을 찍어 주세요. 증빙서류는 요구하지 않습니다. 대상 여부와 필요한 지원만 나옵니다.</p>
+        <p className="muted">여객의 탑승권 QR·바코드를 읽어 주세요. 증빙서류는 요구하지 않습니다. 대상 여부와 필요한 지원만 나옵니다.</p>
         <ExitCheck />
       </main>
       <StaffNav isDesk={session.isDesk} />

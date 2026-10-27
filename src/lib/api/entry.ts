@@ -17,8 +17,9 @@ import { logEvent } from "../metrics";
 import {
   boardingPassText,
   extractToken,
-  parseBoardingPass,
+
 } from "../pass-format";
+import { readBoardingPayload } from "../airline-boarding";
 import { bindBoardingPass, issuePass, resolveBoardingRef } from "../passes";
 import { createRegistration } from "../registrations";
 import { departureAt, isDeparted, kstTime, pollState } from "../timing";
@@ -48,7 +49,7 @@ export async function entryScanHandler(
   const denied = kioskError(session);
   if (denied) return denied;
   const scanned = typeof body.scanned === "string" ? body.scanned : "";
-  const bp = parseBoardingPass(scanned);
+  const bp = readBoardingPayload(scanned, now);
   let token = extractToken(scanned);
   if (bp) {
     const bound = await resolveBoardingRef(db, bp.ref);
@@ -58,6 +59,7 @@ export async function entryScanHandler(
     const found = await lookupPass(db, token, now);
     if (found.kind === "none") return fail(404, NOT_A_PASS);
     if (found.kind === "ended") return fail(410, PASS_ENDED);
+    if (bp && (bp.flightDate !== found.journey.flightDate || bp.flightNo !== found.journey.flightNo)) return fail(400, "탑승권과 등록한 항공편이 다릅니다");
     await logEvent(db, {
       at: now,
       kind: "guide_open",
@@ -122,9 +124,7 @@ export async function onsiteRegisterHandler(
 ): Promise<ApiResult> {
   const denied = kioskError(session);
   if (denied) return denied;
-  const bp = parseBoardingPass(
-    typeof body.boarding === "string" ? body.boarding : "",
-  );
+  const bp = readBoardingPayload(typeof body.boarding === "string" ? body.boarding : "", now);
   if (!bp) return fail(400, "탑승권을 다시 찍어 주세요");
   // 같은 탑승권으로 이미 등록했으면(두 번 누름) 그것을 돌려준다.
   const bound = await resolveBoardingRef(db, bp.ref);

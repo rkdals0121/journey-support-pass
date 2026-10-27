@@ -9,7 +9,7 @@ import { flightsToCity, suggestFlights, listDestinations } from "../flights/sear
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll, type Journey } from "../journey";
 import { logEvent, logLimitedEvent } from "../metrics";
-import { parseBoardingPass } from "../pass-format";
+import { readBoardingPayload } from "../airline-boarding";
 import { checkIn, extractToken, issuePass, resolveBoardingRef, resolveToken } from "../passes";
 import { eraseRegistration } from "../purge";
 import { createRegistration, type Route } from "../registrations";
@@ -197,9 +197,10 @@ export type PassLookup =
  * 받는 것: 탑승권 바코드(체크인 때 전자토큰이 저장된 탑승권), 그리고 패스 값(여객 휴대전화의 주소, 예전 스티커).
  */
 export async function lookupPass(db: Db, scanned: string, now: Date): Promise<PassLookup> {
+  const boarding = readBoardingPayload(scanned, now);
   let token = extractToken(scanned);
   if (!token) {
-    const bp = parseBoardingPass(scanned);
+    const bp = readBoardingPayload(scanned, now);
     if (!bp) return { kind: "none" };
     const bound = await resolveBoardingRef(db, bp.ref);
     // 체크인하지 않았거나 이미 끝난 등록의 탑승권은 등록되지 않은 탑승권과 같다.
@@ -210,6 +211,7 @@ export async function lookupPass(db: Db, scanned: string, now: Date): Promise<Pa
   if (res.kind === "unknown") return { kind: "none" };
   if (res.kind === "unusable") return { kind: "ended" };
   const journey = await getJourney(db, res.registrationId, now);
+  if (boarding && journey && (boarding.flightDate !== journey.flightDate || boarding.flightNo !== journey.flightNo)) return { kind: "none" };
   if (!journey || isJourneyOver(journey, now, await lastRealPoll(db))) return { kind: "ended" };
   return { kind: "ok", journey, passNo: res.pass.passNo, token };
 }
