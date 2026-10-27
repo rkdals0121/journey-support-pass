@@ -64,15 +64,11 @@ export default async function PreparePage({
           <h1>
             {en ? (
               <>
-                A more comfortable
-                <br />
-                airport journey.
+                Register your support needs
               </>
             ) : (
               <>
-                공항에서의 이동이
-                <br />
-                <em>조금 더 편안하도록.</em>
+                출발 전 지원등록
               </>
             )}
           </h1>
@@ -90,6 +86,9 @@ export default async function PreparePage({
               ? "This saves your needs. It does not confirm a service booking."
               : "필요 정보를 미리 저장하는 절차이며 서비스 예약 확정은 아니에요."}
           </p>
+          <Link className="prepare-lookup-link" href={"/prepare/booking" + (en ? "?lang=en" : "")}>
+            {en ? "Find flight by booking reference (demo)" : "예약번호로 항공편 불러오기 (시연)"}
+          </Link>
         </section>
         <aside className="prepare-steps">
           <div className="prepare-step">
