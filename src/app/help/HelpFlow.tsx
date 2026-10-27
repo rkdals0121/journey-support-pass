@@ -917,7 +917,12 @@ export function HelpFlow({
                 >
                   <h2>
                     <span>1</span>
-                    {tr("필요한 서비스", "Your service")}
+                    {topic ? tr("요청 내용", "Request details") : tr("필요한 서비스", "Your service")}
+                    {topic && (
+                      <Link className="request-change-service" href={"/services" + (en ? "?lang=en" : "")}>
+                        {tr("서비스 변경", "Change service")}
+                      </Link>
+                    )}
                   </h2>
                   {!topic && (
                     <fieldset className="request-service-options">
@@ -953,19 +958,11 @@ export function HelpFlow({
                       ))}
                     </fieldset>
                   )}
-                  {topic && (
-                    <div className="request-selected-service">
-                      <strong>{en ? topic.en : topic.label}</strong>
-                      <Link href={"/services" + (en ? "?lang=en" : "")}>
-                        {tr("변경", "Change")}
-                      </Link>
-                    </div>
-                  )}
                   {topic?.id === "robot" && <RobotIntro en={en} />}
                   {task && (
                     <>
                       <fieldset className="request-task-options">
-                        <legend>{tr("이용할 서비스", "Service option")}</legend>
+                        <legend className={topic ? "sr-only" : undefined}>{tr("이용할 서비스", "Service option")}</legend>
                         {availableTasks.map((t) => (
                           <label
                             key={t.id}

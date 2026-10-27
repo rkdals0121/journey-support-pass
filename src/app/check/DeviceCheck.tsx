@@ -197,7 +197,7 @@ export function DeviceCheck() {
       <Brand />
       <h1>기기 점검</h1>
       <p className="muted">
-        키오스크로 쓸 태블릿이나 여객 역할 휴대전화에서 이 화면을 열어, 시연 전에 하나씩 확인합니다. 서버에는 아무것도 남기지 않습니다.
+        사용할 기기에서 연결·카메라·소리를 확인하세요.
       </p>
 
       <Item id="net" icon={Globe} title="인터넷" row={net}>
@@ -253,9 +253,6 @@ export function DeviceCheck() {
         </section>
       )}
 
-      <p className="hint">
-        스티커 인쇄는 주 흐름에서 뺐습니다. 예비 등록 키오스크(키오스크 설치 주소에 ?reserve=1)를 쓸 때만 그 화면의 「스티커 뽑기」로 확인합니다.
-      </p>
       <Link className="home-staff" href="/kiosk">
         키오스크 설치로
       </Link>

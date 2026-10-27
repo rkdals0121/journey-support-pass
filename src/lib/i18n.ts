@@ -177,7 +177,7 @@ const ko = {
   proofDemo: "서류는 이 기기 안에서 글자를 읽어 확인합니다. 사진과 읽은 글자는 어디에도 보내지 않습니다. 서류 종류와 나이까지만 확인하며 위조 여부는 가리지 못합니다(시연).",
   // ── 공항 입구 키오스크(안내로봇) ──
   entryTitle: "교통약자를 위한 안내로봇",
-  entrySleep: "탑승권을 스캔하여 저를 깨워 주세요!",
+  entrySleep: "탑승권을 카메라에 보여 주세요",
   entrySleepHint: "탑승권을 카메라에 대 주세요. 종이 탑승권도, 휴대전화의 모바일 탑승권도 됩니다.",
   entryCamNone: "이 기기에서는 카메라를 쓸 수 없습니다. 「도움 요청하기」를 눌러 주세요.",
   guideRobot: "탑승권을 대 주시면 미리 고르신 대로 길을 알려 드릴게요!",
@@ -708,7 +708,7 @@ const en: Text = {
   proofDemo:
     "Your document is read on this device. The photo and the text read from it are never sent anywhere. Only the document type and age are checked; forgeries cannot be detected (demo).",
   entryTitle: "Guide robot for travellers who need assistance",
-  entrySleep: "Scan your boarding pass to wake me up!",
+  entrySleep: "Show your boarding pass to the camera",
   entrySleepHint: "Hold your boarding pass to the camera. A paper or mobile boarding pass both work.",
   entryCamNone: "The camera cannot be used on this device. Please press “Request assistance”.",
   guideRobot: "Show me your boarding pass and I will guide you the way you chose!",
