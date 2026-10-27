@@ -1,16 +1,3 @@
-.place-map {
-  margin: 1rem 0 0.5rem;
-}
-.place-map svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.place-map figcaption {
-  font-size: 0.72rem;
-  color: #64776a;
-  margin-top: 0.35rem;
-}
 .service-field-example {
   font-size: 0.8rem;
   color: #576c5e;
@@ -28,8 +15,105 @@
   color: #32523e;
 }
 @media (max-width: 760px) {
+  .request-form[data-last-step="0"][data-active-step="0"]
+    > .request-submit-card {
+    display: block;
+  }
   .request-form[data-short-flow="true"][data-active-step="1"]
     > .request-submit-card {
     display: block;
+  }
+}
+.official-map-panel {
+  margin: 0 0 1.25rem;
+  border: 1px solid #d4ded6;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+}
+.official-map-panel summary {
+  cursor: pointer;
+  color: #285a41;
+  font-weight: 600;
+  min-height: 32px;
+  line-height: 1.6;
+}
+.official-map-panel > a {
+  display: inline-block;
+  font-size: 0.85rem;
+  margin: 0.75rem 0;
+}
+.official-map-panel iframe {
+  display: block;
+  border: 0;
+  width: 100%;
+  height: 540px;
+  background: #f0f4f1;
+  border-radius: 5px;
+}
+.report-location-picker > label {
+  margin-top: 1rem;
+}
+.report-photo-helper {
+  margin-top: 1rem;
+}
+.report-photo-helper > summary {
+  cursor: pointer;
+  color: #285a41;
+  padding: 0.5rem 0;
+}
+.traffic-intent-options {
+  display: grid;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.traffic-intent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  border: 1px solid #a2b9ab;
+  background: white;
+  border-radius: 8px;
+  color: #1b3e2c;
+  padding: 1.5rem;
+  font: inherit;
+  cursor: pointer;
+}
+.traffic-intent strong {
+  font-size: 1.15rem;
+}
+.traffic-intent span {
+  font-size: 0.9rem;
+  color: #52685a;
+}
+.traffic-intent:hover {
+  border-color: #285a41;
+  background: #f2f8f3;
+}
+.traffic-intent:focus-visible {
+  outline: 3px solid #72a98b;
+  outline-offset: 3px;
+}
+.traffic-information p {
+  padding: 0.5rem 0;
+}
+.desk-locations section {
+  border-top: 1px solid #d4ded6;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+.desk-locations li {
+  line-height: 1.8;
+  margin: 0.5rem 0;
+}
+@media (max-width: 760px) {
+  .official-map-panel {
+    padding: 0.7rem;
+  }
+  .official-map-panel iframe {
+    height: 460px;
+  }
+  .traffic-intent {
+    padding: 1.2rem;
   }
 }

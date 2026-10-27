@@ -2,7 +2,10 @@ import { journeysByIds, isJourneyOver, lastRealPoll } from "./journey";
 import { createHash } from "node:crypto";
 import { kstDate } from "./flights/normalize";
 import { NO_MEETING_PLACE } from "./airport";
-import { requestPlaceOf as placeOf } from "./service-locations";
+import {
+  requestPlaceOf as placeOf,
+  reportLocationLabel,
+} from "./service-locations";
 import type { Db } from "./db";
 import { ipPart, type Session } from "./auth";
 import { isUuid } from "./registrations";
@@ -87,8 +90,19 @@ function view(r: Row): ServiceRequestView {
     service: r.service,
     state: r.state,
     placeId: r.place_id,
-    place: place?.label ?? "",
-    placeEn: place?.labelEn ?? "",
+    place:
+      reportLocationLabel(
+        (r.service_details as ServiceDetails | undefined)?.fields,
+      ) ||
+      place?.label ||
+      "",
+    placeEn:
+      reportLocationLabel(
+        (r.service_details as ServiceDetails | undefined)?.fields,
+        true,
+      ) ||
+      place?.labelEn ||
+      "",
     choices: r.choices,
     party: r.party,
     note: r.note,
@@ -150,14 +164,23 @@ export async function createServiceRequest(
   if (!SERVICE_TYPES.includes(body.service as ServiceType))
     return fail(400, "도움 종류를 골라 주세요");
   const place = placeOf(
-    body.topicId === "other" && body.placeId === NO_MEETING_PLACE ? NO_MEETING_PLACE : session?.isKiosk
-      ? session.placeId
-      : typeof body.placeId === "string"
-        ? body.placeId
-        : null,
+    body.topicId === "facility" &&
+      typeof body.placeId === "string" &&
+      /^report-(T1|T2|CONCOURSE)$/.test(body.placeId)
+      ? body.placeId
+      : body.topicId === "other" && body.placeId === NO_MEETING_PLACE
+        ? NO_MEETING_PLACE
+        : session?.isKiosk
+          ? session.placeId
+          : typeof body.placeId === "string"
+            ? body.placeId
+            : null,
   );
   if (!place) return fail(400, "현재 위치를 골라 주세요");
-  if (place.id === NO_MEETING_PLACE && body.topicId !== "other") return fail(400, "이 서비스는 현장 위치가 필요합니다");
+  if (place.id === NO_MEETING_PLACE && body.topicId !== "other")
+    return fail(400, "이 서비스는 현장 위치가 필요합니다");
+  if (place.id.startsWith("report-") && body.topicId !== "facility")
+    return fail(400, "신고 위치는 시설 신고에서만 사용할 수 있습니다");
   const topic =
     body.topicId === undefined || body.topicId === ""
       ? undefined
@@ -187,12 +210,27 @@ export async function createServiceRequest(
       ? undefined
       : parseServiceDetails(body.serviceDetails, topic?.id, now);
   if (typeof details === "string") return fail(400, details);
+  if (
+    !place.id.startsWith("report-") &&
+    details &&
+    Object.keys(details.fields).some((k) => k.startsWith("report"))
+  )
+    return fail(400, "시설 신고 위치를 전용 입력에서 확인해 주세요");
+  if (
+    place.id.startsWith("report-") &&
+    (!details ||
+      details.fields.reportArea !== place.area ||
+      !reportLocationLabel(details.fields))
+  )
+    return fail(400, "신고할 터미널·층·상세 위치를 확인해 주세요");
   if (details?.task === "facility-access")
     business = businessOf("passenger-terminal");
   const destination =
     body.destinationId === undefined || body.destinationId === ""
       ? null
       : body.destinationId;
+  if (details?.task === "mobility-wheelchair" && destination !== null)
+    return fail(400, "휠체어 수령에는 이동 목적지를 지정하지 않습니다");
   if (
     destination !== null &&
     (body.service !== "mobility" ||
@@ -373,7 +411,13 @@ export async function changeRequestPlace(
   let target: string | null = null;
   if (action === "request") {
     const place = placeOf(typeof body.placeId === "string" ? body.placeId : "");
-    if (!place || place.id === NO_MEETING_PLACE || r.place_id === NO_MEETING_PLACE)
+    if (
+      !place ||
+      place.id === NO_MEETING_PLACE ||
+      r.place_id === NO_MEETING_PLACE ||
+      place.id.startsWith("report-") ||
+      r.place_id.startsWith("report-")
+    )
       return fail(
         400,
         "목록에서 새 만날 곳을 선택해 주세요",

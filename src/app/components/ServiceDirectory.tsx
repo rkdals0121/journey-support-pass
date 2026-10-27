@@ -46,7 +46,7 @@ export function ServiceDirectory({
   const [filter, setFilter] = useState("all");
   const rows = SERVICE_CATALOG.filter(
     (s) =>
-      (filter === "all" || s.mode === filter) &&
+      s.id !== "lost-property" && (filter === "all" || s.mode === filter) &&
       (!query.trim() ||
         searchText(
           s.id +
@@ -83,8 +83,8 @@ export function ServiceDirectory({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={
           en
-            ? "Gate, mobility, lost property"
-            : "탑승구, 이동 지원, 분실물 검색"
+            ? "Gate, mobility, facility assistance"
+            : "탑승구, 이동 지원, 시설 불편 검색"
         }
       />
       <button type="submit" aria-label={en ? "Search" : "검색"}>

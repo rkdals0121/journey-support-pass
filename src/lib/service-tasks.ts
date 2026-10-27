@@ -30,6 +30,39 @@ const item: TaskField = {
     { value: "other", label: "기타 물품", en: "Other item" },
   ],
 };
+const reportFields: TaskField[] = [
+  {
+    id: "reportArea",
+    label: "터미널",
+    en: "Terminal",
+    legacy: true,
+    options: [
+      { value: "T1", label: "제1터미널", en: "Terminal 1" },
+      { value: "CONCOURSE", label: "탑승동", en: "Concourse" },
+      { value: "T2", label: "제2터미널", en: "Terminal 2" },
+    ],
+  },
+  {
+    id: "reportLevel",
+    label: "층",
+    en: "Floor",
+    legacy: true,
+    options: [
+      { value: "B1", label: "지하 1층", en: "B1" },
+      ...["1", "2", "3", "4", "5"].map((n) => ({
+        value: n,
+        label: n + "층",
+        en: n + "F",
+      })),
+    ],
+  },
+  {
+    id: "reportLocation",
+    label: "시설 상세 위치",
+    en: "Facility location",
+    legacy: true,
+  },
+];
 export const SERVICE_TASKS: ServiceTask[] = [
   {
     id: "mobility-escort",
@@ -87,6 +120,7 @@ export const SERVICE_TASKS: ServiceTask[] = [
         required: true,
       },
       { id: "issue", label: "불편한 내용", en: "Issue", required: true },
+      ...reportFields,
     ],
   },
   {
@@ -109,6 +143,7 @@ export const SERVICE_TASKS: ServiceTask[] = [
         en: "Access issue",
         required: true,
       },
+      ...reportFields,
     ],
   },
   {
@@ -252,7 +287,9 @@ export function parseServiceDetails(
       if (
         !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text) ||
         !Number.isFinite(Date.parse(text + "+09:00")) ||
-        new Date(Date.parse(text + "+09:00") + 9 * 3600000).toISOString().slice(0,16) !== text ||
+        new Date(Date.parse(text + "+09:00") + 9 * 3600000)
+          .toISOString()
+          .slice(0, 16) !== text ||
         Date.parse(text + "+09:00") > now.getTime() + 300000
       )
         return "시각은 한국 시간 기준의 현재 또는 과거로 입력해 주세요";
@@ -272,18 +309,20 @@ export function serviceDetailsLines(
 ) {
   const t = taskOf(details.task);
   return (
-    t?.fields.flatMap((f) =>
-      details.fields[f.id]
-        ? [
-            {
-              label: lang === "en" ? f.en : f.label,
-              value:
-                f.options?.find((o) => o.value === details.fields[f.id])?.[
-                  lang === "en" ? "en" : "label"
-                ] ?? details.fields[f.id],
-            },
-          ]
-        : [],
-    ) ?? []
+    t?.fields
+      .filter((f) => !f.id.startsWith("report"))
+      .flatMap((f) =>
+        details.fields[f.id]
+          ? [
+              {
+                label: lang === "en" ? f.en : f.label,
+                value:
+                  f.options?.find((o) => o.value === details.fields[f.id])?.[
+                    lang === "en" ? "en" : "label"
+                  ] ?? details.fields[f.id],
+              },
+            ]
+          : [],
+      ) ?? []
   );
 }

@@ -24,9 +24,9 @@ export default async function LostProperty({
         </p>
         <Link
           className="public-button"
-          href={"/navigate" + (en ? "?lang=en" : "")}
+          href={"/services/desks" + (en ? "?lang=en" : "")}
         >
-          {en ? "Find an information desk" : "주변 안내데스크 찾기"}
+          {en ? "View information desk locations" : "안내데스크 위치 보기"}
         </Link>
         <p>
           <a

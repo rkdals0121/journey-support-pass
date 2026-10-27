@@ -53,18 +53,16 @@ async function main() {
       await p.type("#task-facility", "남자화장실");
       await p.type("#task-issue", "바닥에 물이 고여요");
       if (width < 760) await p.click("[data-request-next]");
-      await p.type("#dx-place-search", "130");
-      await p.waitForSelector('[data-confirm-place="cc-130"]');
+      await p.select("#report-area", "CONCOURSE");
+      await p.select("#report-level", "2");
+      await p.type("#report-location", "130번 탑승구 연결 통로 아래층");
       check(
-        `${width}px report uses no meeting language`,
-        await p.$eval('[data-confirm-place="cc-130"]', (e) =>
-          e.textContent?.includes("이 위치로 신고"),
-        ),
+        `${width}px report collects the actual floor and landmark`,
+        !(await p.$("#dx-place-search")) && !!(await p.$("#report-location")),
       );
-      await p.click('[data-confirm-place="cc-130"]');
       check(
-        `${width}px selected place has a location diagram`,
-        !!(await p.$(".place-map svg")),
+        `${width}px official floor map is available before selection`,
+        !!(await p.$(".official-map-panel summary")),
       );
       await p.screenshot({
         path: `${out}/facility-location-${width}.png`,
@@ -98,6 +96,10 @@ async function main() {
       await p.goto(base + "/help?topic=mobility&fresh=1");
       await p.waitForSelector('input[value="mobility-wheelchair"]');
       await p.click('input[value="mobility-wheelchair"]');
+      check(
+        `${width}px wheelchair handover asks no destination`,
+        !(await p.$("#dx-destination")),
+      );
       if (width < 760) await p.click("[data-request-next]");
       await p.type("#dx-place-search", "130");
       await p.waitForSelector('[data-confirm-place="cc-130"]');
@@ -117,14 +119,19 @@ async function main() {
         ),
       );
       await p.goto(base + "/help?topic=traffic&fresh=1");
+      await p.waitForSelector('[data-traffic-intent="info"]');
+      await p.click('[data-traffic-intent="info"]');
+      check(
+        `${width}px information requests need no location or intake form`,
+        !(await p.$("form")) && !!(await p.$('a[href="tel:15772600"]')),
+      );
+      await p.$eval(".traffic-information button.public-button", (e) =>
+        (e as HTMLButtonElement).click(),
+      );
       await p.waitForSelector("#task-zone");
       check(
         `${width}px transport avoids duplicate mandatory description`,
         !(await p.$("#task-issue")),
-      );
-      check(
-        `${width}px information calls are distinct from dispatch`,
-        !!(await p.$('a[href="tel:15772600"]')),
       );
       await p.goto(base + "/help?topic=other&fresh=1");
       await p.waitForSelector("#task-purpose");
@@ -133,10 +140,14 @@ async function main() {
         !(await p.$("#dx-business")),
       );
       await p.type("#task-purpose", "공항 이용 관련 문의");
-      if (width < 760) await p.click("[data-request-next]");
+      check(
+        `${width}px no-meeting skips the entire location stage`,
+        !(await p.$('[data-request-step="1"]')) &&
+          !(await p.$("[data-request-next]")),
+      );
       check(
         `${width}px other request defaults to no meeting`,
-        (await p.$eval('[data-request-step="1"]', (e) =>
+        (await p.$eval('[data-request-step="0"]', (e) =>
           e.textContent?.includes("만나지 않음"),
         )) && !(await p.$("#dx-place-search")),
       );
@@ -165,6 +176,20 @@ async function main() {
     check(
       "lost property legacy entry leads to handover guidance",
       p.url().includes("/services/lost-property") && !(await p.$("form")),
+    );
+    await p.click('a[href^="/services/desks"]');
+    await p.waitForSelector(".desk-locations");
+    check(
+      "information desk action opens actual terminal/floor locations",
+      await p.$eval(".desk-locations", (e) =>
+        e.textContent?.includes("8번 출입구"),
+      ),
+    );
+    await p.goto(base + "/services");
+    await p.waitForSelector("[data-service-topic]");
+    check(
+      "lost property is removed from the main service catalogue",
+      !(await p.$('[data-service-topic="lost-property"]')),
     );
     if (local) {
       const h = (

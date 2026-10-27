@@ -45,9 +45,9 @@ async function main() {
     await p.waitForSelector("#task-facility");
     await p.type("#task-facility", "127번 탑승구 화장실");
     await p.type("#task-issue", "바닥에 물이 고여 있어요");
-    await p.type("#dx-place-search", "127");
-    await p.waitForSelector('[data-confirm-place="gate-127"]');
-    await p.click('[data-confirm-place="gate-127"]');
+    await p.select("#report-area","CONCOURSE");
+    await p.select("#report-level","3");
+    await p.type("#report-location","127번 탑승구 옆");
     await p.click("input[required][type=checkbox]");
     await p.screenshot({ path: out + "/facility-pc.png", fullPage: true });
     await p.click("button[type=submit]");
@@ -138,6 +138,7 @@ async function main() {
     await p.waitForSelector(".booking-lookup h1");
     check("lost property directs to staff handover without an intake form", p.url().includes("/services/lost-property") && (await p.$("form")) === null);
     await p.goto(base + "/help?topic=traffic&fresh=1");
+    await p.waitForSelector('[data-traffic-intent="dispatch"]');await p.click('[data-traffic-intent="dispatch"]');
     await p.waitForSelector("#task-zone");
     await p.type("#task-zone", "단기주차장 B1");
     await p.type("#dx-place-search", "130");

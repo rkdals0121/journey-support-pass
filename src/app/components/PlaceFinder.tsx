@@ -8,7 +8,7 @@ import {
   type PlaceMatches,
 } from "@/lib/place-search";
 import { readLocationPhoto, locationPhotoError } from "@/lib/location-photo";
-import { PlaceMap } from "./PlaceMap";
+import { OfficialMapPanel } from "./OfficialMapPanel";
 const areas: { id: LocationArea; ko: string; en: string }[] = [
   { id: "all", ko: "전체", en: "All" },
   { id: "T1", ko: "제1터미널", en: "Terminal 1" },
@@ -24,6 +24,7 @@ export function PlaceFinder({
   photos = true,
   label,
   purpose = "pickup",
+  showMap = true,
 }: {
   id: string;
   value: string;
@@ -33,6 +34,7 @@ export function PlaceFinder({
   photos?: boolean;
   label?: string;
   purpose?: "pickup" | "report" | "location";
+  showMap?: boolean;
 }) {
   const [query, setQuery] = useState(""),
     [area, setArea] = useState<LocationArea>("all"),
@@ -149,6 +151,7 @@ export function PlaceFinder({
   const hasText = photoText !== null || query.trim().length > 0;
   return (
     <div className="place-finder" data-place-finder={id}>
+      {showMap && <OfficialMapPanel en={en} />}
       <label htmlFor={id + "-search"}>
         {label ?? tr("주변에 무엇이 보이나요?", "What can you see nearby?")}
       </label>
@@ -316,7 +319,7 @@ export function PlaceFinder({
             {(hasText
               ? matches.candidates
               : quick.map((place) => ({ place }))
-            ).map(({ place }) => (
+            ).filter(({place})=>purpose!=="report"||/번 탑승구/.test(place.label)).map(({ place }) => (
               <div className="place-candidate" key={place.id}>
                 <div>
                   <MapPin size={18} aria-hidden="true" />
@@ -365,7 +368,6 @@ export function PlaceFinder({
           </button>
         </div>
       )}
-      {selected && <PlaceMap place={selected} en={en} />}
       <details className="place-manual">
         <summary>{tr("목록에서 직접 고르기", "Choose from a list")}</summary>
         <label className="sr-only" htmlFor={id}>
@@ -386,7 +388,7 @@ export function PlaceFinder({
             )
             .map((a) => (
               <optgroup key={a.id} label={en ? a.en : a.ko}>
-                {PICKUP_PLACES.filter((p) => p.area === a.id).map((p) => (
+                {PICKUP_PLACES.filter((p) => p.area === a.id && (purpose!=="report"||/번 탑승구/.test(p.label))).map((p) => (
                   <option key={p.id} value={p.id}>
                     {en ? p.labelEn : p.label}
                   </option>
