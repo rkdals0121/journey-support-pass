@@ -21,7 +21,7 @@ export const SERVICE_CATALOG = [
     service: "guidance",
     business: "passenger-terminal",
     mode: "request",
-    keywords: "탑승구 화장실 수유실 안내",
+    keywords: "탑승구 게이트 화장실 수유실 안내 길 찾기 길찾기 경로",
     icon: "signpost",
   },
   {

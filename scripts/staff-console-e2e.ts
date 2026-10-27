@@ -136,6 +136,46 @@ async function main() {
       }
     }
     await p.setViewport({ width: 390, height: 844 });
+    check(
+      "mobile scope picker is visible",
+      await p.$eval(
+        "#request-filter",
+        (e) =>
+          getComputedStyle(e).display !== "none" &&
+          (e as HTMLElement).getBoundingClientRect().height >= 40,
+      ),
+    );
+    const [waitingResponse] = await Promise.all([
+      p.waitForResponse(
+        (r) =>
+          new URL(r.url()).pathname === "/api/staff/requests" &&
+          new URL(r.url()).searchParams.get("scope") === "waiting",
+      ),
+      p.select("#request-filter", "waiting"),
+    ]);
+    const waitingData = await waitingResponse.json();
+    check(
+      "mobile scope picker loads the unassigned queue",
+      waitingData.requests.every(
+        (r: { state: string }) => r.state === "received",
+      ),
+    );
+    await p.waitForSelector(".work-search>button.btn-ghost");
+    await Promise.all([
+      p.waitForResponse(
+        (r) =>
+          new URL(r.url()).pathname === "/api/staff/requests" &&
+          new URL(r.url()).searchParams.get("scope") === "all",
+      ),
+      p.click(".work-search>button.btn-ghost"),
+    ]);
+    check(
+      "queue reset restores the full scope",
+      await p.$eval(
+        "#request-filter",
+        (e) => (e as HTMLSelectElement).value === "all",
+      ),
+    );
     await p.click(".workspace-mobile-menu>summary");
     check(
       "mobile navigation includes integrations",
@@ -144,7 +184,16 @@ async function main() {
         (e) => (e as HTMLElement).getBoundingClientRect().height > 0,
       ),
     );
-    await p.goto(base + "/staff/integrations");
+    await Promise.all([
+      p.waitForNavigation(),
+      p.click('.workspace-mobile-menu a[href="/staff/integrations"]'),
+    ]);
+    await p.waitForSelector(".integration-badge");
+    await p.waitForFunction(() => document.title.trim().length > 0);
+    check(
+      "staff mobile menu closes after navigation",
+      await p.$eval(".workspace-mobile-menu", (e) => !e.hasAttribute("open")),
+    );
     check(
       "integration page clearly says disconnected",
       await p.evaluate(

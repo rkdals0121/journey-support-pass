@@ -9,9 +9,12 @@ export interface BridgeConfig {
   webhookSecret: string;
   resources: Record<string, string>;
 }
+export type IntegrationEnvironment = Readonly<
+  Record<string, string | undefined>
+>;
 export function bridgeConfig(
   channel: IntegrationChannel,
-  env: NodeJS.ProcessEnv = process.env,
+  env: IntegrationEnvironment = process.env,
 ): BridgeConfig | IntegrationReadiness {
   const prefix = "EXTERNAL_" + channel.toUpperCase(),
     url = env[prefix + "_URL"],
@@ -72,7 +75,7 @@ export function bridgeConfig(
   }
 }
 export function integrationReadiness(
-  env: NodeJS.ProcessEnv = process.env,
+  env: IntegrationEnvironment = process.env,
 ): IntegrationReadiness[] {
   return INTEGRATION_CHANNELS.map((channel) => {
     const c = bridgeConfig(channel, env);

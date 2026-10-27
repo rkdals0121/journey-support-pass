@@ -73,7 +73,6 @@ export function RequestList({
     }
   }
   const [rows, setRows] = useState<ServiceRequestView[]>([]);
-  const [moreMetrics, setMoreMetrics] = useState(false);
   const [selection, setSelection] = useState<{
     id: string;
     query: string;
@@ -300,6 +299,20 @@ export function RequestList({
       setBusy(null);
     }
   }
+  function resetFilters() {
+    setShowHistory(false);
+    setDraft("");
+    setSearch("");
+    setService("all");
+    setTopic("all");
+    setBusiness("all");
+    setSource("all");
+    setQueue("all");
+    setZone("all");
+    setFilter("all");
+    setOrder("priority");
+    setOffset(0);
+  }
   const pageReady = ready && loadedUrl === requestUrl;
   const open = pageReady
     ? rows.filter((r) => OPEN_REQUEST_STATES.includes(r.state))
@@ -319,15 +332,9 @@ export function RequestList({
     }
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <section
-      className={
-        "work-requests" +
-        (selected ? " has-selection" : "") +
-        (moreMetrics ? " metrics-expanded" : "")
-      }
-    >
+    <section className={"work-requests" + (selected ? " has-selection" : "")}>
       <details className="work-preferences">
-        <summary>알림·장비·접수 설정</summary>
+        <summary>알림·설정</summary>
         <Link className="btn" href="/staff/resources">
           장비 현황 · 배차
         </Link>
@@ -343,6 +350,73 @@ export function RequestList({
           </Link>
         )}
         <PushSettings />
+        <details className="work-metrics">
+          <summary>오늘 운영 지표</summary>
+          {summary && (
+            <dl className="dx-summary">
+              <div>
+                <dt>오늘 전체 접수</dt>
+                <dd>{summary.total}건</dd>
+              </div>
+              <div>
+                <dt>사전등록 연결</dt>
+                <dd>{summary.linked}건</dd>
+              </div>
+              <div>
+                <dt>확인 지연 · 운영자 점검</dt>
+                <dd>{summary.awaitingAttention}건</dd>
+              </div>
+              <div>
+                <dt>직원 안내 / 로봇 / 이동지원</dt>
+                <dd>
+                  {summary.byService?.guidance ?? 0} /{" "}
+                  {summary.byService?.robot ?? 0} /{" "}
+                  {summary.byService?.mobility ?? 0}건
+                </dd>
+              </div>
+              <div>
+                <dt>통합 / 이전 호출 / 이전 이동지원</dt>
+                <dd>
+                  {summary.byQueue?.integrated ?? 0} /{" "}
+                  {summary.byQueue?.call ?? 0} / {summary.byQueue?.assist ?? 0}
+                  건
+                </dd>
+              </div>
+              <div>
+                <dt>오늘 완료</dt>
+                <dd>{summary.done}건</dd>
+              </div>
+              <div>
+                <dt>오늘 취소</dt>
+                <dd>{summary.cancelled}건</dd>
+              </div>
+              <div>
+                <dt>지원 불가</dt>
+                <dd>{summary.unavailable}건</dd>
+              </div>
+              <div>
+                <dt>시간 초과</dt>
+                <dd>{summary.expired}건</dd>
+              </div>
+              <div>
+                <dt>접수→배정 중앙값</dt>
+                <dd>
+                  {summary.medianAcceptSec === null
+                    ? "자료 없음"
+                    : `${summary.medianAcceptSec}초`}
+                </dd>
+              </div>
+              <div>
+                <dt>배정→도착 중앙값</dt>
+                <dd>
+                  {summary.medianArrivalSec === null
+                    ? "자료 없음"
+                    : `${summary.medianArrivalSec}초`}
+                </dd>
+              </div>
+            </dl>
+          )}
+        </details>
         <p>
           현재 근무 구역: <strong>{zoneLabels[zoneId] ?? zoneId}</strong>
         </p>
@@ -364,7 +438,7 @@ export function RequestList({
           {error}
         </p>
       )}
-      <p role="status">
+      <p role="status" className="work-queue-status sr-only">
         {pageReady
           ? `현재 페이지 · 진행 중 ${open.length}건 · 미배정 ${rows.filter((r) => r.state === "received").length}건`
           : "불러오는 중…"}
@@ -390,25 +464,24 @@ export function RequestList({
         <button className="btn" type="submit">
           검색
         </button>
-        <button
-          className="btn btn-ghost"
-          type="button"
-          onClick={() => {
-            setDraft("");
-            setSearch("");
-            setService("all");
-            setTopic("all");
-            setBusiness("all");
-            setSource("all");
-            setQueue("all");
-            setZone("all");
-            setFilter("all");
-            setOrder("priority");
-            setOffset(0);
-          }}
-        >
-          초기화
-        </button>
+        {(search ||
+          service !== "all" ||
+          topic !== "all" ||
+          business !== "all" ||
+          source !== "all" ||
+          queue !== "all" ||
+          zone !== "all" ||
+          filter !== "all" ||
+          showHistory ||
+          order !== "priority") && (
+          <button
+            className="btn btn-ghost"
+            type="button"
+            onClick={resetFilters}
+          >
+            초기화
+          </button>
+        )}
         <details data-queue-filters>
           <summary>
             상세 필터
@@ -558,69 +631,6 @@ export function RequestList({
           </select>
         </details>
       </form>
-      {summary && (
-        <dl className="dx-summary">
-          <div>
-            <dt>오늘 전체 접수</dt>
-            <dd>{summary.total}건</dd>
-          </div>
-          <div>
-            <dt>사전등록 연결</dt>
-            <dd>{summary.linked}건</dd>
-          </div>
-          <div>
-            <dt>확인 지연 · 운영자 점검</dt>
-            <dd>{summary.awaitingAttention}건</dd>
-          </div>
-          <div>
-            <dt>직원 안내 / 로봇 / 이동지원</dt>
-            <dd>
-              {summary.byService?.guidance ?? 0} /{" "}
-              {summary.byService?.robot ?? 0} /{" "}
-              {summary.byService?.mobility ?? 0}건
-            </dd>
-          </div>
-          <div>
-            <dt>통합 / 이전 호출 / 이전 이동지원</dt>
-            <dd>
-              {summary.byQueue?.integrated ?? 0} / {summary.byQueue?.call ?? 0}{" "}
-              / {summary.byQueue?.assist ?? 0}건
-            </dd>
-          </div>
-          <div>
-            <dt>오늘 완료</dt>
-            <dd>{summary.done}건</dd>
-          </div>
-          <div>
-            <dt>오늘 취소</dt>
-            <dd>{summary.cancelled}건</dd>
-          </div>
-          <div>
-            <dt>지원 불가</dt>
-            <dd>{summary.unavailable}건</dd>
-          </div>
-          <div>
-            <dt>시간 초과</dt>
-            <dd>{summary.expired}건</dd>
-          </div>
-          <div>
-            <dt>접수→배정 중앙값</dt>
-            <dd>
-              {summary.medianAcceptSec === null
-                ? "자료 없음"
-                : `${summary.medianAcceptSec}초`}
-            </dd>
-          </div>
-          <div>
-            <dt>배정→도착 중앙값</dt>
-            <dd>
-              {summary.medianArrivalSec === null
-                ? "자료 없음"
-                : `${summary.medianArrivalSec}초`}
-            </dd>
-          </div>
-        </dl>
-      )}
       <div className="work-scope-control">
         <div className="work-scope-tabs" role="group" aria-label="요청 범위">
           {[
@@ -647,41 +657,34 @@ export function RequestList({
         <label htmlFor="request-filter">보여 줄 요청</label>
         <select
           id="request-filter"
+          aria-label="요청 범위"
           value={filter}
           onChange={(e) => {
             setFilter(e.target.value);
             setOffset(0);
           }}
         >
-          <option value="all">전체</option>
+          <option value="all">전체 요청</option>
           <option value="active">진행 중</option>
           <option value="waiting">미배정</option>
           <option value="location">위치 변경 확인 대기</option>
           <option value="attention">확인 지연</option>
           <option value="mine">내 구역 담당</option>
         </select>
-        {summary && (
-          <button
-            className="btn btn-ghost work-metrics-toggle"
-            type="button"
-            aria-expanded={moreMetrics}
-            onClick={() => setMoreMetrics((v) => !v)}
-          >
-            {moreMetrics ? "추가 운영 지표 접기" : "추가 운영 지표 보기"}
-          </button>
-        )}
       </div>
 
-      {pageReady && visible.length === 0 && <p>표시할 요청이 없습니다.</p>}
       {rows.length >= 200 && (
         <p role="status">
           목록은 최대 200건을 표시합니다. 미처리 요청을 먼저 확인해 주세요.
         </p>
       )}
-      <div className="work-master-detail">
+      <div
+        className={"work-master-detail" + (visible.length ? "" : " is-empty")}
+      >
         <div className="work-master">
           <h2 id="work-list-title" tabIndex={-1}>
-            요청 목록
+            요청 목록{" "}
+            <span className="work-result-count">{pageReady ? total : "—"}</span>
           </h2>
           <div className="work-table-wrap">
             <table className="work-request-table">
@@ -693,6 +696,28 @@ export function RequestList({
                 </tr>
               </thead>
               <tbody>
+                {visible.length === 0 && (
+                  <tr>
+                    <td colSpan={3}>
+                      <div className="work-empty">
+                        <strong>
+                          {pageReady
+                            ? "표시할 요청이 없습니다"
+                            : "요청을 불러오는 중입니다"}
+                        </strong>
+                        {pageReady && (
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={resetFilters}
+                          >
+                            검색·필터 초기화
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {visible.map((r) => (
                   <tr
                     key={r.id}

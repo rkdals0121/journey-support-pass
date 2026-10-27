@@ -43,11 +43,12 @@ export function StaffFrame({
     { href: "/staff/operations", label: "운영 기준", Icon: Settings2 },
   ];
   return (
-    <div className="staff-workspace">
+    <div className="staff-workspace airport-workspace">
       <a href="#staff-content" className="public-skip">
         본문 바로가기
       </a>
       <header className="workspace-header">
+        <span className="workspace-context">직원 운영</span>
         <Link className="public-logo" href="/staff/requests">
           <Sunflower />
           <span>
@@ -64,6 +65,9 @@ export function StaffFrame({
             {items.map(({ href, label, Icon }) => (
               <Link
                 key={href}
+                onClick={(e) =>
+                  e.currentTarget.closest("details")?.removeAttribute("open")
+                }
                 href={href}
                 aria-current={path === href ? "page" : undefined}
               >
@@ -76,6 +80,12 @@ export function StaffFrame({
       </header>
       <div className="workspace-grid">
         <aside className="workspace-side">
+          <Link className="workspace-brand" href="/staff/requests">
+            <Sunflower />
+            <span>
+              공항 이용 지원<small>OPERATIONS</small>
+            </span>
+          </Link>
           <p>업무 공간</p>
           <nav aria-label="업무 메뉴">
             {items.map(({ href, label, Icon }) => (

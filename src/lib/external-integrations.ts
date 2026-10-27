@@ -3,7 +3,11 @@ import type { Db } from "./db";
 import type { Session } from "./auth";
 import { fail, ok } from "./api/dto";
 import { isUuid } from "./registrations";
-import { bridgeConfig, integrationReadiness } from "./integration-config";
+import {
+  bridgeConfig,
+  integrationReadiness,
+  type IntegrationEnvironment,
+} from "./integration-config";
 import {
   INTEGRATION_CHANNELS,
   type IntegrationChannel,
@@ -59,7 +63,7 @@ export async function enqueueIntegration(
   s: Session | null,
   body: Record<string, unknown>,
   now: Date,
-  env: NodeJS.ProcessEnv = process.env,
+  env: IntegrationEnvironment = process.env,
 ) {
   const auth = denied(s);
   if (auth) return auth;
@@ -117,7 +121,7 @@ export async function enqueueIntegration(
 export async function processIntegrationJobs(
   db: Db,
   now: Date,
-  env: NodeJS.ProcessEnv = process.env,
+  env: IntegrationEnvironment = process.env,
   fetcher: typeof fetch = fetch,
 ) {
   const enabled = INTEGRATION_CHANNELS.filter(
@@ -303,7 +307,7 @@ export async function integrationCallback(
   timestamp: string,
   signature: string,
   now: Date,
-  env: NodeJS.ProcessEnv = process.env,
+  env: IntegrationEnvironment = process.env,
 ) {
   if (raw.length > 16384) return fail(413, "요청 크기를 확인해 주세요");
   const cfg = bridgeConfig(channel, env);
