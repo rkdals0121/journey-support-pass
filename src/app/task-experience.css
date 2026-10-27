@@ -614,7 +614,24 @@ html[data-kiosk] .kiosk-taskhome.kiosk-scan-surface {
   margin-bottom: 0.5rem;
 }
 .task-device-preview.robot-preview .device-preview-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 1.25rem;
   padding: 1.5rem;
+}
+.task-device-preview.robot-preview .device-preview-body > * {
+  min-width: 0;
+  width: 100%;
+}
+.task-device-preview.robot-preview .kiosk-task-heading {
+  text-align: center;
+}
+.task-device-preview.robot-preview .kiosk-task-heading p {
+  justify-content: center;
+}
+.task-device-preview.robot-preview .device-booking-entry {
+  margin-top: 0;
 }
 .task-device-preview.robot-preview .task-launcher {
   grid-template-columns: 1fr;
