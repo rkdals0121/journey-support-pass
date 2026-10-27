@@ -103,9 +103,11 @@ export function DevicePreview({
                   </p>
                 </div>
               )}
-              <span>
-                {t("탑승권 · 지원 패스", "Boarding pass · Support pass")}
-              </span>
+              {robot && (
+                <span>
+                  {t("탑승권 · 지원 패스", "Boarding pass · Support pass")}
+                </span>
+              )}
             </div>
           </div>
         ) : screen === "services" ? (
