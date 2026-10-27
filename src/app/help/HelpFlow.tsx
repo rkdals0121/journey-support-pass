@@ -23,6 +23,7 @@ import { ReportLocationPicker } from "../components/ReportLocationPicker";
 import { TrafficEntry } from "../components/TrafficEntry";
 import { PlaceFinder } from "../components/PlaceFinder";
 import { RequestStatusPanel } from "./RequestStatusPanel";
+import { Robot } from "../components/Robot";
 import { ServiceDetailsView } from "../components/ServiceDetailsView";
 import {
   tasksFor,
@@ -33,6 +34,8 @@ import { rememberRequestReceipt } from "@/lib/request-receipts";
 import {
   ArrowRight,
   MapPin,
+  AlertTriangle,
+  ArrowLeft,
   ClipboardCheck,
   Check,
   Volume2,
@@ -42,6 +45,24 @@ import { SERVICE_CATALOG, supportTopic } from "@/lib/service-catalog";
 import { pilotDestinations } from "@/lib/operating-profile";
 
 const STORAGE = "jsp-dx-receipt-v1";
+// 작성 중인 요청(피드백: 뒤로 갔다 다시 들어와도 내용이 남아 있게). 접수하거나 30분이 지나면 지운다.
+// 여러 사람이 쓰는 키오스크에서는 남기지 않는다. 다음 사람에게 앞사람의 내용이 보이면 안 된다.
+const DRAFT = "jsp-dx-draft-v1";
+const DRAFT_TTL_MS = 30 * 60_000;
+interface Draft {
+  at: number;
+  topicId?: string;
+  service: string;
+  taskId: string;
+  taskFields: Record<string, string>;
+  placeId: string;
+  destinationId: string;
+  note: string;
+  party: number;
+  choices: string[];
+  inputStep: number;
+  trafficIntent: "choose" | "info" | "dispatch";
+}
 const STORAGE_SCOPE = "jsp-dx-receipt-registration-v1";
 const supportCodes = [
   "mov_no_stairs",
@@ -177,6 +198,50 @@ export function HelpFlow({
   const noMeeting = topic?.id === "other" && placeId === NO_MEETING_PLACE;
   const lastInputStep = noMeeting ? 0 : needsDetails ? 2 : 1;
   const reviewIndex = noMeeting ? 1 : 2;
+  // 작성 중인 내용 되살리기. 같은 서비스로 다시 들어왔을 때만, 키오스크가 아닐 때만, 새로 시작하기(fresh)가 아닐 때만.
+  const draftReady = useRef(false);
+  useEffect(() => {
+    if (sharedDevice || freshPrivate || initialReceipt) {
+      draftReady.current = true;
+      return;
+    }
+    try {
+      const d = JSON.parse(sessionStorage.getItem(DRAFT) ?? "null") as Draft | null;
+      if (d && Date.now() - d.at < DRAFT_TTL_MS && (d.topicId ?? "") === (initialTopic ?? "")) {
+        setService(d.service as ServiceType);
+        setTaskId(d.taskId);
+        setTaskFields(d.taskFields);
+        if (!initialPlace) setPlaceId(d.placeId);
+        setDestinationId(d.destinationId);
+        setNote(d.note);
+        setParty(d.party);
+        setChoices(d.choices);
+        setInputStep(d.inputStep);
+        setTrafficIntent(d.trafficIntent);
+      } else if (d) sessionStorage.removeItem(DRAFT);
+    } catch {}
+    draftReady.current = true;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!draftReady.current || sharedDevice || request) return;
+    const d: Draft = {
+      at: Date.now(),
+      topicId,
+      service,
+      taskId,
+      taskFields,
+      placeId,
+      destinationId,
+      note,
+      party,
+      choices,
+      inputStep,
+      trafficIntent,
+    };
+    try {
+      sessionStorage.setItem(DRAFT, JSON.stringify(d));
+    } catch {}
+  }, [sharedDevice, request, topicId, service, taskId, taskFields, placeId, destinationId, note, party, choices, inputStep, trafficIntent]);
   const applyRequest = useCallback(
     (r: ServiceRequestView) =>
       setRequest((old) =>
@@ -211,6 +276,7 @@ export function HelpFlow({
         !freshConsumed.current
       ) {
         freshConsumed.current = true;
+        sessionStorage.removeItem(DRAFT);
         if (freshPrivate) {
           const previous = sessionStorage.getItem(STORAGE);
           if (previous && /^[a-f0-9]{64}$/.test(previous))
@@ -338,6 +404,7 @@ export function HelpFlow({
         try {
           sessionStorage.setItem(STORAGE, key);
           sessionStorage.setItem(STORAGE_SCOPE, registrationToken ?? "");
+          sessionStorage.removeItem(DRAFT);
         } catch {}
       }
       const ctrl = new AbortController();
@@ -487,6 +554,18 @@ export function HelpFlow({
   const readText = request
     ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
     : `${tr("지금 도움 요청하기", "Request help now")}. ${tr("현재 위치와 필요한 도움을 확인해 주세요. 사전등록은 서비스 예약 확정이 아닙니다.", "Confirm your pickup point and assistance. Pre-registration is not a confirmed service booking.")}`;
+  function goBack() {
+    setError("");
+    if (review) return setReview(false);
+    if (inputStep > 0) {
+      setInputStep((v) => v - 1);
+      document.getElementById("public-main")?.scrollIntoView({ block: "start" });
+      return;
+    }
+    if (topic?.id === "traffic" && trafficIntent === "dispatch") return setTrafficIntent("choose");
+    if (window.history.length > 1) window.history.back();
+    else window.location.assign("/services" + (en ? "?lang=en" : ""));
+  }
   if (!request && topic?.id === "traffic" && trafficIntent !== "dispatch")
     return (
       <TrafficEntry
@@ -603,6 +682,11 @@ export function HelpFlow({
       ) : (
         <>
           <header className="service-heading request-heading">
+            {/* 피드백: 모든 화면 같은 자리에 「이전」. 확인 화면 → 입력, 입력 단계 → 앞 단계, 첫 단계 → 앞 화면. */}
+            <button type="button" className="request-back" onClick={goBack}>
+              <ArrowLeft aria-hidden="true" />
+              {tr("이전", "Back")}
+            </button>
             <span className="service-kicker">
               <MapPin aria-hidden="true" />
               {tr("공항 현장 서비스", "AIRPORT SERVICES")}
@@ -877,6 +961,7 @@ export function HelpFlow({
                       </Link>
                     </div>
                   )}
+                  {topic?.id === "robot" && <RobotIntro en={en} />}
                   {task && (
                     <>
                       <fieldset className="request-task-options">
@@ -901,6 +986,10 @@ export function HelpFlow({
                           </label>
                         ))}
                       </fieldset>
+                      {/* 피드백: 직접 적는 칸 바로 위에 눈에 띄는 개인정보 경고. */}
+                      {task.fields.some((f) => !f.legacy && !f.options && f.type !== "datetime-local") && (
+                        <PrivacyWarning en={en} />
+                      )}
                       <div className="service-task-fields">
                         {task.fields
                           .filter((f) => !f.legacy)
@@ -1158,6 +1247,7 @@ export function HelpFlow({
                         </details>
                       </>
                     )}
+                    <PrivacyWarning en={en} />
                     <label htmlFor="dx-note">
                       {tr("추가 말씀 · 선택", "Additional message · optional")}
                     </label>
@@ -1172,10 +1262,7 @@ export function HelpFlow({
                       )}
                     />
                     <p className="request-privacy-note">
-                      {tr(
-                        "이름·연락처·증빙은 입력하지 마세요. 접수 정보는 24시간 후 만료돼요.",
-                        "Do not enter names, contact details or documents. Details expire after 24 hours.",
-                      )}
+                      {tr("접수 정보는 24시간 후 만료돼요.", "Details expire after 24 hours.")}
                     </p>
                   </section>
                 )}
@@ -1256,5 +1343,54 @@ export function HelpFlow({
         </>
       )}
     </main>
+  );
+}
+
+/** 직접 적는 칸 위의 개인정보 경고. 이 서비스는 이름·연락처 등을 받지 않는다. */
+function PrivacyWarning({ en }: { en: boolean }) {
+  return (
+    <div className="request-privacy-warning" role="note">
+      <AlertTriangle aria-hidden="true" />
+      <p>
+        {en ? (
+          <>
+            <strong>Do not enter personal information.</strong> Name, phone number, address, resident registration number, passport
+            number, card number or boarding pass details.
+          </>
+        ) : (
+          <>
+            <strong>개인정보는 적지 마세요.</strong> 이름, 전화번호, 주소, 주민등록번호, 여권번호, 카드번호, 탑승권 정보
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * 찾아오는 안내로봇 소개(피드백: 로봇 소개와 이용 가능한 서비스).
+ * 실제 로봇 사진이 없어 공항 키오스크와 같은 로봇 그림을 쓴다. 시연용 모의 서비스라는 것을 분명히 밝힌다.
+ */
+function RobotIntro({ en }: { en: boolean }) {
+  const items = en
+    ? ["Walks with you to your gate or a facility", "Guides you by voice and on its screen", "Shows your flight, gate and the way"]
+    : ["탑승구·편의시설까지 함께 이동", "소리와 화면으로 길 안내", "항공편·탑승구·가는 길 안내"];
+  return (
+    <section className="robot-intro" aria-labelledby="robot-intro-title">
+      <Robot mood="happy" size={96} />
+      <div>
+        <h3 id="robot-intro-title">{en ? "What the guide robot can do" : "안내로봇이 해 드리는 일"}</h3>
+        <ul>
+          {items.map((i) => (
+            <li key={i}>{i}</li>
+          ))}
+        </ul>
+        <p className="robot-intro-note">
+          {en
+            ? "Contest demo: this simulates a robot visit. No real robot is sent."
+            : "공모전 시연용 모의 서비스예요. 실제 로봇은 오지 않아요."}
+        </p>
+      </div>
+    </section>
   );
 }
