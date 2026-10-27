@@ -268,6 +268,8 @@ export const PICKUP_PLACES: Place[] = [
     (p) => !PLACES.some((n) => n.id === p.id),
   ),
 ];
+/** Routing marker for requests that explicitly do not involve meeting a passenger. Not a physical map location. */
+export const NO_MEETING_PLACE = "no-meeting";
 export function placeOf(id: string | null | undefined): Place | null {
   return PICKUP_PLACES.find((p) => p.id === id) ?? null;
 }

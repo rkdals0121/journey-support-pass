@@ -17,7 +17,7 @@ import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
 import type { GuideDto, GuideFacility } from "@/lib/guide";
 import { textOf, type Lang } from "@/lib/i18n";
-import { extractToken, PASS_NO_LENGTH } from "@/lib/pass-format";
+import { isBoardingScan, extractToken, PASS_NO_LENGTH } from "@/lib/pass-format";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { FlowShell } from "../../components/FlowShell";
 import {
@@ -318,7 +318,7 @@ export function GuideKiosk({
   const onScan = useCallback(
     (text: string) => {
       const scanned = extractToken(text);
-      if (!scanned) {
+      if (!isBoardingScan(text)) {
         setError(textOf(startLang).notQr);
         return;
       }

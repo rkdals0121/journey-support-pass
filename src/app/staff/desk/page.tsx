@@ -39,7 +39,7 @@ export default async function DeskPage() {
           </span>
           <span>
             <strong>여객 대신 등록하기</strong>
-            <small>여객께 여쭤보며 대신 누르고, 여객 휴대전화로 QR을 찍게 해 드립니다</small>
+            <small>여객께 여쭤보며 대신 등록하고 기존 탑승권에 연결합니다</small>
           </span>
           <ChevronRight size={22} aria-hidden="true" />
         </Link>

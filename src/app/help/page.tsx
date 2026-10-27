@@ -4,6 +4,7 @@ import { helpService, kioskReturn } from "@/lib/help-entry";
 import { businessOf } from "@/lib/operating-profile";
 import { supportTopic } from "@/lib/service-catalog";
 import { PublicShell } from "../components/PublicShell";
+import { redirect } from "next/navigation";
 export default async function HelpPage({
   searchParams,
 }: {
@@ -19,6 +20,7 @@ export default async function HelpPage({
   }>;
 }) {
   const q = await searchParams;
+  if (q.topic === "lost-property") redirect("/services/lost-property" + (q.lang === "en" ? "?lang=en" : ""));
   const session = await currentSession();
   const business = businessOf(q.business);
   const topic = supportTopic(q.topic),

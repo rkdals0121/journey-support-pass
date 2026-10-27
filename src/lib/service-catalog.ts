@@ -63,10 +63,10 @@ export const SERVICE_CATALOG = [
   },
   {
     id: "lost-property",
-    label: "분실물 신고·인계",
-    en: "Lost and found reports",
-    description: "분실·습득 물품을 신고하고 처리 상태와 담당자의 결과를 확인하세요.",
-    descriptionEn: "Report a lost or found item and follow its handling status.",
+    label: "분실물 안내",
+    en: "Lost property guidance",
+    description: "주변 안내데스크·직원에게 물품을 인계하거나 분실물 안내를 확인하세요.",
+    descriptionEn: "Hand found items to nearby staff or an information desk.",
     service: "guidance",
     business: "passenger-terminal",
     mode: "referral",
@@ -94,6 +94,7 @@ export function supportTopic(value: unknown) {
 }
 export function topicLink(id: string, lang: "ko" | "en" = "ko") {
   const t = supportTopic(id);
+  if (t?.id === "lost-property") return "/services/lost-property" + (lang === "en" ? "?lang=en" : "");
   if (t?.id === "guidance") return "/navigate" + (lang === "en" ? "?lang=en" : "");
   return t
     ? "/help?" +

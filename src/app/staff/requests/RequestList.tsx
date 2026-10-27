@@ -452,7 +452,7 @@ export function RequestList({
           setOffset(0);
         }}
       >
-        <label htmlFor="queue-search">요청 번호 또는 만날 곳 검색</label>
+        <label htmlFor="queue-search">요청 번호 또는 위치 검색</label>
         <input
           id="queue-search"
           type="search"
@@ -691,7 +691,7 @@ export function RequestList({
               <thead>
                 <tr>
                   <th scope="col">접수·업무</th>
-                  <th scope="col">만날 곳</th>
+                  <th scope="col">위치·처리 방식</th>
                   <th scope="col">상태·담당</th>
                 </tr>
               </thead>
@@ -820,7 +820,7 @@ export function RequestList({
                     SERVICE_LABEL[r.service]}
                 </h2>
                 <p className="work-meeting-place">
-                  <strong>만날 곳: {r.place}</strong>
+                  <strong>{r.placeId === "no-meeting" ? "처리 방식" : r.topicId === "facility" ? "신고 위치" : "만날 곳"}: {r.place}</strong>
                 </p>
                 {r.serviceDetails &&
                   serviceDetailsLines(r.serviceDetails).length > 0 && (

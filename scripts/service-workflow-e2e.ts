@@ -134,42 +134,21 @@ async function main() {
         document.body.innerText.includes("현장 청소 완료"),
       ),
     );
-    console.log("Checking lost property form");
     await p.goto(base + "/help?topic=lost-property&fresh=1");
-    await p.waitForSelector("#task-item");
-    await p.select("#task-item", "wallet");
-    await p.type("#task-appearance", "검정 지갑");
-    await p.$eval("#task-eventTime", (e) => {
-      const input = e as HTMLInputElement;
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      setter.call(
-        input,
-        new Date(Date.now() + 9 * 3600000 - 60000).toISOString().slice(0, 16),
-      );
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    console.log("Lost property fields entered");
+    await p.waitForSelector(".booking-lookup h1");
+    check("lost property directs to staff handover without an intake form", p.url().includes("/services/lost-property") && (await p.$("form")) === null);
+    await p.goto(base + "/help?topic=traffic&fresh=1");
+    await p.waitForSelector("#task-zone");
+    await p.type("#task-zone", "단기주차장 B1");
     await p.type("#dx-place-search", "130");
-    console.log("Lost property location search entered");
     await p.waitForSelector('[data-confirm-place="cc-130"]');
     await p.click('[data-confirm-place="cc-130"]');
     await p.click("input[required][type=checkbox]");
     await p.click("button[type=submit]");
     await p.waitForSelector(".request-review-card");
-    console.log("Lost property review");
-    await p.evaluate(() =>
-      Array.from(document.querySelectorAll("button"))
-        .find((e) => e.textContent?.includes("이 내용으로 요청 접수"))
-        ?.click(),
-    );
+    await p.evaluate(() => Array.from(document.querySelectorAll("button")).find(e => e.textContent?.includes("이 내용으로 요청 접수"))?.click());
     await p.waitForSelector(".request-status-layout");
-    check(
-      "lost report produces a tracked work order",
-      await p.evaluate(() => document.body.innerText.includes("분실 신고")),
-    );
+    check("transport work order needs no duplicate assistance description", await p.evaluate(() => document.body.innerText.includes("주차장 현장 지원")));
     await p.goto(base + "/requests");
     await p.waitForSelector(".my-service-request");
     await p.waitForFunction(
@@ -238,9 +217,7 @@ async function main() {
     await p.type("#dx-place-search", "127");
     await p.waitForSelector('[data-confirm-place="gate-127"]');
     await p.click('[data-confirm-place="gate-127"]');
-    await p.click("[data-request-next]");
-    await p.waitForSelector("#dx-note", { visible: true });
-    await p.type("#dx-note", "모바일 단계 입력");
+    check("mobility skips unrelated preferences", (await p.$("#dx-note")) === null);
     await p.click("input[required][type=checkbox]");
     await p.click("button[type=submit]");
     await p.waitForSelector(".request-review-card");
@@ -249,7 +226,7 @@ async function main() {
       await p.evaluate(
         () =>
           document.body.innerText.includes("127번") &&
-          document.body.innerText.includes("모바일 단계 입력"),
+          document.body.innerText.includes("이동 동행"),
       ),
     );
     for (const route of [

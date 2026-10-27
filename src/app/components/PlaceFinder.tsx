@@ -8,6 +8,7 @@ import {
   type PlaceMatches,
 } from "@/lib/place-search";
 import { readLocationPhoto, locationPhotoError } from "@/lib/location-photo";
+import { PlaceMap } from "./PlaceMap";
 const areas: { id: LocationArea; ko: string; en: string }[] = [
   { id: "all", ko: "전체", en: "All" },
   { id: "T1", ko: "제1터미널", en: "Terminal 1" },
@@ -22,6 +23,7 @@ export function PlaceFinder({
   disabled = false,
   photos = true,
   label,
+  purpose = "pickup",
 }: {
   id: string;
   value: string;
@@ -30,6 +32,7 @@ export function PlaceFinder({
   disabled?: boolean;
   photos?: boolean;
   label?: string;
+  purpose?: "pickup" | "report" | "location";
 }) {
   const [query, setQuery] = useState(""),
     [area, setArea] = useState<LocationArea>("all"),
@@ -151,8 +154,8 @@ export function PlaceFinder({
       </label>
       <p className="place-finder-hint" id={id + "-hint"}>
         {tr(
-          "지금 계신 곳의 게이트 번호나 안내판을 찾아보세요.",
-          "Use the gate number or sign where you are standing.",
+          purpose === "report" ? "시설 근처 게이트 번호나 안내판으로 위치를 선택해 주세요." : "지금 계신 곳의 게이트 번호나 안내판을 찾아보세요.",
+          purpose === "report" ? "Choose the gate or sign nearest the reported facility." : "Use the gate number or sign where you are standing.",
         )}
       </p>
       <div className="place-find-actions">
@@ -206,17 +209,6 @@ export function PlaceFinder({
           </>
         )}
       </div>
-      {photos && (
-        <details className="place-photo-info">
-          <summary>{tr("사진 이용 안내", "About photo recognition")}</summary>
-          <p className="place-finder-hint">
-            {tr(
-              "사진은 이 기기에서 글자만 읽고 서버에 보내거나 저장하지 않아요. 매장 상호만으로는 위치를 확정하지 않아요.",
-              "The photo is read on this device and is not uploaded or stored. A shop name alone does not confirm a location.",
-            )}
-          </p>
-        </details>
-      )}
       {photo && (
         <figure className="place-photo-preview">
           {/* Local blob previews must not be sent through a server image optimizer. */}
@@ -260,8 +252,8 @@ export function PlaceFinder({
       {show && !busy && (
         <>
           <fieldset className="place-area-filter">
-            <legend>
-              {tr("구역으로 좁히기 · 선택", "Narrow by area · optional")}
+            <legend className="sr-only">
+              {tr("터미널", "Terminal")}
             </legend>
             {areas.map((a) => (
               <label key={a.id}>
@@ -333,14 +325,12 @@ export function PlaceFinder({
                 <button
                   type="button"
                   data-confirm-place={place.id}
-                  aria-label={`${photoText !== null ? tr("여기가 맞아요", "This is where I am") : tr("이곳에서 만날게요", "Meet me here")} · ${en ? place.labelEn : place.label}`}
+                  aria-label={`${purpose === "report" ? tr("이 위치로 신고", "Report this location") : tr("이 위치 선택", "Select location")} · ${en ? place.labelEn : place.label}`}
                   className="btn btn-ghost"
                   disabled={disabled}
                   onClick={() => choose(place.id)}
                 >
-                  {photoText !== null
-                    ? tr("여기가 맞아요", "This is where I am")
-                    : tr("이곳에서 만날게요", "Meet me here")}
+                  {purpose === "report" ? tr("이 위치로 신고", "Report this location") : tr("이 위치 선택", "Select location")}
                 </button>
               </div>
             ))}
@@ -357,7 +347,7 @@ export function PlaceFinder({
       )}
       {selected && (
         <div className="place-confirmed" role="status">
-          <span>{tr("선택한 만날 곳", "Selected pickup point")}</span>
+          <span>{purpose === "report" ? tr("신고할 위치", "Report location") : purpose === "pickup" ? tr("선택한 만날 곳", "Selected pickup point") : tr("선택 위치", "Selected location")}</span>
           <strong>{en ? selected.labelEn : selected.label}</strong>
           <button
             type="button"
@@ -375,10 +365,11 @@ export function PlaceFinder({
           </button>
         </div>
       )}
+      {selected && <PlaceMap place={selected} en={en} />}
       <details className="place-manual">
         <summary>{tr("목록에서 직접 고르기", "Choose from a list")}</summary>
         <label className="sr-only" htmlFor={id}>
-          {tr("만날 곳 직접 선택", "Select pickup point")}
+          {tr("위치 직접 선택", "Select location")}
         </label>
         <select
           id={id}
