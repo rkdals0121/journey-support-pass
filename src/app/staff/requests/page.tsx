@@ -24,7 +24,7 @@ export default async function RequestsPage({
       q.scope,
     )
       ? q.scope
-      : "all";
+      : "active";
   return (
     <>
       <main className="page has-nav dx-page staff-console">

@@ -12,7 +12,6 @@ import {
   Navigation,
   Pencil,
   PersonStanding,
-  Ticket,
 } from "lucide-react";
 import Link from "next/link";
 import { kioskHelpHref } from "@/lib/help-entry";
@@ -30,6 +29,7 @@ import { Choice } from "../../components/Inputs";
 import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { Robot } from "../../components/Robot";
+import { TaskLauncher } from "../../components/TaskLauncher";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { Scanner } from "../../components/Scanner";
 import { StaffCall } from "../../components/StaffCall";
@@ -84,7 +84,6 @@ interface FlightLite {
 
 type View =
   | { kind: "sleep" }
-  | { kind: "nopass" }
   | { kind: "confirm"; token: string; guide: GuideDto }
   | { kind: "edit"; token: string; guide: GuideDto }
   | { kind: "ask"; boarding: string; flight: FlightLite }
@@ -95,6 +94,7 @@ type View =
   | { kind: "guide"; token: string; guide: GuideDto };
 
 interface Props {
+  initialLang?: Lang;
   placeLabel: string;
   placeLabelEn: string;
   idleAskSec: number;
@@ -121,14 +121,16 @@ async function post(
 }
 
 export function EntryKiosk({
+  initialLang = "ko",
   placeLabel,
   placeLabelEn,
   idleAskSec,
   idleAnswerSec,
 }: Props) {
   useRobotTheme();
-  const [lang, setLang] = useState<Lang>("ko");
+  const [lang, setLang] = useState<Lang>(initialLang);
   const [view, setView] = useState<View>({ kind: "sleep" });
+  const [scanOpen, setScanOpen] = useState(false);
   const [picks, setPicks] = useState<EasyKey[]>([]);
   const [target, setTarget] = useState<Target | null>(null);
   const [proofOk, setProofOk] = useState(false);
@@ -152,6 +154,7 @@ export function EntryKiosk({
   const reset = useCallback(() => {
     seq.current++;
     setView({ kind: "sleep" });
+    setScanOpen(false);
     setPicks([]);
     setTarget(null);
     setProofOk(false);
@@ -270,6 +273,8 @@ export function EntryKiosk({
       prefs={prefs}
       kiosk
       screenKey={key}
+      serviceHome={key === "sleep"}
+      headerTools={key === "sleep" ? <button className="bar-btn" onClick={() => setLang(l => l === "en" ? "ko" : "en")} lang={lang === "en" ? "ko" : "en"}>{t.otherLang}</button> : undefined}
       speakText={speakText}
       onBack={onBack ?? reset}
       onHome={reset}
@@ -290,18 +295,20 @@ export function EntryKiosk({
   if (view.kind === "sleep") {
     screen = shell(
       "sleep",
-      `${t.entrySleep} ${t.entrySleepHint}`,
+      `${t.entrySleep}. ${lang === "en" ? "Find a gate or request mobility assistance." : "탑승구와 시설을 찾거나 이동 도움을 요청할 수 있어요."} ${scanOpen ? t.entrySleepHint : ""}`,
       <div className="robot-home robot-portrait">
         <div className="robot-panel">
           <p className="robot-title">{t.entryTitle}</p>
           <h1 className="sr-only">{t.entrySleep}</h1>
           <div className="robot-stage">
-            <Robot mood="sleep" size={260} />
+            <Robot mood="awake" size={200} />
             <p className="robot-bubble">{t.entrySleep}</p>
           </div>
         </div>
-        <div className="robot-scan">
-          <Scanner
+        <div className="robot-direct-services"><TaskLauncher en={lang === "en"} returnTo="/kiosk/entry" field topics={["guidance", "mobility"]} /></div>
+        <details className="robot-pass-entry" open={scanOpen} onToggle={e => setScanOpen(e.currentTarget.open)}>
+          <summary>{lang === "en" ? "Retrieve saved needs with your boarding pass" : "탑승권으로 등록한 도움 불러오기"}</summary>
+          {scanOpen && <div className="robot-scan"><Scanner
             onScan={(s) => void onScan(s)}
             paused={busy}
             prefer="user"
@@ -312,42 +319,14 @@ export function EntryKiosk({
               none: t.entryCamNone,
               switchCamera: t.camSwitch,
             }}
-          />
-        </div>
+          /></div>}
+        </details>
         <div className="robot-actions">
-          <Link
-            className="btn btn-primary"
-            href={kioskHelpHref(null, lang, "guidance", "/kiosk/entry")}
-          >
-            {lang === "en"
-              ? "Request help without a boarding pass"
-              : "탑승권 없이 도움 요청하기"}
-          </Link>
           <ListenStart t={t} />
-          <button className="btn" onClick={() => setView({ kind: "nopass" })}>
-            <Ticket size={22} aria-hidden="true" />
-            {t.entryNoPass}
-          </button>
-          <button
-            className="lang-switch"
-            onClick={() => setLang((l) => (l === "en" ? "ko" : "en"))}
-            lang={lang === "en" ? "ko" : "en"}
-          >
-            {t.otherLang}
-          </button>
+
         </div>
         <p className="kiosk-foot">{here}</p>
       </div>,
-    );
-  } else if (view.kind === "nopass") {
-    screen = shell(
-      "nopass",
-      `${t.entryNoPass}. ${t.entryNoPassBody}`,
-      <>
-        {bubble("awake", t.entryNoPass)}
-        <h1>{t.entryNoPass}</h1>
-        <p className="lead">{t.entryNoPassBody}</p>
-      </>,
     );
   } else if (view.kind === "confirm") {
     // 미리 등록한 내용을 먼저 보여 주고, 고칠 것이 있으면 체크리스트 질문 그대로 고친다(피드백 3).

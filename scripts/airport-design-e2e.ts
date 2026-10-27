@@ -31,7 +31,7 @@ async function main() {
       await p.setViewport({ width, height: 1000 });
       for (const route of ["/", "/services", "/services?lang=en"]) {
         await p.goto(base + route);
-        await p.waitForSelector(".airport-service-item");
+        await p.waitForSelector("[data-service-topic]");
         check(
           `${width}px ${route} fits`,
           await p.evaluate(
@@ -168,7 +168,7 @@ async function main() {
     const req = createRequire(import.meta.url);
     for (const route of ["/services", "/services?lang=en", "/"]) {
       await p.goto(base + route);
-      await p.waitForSelector(".airport-service-item");
+      await p.waitForSelector("[data-service-topic]");
       await p.addScriptTag({ path: req.resolve("axe-core/axe.min.js") });
       const violations = await p.evaluate(async () => {
         const w = window as unknown as {

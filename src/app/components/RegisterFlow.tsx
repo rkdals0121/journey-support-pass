@@ -666,6 +666,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       onBack={back}
       onHome={() => onExit(lang)}
       progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
+      onStepSelect={index => { if (index < step) goTo(index, true); }}
       desktopSteps={
         mode === "web"
           ? ORDER.map((k, i) => ({

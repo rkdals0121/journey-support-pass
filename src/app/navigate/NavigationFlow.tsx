@@ -9,6 +9,8 @@ import {
   Accessibility,
 } from "lucide-react";
 import { PlaceFinder } from "../components/PlaceFinder";
+import { IdleGuard } from "../components/IdleGuard";
+import type { KioskReturn } from "@/lib/help-entry";
 import {
   placeOf,
   GATE_PICKUP_POINTS,
@@ -19,12 +21,12 @@ import {
   type FacilityKind,
 } from "@/lib/airport";
 import { textOf } from "@/lib/i18n";
-export function NavigationFlow({ en }: { en: boolean }) {
+export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedPlace = false, returnTo = "/kiosk/guide", idleAskSec = 120, idleAnswerSec = 30 }: { en: boolean; initialGate?: string; initialPlace?: string; fixedPlace?: boolean; returnTo?: KioskReturn; idleAskSec?: number; idleAnswerSec?: number }) {
   const t = (ko: string, english: string) => (en ? english : ko),
     labels = textOf(en ? "en" : "ko").facility;
-  const [place, setPlace] = useState(""),
+  const [place, setPlace] = useState(initialPlace),
     [kind, setKind] = useState("gate"),
-    [gate, setGate] = useState(""),
+    [gate, setGate] = useState(initialGate),
     [stepFree, setStepFree] = useState(true),
     [result, setResult] = useState<{ title: string; route: Route } | null>(
       null,
@@ -83,6 +85,7 @@ export function NavigationFlow({ en }: { en: boolean }) {
   }
   return (
     <main id="public-main" className="service-workspace">
+      <IdleGuard t={textOf(en ? "en" : "ko")} enabled={fixedPlace} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={() => window.location.assign(returnTo + (en ? "?lang=en" : ""))} />
       <header className="service-heading">
         <span className="service-kicker">
           <Navigation aria-hidden="true" />
@@ -112,7 +115,7 @@ export function NavigationFlow({ en }: { en: boolean }) {
               <span>1</span>
               {t("출발 위치", "Start location")}
             </h2>
-            <PlaceFinder
+            {fixedPlace ? <p className="field-current-location"><MapPin aria-hidden="true" />{en ? placeOf(place)?.labelEn : placeOf(place)?.label}</p> : <PlaceFinder
               id="nav-place"
               value={place}
               onChange={(id) => {
@@ -120,7 +123,7 @@ export function NavigationFlow({ en }: { en: boolean }) {
                 setResult(null);
               }}
               en={en}
-            />
+            />}
           </section>
           <section className="request-section">
             <h2>

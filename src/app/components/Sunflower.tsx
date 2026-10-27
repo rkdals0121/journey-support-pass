@@ -17,7 +17,7 @@ export function Brand() {
   return (
     <div className="brand">
       <Sunflower />
-      Journey Support Pass
+      <span>공항 이용 지원<small>Journey Support Pass</small></span>
     </div>
   );
 }

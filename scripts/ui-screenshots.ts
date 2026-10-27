@@ -5,7 +5,8 @@ import { createRequire } from "node:module";
 import { readSeedZones } from "../src/lib/zones";
 
 async function main() {
-  const base = "http://127.0.0.1:3100";
+  const base = process.env.E2E_BASE ?? "http://127.0.0.1:3100";
+  if (!["localhost", "127.0.0.1"].includes(new URL(base).hostname)) throw new Error("Isolated local server only");
   const out = path.resolve(process.env.UI_OUTPUT ?? ".e2e-shots/ui");
   fs.mkdirSync(out, { recursive: true });
   const browser = await puppeteer.launch({

@@ -4,6 +4,8 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
+const port = Number(process.env.JSP_CHECK_PORT ?? 3100);
+if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("Invalid local check port");
 if (!fs.existsSync(path.join(root, ".next", "BUILD_ID")))
   throw new Error("Run npm run build first.");
 const require = createRequire(import.meta.url);
@@ -15,7 +17,7 @@ const child = spawn(
     "--hostname",
     "127.0.0.1",
     "--port",
-    "3100",
+    String(port),
   ],
   {
     cwd: root,
@@ -30,8 +32,8 @@ const child = spawn(
       EXTERNAL_CONNECTION_MODE: "",
       CRON_SECRET: "dx-local-check-only",
       SESSION_SECRET: "dx-local-check-only-session-not-for-deployment",
-      BASE_URL: "http://localhost:3100",
-      JSP_LOCAL_DB_DIR: path.join(root, ".data", "dx-browser-checks"),
+      BASE_URL: `http://localhost:${port}`,
+      JSP_LOCAL_DB_DIR: path.join(root, ".data", port === 3100 ? "dx-browser-checks" : `dx-browser-checks-${port}`),
       WEB_PUSH_PUBLIC_KEY: "",
       WEB_PUSH_PRIVATE_KEY: "",
       WEB_PUSH_SUBJECT: "",
