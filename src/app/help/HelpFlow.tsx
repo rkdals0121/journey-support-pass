@@ -2,7 +2,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PLACES, NO_MEETING_PLACE } from "@/lib/airport";
-import { requestPlaceOf as placeOf } from "@/lib/service-locations";
+import {
+  requestPlaceOf as placeOf,
+  reportLocationLabel,
+} from "@/lib/service-locations";
 import { labelOf } from "@/lib/catalog";
 import {
   OPEN_REQUEST_STATES,
@@ -16,6 +19,8 @@ import { textOf } from "@/lib/i18n";
 import { IdleGuard } from "../components/IdleGuard";
 import { ReceiptQr } from "./ReceiptQr";
 import { PickupChange } from "./PickupChange";
+import { ReportLocationPicker } from "../components/ReportLocationPicker";
+import { TrafficEntry } from "../components/TrafficEntry";
 import { PlaceFinder } from "../components/PlaceFinder";
 import { RequestStatusPanel } from "./RequestStatusPanel";
 import { ServiceDetailsView } from "../components/ServiceDetailsView";
@@ -33,7 +38,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useSpeech } from "../components/useSpeech";
-import { SERVICE_CATALOG, supportTopic, topicLink } from "@/lib/service-catalog";
+import { SERVICE_CATALOG, supportTopic } from "@/lib/service-catalog";
 import { pilotDestinations } from "@/lib/operating-profile";
 
 const STORAGE = "jsp-dx-receipt-v1";
@@ -120,7 +125,11 @@ export function HelpFlow({
     if (embedded) setLang(initialLang);
   }, [embedded, initialLang]);
   const en = lang === "en";
-  const [placeId, setPlaceId] = useState(initialTopic === "other" ? NO_MEETING_PLACE : placeOf(initialPlace)?.id ?? "");
+  const [placeId, setPlaceId] = useState(
+    initialTopic === "other"
+      ? NO_MEETING_PLACE
+      : (placeOf(initialPlace)?.id ?? ""),
+  );
   const [service, setService] = useState<ServiceType>(initialService);
   const [choices, setChoices] = useState(savedChoices);
   const [party, setParty] = useState(savedParty);
@@ -145,6 +154,9 @@ export function HelpFlow({
   const [consent, setConsent] = useState(false);
   const [review, setReview] = useState(false);
   const [inputStep, setInputStep] = useState(0);
+  const [trafficIntent, setTrafficIntent] = useState<
+    "choose" | "info" | "dispatch"
+  >("choose");
   const [request, setRequest] = useState<ServiceRequestView | null>(null);
   const [receipt, setReceipt] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -162,7 +174,9 @@ export function HelpFlow({
   const topic = supportTopic(topicId),
     referral = topic?.mode === "referral";
   const needsDetails = service === "robot" && !referral;
-  const lastInputStep = needsDetails ? 2 : 1;
+  const noMeeting = topic?.id === "other" && placeId === NO_MEETING_PLACE;
+  const lastInputStep = noMeeting ? 0 : needsDetails ? 2 : 1;
+  const reviewIndex = noMeeting ? 1 : 2;
   const applyRequest = useCallback(
     (r: ServiceRequestView) =>
       setRequest((old) =>
@@ -337,7 +351,11 @@ export function HelpFlow({
               placeId,
               service,
               // Reuse previously saved needs for a linked mobility request without asking again.
-              choices: needsDetails ? choices : service === "mobility" && registrationToken ? undefined : [],
+              choices: needsDetails
+                ? choices
+                : service === "mobility" && registrationToken
+                  ? undefined
+                  : [],
               party: referral ? 1 : party,
               note,
               ...(serviceDetails && (topicId || !businessId)
@@ -430,13 +448,30 @@ export function HelpFlow({
     setReview(false);
     setError("");
   }
-  const currentPlace = placeOf(placeId);
+  const basePlace = placeOf(placeId);
+  const currentPlace =
+    basePlace && topic?.id === "facility"
+      ? {
+          ...basePlace,
+          label: reportLocationLabel(taskFields) || basePlace.label,
+          labelEn: reportLocationLabel(taskFields, true) || basePlace.labelEn,
+        }
+      : basePlace;
   function advanceInput() {
     if (inputStep === 1 && !currentPlace) {
       setError(
-        tr("현재 위치 후보를 확인해 주세요.", "Confirm your current location."),
+        tr(
+          topic?.id === "facility"
+            ? "신고할 위치를 확인해 주세요."
+            : "현재 위치 후보를 확인해 주세요.",
+          "Confirm the location.",
+        ),
       );
-      document.getElementById("dx-place-search")?.focus();
+      document
+        .getElementById(
+          topic?.id === "facility" ? "report-area" : "dx-place-search",
+        )
+        ?.focus();
       return;
     }
     const controls = document.querySelectorAll<
@@ -452,6 +487,16 @@ export function HelpFlow({
   const readText = request
     ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
     : `${tr("지금 도움 요청하기", "Request help now")}. ${tr("현재 위치와 필요한 도움을 확인해 주세요. 사전등록은 서비스 예약 확정이 아닙니다.", "Confirm your pickup point and assistance. Pre-registration is not a confirmed service booking.")}`;
+  if (!request && topic?.id === "traffic" && trafficIntent !== "dispatch")
+    return (
+      <TrafficEntry
+        en={en}
+        info={trafficIntent === "info"}
+        onInfo={() => setTrafficIntent("info")}
+        onDispatch={() => setTrafficIntent("dispatch")}
+        onBack={() => setTrafficIntent("choose")}
+      />
+    );
   return (
     <main
       id="public-main"
@@ -503,23 +548,25 @@ export function HelpFlow({
           onCancel={() => void cancel()}
           onRestart={restart}
         >
-          {receipt && request.placeId !== NO_MEETING_PLACE && request.topicId !== "facility" && (
-            <details
-              className="request-location-tools"
-              open={!!request.pendingPlaceId || undefined}
-            >
-              <summary>{tr("위치 변경 요청", "Change location")}</summary>
-              <PickupChange
-                request={request}
-                receipt={receipt}
-                en={en}
-                sharedDevice={sharedDevice}
-                disabled={busy}
-                onChanged={applyRequest}
-                onRefresh={refresh}
-              />
-            </details>
-          )}
+          {receipt &&
+            request.placeId !== NO_MEETING_PLACE &&
+            request.topicId !== "facility" && (
+              <details
+                className="request-location-tools"
+                open={!!request.pendingPlaceId || undefined}
+              >
+                <summary>{tr("위치 변경 요청", "Change location")}</summary>
+                <PickupChange
+                  request={request}
+                  receipt={receipt}
+                  en={en}
+                  sharedDevice={sharedDevice}
+                  disabled={busy}
+                  onChanged={applyRequest}
+                  onRefresh={refresh}
+                />
+              </details>
+            )}
           {sharedDevice && receipt && <ReceiptQr receipt={receipt} en={en} />}
           {sharedDevice && (
             <button
@@ -590,8 +637,8 @@ export function HelpFlow({
                     "Your request will be sent to the handling team.",
                   )
                 : tr(
-                    "필요한 내용과 위치를 확인해 주세요.",
-                    "Confirm the service details and location.",
+                    noMeeting ? "전달할 요청 내용을 확인해 주세요." : "필요한 내용과 위치를 확인해 주세요.",
+                    noMeeting ? "Review the request you want to send." : "Confirm the service details and location.",
                   )}
             </p>
             <span className="service-demo-label">
@@ -605,19 +652,22 @@ export function HelpFlow({
             className="request-stepbar"
             aria-label={tr("접수 단계", "Request steps")}
           >
-            {[
-              tr("서비스 선택", "Service"),
-              tr("위치 확인", "Location"),
-              tr("내용 확인", "Details"),
-            ].map((label, i) => (
+            {(noMeeting
+              ? [tr("요청 내용", "Request"), tr("내용 확인", "Review")]
+              : [
+                  tr("서비스 선택", "Service"),
+                  tr("위치 확인", "Location"),
+                  tr("내용 확인", "Details"),
+                ]
+            ).map((label, i) => (
               <li
                 key={label}
                 aria-current={
-                  (review ? 2 : inputStep) === i ? "step" : undefined
+                  (review ? reviewIndex : inputStep) === i ? "step" : undefined
                 }
               >
                 <span>
-                  {(review ? 2 : inputStep) > i ? (
+                  {(review ? reviewIndex : inputStep) > i ? (
                     <Check aria-hidden="true" />
                   ) : (
                     i + 1
@@ -672,7 +722,7 @@ export function HelpFlow({
                     </dd>
                   </div>
                   <div>
-                    <dt>{tr("위치", "Location")}</dt>
+                    <dt>{noMeeting ? tr("처리 방식", "Handling") : topic?.id === "facility" ? tr("신고 위치", "Report location") : tr("만날 곳", "Meeting point")}</dt>
                     <dd>{en ? currentPlace?.labelEn : currentPlace?.label}</dd>
                   </div>
                   {destinationId && (
@@ -685,10 +735,12 @@ export function HelpFlow({
                       </dd>
                     </div>
                   )}
-                  {!referral && <div>
-                    <dt>{tr("인원", "People")}</dt>
-                    <dd>{party}</dd>
-                  </div>}
+                  {!referral && (
+                    <div>
+                      <dt>{tr("인원", "People")}</dt>
+                      <dd>{party}</dd>
+                    </div>
+                  )}
                 </dl>
                 {serviceDetails && (
                   <ServiceDetailsView details={serviceDetails} en={en} />
@@ -728,6 +780,7 @@ export function HelpFlow({
               noValidate
               data-active-step={inputStep}
               data-short-flow={!needsDetails}
+              data-last-step={lastInputStep}
               onSubmit={(e) => {
                 e.preventDefault();
                 if (
@@ -744,7 +797,13 @@ export function HelpFlow({
                       "Confirm and select your current location.",
                     ),
                   );
-                  document.getElementById("dx-place-search")?.focus();
+                  document
+                    .getElementById(
+                      topic?.id === "facility"
+                        ? "report-area"
+                        : "dx-place-search",
+                    )
+                    ?.focus();
                   return;
                 }
                 if (!e.currentTarget.reportValidity()) return;
@@ -781,34 +840,33 @@ export function HelpFlow({
                       <legend className="sr-only">
                         {tr("서비스 선택", "Choose service")}
                       </legend>
-                      {SERVICE_CATALOG.filter((s) => s.id !== "other").map(
-                        (s) => (
-                          <label
-                            key={s.id}
-                            className={
-                              (topicId ?? service) === s.id ? "selected" : ""
-                            }
-                          >
-                            <input
-                              type="radio"
-                              name="service"
-                              value={s.id}
-                              checked={(topicId ?? service) === s.id}
-                              onChange={() => {
-                                if (s.id === "lost-property") { window.location.assign(topicLink(s.id, lang)); return; }
-                                setService(s.service);
-                                if (placeId === NO_MEETING_PLACE) setPlaceId("");
-                                setTopicId(s.id);
-                                setBusinessId(undefined);
-                                setTaskId("");
-                                setTaskFields({});
-                                setDestinationId("");
-                              }}
-                            />
-                            <span>{en ? s.en : s.label}</span>
-                          </label>
-                        ),
-                      )}
+                      {SERVICE_CATALOG.filter(
+                        (s) => s.id !== "other" && s.id !== "lost-property",
+                      ).map((s) => (
+                        <label
+                          key={s.id}
+                          className={
+                            (topicId ?? service) === s.id ? "selected" : ""
+                          }
+                        >
+                          <input
+                            type="radio"
+                            name="service"
+                            value={s.id}
+                            checked={(topicId ?? service) === s.id}
+                            onChange={() => {
+                              setService(s.service);
+                              if (placeId === NO_MEETING_PLACE) setPlaceId("");
+                              setTopicId(s.id);
+                              setBusinessId(undefined);
+                              setTaskId("");
+                              setTaskFields({});
+                              setDestinationId("");
+                            }}
+                          />
+                          <span>{en ? s.en : s.label}</span>
+                        </label>
+                      ))}
                     </fieldset>
                   )}
                   {topic && (
@@ -836,6 +894,7 @@ export function HelpFlow({
                               onChange={() => {
                                 setTaskId(t.id);
                                 setTaskFields({});
+                                setDestinationId("");
                               }}
                             />
                             {en ? t.en : t.label}
@@ -843,206 +902,277 @@ export function HelpFlow({
                         ))}
                       </fieldset>
                       <div className="service-task-fields">
-                        {task.fields.filter(f => !f.legacy).map((f) => (
-                          <div key={f.id}>
-                            <label htmlFor={"task-" + f.id}>
-                              {en ? f.en : f.label}
-                              {f.required && (
-                                <span
-                                  className="required-dot"
-                                  aria-hidden="true"
-                                >
-                                  {" "}
-                                  *
-                                </span>
+                        {task.fields
+                          .filter((f) => !f.legacy)
+                          .map((f) => (
+                            <div key={f.id}>
+                              <label htmlFor={"task-" + f.id}>
+                                {en ? f.en : f.label}
+                                {f.required && (
+                                  <span
+                                    className="required-dot"
+                                    aria-hidden="true"
+                                  >
+                                    {" "}
+                                    *
+                                  </span>
+                                )}
+                              </label>
+                              {f.placeholder && (
+                                <p className="service-field-example">
+                                  {en ? f.placeholderEn : f.placeholder}
+                                </p>
                               )}
-                            </label>
-                            {f.placeholder && <p className="service-field-example">{en ? f.placeholderEn : f.placeholder}</p>}
-                            {f.options ? (
-                              <select
-                                id={"task-" + f.id}
-                                value={taskFields[f.id] ?? ""}
-                                required={f.required}
-                                onChange={(e) =>
-                                  setTaskFields((v) => ({
-                                    ...v,
-                                    [f.id]: e.target.value,
-                                  }))
-                                }
-                              >
-                                <option value="">
-                                  {tr("선택해 주세요", "Choose an option")}
-                                </option>
-                                {f.options.map((o) => (
-                                  <option key={o.value} value={o.value}>
-                                    {en ? o.en : o.label}
+                              {f.options ? (
+                                <select
+                                  id={"task-" + f.id}
+                                  value={taskFields[f.id] ?? ""}
+                                  required={f.required}
+                                  onChange={(e) =>
+                                    setTaskFields((v) => ({
+                                      ...v,
+                                      [f.id]: e.target.value,
+                                    }))
+                                  }
+                                >
+                                  <option value="">
+                                    {tr("선택해 주세요", "Choose an option")}
                                   </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                id={"task-" + f.id}
-                                type={f.type ?? "text"}
-                                placeholder={en ? f.placeholderEn : f.placeholder}
-                                maxLength={120}
-                                value={taskFields[f.id] ?? ""}
-                                required={f.required}
-                                onChange={(e) =>
-                                  setTaskFields((v) => ({
-                                    ...v,
-                                    [f.id]: e.target.value,
-                                  }))
-                                }
-                              />
-                            )}
-                          </div>
-                        ))}
+                                  {f.options.map((o) => (
+                                    <option key={o.value} value={o.value}>
+                                      {en ? o.en : o.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  id={"task-" + f.id}
+                                  type={f.type ?? "text"}
+                                  placeholder={
+                                    en ? f.placeholderEn : f.placeholder
+                                  }
+                                  maxLength={120}
+                                  value={taskFields[f.id] ?? ""}
+                                  required={f.required}
+                                  onChange={(e) =>
+                                    setTaskFields((v) => ({
+                                      ...v,
+                                      [f.id]: e.target.value,
+                                    }))
+                                  }
+                                />
+                              )}
+                            </div>
+                          ))}
                       </div>
                     </>
                   )}
-                  {topic?.id === "traffic" && <p className="service-field-example">{tr("단순 이용 문의는 ", "For travel information, ")}<a href="tel:15772600">{tr("공항 고객센터 1577-2600", "airport information 1577-2600")}</a> · <a href="https://www.airport.kr/" target="_blank" rel="noreferrer">{tr("공식 교통안내", "Official transport guide")}</a></p>}
-                </section>
-                <section
-                  className="request-section"
-                  data-request-step="1"
-                  onFocusCapture={() => setInputStep(1)}
-                >
-                  <h2>
-                    <span>2</span>
-                    {topic?.id === "facility" || topic?.id === "lost-property"
-                      ? tr("신고할 위치", "Report location")
-                      : tr("현재 위치", "Your location")}
-                  </h2>
-                  {topic?.id === "other" && <label className="request-check"><input type="checkbox" checked={placeId === NO_MEETING_PLACE} onChange={e => setPlaceId(e.target.checked ? NO_MEETING_PLACE : "")} />{tr("만나지 않음 · 온라인으로 내용 전달", "No meeting · send the request online")}</label>}
-                  {placeId === NO_MEETING_PLACE ? <p>{tr("요청 내용으로 담당자가 업무를 분류합니다.", "Staff will classify your request.")}</p> : lockedPlace ? (
-                    <>
-                      <label htmlFor="dx-place">
-                        {tr("이 기기의 현재 위치", "This kiosk's location")}
-                      </label>
-                      <select id="dx-place" value={placeId} disabled>
-                        {PLACES.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {en ? p.labelEn : p.label}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  ) : (
-                    <PlaceFinder
-                      id="dx-place"
-                      purpose={topic?.id === "facility" ? "report" : topic?.id === "other" ? "location" : "pickup"}
-                      value={placeId}
-                      en={en}
-                      photos={!sharedDevice}
-                      disabled={busy}
-                      onChange={(id) => {
-                        setPlaceId(id);
-                        setDestinationId("");
-                        if (id) setError("");
-                      }}
-                    />
+                  {topic?.id === "traffic" && (
+                    <button
+                      type="button"
+                      className="booking-sample"
+                      onClick={() => setTrafficIntent("info")}
+                    >
+                      {tr(
+                        "현장 지원 대신 이용 안내 보기",
+                        "View travel information instead",
+                      )}
+                    </button>
                   )}
-                  {service === "mobility" && (
-                    <>
-                      <label htmlFor="dx-destination">
-                        {tr("가고 싶은 곳 · 선택", "Destination · optional")}
-                      </label>
-                      <select
-                        id="dx-destination"
-                        value={destinationId}
-                        onChange={(e) => setDestinationId(e.target.value)}
-                      >
-                        <option value="">
-                          {tr("담당자와 상담해 정할게요", "Confirm with staff")}
-                        </option>
-                        {pilotDestinations(placeId).map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {en ? p.labelEn : p.label}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-                </section>
-                {needsDetails && <section
-                  className="request-section"
-                  data-request-step="2"
-                  onFocusCapture={() => setInputStep(2)}
-                >
-                  <h2>
-                    <span>3</span>
-                    {tr("함께 전달할 내용", "Additional details")}
-                  </h2>
-                  {!referral && (
-                    <>
-                      <label htmlFor="dx-party">
-                        {tr(
-                          "함께 도움받을 인원",
-                          "Number of people needing help",
-                        )}
-                      </label>
+                  {topic?.id === "other" && (
+                    <label className="request-check">
                       <input
-                        id="dx-party"
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={party}
-                        required
-                        onChange={(e) => setParty(Number(e.target.value))}
+                        type="checkbox"
+                        checked={placeId === NO_MEETING_PLACE}
+                        onChange={(e) => {
+                          setPlaceId(e.target.checked ? NO_MEETING_PLACE : "");
+                          setInputStep(0);
+                          setConsent(false);
+                        }}
                       />
-                      <details
-                        className="request-needs"
-                        open={savedChoices.length > 0 || undefined}
-                      >
-                        <summary>
-                          {tr(
-                            "안내 방식·필요한 도움",
-                            "Communication & assistance needs",
-                          )}
-                        </summary>
-                        <div className="request-needs-options">
-                          {Array.from(
-                            new Set([...savedChoices, ...supportCodes]),
-                          ).map((code) => (
-                            <label className="request-check" key={code}>
-                              <input
-                                type="checkbox"
-                                checked={choices.includes(code)}
-                                onChange={() =>
-                                  setChoices((v) =>
-                                    v.includes(code)
-                                      ? v.filter((c) => c !== code)
-                                      : [...v, code],
-                                  )
-                                }
-                              />
-                              {labelOf(code, lang)}
-                            </label>
-                          ))}
-                        </div>
-                      </details>
-                    </>
+                      {tr(
+                        "만나지 않음 · 온라인으로 내용 전달",
+                        "No meeting · send the request online",
+                      )}
+                    </label>
                   )}
-                  <label htmlFor="dx-note">
-                    {tr("추가 말씀 · 선택", "Additional message · optional")}
-                  </label>
-                  <textarea
-                    id="dx-note"
-                    maxLength={200}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder={tr(
-                      "필요한 내용을 200자 이내로 적어 주세요.",
-                      "Up to 200 characters.",
+                </section>
+                {!noMeeting && (
+                  <section
+                    className="request-section"
+                    data-request-step="1"
+                    hidden={noMeeting}
+                    onFocusCapture={() => setInputStep(1)}
+                  >
+                    <h2>
+                      <span>2</span>
+                      {topic?.id === "facility" || topic?.id === "lost-property"
+                        ? tr("신고할 위치", "Report location")
+                        : tr("현재 위치", "Your location")}
+                    </h2>
+
+                    {topic?.id === "facility" ? (
+                      <ReportLocationPicker
+                        fields={taskFields}
+                        en={en}
+                        disabled={busy}
+                        photos={!sharedDevice}
+                        onChange={(fields) => {
+                          setTaskFields(fields);
+                          setPlaceId(
+                            fields.reportArea
+                              ? "report-" + fields.reportArea
+                              : "",
+                          );
+                          setError("");
+                        }}
+                      />
+                    ) : placeId === NO_MEETING_PLACE ? (
+                      <p>
+                        {tr(
+                          "요청 내용으로 담당자가 업무를 분류합니다.",
+                          "Staff will classify your request.",
+                        )}
+                      </p>
+                    ) : lockedPlace ? (
+                      <>
+                        <label htmlFor="dx-place">
+                          {tr("이 기기의 현재 위치", "This kiosk's location")}
+                        </label>
+                        <select id="dx-place" value={placeId} disabled>
+                          {PLACES.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {en ? p.labelEn : p.label}
+                            </option>
+                          ))}
+                        </select>
+                      </>
+                    ) : (
+                      <PlaceFinder
+                        id="dx-place"
+                        purpose={topic?.id === "other" ? "location" : "pickup"}
+                        value={placeId}
+                        en={en}
+                        photos={!sharedDevice}
+                        disabled={busy}
+                        onChange={(id) => {
+                          setPlaceId(id);
+                          setDestinationId("");
+                          if (id) setError("");
+                        }}
+                      />
                     )}
-                  />
-                  <p className="request-privacy-note">
-                    {tr(
-                      "이름·연락처·증빙은 입력하지 마세요. 접수 정보는 24시간 후 만료돼요.",
-                      "Do not enter names, contact details or documents. Details expire after 24 hours.",
+                    {service === "mobility" &&
+                      task?.id !== "mobility-wheelchair" && (
+                        <>
+                          <label htmlFor="dx-destination">
+                            {tr(
+                              "가고 싶은 곳 · 선택",
+                              "Destination · optional",
+                            )}
+                          </label>
+                          <select
+                            id="dx-destination"
+                            value={destinationId}
+                            onChange={(e) => setDestinationId(e.target.value)}
+                          >
+                            <option value="">
+                              {tr(
+                                "담당자와 상담해 정할게요",
+                                "Confirm with staff",
+                              )}
+                            </option>
+                            {pilotDestinations(placeId).map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {en ? p.labelEn : p.label}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+                  </section>
+                )}
+                {needsDetails && (
+                  <section
+                    className="request-section"
+                    data-request-step="2"
+                    onFocusCapture={() => setInputStep(2)}
+                  >
+                    <h2>
+                      <span>3</span>
+                      {tr("함께 전달할 내용", "Additional details")}
+                    </h2>
+                    {!referral && (
+                      <>
+                        <label htmlFor="dx-party">
+                          {tr(
+                            "함께 도움받을 인원",
+                            "Number of people needing help",
+                          )}
+                        </label>
+                        <input
+                          id="dx-party"
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={party}
+                          required
+                          onChange={(e) => setParty(Number(e.target.value))}
+                        />
+                        <details
+                          className="request-needs"
+                          open={savedChoices.length > 0 || undefined}
+                        >
+                          <summary>
+                            {tr(
+                              "안내 방식·필요한 도움",
+                              "Communication & assistance needs",
+                            )}
+                          </summary>
+                          <div className="request-needs-options">
+                            {Array.from(
+                              new Set([...savedChoices, ...supportCodes]),
+                            ).map((code) => (
+                              <label className="request-check" key={code}>
+                                <input
+                                  type="checkbox"
+                                  checked={choices.includes(code)}
+                                  onChange={() =>
+                                    setChoices((v) =>
+                                      v.includes(code)
+                                        ? v.filter((c) => c !== code)
+                                        : [...v, code],
+                                    )
+                                  }
+                                />
+                                {labelOf(code, lang)}
+                              </label>
+                            ))}
+                          </div>
+                        </details>
+                      </>
                     )}
-                  </p>
-                </section>}
+                    <label htmlFor="dx-note">
+                      {tr("추가 말씀 · 선택", "Additional message · optional")}
+                    </label>
+                    <textarea
+                      id="dx-note"
+                      maxLength={200}
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder={tr(
+                        "필요한 내용을 200자 이내로 적어 주세요.",
+                        "Up to 200 characters.",
+                      )}
+                    />
+                    <p className="request-privacy-note">
+                      {tr(
+                        "이름·연락처·증빙은 입력하지 마세요. 접수 정보는 24시간 후 만료돼요.",
+                        "Do not enter names, contact details or documents. Details expire after 24 hours.",
+                      )}
+                    </p>
+                  </section>
+                )}
               </div>
               <div className="request-mobile-nav">
                 {inputStep > 0 && (
@@ -1082,7 +1212,7 @@ export function HelpFlow({
                     : (task?.label ?? topic?.label ?? SERVICE_LABEL[service])}
                 </h2>
                 <p>
-                  <MapPin aria-hidden="true" />
+                  {!noMeeting && <MapPin aria-hidden="true" />}
                   {currentPlace
                     ? en
                       ? currentPlace.labelEn
@@ -1102,8 +1232,12 @@ export function HelpFlow({
                     onChange={(e) => setConsent(e.target.checked)}
                   />
                   {tr(
-                    "위치와 서비스 요청 내용을 담당자에게 전달하는 데 동의합니다.",
-                    "I agree to share my location and service details with the handling team.",
+                    noMeeting
+                      ? "요청 내용을 담당자에게 전달하는 데 동의합니다."
+                      : "위치와 서비스 요청 내용을 담당자에게 전달하는 데 동의합니다.",
+                    noMeeting
+                      ? "I agree to share the request with the handling team."
+                      : "I agree to share my location and service details with the handling team.",
                   )}
                 </label>
                 <button className="public-button" type="submit" disabled={busy}>

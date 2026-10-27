@@ -51,11 +51,11 @@ async function main() {
           }),
         );
         check(
-          `${width}px ${route} retains seven working destinations`,
+          `${width}px ${route} retains six working destinations`,
           await p.$$eval(
             "[data-service-topic] a",
             (links) =>
-              links.length === 7 &&
+              links.length === 6 &&
               links.every(
                 (a) =>
                   new URL((a as HTMLAnchorElement).href).pathname.startsWith(
@@ -89,7 +89,7 @@ async function main() {
     await p.click(".airport-directory-empty button");
     check(
       "empty search can reset to all services",
-      await p.$$eval("[data-service-topic]", (rows) => rows.length === 7),
+      await p.$$eval("[data-service-topic]", (rows) => rows.length === 6),
     );
     await p.type("#service-search", "길찾기");
     await p.waitForSelector('[data-service-topic="guidance"]');

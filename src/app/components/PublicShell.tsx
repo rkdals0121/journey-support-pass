@@ -125,6 +125,8 @@ export function PublicShell({
           <Link href={"/devices" + suffix}>
             {en ? "Kiosk & robot" : "키오스크·로봇"}
           </Link>
+          <Link href={"/services/desks" + suffix}>{en ? "Information desks" : "안내데스크 위치"}</Link>
+          <Link href={"/services/lost-property" + suffix}>{en ? "Lost property information" : "유실물 안내"}</Link>
           <Link href="/staff">
             {en ? "Staff workspace" : "직원 업무 화면"}
             <ArrowUpRight size={14} aria-hidden="true" />
