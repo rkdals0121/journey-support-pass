@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed } from "next/font/google";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
-import { MockBanner } from "./components/MockBanner";
 import "./globals.css";
 import "./redesign.css";
 import "./service-flow.css";
@@ -24,7 +23,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0f231b" };
 
-// 띠 표시 여부가 실행 시점의 DATA_MODE 를 따르도록 한다.
 export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -32,7 +30,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={num.variable} suppressHydrationWarning>
       <body>
-        <MockBanner />
         {children}
       </body>
     </html>
