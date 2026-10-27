@@ -36,11 +36,13 @@ export function RequestList({
   isDesk,
   initialBusiness = "all",
   initialScope = "active",
+  initialSearch = "",
 }: {
   zoneId: string;
   isDesk: boolean;
   initialBusiness?: string;
   initialScope?: string;
+  initialSearch?: string;
 }) {
   const [summary, setSummary] = useState<OperationalSummary | null>(null);
   const [resources, setResources] = useState<DispatchResource[]>([]);
@@ -84,8 +86,8 @@ export function RequestList({
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [sound, setSound] = useState(false);
   const [filter, setFilter] = useState(initialScope);
-  const [draft, setDraft] = useState(""),
-    [search, setSearch] = useState("");
+  const [draft, setDraft] = useState(initialSearch),
+    [search, setSearch] = useState(initialSearch);
   const [service, setService] = useState("all"),
     [source, setSource] = useState("all"),
     [queue, setQueue] = useState("all"),
@@ -334,8 +336,21 @@ export function RequestList({
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className={"work-requests" + (selected ? " has-selection" : "")}>
-      <div className="work-contextbar"><p>근무 구역 <strong>{zoneLabels[zoneId] ?? "확인 중"}</strong></p><button type="button" onClick={() => void load()}>새로고침</button></div>
-      {summary && <p className="work-today">오늘 접수 <strong>{summary.total}</strong>건 <span>·</span> 완료 <strong>{summary.done}</strong>건 <span>·</span> 확인 지연 <strong>{summary.awaitingAttention}</strong>건</p>}
+      <div className="work-contextbar">
+        <p>
+          근무 구역 <strong>{zoneLabels[zoneId] ?? "확인 중"}</strong>
+        </p>
+        <button type="button" onClick={() => void load()}>
+          새로고침
+        </button>
+      </div>
+      {summary && (
+        <p className="work-today">
+          오늘 접수 <strong>{summary.total}</strong>건 <span>·</span> 완료{" "}
+          <strong>{summary.done}</strong>건 <span>·</span> 확인 지연{" "}
+          <strong>{summary.awaitingAttention}</strong>건
+        </p>
+      )}
       <details className="work-preferences">
         <summary>알림·설정</summary>
         <Link className="btn" href="/staff/resources">
@@ -689,7 +704,14 @@ export function RequestList({
             요청 목록{" "}
             <span className="work-result-count">{pageReady ? total : "—"}</span>
           </h2>
-          <RequestCards rows={visible} selectedId={selected?.id} zoneLabels={zoneLabels} onSelect={id => setSelection({ id, query: requestUrl })} ready={pageReady} onReset={resetFilters} />
+          <RequestCards
+            rows={visible}
+            selectedId={selected?.id}
+            zoneLabels={zoneLabels}
+            onSelect={(id) => setSelection({ id, query: requestUrl })}
+            ready={pageReady}
+            onReset={resetFilters}
+          />
           <div className="work-table-wrap">
             <table className="work-request-table">
               <thead>
@@ -824,7 +846,14 @@ export function RequestList({
                     SERVICE_LABEL[r.service]}
                 </h2>
                 <p className="work-meeting-place">
-                  <strong>{r.placeId === "no-meeting" ? "처리 방식" : r.topicId === "facility" ? "신고 위치" : "만날 곳"}: {r.place}</strong>
+                  <strong>
+                    {r.placeId === "no-meeting"
+                      ? "처리 방식"
+                      : r.topicId === "facility"
+                        ? "신고 위치"
+                        : "만날 곳"}
+                    : {r.place}
+                  </strong>
                 </p>
                 {r.serviceDetails &&
                   serviceDetailsLines(r.serviceDetails).length > 0 && (

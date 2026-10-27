@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Navigation,
   ArrowRight,
@@ -21,7 +21,23 @@ import {
   type FacilityKind,
 } from "@/lib/airport";
 import { textOf } from "@/lib/i18n";
-export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedPlace = false, returnTo = "/kiosk/guide", idleAskSec = 120, idleAnswerSec = 30 }: { en: boolean; initialGate?: string; initialPlace?: string; fixedPlace?: boolean; returnTo?: KioskReturn; idleAskSec?: number; idleAnswerSec?: number }) {
+export function NavigationFlow({
+  en,
+  initialGate = "",
+  initialPlace = "",
+  fixedPlace = false,
+  returnTo = "/kiosk/guide",
+  idleAskSec = 120,
+  idleAnswerSec = 30,
+}: {
+  en: boolean;
+  initialGate?: string;
+  initialPlace?: string;
+  fixedPlace?: boolean;
+  returnTo?: KioskReturn;
+  idleAskSec?: number;
+  idleAnswerSec?: number;
+}) {
   const t = (ko: string, english: string) => (en ? english : ko),
     labels = textOf(en ? "en" : "ko").facility;
   const [place, setPlace] = useState(initialPlace),
@@ -32,6 +48,15 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
       null,
     ),
     [error, setError] = useState("");
+  const resultHeading = useRef<HTMLHeadingElement>(null);
+  const errorMessage = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (result) {
+      resultHeading.current?.focus({ preventScroll: true });
+      if (window.matchMedia("(max-width: 850px)").matches)
+        resultHeading.current?.scrollIntoView({ block: "center" });
+    } else if (error) errorMessage.current?.focus();
+  }, [result, error]);
   function find() {
     setResult(null);
     setError("");
@@ -85,7 +110,15 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
   }
   return (
     <main id="public-main" className="service-workspace">
-      <IdleGuard t={textOf(en ? "en" : "ko")} enabled={fixedPlace} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={() => window.location.assign(returnTo + (en ? "?lang=en" : ""))} />
+      <IdleGuard
+        t={textOf(en ? "en" : "ko")}
+        enabled={fixedPlace}
+        askSec={idleAskSec}
+        answerSec={idleAnswerSec}
+        onTimeout={() =>
+          window.location.assign(returnTo + (en ? "?lang=en" : ""))
+        }
+      />
       <header className="service-heading">
         <span className="service-kicker">
           <Navigation aria-hidden="true" />
@@ -115,15 +148,22 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
               <span>1</span>
               {t("출발 위치", "Start location")}
             </h2>
-            {fixedPlace ? <p className="field-current-location"><MapPin aria-hidden="true" />{en ? placeOf(place)?.labelEn : placeOf(place)?.label}</p> : <PlaceFinder
-              id="nav-place"
-              value={place}
-              onChange={(id) => {
-                setPlace(id);
-                setResult(null);
-              }}
-              en={en}
-            />}
+            {fixedPlace ? (
+              <p className="field-current-location">
+                <MapPin aria-hidden="true" />
+                {en ? placeOf(place)?.labelEn : placeOf(place)?.label}
+              </p>
+            ) : (
+              <PlaceFinder
+                id="nav-place"
+                value={place}
+                onChange={(id) => {
+                  setPlace(id);
+                  setResult(null);
+                }}
+                en={en}
+              />
+            )}
           </section>
           <section className="request-section">
             <h2>
@@ -179,7 +219,12 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
             </label>
           </section>
           {error && (
-            <p className="error-note" role="alert">
+            <p
+              className="error-note"
+              role="alert"
+              ref={errorMessage}
+              tabIndex={-1}
+            >
               {error}
             </p>
           )}
@@ -198,7 +243,9 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
               <span className="service-kicker">
                 {t("이동 경로", "YOUR ROUTE")}
               </span>
-              <h2>{result.title}</h2>
+              <h2 ref={resultHeading} tabIndex={-1}>
+                {result.title}
+              </h2>
               <div className="route-metrics">
                 <span>
                   <Clock aria-hidden="true" />
@@ -252,7 +299,7 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
           )}
           <Link
             className="public-text-link"
-            href={`/help?topic=guidance${place ? "&place=" + place : ""}${en ? "&lang=en" : ""}`}
+            href={`/help?topic=guidance&fresh=1${place ? "&place=" + encodeURIComponent(place) : ""}${fixedPlace ? "&returnTo=" + encodeURIComponent(returnTo) : ""}${en ? "&lang=en" : ""}`}
           >
             {t("현장 안내 지원 요청", "Request on-site guidance")}
             <ArrowRight aria-hidden="true" />

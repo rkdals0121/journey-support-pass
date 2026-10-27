@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   RESOURCE_KIND,
   RESOURCE_STATUS,
@@ -16,6 +17,13 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [ready, setReady] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [search, setSearch] = useState("");
+  const [kindFilter, setKindFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [drafts, setDrafts] = useState<Record<string, ResourceStatus>>({});
+  const saving = useRef(false);
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
       const res = await fetch("/api/staff/resources", {
@@ -55,8 +63,11 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
     };
   }, [load]);
   async function mutate(body: Record<string, unknown>) {
-    if (busy) return;
+    if (saving.current) return;
+    saving.current = true;
     setBusy(true);
+    setActionError("");
+    setNotice("");
     try {
       const res = await fetch("/api/staff/resources", {
         method: "POST",
@@ -68,20 +79,94 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
       if (!res.ok) throw new Error(b.error ?? "변경하지 못했습니다");
       if (body.action === "create") setLabel("");
       await load();
+      setNotice(
+        body.action === "create"
+          ? "장비를 등록했습니다."
+          : "장비 상태를 변경했습니다.",
+      );
+      if (typeof body.id === "string")
+        setDrafts((current) => {
+          const next = { ...current };
+          delete next[body.id as string];
+          return next;
+        });
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   }
+  const group = (r: DispatchResource) =>
+    r.requestId ? "assigned" : r.status === "ready" ? "ready" : "unavailable";
+  const filters = [
+    { id: "all", label: "전체" },
+    { id: "ready", label: "가용" },
+    { id: "assigned", label: "배차 중" },
+    { id: "unavailable", label: "점검·중지" },
+  ];
+  const visible = rows.filter(
+    (r) =>
+      (statusFilter === "all" || group(r) === statusFilter) &&
+      (kindFilter === "all" || r.kind === kindFilter) &&
+      `${r.label} ${r.zone}`
+        .toLocaleLowerCase()
+        .includes(search.trim().toLocaleLowerCase()),
+  );
   return (
-    <section>
-      {error && <p role="alert">{error}</p>}
-      <p>
-        가용 {rows.filter((r) => r.status === "ready" && !r.requestId).length}대
-        · 배차 중 {rows.filter((r) => r.requestId).length}대 · 점검/중지{" "}
-        {rows.filter((r) => r.status !== "ready").length}대
+    <section className="resource-inventory" aria-label="장비 대장">
+      {(error || actionError) && (
+        <p role="alert" className="error">
+          {actionError || error}
+        </p>
+      )}
+      <p role="status" className="sr-only">
+        {notice}
       </p>
+      <div className="inventory-toolbar">
+        <div className="inventory-filters" role="group" aria-label="장비 상태">
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={statusFilter === f.id}
+              onClick={() => setStatusFilter(f.id)}
+            >
+              {f.label}
+              <span>
+                {ready
+                  ? rows.filter((r) => f.id === "all" || group(r) === f.id)
+                      .length
+                  : "—"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="inventory-search">
+          <label htmlFor="inventory-search">장비·구역 검색</label>
+          <input
+            id="inventory-search"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="장비 이름 또는 구역"
+            maxLength={80}
+          />
+          <label htmlFor="inventory-kind">장비 종류</label>
+          <select
+            id="inventory-kind"
+            value={kindFilter}
+            onChange={(e) => setKindFilter(e.target.value)}
+          >
+            <option value="all">모든 종류</option>
+            {Object.entries(RESOURCE_KIND).map(([id, text]) => (
+              <option key={id} value={id}>
+                {text}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
       {isDesk && (
         <details className="resource-register">
           <summary>장비 등록</summary>
@@ -145,45 +230,92 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
           </p>
         )
       )}
-      <ul className="dx-request-list">
-        {rows.map((r) => (
-          <li key={r.id} className="dx-card" data-resource-id={r.id}>
-            <h2>{r.label}</h2>
-            <p>
-              {RESOURCE_KIND[r.kind]} · {r.zone}
-            </p>
-            <p>
-              <strong>
+      {ready && rows.length > 0 && (
+        <p className="inventory-result-count">
+          {visible.length}대 표시 / 전체 {rows.length}대
+        </p>
+      )}
+      {ready && rows.length > 0 && visible.length === 0 && (
+        <div className="inventory-empty">
+          <p>조건에 맞는 장비가 없습니다.</p>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setSearch("");
+              setKindFilter("all");
+              setStatusFilter("all");
+            }}
+          >
+            검색 초기화
+          </button>
+        </div>
+      )}
+      <ul className="inventory-list">
+        {visible.map((r) => (
+          <li key={r.id} data-resource-id={r.id}>
+            <div className="inventory-name">
+              <h2>{r.label}</h2>
+              <p>{RESOURCE_KIND[r.kind]}</p>
+            </div>
+            <p className="inventory-zone">{r.zone}</p>
+            <p className="inventory-state" data-state={group(r)}>
+              <strong className="resource-current-state">
                 {r.requestId ? "배차 중" : RESOURCE_STATUS[r.status]}
               </strong>
             </p>
-            {r.requestId && (
-              <p>
-                요청이 완료·취소·종료되면 가용 수량으로 돌아옵니다. 출발 전에는
-                통합 요청에서 배차를 해제할 수 있습니다.
-              </p>
-            )}
-            {isDesk && (
-              <div className="dx-actions">
-                {Object.entries(RESOURCE_STATUS).map(([status, text]) => (
-                  <button
-                    className="btn"
-                    key={status}
-                    disabled={busy || !!r.requestId || r.status === status}
-                    onClick={() =>
-                      void mutate({
-                        action: "status",
-                        id: r.id,
-                        version: r.version,
-                        status: status as ResourceStatus,
-                      })
-                    }
-                  >
-                    {text}으로 변경
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="inventory-actions">
+              {r.requestId ? (
+                <Link
+                  href={`/staff/requests?search=${encodeURIComponent(r.requestId)}`}
+                >
+                  배차 요청 보기 →
+                </Link>
+              ) : (
+                isDesk && (
+                  <>
+                    <label className="sr-only" htmlFor={`status-${r.id}`}>
+                      {r.label} 상태 변경
+                    </label>
+                    <select
+                      id={`status-${r.id}`}
+                      value={drafts[r.id] ?? r.status}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setDrafts((current) => ({
+                          ...current,
+                          [r.id]: e.target.value as ResourceStatus,
+                        }))
+                      }
+                    >
+                      {Object.entries(RESOURCE_STATUS).map(([status, text]) => (
+                        <option key={status} value={status}>
+                          {text}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn"
+                      aria-label={`${r.label} 상태 적용`}
+                      disabled={
+                        busy || !drafts[r.id] || drafts[r.id] === r.status
+                      }
+                      onClick={() =>
+                        void mutate({
+                          action: "status",
+                          id: r.id,
+                          version: r.version,
+                          status: drafts[r.id],
+                        })
+                      }
+                    >
+                      적용
+                    </button>
+                  </>
+                )
+              )}
+            </div>
           </li>
         ))}
       </ul>

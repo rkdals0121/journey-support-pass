@@ -13,6 +13,7 @@ export default async function RequestsPage({
 }) {
   const s = await requireStaff();
   const q = await searchParams;
+  const search = typeof q.search === "string" ? q.search.slice(0, 80) : "";
   const business =
     typeof q.business === "string" &&
     (q.business === UNCLASSIFIED_BUSINESS || businessOf(q.business))
@@ -44,11 +45,12 @@ export default async function RequestsPage({
           </div>
         </div>
         <RequestList
-          key={`${business}-${scope}`}
+          key={`${business}-${scope}-${search}`}
           zoneId={s.zoneId}
           isDesk={s.isDesk}
           initialBusiness={business}
           initialScope={scope}
+          initialSearch={search}
         />
       </main>
       <StaffNav isDesk={s.isDesk} />
