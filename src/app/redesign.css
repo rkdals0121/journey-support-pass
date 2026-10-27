@@ -279,7 +279,6 @@
 .public-site :is(button,input,select,textarea) { font-family: inherit; }
 .public-site :is(a,button) { -webkit-tap-highlight-color: transparent; }
 .public-site :is(h1,h2,h3,p) { overflow-wrap: break-word; }
-.mock-banner { padding: .25rem 1rem; font-size: .7rem; letter-spacing: .03em; }
 .public-header-inner { padding-block: 1.1rem; }
 .public-logo { gap: .6rem; font-size: 1.3rem; }
 .public-logo small { margin-top: .2rem; font-size: .68rem; }
@@ -432,7 +431,6 @@
 .device-setup .home-staff { display: flex; min-height: 44px; margin-top: .75rem; font-size: .85rem; }
 .device-setup .setup-now { border: 1px solid var(--line); background: var(--mint-2); color: var(--text); padding: 1rem; border-radius: .75rem; margin: 1.5rem 0; font-size: .95rem; }
 /* Keep the fixed assistance dock below the sticky toolbar, including the trial label. */
-body:has(.call-dock) .mock-banner { display: none; }
 .robot-home { gap: 1.5rem; }
 .robot-panel { border-radius: 1.5rem; box-shadow: none; padding: 1.5rem; }
 .robot-bubble { box-shadow: none; font-size: 1.2rem; }

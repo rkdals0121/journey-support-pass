@@ -215,22 +215,6 @@ h1.kicker {
   letter-spacing: 0.02em;
 }
 
-/* ── 시범 운영 띠 ── */
-.mock-banner {
-  flex: none;
-  padding: 0.25rem 0.75rem;
-  background: var(--sun);
-  color: var(--ink);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-align: center;
-}
-/* 키오스크에서는 위쪽을 「이전·처음으로·직원 부르기」에 쓴다. 모의 자료라는 안내는 화면 아래에 글로 둔다. */
-html[data-kiosk] .mock-banner {
-  display: none;
-}
-
 /* ── 공통 틀 ── */
 .page {
   flex: 1 0 auto;
@@ -608,9 +592,6 @@ html[data-kiosk] .bar-btn {
   html:not([data-kiosk]) .flow-body .lead {
     margin-bottom: min(1.25rem, 4vw);
     font-size: min(1.0625rem, 5.6vw);
-  }
-  html:not([data-kiosk]) .mock-banner {
-    font-size: min(0.75rem, 3.6vw);
   }
   /* 글자를 크게 하면 항공편 줄에서 목적지·시간·항공사 칸이 글자 한두 개 너비만 남아 한 자씩 꺾였다.
      그 칸이 7rem보다 좁아지면 편명은 첫 줄에 혼자 두고, 목적지·시간·항공사는 둘째 줄로 내린다.
