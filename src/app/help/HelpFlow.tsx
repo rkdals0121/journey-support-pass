@@ -336,7 +336,8 @@ export function HelpFlow({
               receipt: key,
               placeId,
               service,
-              choices: needsDetails ? choices : [],
+              // Reuse previously saved needs for a linked mobility request without asking again.
+              choices: needsDetails ? choices : service === "mobility" && registrationToken ? undefined : [],
               party: referral ? 1 : party,
               note,
               ...(serviceDetails && (topicId || !businessId)
