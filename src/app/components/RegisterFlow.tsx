@@ -36,6 +36,7 @@ import { AlnumPad, Choice } from "./Inputs";
 import { ListenStart } from "./ListenStart";
 import type { Target } from "@/lib/docscan";
 import type { BookingHandoff } from "@/lib/booking-model";
+import { REGISTRATION_DRAFT, readRegistrationDraft, normalizeFlightQuery } from "@/lib/registration-draft";
 
 export interface FlightOption {
   airline: string;
@@ -172,6 +173,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [step, setStep] = useState(0);
   const [declined, setDeclined] = useState(false);
   const [query, setQuery] = useState("");
+  const composing = useRef(false);
+  const [isComposing, setIsComposing] = useState(false);
+  const [draftReady, setDraftReady] = useState(mode !== "web");
+  const draftFinished = useRef(false);
   const [options, setOptions] = useState<FlightOption[] | null>(null);
   // 편명을 모르는 여객은 도착 도시를 눌러 고른다. 편이 많으면 출발 시간대로 좁힌다.
   const [cityOpen, setCityOpen] = useState(false);
@@ -197,6 +202,26 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [proofOk, setProofOk] = useState<Partial<Record<DocKey, boolean>>>({});
   const proofSent = docs.length > 0 && docs.every((x) => proofOk[x]);
 
+  // Keep drafts on this browser history entry only; never save shared-kiosk answers.
+  useEffect(() => {
+    if (mode !== "web") return;
+    const d = readRegistrationDraft(window.history.state?.[REGISTRATION_DRAFT], booking?.context ?? "");
+    if (d) {
+      setLang(d.lang); setChoices(d.choices); setExtra(d.extra);
+      setStep(Math.min(d.step, orderOf(mode, d.choices).length - 1));
+      setQuery(d.query); setLater(d.later); setLaterDate(d.laterDate); setLaterNo(d.laterNo);
+      setFlight(d.flight ?? booking?.flight ?? null);
+      setDocs(d.docs); setNoDocs(d.noDocs); setProofOk(d.proofOk);
+    }
+    setDraftReady(true);
+  }, [mode, booking?.context, booking?.flight]);
+  useEffect(() => {
+    if (mode !== "web" || !draftReady || draftFinished.current) return;
+    try {
+      window.history.replaceState({ ...window.history.state, [REGISTRATION_DRAFT]: { at: Date.now(), context: booking?.context ?? "", lang, choices, extra, step, query, later, laterDate, laterNo, flight, docs, noDocs, proofOk } }, "");
+    } catch { /* Registration still works if browser history storage is unavailable. */ }
+  }, [mode, draftReady, booking?.context, lang, choices, extra, step, query, later, laterDate, laterNo, flight, docs, noDocs, proofOk]);
+
   const ORDER = orderOf(mode, choices);
   const kind: StepKind = ORDER[Math.min(step, ORDER.length - 1)];
   const itemLabel = (i: Item) => (lang === "en" ? i.en : i.label);
@@ -218,7 +243,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     // 편 단계에서만 찾는다. 다른 단계로 가면 찾던 것을 끊고(늦은 오류가 다른 질문에 뜨지 않게), 돌아오면 다시 찾는다
     // (전에는 이전·다음으로 돌아오면 넣은 글자만 있고 목록도 「다시 찾기」도 없는 빈 화면이 됐다).
     // 도시에서 고른 경우는 글자 수와 상관없이 그 도시로 찾는다(괌처럼 한 글자인 도시도 있다).
-    if (kind !== "flight" || flight || (!cityPick && q.length < 2)) {
+    if (kind !== "flight" || isComposing || /[ㆍᆞ]/.test(q) || flight || (!cityPick && q.length < 2)) {
       setSearching(false);
       return;
     }
@@ -250,7 +275,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [kind, query, cityPick, flight, offline, retry]);
+  }, [kind, query, cityPick, flight, offline, retry, isComposing]);
 
   // 이전 질문으로 돌아가 값을 바꾼 횟수를 센다(잘못 넣어 고친 횟수).
   const touched = () => {
@@ -274,11 +299,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   // 「다른 편 고르기」를 누르면 이 글로 되돌려 아까의 목록이 다시 나오게 한다(고른 편 하나만 남지 않게).
   const pickedFrom = useRef("");
 
-  const typeFlight = (value: string) => {
+  const typeFlight = (value: string, inComposition = false) => {
     touched();
     pickedFrom.current = "";
     // 편명(KE123) 말고 도착 도시(도쿄, tokyo)나 편명의 숫자만 넣어도 찾는다. 그래서 한글과 띄어쓰기도 받는다.
-    setQuery(value.toUpperCase().replace(/[^A-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ ]/g, "").replace(/^ +/, "").slice(0, 16));
+    setQuery(inComposition ? value : normalizeFlightQuery(value));
     setOptions(null);
     setFlight(null);
     setCityPick(null);
@@ -436,6 +461,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                   : t.failed;
         fail(lang === "en" ? en : (data.error ?? t.failed));
         return;
+      }
+      if (mode === "web") {
+        draftFinished.current = true;
+        try {
+          const state = { ...window.history.state };
+          delete state[REGISTRATION_DRAFT];
+          window.history.replaceState(state, "");
+        } catch { /* A successful registration must still proceed if history is unavailable. */ }
       }
       onDone?.({ token: data.token, passNo: data.passNo, lang, choices });
     } catch {
@@ -920,7 +953,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                     autoComplete="off"
                     spellCheck={false}
                     aria-describedby="flight-state"
-                    onChange={(e) => typeFlight(e.target.value)}
+                    onCompositionStart={() => { composing.current = true; setIsComposing(true); }}
+                    onCompositionEnd={(e) => { composing.current = false; setIsComposing(false); typeFlight(e.currentTarget.value); }}
+                    onChange={(e) => typeFlight(e.target.value, composing.current || (e.nativeEvent as InputEvent).isComposing)}
                   />
                 </div>
               </>
