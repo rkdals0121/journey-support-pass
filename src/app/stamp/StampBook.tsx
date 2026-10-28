@@ -185,7 +185,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
         note={welcome}
         mine={
           s.theme && s.name
-            ? `${THEMES[s.theme].title} · ${THEMES[s.theme].unit} ${countOf(s)}개`
+            ? `${THEMES[s.theme].title} · ${THEMES[s.theme].unit} ${stampEligibility(s).indices.filter((i) => i in s.stamps).length}개`
             : ""
         }
         onOpen={() => go("cover")}
