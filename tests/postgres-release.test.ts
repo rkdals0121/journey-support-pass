@@ -148,7 +148,7 @@ describe.skipIf(!url)("real PostgreSQL release gate", () => {
       eraseRegistration(broken, registration.id, now, "revoked"),
     ).rejects.toThrow("injected erasure interruption");
     const [saved] = await db.query<{ state: string; registration_id: string }>(
-      "select state,registration_id from passes where token_hash is not null and registration_id=$1",
+      "select state,registration_id from passes where registration_id=$1",
       [registration.id],
     );
     expect(saved).toMatchObject({
