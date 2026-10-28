@@ -131,15 +131,15 @@ export const THEMES: Record<ThemeId, Theme> = {
     takePhoto: "사진 찍고 인증 ID 받기",
   },
   friend: {
-    kicker: "뭉게와 함께하는",
+    kicker: "하늘이와 함께하는",
     title: "공항 도장 놀이",
-    subtitle: "뭉게랑 별 도장 모으기",
+    subtitle: "하늘이랑 별 도장 모으기",
     start: "놀이 시작하기",
     nameLabel: "내 이름",
     gateLabel: "우리 게이트",
     photoSlot: "친구 사진 자리",
     promise:
-      "현재 구역의 별을 모으면\n뭉게 단짝 인증 ID가 이 페이지에 채워져요",
+      "현재 구역의 별을 모으면\n하늘이 단짝 인증 ID가 이 페이지에 채워져요",
     unit: "별",
     stops: [
       "인사 도장",
@@ -164,8 +164,8 @@ export const THEMES: Record<ThemeId, Theme> = {
       {
         id: "friend",
         label: "단짝",
-        badge: "뭉게 단짝 인증",
-        filter: "캐릭터 필터",
+        badge: "하늘이 단짝 인증",
+        filter: "하늘이 필터",
       },
     ],
     takePhoto: "친구들과 사진 찍기",

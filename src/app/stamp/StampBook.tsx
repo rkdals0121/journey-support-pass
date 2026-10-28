@@ -25,7 +25,7 @@ import {
 } from "@/lib/stamp-book";
 import { stampEligibility, stampRoute } from "@/lib/stamp-routing";
 import { SERVICE_HUBS } from "@/lib/service-hubs";
-import { Emblem, Mongge, Portrait, StampMark } from "./art";
+import { Emblem, Haneul, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
 import "./stamp.css";
 
@@ -104,12 +104,38 @@ export function StampBook({ scanned }: { scanned?: string }) {
         setWelcome(message);
         setScanErr(message);
       }
-      // 새로 고쳐도 같은 도장을 다시 찍은 것처럼 보이지 않게 주소를 스탬프북 첫 주소로 바꿔 둔다.
-      window.history.replaceState(null, "", "/stamp");
+    }
+    // 화면 이동을 브라우저 기록에 남겨 휴대전화 뒤로가기로 앞 화면에 돌아오게 한다.
+    // 맨 밑에는 늘 테마 고르기를 깔아 둔다. 저장된 수첩으로 바로 열려도 뒤로가기 한 번이면 테마 고르기가 나온다.
+    // QR 주소로 들어왔으면 주소를 스탬프북 첫 주소로 바꿔, 새로 고쳐도 같은 도장을 다시 찍은 것처럼 보이지 않게 한다.
+    // 새로 고침·되돌아오기라 이미 기록이 있으면 기록을 더 쌓지 않고 그 화면을 이어 쓴다(카메라·도장 화면은 수첩 홈으로).
+    const kept = (window.history.state as { sb?: View } | null)?.sb;
+    if (kept && !scanned && st.theme && st.name)
+      first =
+        kept === "themes" || kept === "cover" || kept === "done"
+          ? kept
+          : "home";
+    else {
+      window.history.replaceState(
+        { ...window.history.state, sb: "themes" },
+        "",
+        "/stamp",
+      );
+      if (first !== "themes")
+        window.history.pushState({ ...window.history.state, sb: first }, "");
     }
     setS(st);
     setView(first);
   }, [scanned]);
+
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const v = (e.state as { sb?: View } | null)?.sb;
+      if (v) setView(v);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   useEffect(() => {
     if (s) save(s);
@@ -143,7 +169,11 @@ export function StampBook({ scanned }: { scanned?: string }) {
   if (!s) return <div className="sb" data-theme="pick" />;
 
   const update = (p: Partial<BookState>) => setS({ ...s, ...p });
-  const go = (v: View) => {
+  // replace: 지금 화면을 기록에서 바꿔 끼운다. 뒤로가기로 다시 오면 어색한 화면(스캔 직후의 카메라, 찍은 뒤의 촬영 화면)에 쓴다.
+  const go = (v: View, replace = false) => {
+    const state = { ...window.history.state, sb: v };
+    if (replace) window.history.replaceState(state, "");
+    else window.history.pushState(state, "");
     setView(v);
     window.scrollTo(0, 0);
   };
@@ -153,6 +183,12 @@ export function StampBook({ scanned }: { scanned?: string }) {
       <ThemePicker
         current={s.theme}
         note={welcome}
+        mine={
+          s.theme && s.name
+            ? `${THEMES[s.theme].title} · ${THEMES[s.theme].unit} ${countOf(s)}개`
+            : ""
+        }
+        onOpen={() => go("cover")}
         onPick={(theme) => {
           update({ theme, role: THEMES[theme].roles[0].id });
           go(s.name ? "home" : "cover");
@@ -174,7 +210,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
     setGot({ i, again });
     setScanErr("");
     setTyped("");
-    go("got");
+    go("got", true);
   }
 
   function onScan(text: string) {
@@ -266,7 +302,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
                     return;
                   setS(EMPTY);
                   setGot(null);
-                  go("themes");
+                  go("themes", true);
                 }}
               >
                 <RotateCcw aria-hidden="true" /> 처음부터 다시 하기
@@ -450,7 +486,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
           <section className="sb-sheet">
             <div className="sb-stamp-pop">
               {theme === "friend" ? (
-                <Mongge size={170} wink />
+                <Haneul size={170} mood="joy" hands />
               ) : (
                 <StampMark theme={theme} size={140} />
               )}
@@ -596,7 +632,8 @@ export function StampBook({ scanned }: { scanned?: string }) {
                 certAt: s.certAt || Date.now(),
                 certGoal: goal,
               });
-              go("done");
+              // 찍은 사진은 내 수첩의 인증 사진 자리에 들어간다. 바로 보여 준다.
+              go("cover", true);
             }}
           />
         </main>
@@ -608,11 +645,15 @@ export function StampBook({ scanned }: { scanned?: string }) {
 function ThemePicker({
   current,
   note,
+  mine,
   onPick,
+  onOpen,
 }: {
   current: ThemeId | null;
   note: string;
+  mine: string;
   onPick: (t: ThemeId) => void;
+  onOpen: () => void;
 }) {
   return (
     <div className="sb" data-theme="pick">
@@ -653,6 +694,16 @@ function ThemePicker({
             </li>
           ))}
         </ul>
+        {mine && (
+          <button
+            type="button"
+            className="sb-link sb-pick-mine"
+            onClick={onOpen}
+          >
+            <BookOpen aria-hidden="true" /> 내 수첩 열어 보기{" "}
+            <small>({mine})</small>
+          </button>
+        )}
       </main>
     </div>
   );

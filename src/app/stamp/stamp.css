@@ -64,21 +64,22 @@
 }
 .sb[data-theme="friend"],
 .sb-pick [data-theme="friend"] {
-  --bg: #eaf5ff;
-  --ink: #2d2f4a;
-  --muted: #5d6080;
+  /* 하늘이 팔레트: Deep Blue · Yellow · White · Sky Blue */
+  --bg: #eaf6fd;
+  --ink: #23395f;
+  --muted: #4f6283;
   --soft: #fff;
-  --line: #2d2f4a;
-  --cover: #c8e5ff;
-  --cover-ink: #2d2f4a;
-  --kicker: #2d2f4a;
-  --main: #ffd84d;
-  --main-ink: #2d2f4a;
-  --cta: #ffd84d;
-  --cta-ink: #2d2f4a;
-  --accent: #ff9fbd;
-  --accent-ink: #2d2f4a;
-  --dark: #393a5a;
+  --line: #36588f;
+  --cover: #cfeefb;
+  --cover-ink: #23395f;
+  --kicker: #36588f;
+  --main: #f5cf3c;
+  --main-ink: #23395f;
+  --cta: #f5cf3c;
+  --cta-ink: #23395f;
+  --accent: #4cc3e8;
+  --accent-ink: #13304f;
+  --dark: #36588f;
   --idcard: #fff;
   --radius: 1.5rem;
 }
@@ -284,8 +285,8 @@
   text-align: center;
 }
 .sb[data-theme="friend"] .sb-photo-slot {
-  border-color: #9b9db8;
-  background: #fff2b8;
+  border-color: #8aa3c7;
+  background: #fff6cf;
   color: var(--ink);
 }
 .sb-photo-slot img {
@@ -444,7 +445,7 @@
   color: #8a5d0b;
 }
 .sb[data-theme="friend"] .sb-progress strong {
-  color: #c2255c;
+  color: #36588f;
 }
 .sb-progress p {
   margin: 0.6rem 0 0;
@@ -714,7 +715,7 @@
   text-align: center;
 }
 .sb[data-theme="friend"] .sb-sheet {
-  background: #fff2b8;
+  background: #fff6cf;
 }
 .sb-sheet h1 {
   margin: 0.5rem 0 0;
@@ -760,8 +761,8 @@
   -webkit-text-stroke: 2px #b5b7c9;
 }
 .sb-stars span.on {
-  color: #ffc21a;
-  -webkit-text-stroke: 2px #2d2f4a;
+  color: #f5cf3c;
+  -webkit-text-stroke: 2px #36588f;
 }
 
 /* 3. 완성 */
@@ -833,17 +834,30 @@
   position: relative;
   overflow: hidden;
   aspect-ratio: 3 / 4;
-  max-height: 62vh;
   margin: 0 auto;
-  width: 100%;
+  width: min(100%, 46.5vh);
   border-radius: var(--radius);
   background: #000;
 }
-.sb-camera-frame video {
+.sb-camera-frame canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
+}
+/* 카메라 영상은 캔버스로만 보여 준다. 숨기되 재생은 멈추지 않게 화면 밖에 두지 않고 투명하게 둔다(iOS 는 display:none 영상을 멈춘다). */
+.sb-camera-src {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+.sb-hidden-art {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 .sb-overlay {
   position: absolute;
@@ -1010,4 +1024,12 @@
   background: var(--card);
   color: var(--ink);
   font: inherit;
+}
+.sb-pick-mine {
+  margin: 0.5rem auto 0;
+  font-size: 0.9rem;
+}
+.sb-pick-mine small {
+  font-weight: 500;
+  opacity: 0.8;
 }
