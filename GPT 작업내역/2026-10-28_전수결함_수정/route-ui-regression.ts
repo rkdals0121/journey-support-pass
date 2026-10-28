@@ -27,7 +27,7 @@ async function main() {
   }
   for(const route of routes){const page=route.startsWith("/staff")?staff:route.startsWith("/kiosk")?kiosk:p;await inspect(page,route,1440,1000);console.log("CHECK",route);}
   for(const route of ["/","/prepare","/register","/services","/help","/requests","/visits","/points","/navigate","/staff/requests","/staff/visits","/staff/experience","/kiosk/guide"]){const page=route.startsWith("/staff")?staff:route.startsWith("/kiosk")?kiosk:p;await inspect(page,route,390,844);}
-  for(const theme of ["flight","explorer","friend"]){await p.goto(base+"/stamp");await p.waitForSelector("h1");await p.evaluate(theme=>localStorage.setItem("jsp:stamp-book",JSON.stringify({theme,name:"시연",gate:"250",mode:"route",startHub:"t2-departure",stamps:{},role:theme==="flight"?"captain":theme,photo:"",certId:"",certAt:0})),theme);await inspect(p,"/stamp?themecheck="+theme,390,844);}
+  for(const theme of ["flight","explorer","friend"]){await p.goto(base+"/stamp");await p.waitForSelector("h1");await p.evaluate(theme=>localStorage.setItem("jsp:stamp-book",JSON.stringify({theme,name:"시연",gate:"250",mode:"route",startHub:"t2-east",stamps:{},role:theme==="flight"?"captain":theme,photo:"",certId:"",certAt:0})),theme);await inspect(p,"/stamp?themecheck="+theme,390,844);}
   fs.writeFileSync(path.join(out,"route-ui-audit.json"),JSON.stringify({sourcePageFiles:files,rows,errors},null,2));
   console.log(JSON.stringify({routeCount:routes.length,scans:rows.length,problems:rows.filter(r=>r.overflow||(r.violations as unknown[]).length),errors},null,2));
  }finally{await b.close();}

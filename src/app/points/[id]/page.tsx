@@ -18,9 +18,7 @@ export default async function PointPage({
   return (
     <PublicShell lang={en ? "en" : "ko"}>
       <main id="public-main" className={styles.page}>
-        <p className={styles.eyebrow}>
-          {t("만남 장소 · 체크포인트", "Meeting point · Checkpoint")}
-        </p>
+        <p className={styles.eyebrow}>{t("만남 장소", "Meeting point")}</p>
         <h1>{en ? hub.en : hub.label}</h1>
         <p className={styles.demo}>
           {t(
@@ -49,8 +47,8 @@ export default async function PointPage({
               >
                 {t("이 위치로 직원 도움 요청", "Request staff here")}
               </Link>
-              <Link className={styles.secondary} href={`/stamp/c/${hub.code}`}>
-                {t("스탬프 받기", "Collect a stamp")}
+              <Link className={styles.secondary} href="/stamp">
+                {t("스탬프북 열기", "Open stamp book")}
               </Link>
             </div>
             <p className={styles.muted}>
