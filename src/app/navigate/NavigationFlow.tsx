@@ -78,7 +78,7 @@ export function NavigationFlow({
       if (!/^\d{1,3}$/.test(gate) || !target) {
         setError(
           t(
-            "지원하는 게이트 번호를 입력해 주세요.",
+            "지원하는 탑승구 번호를 입력해 주세요.",
             "Enter a supported gate number.",
           ),
         );

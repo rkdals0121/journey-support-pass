@@ -112,7 +112,7 @@ export function VisitResponse({
       {facility && (
         <p>
           {t(
-            `${facility.nearGate}번 게이트 부근`,
+            `${facility.nearGate}번 탑승구 부근`,
             `Near gate ${facility.nearGate}`,
           )}
         </p>

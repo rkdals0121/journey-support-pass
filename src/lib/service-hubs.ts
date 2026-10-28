@@ -32,7 +32,7 @@ export const SERVICE_HUBS = [
     en: "T1 central airside",
     x: 50,
     y: 30,
-    landmark: "25번 게이트 부근 만남 표지",
+    landmark: "25번 탑승구 부근 만남 표지",
     landmarkEn: "Meeting sign near gate 25, 3F",
   },
   {
@@ -43,7 +43,7 @@ export const SERVICE_HUBS = [
     en: "Concourse centre",
     x: 50,
     y: 35,
-    landmark: "탑승동 3층 116번 게이트 앞 만남 표지",
+    landmark: "탑승동 3층 116번 탑승구 앞 만남 표지",
     landmarkEn: "Meeting sign by gate 116 in the concourse, 3F",
   },
   {
@@ -65,7 +65,7 @@ export const SERVICE_HUBS = [
     en: "T2 central airside",
     x: 50,
     y: 30,
-    landmark: "250번 게이트 부근 만남 표지",
+    landmark: "250번 탑승구 부근 만남 표지",
     landmarkEn: "Meeting sign near gate 250, 3F",
   },
 ] as const;

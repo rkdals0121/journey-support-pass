@@ -177,10 +177,10 @@ export function PlaceFinder({
       <p className="place-finder-hint" id={id + "-hint"}>
         {tr(
           purpose === "report"
-            ? "시설 근처 게이트 번호나 안내판으로 위치를 선택해 주세요."
+            ? "시설 근처 탑승구 번호나 안내판으로 위치를 선택해 주세요."
             : curbside
               ? "지금 계신 곳의 출입구 번호, 택시·버스 승차장 표지, 주차장 구역 표지를 찾아보세요."
-              : "지금 계신 곳의 게이트 번호나 안내판을 찾아보세요.",
+              : "지금 계신 곳의 탑승구 번호나 안내판을 찾아보세요.",
           purpose === "report"
             ? "Choose the gate or sign nearest the reported facility."
             : curbside
@@ -201,7 +201,7 @@ export function PlaceFinder({
             placeholder={
               curbside
                 ? tr("예: 5번 출입구, 6C 택시 승차장, 단기주차장 A구역", "e.g. Door 5, taxi stand 6C, car park Zone A")
-                : tr("예: 130, 116번 게이트, 안내데스크", "e.g. 130, Gate 116, information desk")
+                : tr("예: 130, 116번 탑승구, 안내데스크", "e.g. 130, Gate 116, information desk")
             }
             aria-describedby={id + "-hint"}
             onChange={(e) => edit(e.target.value)}
@@ -230,7 +230,7 @@ export function PlaceFinder({
               aria-label={
                 curbside
                   ? tr("주변 출입구·승차장·주차 구역 표지 사진 선택", "Choose a photo of a nearby door, stand or car park sign")
-                  : tr("주변 게이트·안내판 사진 선택", "Choose a nearby gate or sign photo")
+                  : tr("주변 탑승구·안내판 사진 선택", "Choose a nearby gate or sign photo")
               }
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -305,7 +305,7 @@ export function PlaceFinder({
             <p role="status" className="place-search-notice">
               {matches.gates.length
                 ? tr(
-                    `사진에서 읽은 게이트 단서: ${matches.gates.join(", ")}번. 지금 서 있는 곳에 표시된 번호인지 확인해 주세요.`,
+                    `사진에서 읽은 탑승구 단서: ${matches.gates.join(", ")}번. 지금 서 있는 곳에 표시된 번호인지 확인해 주세요.`,
                     `Gate clues read: ${matches.gates.join(", ")}. Check that these numbers mark where you are standing.`,
                   )
                 : photoText.trim()
@@ -314,7 +314,7 @@ export function PlaceFinder({
                       "Text read. Check whether a candidate below is your current location.",
                     )
                   : tr(
-                      "사진에서 글자를 찾지 못했어요. 게이트 번호를 가까이 찍거나 직접 검색해 주세요.",
+                      "사진에서 글자를 찾지 못했어요. 탑승구 번호를 가까이 찍거나 직접 검색해 주세요.",
                       "No text found. Photograph the gate number more closely or search manually.",
                     )}
             </p>
@@ -331,7 +331,7 @@ export function PlaceFinder({
             <p className="place-search-notice">
               {matches.gates.length
                 ? tr(
-                    "안내판의 번호는 이동 방향이나 여러 게이트를 가리킬 수 있어요. 현재 서 있는 곳만 선택해 주세요.",
+                    "안내판의 번호는 이동 방향이나 여러 탑승구를 가리킬 수 있어요. 현재 서 있는 곳만 선택해 주세요.",
                     "A sign may point to several gates or a direction. Choose only where you are standing.",
                   )
                 : tr(
@@ -375,7 +375,7 @@ export function PlaceFinder({
                     "Could not find a location from this clue. Enter a door number (Door 5), a taxi stand (6C) or a car park zone (Zone A, P1), or choose from the list below.",
                   )
                 : tr(
-                    "이 단서로 현재 위치를 찾지 못했어요. 매장 사진이라면 옆 게이트 번호나 안내판도 함께 찍어 주세요. 직접 위치를 선택하거나 안내데스크에 사진을 보여주실 수 있어요.",
+                    "이 단서로 현재 위치를 찾지 못했어요. 매장 사진이라면 옆 탑승구 번호나 안내판도 함께 찍어 주세요. 직접 위치를 선택하거나 안내데스크에 사진을 보여주실 수 있어요.",
                     "Could not find a current location from this clue. For a shop, include the nearby gate or sign. You can select manually or show your photo at an information desk.",
                   )}
             </p>
