@@ -169,7 +169,10 @@ export function KioskVisitFlow({
         "visit-" + (visit?.state ?? (meetingPoint ? "destination" : "lookup"))
       }
       speakText={title}
-      onHome={reset}
+      onHome={() => {
+        reset();
+        window.location.replace(returnTo + (en ? "?lang=en" : ""));
+      }}
       onBack={visit ? reset : () => window.location.replace(returnTo)}
       headerTools={
         <button className="bar-btn" onClick={() => setEn(!en)}>

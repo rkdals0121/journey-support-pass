@@ -42,7 +42,7 @@ const errors: Record<string, string> = {
     "This action is unavailable in the current stage. Check the latest status.",
   visit_reference: "Enter the eight-character appointment reference.",
   visit_reference_missing:
-    "No appointment was found at this point today. Check the location and reference.",
+    "No appointment was found today. Check the date and reference.",
   kiosk_required: "Use an installed airport device.",
   kiosk_meeting_point:
     "Use the device at your booked meeting point, or confirm on your own phone.",
