@@ -25,7 +25,7 @@ import { DocScan } from "../../components/DocScan";
 import { FlowShell } from "../../components/FlowShell";
 import { FlightBoard } from "../../components/GuideParts";
 import { IdleGuard } from "../../components/IdleGuard";
-import { Choice } from "../../components/Inputs";
+import { Choice, NumPad } from "../../components/Inputs";
 import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { Robot } from "../../components/Robot";
@@ -131,6 +131,9 @@ export function EntryKiosk({
   const [lang, setLang] = useState<Lang>(initialLang);
   const [view, setView] = useState<View>({ kind: "sleep" });
   const [scanOpen, setScanOpen] = useState(false);
+  const [passNo, setPassNo] = useState("");
+  const [numberOpen, setNumberOpen] = useState(false);
+  const lookupBusy = useRef(false);
   const [picks, setPicks] = useState<EasyKey[]>([]);
   const [target, setTarget] = useState<Target | null>(null);
   const [proofOk, setProofOk] = useState(false);
@@ -155,6 +158,9 @@ export function EntryKiosk({
     seq.current++;
     setView({ kind: "sleep" });
     setScanOpen(false);
+    setPassNo("");
+    setNumberOpen(false);
+    lookupBusy.current = false;
     setPicks([]);
     setTarget(null);
     setProofOk(false);
@@ -207,6 +213,38 @@ export function EntryKiosk({
     [busy, lang],
   );
 
+  async function findNumber() {
+    if (lookupBusy.current || busy || !/^\d{6}$/.test(passNo)) return;
+    lookupBusy.current = true;
+    const mine = ++seq.current;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await post("/api/kiosk/resolve", {
+        passNo,
+        purpose: "guide",
+      });
+      if (mine !== seq.current) return;
+      if (res.status !== 200) {
+        failed(res.status, res.body);
+        setPassNo("");
+        return;
+      }
+      const guide = res.body.guide as GuideDto;
+      startedAt.current = new Date().toISOString();
+      setLang(guide.lang);
+      setPassNo("");
+      setView({ kind: "confirm", token: res.body.token as string, guide });
+    } catch {
+      if (mine === seq.current) setError(t.offline);
+    } finally {
+      if (mine === seq.current) {
+        setBusy(false);
+        lookupBusy.current = false;
+      }
+    }
+  }
+
   async function register(boarding: string) {
     const mine = ++seq.current;
     setBusy(true);
@@ -253,7 +291,7 @@ export function EntryKiosk({
   const idle = (
     <IdleGuard
       t={t}
-      enabled={view.kind !== "sleep"}
+      enabled={view.kind !== "sleep" || numberOpen || scanOpen}
       askSec={idleAskSec}
       answerSec={idleAnswerSec}
       onTimeout={reset}
@@ -274,14 +312,26 @@ export function EntryKiosk({
       kiosk
       screenKey={key}
       serviceHome={key === "sleep"}
-      headerTools={key === "sleep" ? <button className="bar-btn" onClick={() => setLang(l => l === "en" ? "ko" : "en")} lang={lang === "en" ? "ko" : "en"}>{t.otherLang}</button> : undefined}
+      headerTools={
+        key === "sleep" ? (
+          <button
+            className="bar-btn"
+            onClick={() => setLang((l) => (l === "en" ? "ko" : "en"))}
+            lang={lang === "en" ? "ko" : "en"}
+          >
+            {t.otherLang}
+          </button>
+        ) : undefined
+      }
       speakText={speakText}
       onBack={onBack ?? reset}
       onHome={reset}
       cta={cta}
     >
       {body}
-      {error && <ErrorNote>{error}</ErrorNote>}
+      {error && !(view.kind === "sleep" && numberOpen) && (
+        <ErrorNote>{error}</ErrorNote>
+      )}
     </FlowShell>
   );
   const bubble = (mood: "sleep" | "awake" | "happy", text: string) => (
@@ -305,25 +355,124 @@ export function EntryKiosk({
             <p className="robot-bubble">{t.entrySleep}</p>
           </div>
         </div>
-        <div className="robot-direct-services"><TaskLauncher en={lang === "en"} returnTo="/kiosk/entry" field topics={["guidance", "mobility"]} /></div>
-        <details className="robot-pass-entry" open={scanOpen} onToggle={e => setScanOpen(e.currentTarget.open)}>
-          <summary>{lang === "en" ? "Retrieve saved needs with your boarding pass" : "탑승권으로 등록한 도움 불러오기"}</summary>
-          {scanOpen && <div className="robot-scan"><Scanner
-            onScan={(s) => void onScan(s)}
-            paused={busy}
-            prefer="user"
-            text={{
-              starting: t.camStarting,
-              ready: t.entrySleepHint,
-              read: t.camRead,
-              none: t.entryCamNone,
-              switchCamera: t.camSwitch,
+        <div className="robot-direct-services">
+          <TaskLauncher
+            en={lang === "en"}
+            returnTo="/kiosk/entry"
+            field
+            topics={["guidance", "mobility"]}
+          />
+        </div>
+        <details
+          className="robot-number-entry"
+          open={numberOpen}
+          onToggle={(e) => {
+            const open = e.currentTarget.open;
+            setNumberOpen(open);
+            if (open) {
+              setScanOpen(false);
+              setError(null);
+            } else setPassNo("");
+          }}
+        >
+          <summary>
+            {lang === "en"
+              ? "Find by registration number"
+              : "고유 일련 번호로 찾기"}
+          </summary>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void findNumber();
             }}
-          /></div>}
+          >
+            <label htmlFor="entry-pass-number">
+              {lang === "en"
+                ? "6-digit registration number"
+                : "고유 일련 번호 6자리"}
+            </label>
+            <input
+              id="entry-pass-number"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={6}
+              pattern="[0-9]{6}"
+              value={passNo}
+              disabled={busy}
+              aria-invalid={!!error}
+              aria-describedby={error ? "entry-number-error" : undefined}
+              onChange={(e) =>
+                setPassNo(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+            />
+            {error && (
+              <div id="entry-number-error">
+                <ErrorNote>{error}</ErrorNote>
+              </div>
+            )}
+            <fieldset disabled={busy} className="entry-number-pad">
+              <legend className="sr-only">
+                {lang === "en" ? "Number pad" : "숫자 입력판"}
+              </legend>
+              <NumPad
+                onKey={(digit) =>
+                  setPassNo((value) => (value + digit).slice(0, 6))
+                }
+                onErase={() => setPassNo((value) => value.slice(0, -1))}
+                eraseLabel={lang === "en" ? "Delete a digit" : "한 자리 지우기"}
+              />
+            </fieldset>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={busy || passNo.length !== 6}
+            >
+              {busy
+                ? lang === "en"
+                  ? "Checking…"
+                  : "확인 중…"
+                : lang === "en"
+                  ? "Retrieve saved needs"
+                  : "등록한 도움 불러오기"}
+            </button>
+          </form>
+        </details>
+        <details
+          className="robot-pass-entry"
+          open={scanOpen}
+          onToggle={(e) => {
+            setScanOpen(e.currentTarget.open);
+            if (e.currentTarget.open) {
+              setNumberOpen(false);
+              setError(null);
+            }
+          }}
+        >
+          <summary>
+            {lang === "en"
+              ? "Retrieve saved needs with your boarding pass"
+              : "탑승권으로 등록한 도움 불러오기"}
+          </summary>
+          {scanOpen && (
+            <div className="robot-scan">
+              <Scanner
+                onScan={(s) => void onScan(s)}
+                paused={busy}
+                prefer="user"
+                text={{
+                  starting: t.camStarting,
+                  ready: t.entrySleepHint,
+                  read: t.camRead,
+                  none: t.entryCamNone,
+                  switchCamera: t.camSwitch,
+                }}
+              />
+            </div>
+          )}
         </details>
         <div className="robot-actions">
           <ListenStart t={t} />
-
         </div>
         <p className="kiosk-foot">{here}</p>
       </div>,

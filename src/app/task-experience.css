@@ -1,4 +1,11 @@
 /* Task-specific layouts: public entry, installed displays and staff queue. */
+.robot-number-entry { width: 100%; border: 1px solid #b8cbbf; border-radius: .5rem; background: #fff; padding: 1rem; }
+.robot-number-entry summary { cursor: pointer; font-weight: 600; min-height: 44px; display: list-item; align-content: center; }
+.robot-number-entry form { margin-top: 1rem; }
+.robot-number-entry label { display: block; margin-bottom: .5rem; }
+.robot-number-entry input { width: 100%; min-height: 52px; text-align: center; letter-spacing: .25em; font-size: 1.5rem; border: 1px solid #829f8c; border-radius: .25rem; padding: .5rem; }
+.entry-number-pad { border: 0; margin: .75rem 0; padding: 0; min-width: 0; }
+.robot-number-entry button[type="submit"] { width: 100%; }
 .field-task-tools {
   display: flex;
   align-items: center;
