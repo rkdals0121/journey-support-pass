@@ -274,7 +274,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
                   value={s.gate}
                   maxLength={4}
                   inputMode="numeric"
-                  placeholder="게이트 번호 (필수)"
+                  placeholder="탑승구 번호 (필수)"
                   className="sb-dashed"
                   required
                   aria-invalid={!!gateErr}
@@ -426,6 +426,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
                   {s.mode === "play" ? "코스 6곳을 도는 데" : "도장을 모으며 탑승구까지"} 약{" "}
                   {itinerary.minutes}분 · 걸음이 느린 가족 기준 추정이에요.
                   {s.mode === "route" && " 탑승 전 여유 15분은 따로 두세요."}
+                  {s.mode === "play" && " 너무 길다 싶으면 다른 코스로 바꿔 보세요."}
                 </p>
               )}
               {s.mode === "play" && !gateProblem(s.gate) && (
@@ -820,15 +821,15 @@ function Stars({ n, goal }: { n: number; goal: number }) {
   );
 }
 
-/** 놀이형: 근처 6곳 코스. 순서 없이 찍어도 되고, 위에서부터 돌면 한 방향으로 이어진다. */
+/** 놀이형: 구역 곳곳에 흩어진 6곳 코스. 순서 없이 찍어도 되고, 마지막 도장은 탑승구 근처다. */
 function PlayList({ s }: { s: BookState }) {
   const plan = stampEligibility(s);
   if (plan.reason) return null;
   return (
     <>
       <p className="sb-hint">
-        {AREA_LABEL[CHECKPOINTS[plan.indices[0]].area]} 이곳저곳을 도는 탐험 코스예요. 순서 없이 찍어도 되고,
-        위에서부터 돌면 한 방향으로 이어져 마지막 도장이 {s.gate}번 탑승구 근처예요.
+        {AREA_LABEL[CHECKPOINTS[plan.indices[0]].area]} 곳곳에 숨은 도장을 찾아 돌아다니는 탐험 코스예요.
+        순서 없이 찍어도 되고, 마지막 도장은 {s.gate}번 탑승구 근처라 다 모으면 바로 탑승하러 가면 돼요.
       </p>
       <Stops s={s} indices={plan.indices} gate={s.gate} />
     </>
@@ -852,30 +853,33 @@ function Stops({ s, indices, gate }: { s: BookState; indices: number[]; gate?: s
   const t = THEMES[theme];
   const next = indices.find((i) => !(i in s.stamps));
   return (
-    <ol className="sb-list">
-      {indices.map((i, k) => {
-        const c = CHECKPOINTS[i];
-        const done = i in s.stamps;
-        return (
-          <li key={c.code} className={done ? "done" : i === next ? "next" : ""}>
-            <span className="sb-node">
-              {done ? <StampMark theme={theme} size={48} /> : i === next ? <QrCode aria-hidden="true" /> : <Lock aria-hidden="true" />}
-            </span>
-            <span className="sb-stop">
-              <strong>
-                {k + 1}. {t.stops[Math.min(k, t.stops.length - 1)]}
-              </strong>
-              <small>
-                {done ? `${t.unit} 획득 완료 · ` : ""}
-                {c.code} · {c.place}
-                {gate && k === indices.length - 1 ? ` · ${gate}번 탑승구 근처` : ""}
-                {c.train ? " · 셔틀트레인" : ""}
-              </small>
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+    <>
+      <ol className="sb-list">
+        {indices.map((i, k) => {
+          const c = CHECKPOINTS[i];
+          const done = i in s.stamps;
+          return (
+            <li key={c.code} className={done ? "done" : i === next ? "next" : ""}>
+              <span className="sb-node">
+                {done ? <StampMark theme={theme} size={48} /> : i === next ? <QrCode aria-hidden="true" /> : <Lock aria-hidden="true" />}
+              </span>
+              <span className="sb-stop">
+                <strong>
+                  {k + 1}. {t.stops[Math.min(k, t.stops.length - 1)]}
+                </strong>
+                <small>
+                  {done ? `${t.unit} 획득 완료 · ` : ""}
+                  {c.code} · {c.place}
+                  {gate && k === indices.length - 1 ? ` · ${gate}번 탑승구 근처` : ""}
+                  {c.train ? " · 셔틀트레인" : ""}
+                </small>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="sb-hint">탑승구 위치 © OpenStreetMap contributors</p>
+    </>
   );
 }
 

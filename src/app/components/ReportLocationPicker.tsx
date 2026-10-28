@@ -69,7 +69,7 @@ export function ReportLocationPicker({
           <summary>
             {en
               ? "Use a gate or sign photo"
-              : "게이트·안내판 사진으로 위치 찾기"}
+              : "탑승구·안내판 사진으로 위치 찾기"}
           </summary>
           <PlaceFinder
             id="report-photo"
