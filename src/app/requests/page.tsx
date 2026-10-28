@@ -17,10 +17,9 @@ export default async function Requests({
     );
   return (
     <PublicShell lang={en ? "en" : "ko"}>
-      <div className="wrap">
+      <MyRequests en={en}>
         <SavedVisits en={en} />
-      </div>
-      <MyRequests en={en} />
+      </MyRequests>
     </PublicShell>
   );
 }

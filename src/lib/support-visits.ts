@@ -555,12 +555,6 @@ export async function kioskVisitAction(
   if (!session?.isKiosk || !session.placeId || session.exp <= now.getTime())
     return fail(401, "설치된 기기에서 이용해 주세요", "kiosk_required");
   const hub = SERVICE_HUBS.find((h) => h.placeId === session.placeId);
-  if (!hub)
-    return fail(
-      409,
-      "예약된 만남 장소의 기기 또는 개인 휴대전화에서 확인해 주세요",
-      "kiosk_meeting_point",
-    );
   await expireVisits(db, now);
   let visit: VisitView | undefined;
   if (body.action === "lookup") {
@@ -589,17 +583,36 @@ export async function kioskVisitAction(
       new Date(now.getTime() + 9 * 3600000).toISOString().slice(0, 10) +
       "T00:00:00+09:00";
     const found = await db.query<VisitView>(
-      `select ${columns} from support_visits where hub_id=$1 and start_at>=$2 and start_at<$2::timestamptz+interval '1 day' and left(id::text,8)=$3 and state not in ('cancelled','missed','done')`,
-      [hub.id, day, code],
+      `select ${columns} from support_visits where start_at>=$1 and start_at<$1::timestamptz+interval '1 day' and left(id::text,8)=$2 and state not in ('cancelled','missed','done')`,
+      [day, code],
     );
     if (found.length !== 1)
       return fail(
         404,
-        "오늘 이 장소의 예약을 찾지 못했습니다. 예약 장소와 번호를 확인해 주세요",
+        "오늘의 예약을 찾지 못했습니다. 예약 날짜와 확인번호를 확인해 주세요",
         "visit_reference_missing",
       );
     visit = found[0];
+    if (visit.hubId !== hub?.id) {
+      // A short reference can locate the meeting point, never expose personal details elsewhere.
+      const destination = hubOf(visit.hubId)!;
+      return ok({
+        meetingPoint: {
+          hubId: destination.id,
+          placeId: destination.placeId,
+          label: destination.label,
+          en: destination.en,
+          startAt: visit.startAt,
+        },
+      });
+    }
   } else {
+    if (!hub)
+      return fail(
+        409,
+        "예약 장소의 기기에서 도착을 확인해 주세요",
+        "kiosk_meeting_point",
+      );
     if (typeof body.id !== "string" || !/^[a-f0-9-]{36}$/i.test(body.id))
       return fail(400, "예약을 먼저 확인해 주세요", "visit_input");
     const day =

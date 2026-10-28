@@ -232,9 +232,11 @@ export function VisitConsole({ isDesk }: { isDesk: boolean }) {
           {error}
         </p>
       )}
-      <p className={styles.status} role="status">
-        {notice}
-      </p>
+      {notice && (
+        <p className={styles.status} role="status">
+          {notice}
+        </p>
+      )}
       {!loaded && <p role="status">지원 현황을 확인하고 있습니다.</p>}
       {loaded && !visits.length && (
         <p className={styles.empty}>조건에 맞는 지원이 없습니다.</p>

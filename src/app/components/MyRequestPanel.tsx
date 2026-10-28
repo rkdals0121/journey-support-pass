@@ -7,7 +7,13 @@ import {
   requestStateLabel,
   type ServiceRequestView,
 } from "@/lib/service-request-model";
-export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
+export function MyRequestPanel({
+  lang = "ko",
+  hideWhenEmpty = false,
+}: {
+  lang?: "ko" | "en";
+  hideWhenEmpty?: boolean;
+}) {
   const en = lang === "en";
   const [request, setRequest] = useState<ServiceRequestView | null>(null),
     [error, setError] = useState(""),
@@ -68,6 +74,7 @@ export function MyRequestPanel({ lang = "ko" }: { lang?: "ko" | "en" }) {
       controller?.abort();
     };
   }, [en]);
+  if (hideWhenEmpty && !request && !error) return null;
   return (
     <aside
       className={`my-request-panel${!request && !loading && !error ? " is-empty" : ""}`}

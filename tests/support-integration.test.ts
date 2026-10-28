@@ -370,7 +370,7 @@ describe("upgrade, kiosk scope and failure recovery", () => {
     expect((await book(2, "10:00")).status).toBe(200);
     expect(v.id).toBeTruthy();
   });
-  it("finds today's reference only at the installed meeting point and never exposes a private receipt", async () => {
+  it("locates appointments from any installed kiosk but exposes details and check-in only at the meeting point", async () => {
     const v = get(await book()),
       kiosk = sessionOf(now, { isKiosk: true, placeId: "cc-center" });
     const result = await kioskVisitAction(
@@ -383,17 +383,36 @@ describe("upgrade, kiosk scope and failure recovery", () => {
     expect(result.status).toBe(200);
     expect(result.body.receipt).toBeUndefined();
     expect(get(result).id).toBe(v.id);
-    expect(
-      (
-        await kioskVisitAction(
-          db,
-          sessionOf(now, { isKiosk: true, placeId: "t2-help" }),
-          { action: "lookup", reference: v.id.slice(0, 8) },
-          "kiosk",
-          now,
-        )
-      ).status,
-    ).toBe(404);
+    for (const placeId of ["t2-help", "t2-west"]) {
+      const elsewhere = await kioskVisitAction(
+        db,
+        sessionOf(now, { isKiosk: true, placeId }),
+        { action: "lookup", reference: v.id.slice(0, 8) },
+        "elsewhere",
+        now,
+      );
+      expect(elsewhere.status).toBe(200);
+      expect(elsewhere.body).toEqual({
+        meetingPoint: {
+          hubId: "concourse",
+          placeId: "cc-center",
+          label: expect.any(String),
+          en: expect.any(String),
+          startAt: v.startAt,
+        },
+      });
+      expect(
+        (
+          await kioskVisitAction(
+            db,
+            sessionOf(now, { isKiosk: true, placeId }),
+            { action: "checkin", id: v.id, version: v.version },
+            "elsewhere",
+            now,
+          )
+        ).status,
+      ).not.toBe(200);
+    }
     expect(
       (
         await kioskVisitAction(

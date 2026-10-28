@@ -40,7 +40,6 @@ import { IdleGuard } from "../../components/IdleGuard";
 import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
 import { Scanner } from "../../components/Scanner";
-import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
@@ -566,13 +565,21 @@ export function GuideKiosk({
           screenKey="scan"
           serviceHome
           headerTools={
-            <button
-              className="bar-btn"
-              onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))}
-              lang={startLang === "en" ? "ko" : "en"}
-            >
-              {t.otherLang}
-            </button>
+            <>
+              <Link
+                className="bar-btn kiosk-header-help"
+                href={kioskHelpHref(null, lang, "guidance", "/kiosk/guide")}
+              >
+                {lang === "en" ? "Staff help" : "직원 도움"}
+              </Link>
+              <button
+                className="bar-btn"
+                onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))}
+                lang={startLang === "en" ? "ko" : "en"}
+              >
+                {t.otherLang}
+              </button>
+            </>
           }
           speakText={
             scanOpen
@@ -596,12 +603,12 @@ export function GuideKiosk({
             </section>
             <TaskLauncher en={lang === "en"} returnTo="/kiosk/guide" field />
             <Link
-              className="btn"
+              className="btn kiosk-appointment-link"
               href={"/kiosk/visits" + (lang === "en" ? "?lang=en" : "")}
             >
               {lang === "en"
                 ? "Confirm a meeting appointment"
-                : "만남 예약 확인번호로 찾기"}
+                : "예약 확인번호 입력"}
             </Link>
             <details
               className="kiosk-personalise"
@@ -652,20 +659,8 @@ export function GuideKiosk({
                 </div>
               )}
             </details>
-            <div className="kiosk-task-utilities">
-              <ListenStart t={t} />
-              <Link
-                className="btn"
-                href={kioskHelpHref(null, lang, "guidance", "/kiosk/guide")}
-              >
-                {lang === "en" ? "Ask a member of staff" : "직원에게 안내 요청"}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </div>
           </div>
-          <p className="kiosk-foot">{here}</p>
         </FlowShell>
-        {call}
       </>
     );
   }

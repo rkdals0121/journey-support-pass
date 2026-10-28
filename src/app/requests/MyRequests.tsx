@@ -10,7 +10,13 @@ import {
 } from "@/lib/service-request-model";
 import { taskOf } from "@/lib/service-tasks";
 import { supportTopic } from "@/lib/service-catalog";
-export function MyRequests({ en }: { en: boolean }) {
+export function MyRequests({
+  en,
+  children,
+}: {
+  en: boolean;
+  children?: React.ReactNode;
+}) {
   const [rows, setRows] = useState<
       { receipt: string; request: ServiceRequestView }[]
     >([]),
@@ -93,6 +99,7 @@ export function MyRequests({ en }: { en: boolean }) {
           )}
         </p>
       </header>
+      {children}
       <div className="request-list-bar">
         <span>
           {t(

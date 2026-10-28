@@ -157,21 +157,7 @@ export function ServiceDirectory({
             <p className="airport-eyebrow">
               {en ? "Airport services" : "공항 현장 서비스"}
             </p>
-            <h1>
-              {en ? (
-                <>
-                  How can we
-                  <br />
-                  help you today?
-                </>
-              ) : (
-                <>
-                  어떤 도움이
-                  <br />
-                  필요하세요?
-                </>
-              )}
-            </h1>
+            <h1>{en ? "Find a service" : "서비스 찾기"}</h1>
             <p className="airport-entry-intro">
               {en
                 ? "Directions, mobility and assistance at the airport."

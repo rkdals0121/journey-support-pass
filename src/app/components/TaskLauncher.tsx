@@ -75,7 +75,7 @@ export function TaskLauncher({
   return (
     <div className={"task-launcher" + (field ? " task-launcher-field" : "")}>
       {actions
-        .filter((a) => !topics || topics.includes(a.id))
+        .filter((a) => (topics ? topics.includes(a.id) : a.id !== "robot"))
         .map(({ id, ko, en: english, detail, detailEn, Icon }) => {
           const href = new URL(
             topicLink(id, en ? "en" : "ko"),

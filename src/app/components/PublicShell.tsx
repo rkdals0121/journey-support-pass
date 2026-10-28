@@ -39,7 +39,6 @@ export function PublicShell({
     ["/requests", en ? "My request" : "내 요청 확인"],
     ["/visits", en ? "Appointments" : "만남 예약"],
     ["/prepare", en ? "Before you travel" : "여행 전 사전등록"],
-    ["/devices", en ? "Kiosk & robot" : "키오스크·로봇"],
   ];
   return (
     <div className="public-site airport-site" lang={lang}>
@@ -126,8 +125,12 @@ export function PublicShell({
           <Link href={"/devices" + suffix}>
             {en ? "Kiosk & robot" : "키오스크·로봇"}
           </Link>
-          <Link href={"/services/desks" + suffix}>{en ? "Information desks" : "안내데스크 위치"}</Link>
-          <Link href={"/services/lost-property" + suffix}>{en ? "Lost property information" : "유실물 안내"}</Link>
+          <Link href={"/services/desks" + suffix}>
+            {en ? "Information desks" : "안내데스크 위치"}
+          </Link>
+          <Link href={"/services/lost-property" + suffix}>
+            {en ? "Lost property information" : "유실물 안내"}
+          </Link>
           <Link href="/staff">
             {en ? "Staff workspace" : "직원 업무 화면"}
             <ArrowUpRight size={14} aria-hidden="true" />
