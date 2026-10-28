@@ -209,11 +209,16 @@ export function makeCourse(gate: string, rand: () => number = Math.random): numb
   return best;
 }
 
-/** 코스가 지금 탑승구에 맞게 만들어져 있는가(같은 구역, 마지막이 탑승구 근처). */
+/** 코스가 지금 탑승구에 맞게 만들어져 있는가(같은 구역, 겹치지 않는 6곳, 마지막이 탑승구 근처). */
 export function courseFits(course: number[] | undefined, gate: string): course is number[] {
   if (gateProblem(gate) || !course || course.length !== GOAL) return false;
   const near = byGate(gate);
-  return course.every((i) => near.includes(i)) && near.slice(0, FINAL_NEAR).includes(course[GOAL - 1]);
+  // 저장된 값이 겹치거나 깨졌으면(같은 번호 반복, 문자열 등) 새로 만든다.
+  return (
+    new Set(course).size === GOAL &&
+    course.every((i) => near.includes(i)) &&
+    near.slice(0, FINAL_NEAR).includes(course[GOAL - 1])
+  );
 }
 
 /** 카메라·사진·번호 입력·QR 주소 모두 같은 기준으로 도장을 받을 수 있는지 본다. */

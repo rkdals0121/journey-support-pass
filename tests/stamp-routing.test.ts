@@ -123,6 +123,11 @@ describe("play mode: wander around the airport, finish near the gate", () => {
     // 탑승구를 바꾸면 예전 코스는 쓰지 않는다
     expect(stampEligibility({ mode: "play", gate: "20", course }).indices).toEqual([]);
   });
+  it("rejects duplicate or corrupt saved course indices", () => {
+    const course = makeCourse("250", seeded(5));
+    expect(courseFits(Array(GOAL).fill(course[GOAL - 1]), "250")).toBe(false);
+    expect(courseFits(course.map(String) as unknown as number[], "250")).toBe(false);
+  });
   it("blocks near boarding", () => {
     const now = Date.parse("2026-10-28T01:00:00Z");
     const course = makeCourse("250", seeded(3));

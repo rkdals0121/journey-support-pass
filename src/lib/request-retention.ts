@@ -18,7 +18,7 @@ export async function expireServiceRequests(db: Db, now: Date) {
   await db.query(
     `update service_requests set state='expired',ended_at=$1,updated_at=$1,version=version+1,last_action='expired',last_actor_zone=null,last_action_reason='',pending_place_id=null,pending_place_at=null,
  reason='응답 대기 시간이 지나 종료되었습니다. 가까운 안내데스크에 문의하거나 새로 요청해 주세요 / Timed out. Contact the nearest information desk or make a new request.'
- where expires_at>$1 and ((state='received' and created_at<=$2) or
+ where planned_at is null and expires_at>$1 and ((state='received' and created_at<=$2) or
  (state in ('assigned','en_route','arrived','serving') and updated_at<=$3))`,
     [
       now,

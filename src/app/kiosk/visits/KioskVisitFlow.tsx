@@ -1,4 +1,9 @@
 "use client";
+import {
+  STATE_LABEL,
+  STATE_EN,
+  type RequestState,
+} from "@/lib/service-request-model";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { prefsOf } from "@/lib/catalog";
@@ -30,6 +35,11 @@ export function KioskVisitFlow({
   const [visit, setVisit] = useState<VisitView | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  const [work, setWork] = useState<{
+    state: RequestState;
+    version: number;
+    staffLabel?: string | null;
+  } | null>(null);
   const epoch = useRef(0),
     saving = useRef(false),
     latest = useRef<VisitView | null>(null);
@@ -42,6 +52,7 @@ export function KioskVisitFlow({
     saving.current = false;
     latest.current = null;
     setVisit(null);
+    setWork(null);
     setReference("");
     setError("");
     setBusy(false);
@@ -83,6 +94,13 @@ export function KioskVisitFlow({
         ) {
           latest.current = b.visit;
           setVisit(b.visit);
+          setWork((current) =>
+            !b.work
+              ? null
+              : !current || b.work.version >= current.version
+                ? b.work
+                : current,
+          );
         }
       } catch (e) {
         if (turn === epoch.current && !request.signal.aborted)
@@ -281,7 +299,14 @@ export function KioskVisitFlow({
               )}
             </div>
             {visit.state === "handed_over" && (
-              <p role="status">
+              <p role="status" className={styles.inlineNotice}>
+                {work && (
+                  <strong>
+                    {en ? STATE_EN[work.state] : STATE_LABEL[work.state]}
+                    {work.staffLabel ? " · " + work.staffLabel : ""}
+                    <br />
+                  </strong>
+                )}
                 {t(
                   "같은 확인번호로 직원에게 전달했어요. 이 장소에서 기다려 주세요.",
                   "Your existing request was handed to staff. Please wait at this meeting point.",

@@ -1,0 +1,201 @@
+{
+  "checkedAt": "2026-10-28T06:38:40.775Z",
+  "deploymentCommit": "3fbc38b974a7d96ef4747478205fe00efa92f1a5",
+  "rows": [
+    {
+      "route": "/",
+      "width": 390,
+      "status": 200,
+      "heading": "공항에서의 이동,여기서 시작하세요.",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/services",
+      "width": 390,
+      "status": 200,
+      "heading": "어떤 도움이필요하세요?",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/visits",
+      "width": 390,
+      "status": 200,
+      "heading": "로봇·이동지원 예약",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/visits?lang=en",
+      "width": 390,
+      "status": 200,
+      "heading": "Arrange your assistance",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/requests",
+      "width": 390,
+      "status": 200,
+      "heading": "내 요청",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/points/concourse",
+      "width": 390,
+      "status": 200,
+      "heading": "탑승동 중앙",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/points/t2-airside?lang=en",
+      "width": 390,
+      "status": 200,
+      "heading": "T2 central airside",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/points?lang=en",
+      "width": 390,
+      "status": 200,
+      "heading": "Find a meeting point",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/devices",
+      "width": 390,
+      "status": 200,
+      "heading": "키오스크 · 안내로봇",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/help?topic=facility",
+      "width": 390,
+      "status": 200,
+      "heading": "시설 이용 불편",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/stamp",
+      "width": 390,
+      "status": 200,
+      "heading": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/staff/login",
+      "width": 390,
+      "status": 200,
+      "heading": "직원 로그인",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/",
+      "width": 1440,
+      "status": 200,
+      "heading": "공항에서의 이동,여기서 시작하세요.",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/services",
+      "width": 1440,
+      "status": 200,
+      "heading": "어떤 도움이필요하세요?",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/visits",
+      "width": 1440,
+      "status": 200,
+      "heading": "로봇·이동지원 예약",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/visits?lang=en",
+      "width": 1440,
+      "status": 200,
+      "heading": "Arrange your assistance",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/requests",
+      "width": 1440,
+      "status": 200,
+      "heading": "내 요청",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/points/concourse",
+      "width": 1440,
+      "status": 200,
+      "heading": "탑승동 중앙",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/points/t2-airside?lang=en",
+      "width": 1440,
+      "status": 200,
+      "heading": "T2 central airside",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/points?lang=en",
+      "width": 1440,
+      "status": 200,
+      "heading": "Find a meeting point",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/devices",
+      "width": 1440,
+      "status": 200,
+      "heading": "키오스크 · 안내로봇",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/help?topic=facility",
+      "width": 1440,
+      "status": 200,
+      "heading": "시설 이용 불편",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/stamp",
+      "width": 1440,
+      "status": 200,
+      "heading": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "route": "/staff/login",
+      "width": 1440,
+      "status": 200,
+      "heading": "직원 로그인",
+      "overflow": false,
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "slotApi": 200,
+  "writeRequests": "blocked"
+}
