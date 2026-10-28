@@ -2,6 +2,7 @@
 import { Scanner } from "../../components/Scanner";
 import {PassRequests} from "./PassRequests";
 import Link from "next/link";
+import { formatPassNo } from "@/lib/pass-format";
 
 import { BadgeCheck, Circle, CircleCheck, ScanLine, Ticket, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -309,6 +310,7 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
         <p className="kicker">Journey Support Pass</p>
       )}
       <h1>{t.passTitle}</h1>
+      <dl className="pass-reference"><dt>{t.passNo}</dt><dd className="num">{formatPassNo(guide.passNo)}</dd></dl>
 
       <h2>{t.readyTitle}</h2>
       <ol className="ready">
