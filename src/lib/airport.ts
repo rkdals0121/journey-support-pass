@@ -280,9 +280,9 @@ export function placeOf(id: string | null | undefined): Place | null {
 
 // ── 길 계산 ──
 
-export type StepKind = "walk" | "elevator" | "escalator" | "shuttle";
+export type StepKind = "walk" | "elevator" | "escalator" | "shuttle" | "security";
 /** 걷는 구간이 끝나는 곳. */
-export type WalkTo = "gate" | "facility" | "lift" | "train";
+export type WalkTo = "gate" | "facility" | "lift" | "train" | "security";
 
 export interface Along {
   kind: FacilityKind;
@@ -333,6 +333,8 @@ const ELEVATOR_MIN = 3;
 const ESCALATOR_MIN = 1;
 // 셔틀트레인: 기다리는 시간과 타는 시간.
 const TRAIN_MIN = 7;
+// 출국장 보안검색과 출국심사(분). 붐비는 정도에 따라 달라 시연 지도의 어림값이다.
+const SECURITY_MIN = 20;
 // 이보다 짧은 걸음은 따로 적지 않는다.
 const SKIP_WALK_M = 15;
 const ALONG_MAX = 3;
@@ -430,6 +432,31 @@ export function routeBetween(from: Spot, to: Spot, walkTo: "gate" | "facility", 
 export function routeToGate(from: Place, area: Area, gate: number, opts: RouteOptions): Route | null {
   if (from.landside) return null;
   return routeBetween(from, { area, x: gateX(area, gate), level: GATE_LEVEL }, "gate", opts, gate);
+}
+
+/**
+ * 바로 이용하는 길 안내용. 보안검색 전 자리(안내데스크, 도착장 등)에서는 같은 터미널 3층 출국장으로 가서
+ * 보안검색·출국심사를 마친 뒤 탑승구로 간다. 출국장은 터미널 가운데에 있다고 본다(시연 지도).
+ * 탑승권으로 찾는 맞춤 안내(guide)는 지금처럼 보안검색 전 자리를 따로 알린다.
+ */
+export function routeToGateFrom(from: Place, area: Area, gate: number, opts: RouteOptions): Route | null {
+  if (!from.landside) return routeToGate(from, area, gate, opts);
+  const hall: Spot = { area: from.area, x: 0, level: GATE_LEVEL };
+  const after = routeBetween(hall, { area, x: gateX(area, gate), level: GATE_LEVEL }, "gate", opts, gate);
+  if (!after) return null;
+  const steps: Step[] = [
+    ...within(from, hall, "security", opts),
+    { kind: "security", meters: 0, minutes: SECURITY_MIN, towardGate: null, dir: 0, walkTo: null, fromLevel: GATE_LEVEL, toLevel: GATE_LEVEL, along: [] },
+    ...after.steps,
+  ];
+  const levelChanges = steps.filter((s) => s.kind === "elevator" || s.kind === "escalator").length;
+  return {
+    steps,
+    meters: steps.reduce((n, s) => n + s.meters, 0),
+    minutes: steps.reduce((n, s) => n + s.minutes, 0),
+    levelChanges,
+    stepFree: opts.stepFree || levelChanges === 0,
+  };
 }
 
 export interface NearFacility {

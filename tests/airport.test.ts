@@ -13,6 +13,8 @@ import {
   routeBetween,
   routeOptionsOf,
   routeToGate,
+  routeToGateFrom,
+  PICKUP_PLACES,
   type Area,
   type Place,
   type RouteOptions,
@@ -586,5 +588,36 @@ describe("제안서의 예시 장면", () => {
     const r = routeToGate(at("cc-train"), "CONCOURSE", 127, routeOptionsOf(scene.choices));
     expect(r?.steps.map((s) => s.kind)).not.toContain("escalator");
     expect(r?.steps.map((s) => s.kind)).not.toContain("shuttle");
+  });
+});
+
+describe("바로 이용하는 길 안내: 보안검색 전 자리에서 탑승구까지", () => {
+  it("제1여객터미널 3층 안내데스크에서 130번 탑승구까지 출국장 보안검색 → 셔틀트레인 → 탑승구로 간다", () => {
+    const r = routeToGateFrom(at("t1-info"), "CONCOURSE", 130, stepFree);
+    expect(r).not.toBeNull();
+    const kinds = r!.steps.map((s) => s.kind);
+    expect(kinds.indexOf("security")).toBeGreaterThanOrEqual(0);
+    expect(kinds.indexOf("security")).toBeLessThan(kinds.indexOf("shuttle"));
+    expect(kinds).not.toContain("escalator");
+    expect(r!.steps.at(-1)).toMatchObject({ kind: "walk", walkTo: "gate", towardGate: 130 });
+  });
+
+  it("1층 도착장에서는 엘리베이터로 3층 출국장에 먼저 올라간다", () => {
+    const r = routeToGateFrom(at("t1-arrivals-demo"), "T1", 10, stepFree)!;
+    expect(r.steps[0]).toMatchObject({ kind: "elevator", fromLevel: 1, toLevel: 3 });
+    expect(r.steps.some((s) => s.kind === "security")).toBe(true);
+  });
+
+  it("걸어서 이어지지 않는 터미널은 길을 내지 않고, 보안검색 뒤 자리는 지금 길과 같다", () => {
+    expect(routeToGateFrom(at("t2-help"), "CONCOURSE", 130, stepFree)).toBeNull();
+    expect(routeToGateFrom(at("t1-info"), "T2", 250, stepFree)).toBeNull();
+    expect(routeToGateFrom(at("t1-west"), "T1", 41, plain)).toEqual(routeToGate(at("t1-west"), "T1", 41, plain));
+  });
+
+  it("모든 보안검색 전 자리(출입구·택시·버스·주차장 포함)에서 같은 터미널의 모든 탑승구로 길이 나온다", () => {
+    for (const p of PICKUP_PLACES.filter((p) => p.landside)) {
+      const [lo, hi] = RANGES[p.area];
+      for (let g = lo; g <= hi; g++) expect(routeToGateFrom(p, p.area, g, stepFree), `${p.id}→${g}`).not.toBeNull();
+    }
   });
 });

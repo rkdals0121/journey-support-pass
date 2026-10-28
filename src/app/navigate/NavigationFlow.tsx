@@ -14,13 +14,15 @@ import type { KioskReturn } from "@/lib/help-entry";
 import {
   placeOf,
   GATE_PICKUP_POINTS,
-  routeToGate,
+  routeToGateFrom,
   nearestFacilities,
   routeOptionsOf,
   type Route,
   type FacilityKind,
 } from "@/lib/airport";
 import { textOf } from "@/lib/i18n";
+const floorKo = (n: number) => (n < 0 ? `지하 ${-n}층` : `${n}층`);
+const floorEn = (n: number) => (n < 0 ? `B${-n}` : `${n}F`);
 export function NavigationFlow({
   en,
   initialGate = "",
@@ -82,14 +84,14 @@ export function NavigationFlow({
         );
         return;
       }
-      const route = routeToGate(from, target.place.area, Number(gate), opts);
+      const route = routeToGateFrom(from, target.place.area, Number(gate), opts);
       if (route)
         setResult({ title: t(`${gate}번 탑승구`, `Gate ${gate}`), route });
       else
         setError(
           t(
-            "현재 위치에서는 안내 가능한 연결 경로가 없어요. 아래 현장 안내를 이용해 주세요.",
-            "No mapped route from this location. Request on-site guidance below.",
+            "이 위치에서는 그 탑승구로 걸어서 갈 수 없어요. 터미널이 다르면 터미널 사이 셔틀버스를 타야 해요. 항공권에 적힌 터미널을 확인하시거나 현장 안내를 불러 주세요.",
+            "You cannot walk to that gate from here. Different terminals are linked by the inter-terminal shuttle bus. Check the terminal on your ticket, or request on-site guidance.",
           ),
         );
     } else {
@@ -270,9 +272,11 @@ export function NavigationFlow({
                         )
                       : s.kind === "shuttle"
                         ? t("셔틀트레인 이용", "Take the shuttle train")
-                        : t(
-                            `${s.kind === "elevator" ? "엘리베이터" : "에스컬레이터"}로 ${s.fromLevel}층 → ${s.toLevel}층`,
-                            `Take the ${s.kind} from level ${s.fromLevel} to ${s.toLevel}`,
+                        : s.kind === "security"
+                          ? t("출국장에서 보안검색·출국심사", "Security and passport control")
+                          : t(
+                            `${s.kind === "elevator" ? "엘리베이터" : "에스컬레이터"}로 ${floorKo(s.fromLevel)} → ${floorKo(s.toLevel)}`,
+                            `Take the ${s.kind} from ${floorEn(s.fromLevel)} to ${floorEn(s.toLevel)}`,
                           )}
                   </li>
                 ))}

@@ -464,12 +464,15 @@ const ko = {
         ? "엘리베이터·에스컬레이터 있는 곳까지 갑니다"
         : to === "train"
           ? "셔틀트레인 타는 곳까지 갑니다"
-          : "갑니다";
+          : to === "security"
+            ? "출국장 입구까지 갑니다"
+            : "갑니다";
     return `${sign}${m}m ${end} (약 ${min}분)`;
   },
   liftStep: (kind: "elevator" | "escalator", from: number, to: number) =>
     `${kind === "elevator" ? "엘리베이터" : "에스컬레이터"}를 타고 ${ko.level(to)}으로 ${to > from ? "올라갑니다" : "내려갑니다"}`,
   shuttle: (min: number) => `셔틀트레인을 타고 탑승동으로 갑니다 (기다리는 시간 포함 약 ${min}분)`,
+  security: (min: number) => `출국장에서 보안검색과 출국심사를 받습니다 (붐비는 정도에 따라 약 ${min}분)`,
 };
 
 type Text = typeof ko;
@@ -539,10 +542,11 @@ const koEasy: Partial<Text> = {
     const sign = g ? `‘${g}’ 숫자가 있는 표지를 따라 ` : "";
     // 다음 줄이 에스컬레이터일 수도 있어서 "엘리베이터까지"라고 못박지 않는다. 앞뒤 줄이 서로 달라 보이면 헷갈린다.
     const end =
-      to === "lift" ? "엘리베이터나 에스컬레이터가 있는 곳까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : "갑니다";
+      to === "lift" ? "엘리베이터나 에스컬레이터가 있는 곳까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : to === "security" ? "비행기 타러 들어가는 문(출국장)까지 갑니다" : "갑니다";
     return `${sign}${m}m ${end} (${min}분쯤)`;
   },
   shuttle: (min: number) => `셔틀트레인(기차)을 타고 갑니다 (${min}분쯤)`,
+  security: (min: number) => `가방과 몸 검사, 여권 확인을 받습니다 (${min}분쯤)`,
 };
 
 const en: Text = {
@@ -985,12 +989,13 @@ const en: Text = {
   area: { T1: "Terminal 1", CONCOURSE: "Concourse", T2: "Terminal 2" },
   walk: (m, min, g, to) => {
     const sign = g ? `Follow the signs for Gate ${g}` : "Go";
-    const end = to === "lift" ? " to the lifts and escalators" : to === "train" ? " to the shuttle train" : "";
+    const end = to === "lift" ? " to the lifts and escalators" : to === "train" ? " to the shuttle train" : to === "security" ? " to the departures entrance" : "";
     return `${sign}${end}, ${m} m (about ${min} min)`;
   },
   liftStep: (kind, from, to) =>
     `Take the ${kind === "elevator" ? "lift" : "escalator"} ${to > from ? "up" : "down"} to ${en.level(to)}`,
   shuttle: (min) => `Take the shuttle train to the Concourse (about ${min} min including the wait)`,
+  security: (min) => `Go through security and passport control in departures (about ${min} min, depending on queues)`,
 };
 
 const enEasy: Partial<Text> = {

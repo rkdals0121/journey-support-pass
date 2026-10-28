@@ -1,4 +1,4 @@
-import { ArrowUpDown, CircleAlert, Clock, Flag, MapPin, Milestone, PlaneTakeoff, TrainFront, TrendingUp } from "lucide-react";
+import { ArrowUpDown, CircleAlert, Clock, Flag, MapPin, Milestone, PlaneTakeoff, ShieldCheck, TrainFront, TrendingUp } from "lucide-react";
 import type { FacilityKind, Route, Step } from "@/lib/airport";
 import { config } from "@/lib/config";
 import { destLabel } from "@/lib/dest-en";
@@ -171,6 +171,7 @@ function sentence(s: string): string {
 function stepText(s: Step, t: Text): string {
   if (s.kind === "walk") return t.walk(s.meters, s.minutes, s.towardGate, s.walkTo);
   if (s.kind === "shuttle") return t.shuttle(s.minutes);
+  if (s.kind === "security") return t.security(s.minutes);
   return t.liftStep(s.kind, s.fromLevel, s.toLevel);
 }
 
@@ -189,7 +190,7 @@ export function routeLines(route: Route, target: RouteTarget, t: Text): string[]
   ];
 }
 
-const STEP_ICON = { walk: Milestone, elevator: ArrowUpDown, escalator: TrendingUp, shuttle: TrainFront } as const;
+const STEP_ICON = { walk: Milestone, elevator: ArrowUpDown, escalator: TrendingUp, shuttle: TrainFront, security: ShieldCheck } as const;
 
 /** 길 안내. 지금 있는 곳에서 시작해 한 줄에 한 가지씩, 차례대로. */
 export function RouteSteps({ route, target, from, t }: { route: Route; target: RouteTarget; from: string; t: Text }) {
