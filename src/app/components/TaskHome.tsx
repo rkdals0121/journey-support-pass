@@ -13,21 +13,19 @@ export function TaskHome({ en = false }: { en?: boolean }) {
     <>
       <section className="task-home-hero" aria-labelledby="home-title">
         <div className="task-home-intro">
-          <p>
-            공항 이용 지원 <span>Airport Assist</span>
-          </p>
+          <p>{en ? "AT THE AIRPORT" : "공항 현장 서비스"}</p>
           <h1 id="home-title">
             {en ? (
               <>
-                Your next stop,
+                Airport services,
                 <br />
-                made easier.
+                in one place.
               </>
             ) : (
               <>
-                공항에서의 이동,
+                지금 필요한 공항 서비스
                 <br />
-                여기서 시작하세요.
+                빠르게 찾아보세요.
               </>
             )}
           </h1>
@@ -36,7 +34,9 @@ export function TaskHome({ en = false }: { en?: boolean }) {
             <ArrowRight aria-hidden="true" />
           </Link>
           <Link href={"/visits" + q}>
-            {en ? "Arrange a meeting before you arrive" : "방문 전에 만날 장소·시간 예약"}
+            {en
+              ? "Arrange a meeting before you arrive"
+              : "방문 전에 만날 장소·시간 예약"}
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>
@@ -80,7 +80,7 @@ export function TaskHome({ en = false }: { en?: boolean }) {
         </form>
       </section>
       <div className="task-home-status">
-        <MyRequestPanel lang={en ? "en" : "ko"} />
+        <MyRequestPanel lang={en ? "en" : "ko"} hideWhenEmpty />
       </div>
       <section
         className="task-home-services"

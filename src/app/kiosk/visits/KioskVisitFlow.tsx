@@ -10,6 +10,8 @@ import { prefsOf } from "@/lib/catalog";
 import { textOf } from "@/lib/i18n";
 import { hubOf, VISIT_STATES, type VisitView } from "@/lib/service-hubs";
 import { VISIT_STATE_EN, visitError } from "@/lib/visit-labels";
+import { HubMap } from "../../components/HubMap";
+import { MapPin, ArrowRight } from "lucide-react";
 import { FlowShell } from "../../components/FlowShell";
 import { IdleGuard } from "../../components/IdleGuard";
 import { SharedVisitPrivacy } from "../../components/SharedVisitPrivacy";
@@ -32,6 +34,13 @@ export function KioskVisitFlow({
 }) {
   const [en, setEn] = useState(initialEnglish),
     [reference, setReference] = useState("");
+  const [meetingPoint, setMeetingPoint] = useState<{
+    hubId: string;
+    placeId: string;
+    label: string;
+    en: string;
+    startAt: string;
+  } | null>(null);
   const [visit, setVisit] = useState<VisitView | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -52,6 +61,7 @@ export function KioskVisitFlow({
     saving.current = false;
     latest.current = null;
     setVisit(null);
+    setMeetingPoint(null);
     setWork(null);
     setReference("");
     setError("");
@@ -87,6 +97,11 @@ export function KioskVisitFlow({
         const b = await r.json();
         if (!r.ok) throw Error(visitError(b, en));
         if (turn !== epoch.current) return;
+        if (b.meetingPoint) {
+          setMeetingPoint(b.meetingPoint);
+          return;
+        }
+        setMeetingPoint(null);
         if (
           !latest.current ||
           latest.current.id !== b.visit.id ||
@@ -142,15 +157,22 @@ export function KioskVisitFlow({
     ? en
       ? VISIT_STATE_EN[visit.state]
       : VISIT_STATES[visit.state]
-    : t("만남 예약을 확인할게요", "Let's find your appointment");
+    : meetingPoint
+      ? t("예약한 만남 장소", "Your booked meeting point")
+      : t("예약 확인번호 입력", "Enter appointment reference");
   return (
     <FlowShell
       lang={en ? "en" : "ko"}
       prefs={prefsOf(visit?.choices ?? [])}
       kiosk
-      screenKey={"visit-" + (visit?.state ?? "lookup")}
+      screenKey={
+        "visit-" + (visit?.state ?? (meetingPoint ? "destination" : "lookup"))
+      }
       speakText={title}
-      onHome={reset}
+      onHome={() => {
+        reset();
+        window.location.replace(returnTo + (en ? "?lang=en" : ""));
+      }}
       onBack={visit ? reset : () => window.location.replace(returnTo)}
       headerTools={
         <button className="bar-btn" onClick={() => setEn(!en)}>
@@ -159,27 +181,15 @@ export function KioskVisitFlow({
       }
     >
       <SharedVisitPrivacy />
-      <main className={styles.devicePage}>
+      <main className={styles.devicePage + " kiosk-appointment-page"}>
         <p className={styles.eyebrow}>
           {en ? (hub?.en ?? "Airport device") : (hub?.label ?? place)}
         </p>
         <h1>{title}</h1>
-        {!hub && (
-          <>
-            <p>
-              {t(
-                "예약한 만남 장소의 기기 또는 개인 휴대전화에서 예약을 확인해 주세요.",
-                "Confirm your appointment at the booked meeting point, or on your own phone.",
-              )}
-            </p>
-            <Link className={styles.button} href={returnTo}>
-              {t("이 기기의 안내로 돌아가기", "Back to this device")}
-            </Link>
-          </>
-        )}
-        {hub && !visit && (
+        {!visit && !meetingPoint && (
           <form
             className={styles.panel}
+            aria-busy={busy}
             onSubmit={(e) => {
               e.preventDefault();
               void send("lookup");
@@ -236,10 +246,48 @@ export function KioskVisitFlow({
                 type="submit"
                 disabled={busy || reference.length !== 8}
               >
-                {t("예약 확인", "Find appointment")}
+                {busy
+                  ? t("확인 중…", "Finding…")
+                  : t("예약 확인", "Find appointment")}
               </button>
             </div>
           </form>
+        )}
+        {meetingPoint && (
+          <section className={styles.panel + " kiosk-meeting-destination"}>
+            <MapPin aria-hidden="true" />
+            <h2>{t("예약한 장소는 여기예요", "Your meeting point")}</h2>
+            <p className="meeting-destination-name">
+              {en ? meetingPoint.en : meetingPoint.label}
+            </p>
+            <p>
+              {new Date(meetingPoint.startAt).toLocaleTimeString(
+                en ? "en-GB" : "ko-KR",
+                { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit" },
+              )}
+            </p>
+            <HubMap hubId={meetingPoint.hubId} en={en} />
+            <p>
+              {t(
+                "예약 장소에 도착한 뒤 그곳의 기기에서 도착을 알려 주세요.",
+                "Check in at the device at your booked meeting point.",
+              )}
+            </p>
+            <Link
+              className={styles.button}
+              href={
+                "/points/" +
+                encodeURIComponent(meetingPoint.hubId) +
+                (en ? "?lang=en" : "")
+              }
+            >
+              {t("장소 자세히 보기", "Meeting point details")}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+            <button className={styles.secondary} onClick={reset}>
+              {t("다른 번호 입력", "Enter another reference")}
+            </button>
+          </section>
         )}
         {visit && (
           <section className={styles.panel}>
@@ -343,7 +391,7 @@ export function KioskVisitFlow({
       </main>
       <IdleGuard
         t={textOf(en ? "en" : "ko")}
-        enabled={!!visit || !!reference}
+        enabled={!!visit || !!reference || !!meetingPoint}
         askSec={askSec}
         answerSec={answerSec}
         onTimeout={reset}
