@@ -19,6 +19,19 @@ export async function eraseRegistration(
   now: Date,
   finalStatus: "expired" | "revoked" = "expired",
 ): Promise<void> {
+  if (!db.transaction) throw new Error("Transactional database connection required");
+  await db.transaction(async (tx) => {
+    await tx.query("select id from registrations where id=$1 for update", [id]);
+    await eraseRegistrationRecords(tx, id, now, finalStatus);
+  });
+}
+
+async function eraseRegistrationRecords(
+  db: Db,
+  id: string,
+  now: Date,
+  finalStatus: "expired" | "revoked",
+): Promise<void> {
   await db.query(
     `update passes set state = $2, registration_id = null, linked_at = null, boarding_ref = null
      where registration_id = $1 and state = 'active'`,
