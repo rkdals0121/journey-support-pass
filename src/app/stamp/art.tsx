@@ -1,48 +1,81 @@
 // 스탬프북 그림. 모두 손으로 그린 SVG 라 따로 받아 올 파일이 없다.
-// 「뭉게」는 시안용 캐릭터다. 실제 적용 때는 인천공항 공식 마스코트로 바꾼다(구상안 7).
+// 「하늘이」는 팀이 디자인한 인천공항 교통약자 지원 마스코트 시안을 옮겨 그린 것이다.
 import type { ThemeId } from "@/lib/stamp-book";
 
 const PLANE = "M50 18c3 0 5 3 5 7v17l24 14v7l-24-7v14l7 6v6l-12-4-12 4v-6l7-6V56l-24 7v-7l24-14V25c0-4 2-7 5-7z";
 const STAR = "M50 8l11 27 29 2-22 19 7 28-25-15-25 15 7-28-22-19 29-2z";
 const COMPASS = "M50 6l9 35 35 9-35 9-9 35-9-35-35-9 35-9z";
 
-/** 뭉게: 비행기 꼬리를 단 구름 친구. svg 안에 넣는 g 모양(사진 필터는 svg 하나로 뽑아야 해서 겹쳐 넣지 않는다). */
-function MonggeShape({ wink }: { wink: boolean }) {
+// 하늘이 색 (시안의 Color Palette)
+const DEEP = "#36588f";
+const YELLOW = "#f5cf3c";
+const SKY = "#4cc3e8";
+
+export type Mood = "smile" | "wink" | "joy" | "wow";
+
+/** 하늘이: 꼬리 날개 달린 파란 후드, 노란 띠, 헤드폰. viewBox 0 0 160 160 안의 g 모양(사진 필터 svg 안에도 그대로 넣는다). */
+function HaneulShape({ mood, hands }: { mood: Mood; hands: boolean }) {
   return (
     <>
-      <ellipse cx="78" cy="92" rx="36" ry="12" fill="#f7b5cd" stroke="#2d2f4a" strokeWidth="4" />
-      <path d="M128 52c10-14 18-16 20-14s0 16-8 30z" fill="#ffd84d" stroke="#2d2f4a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M26 30l-12-10 4 18z" fill="#f7b5cd" stroke="#2d2f4a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M22 60c0-28 26-44 58-44s54 16 54 40-24 38-56 38-56-8-56-34z" fill="#fff" stroke="#2d2f4a" strokeWidth="5" />
-      {wink ? (
-        <>
-          <path d="M52 54q7-8 14 0M92 54q7-8 14 0" fill="none" stroke="#2d2f4a" strokeWidth="5" strokeLinecap="round" />
-          <path d="M66 68q13 14 26 0" fill="#e2577f" stroke="#2d2f4a" strokeWidth="4" strokeLinejoin="round" />
-        </>
+      {/* 꼬리 날개 */}
+      <path d="M108 44c6-22 22-34 40-38 4 18-2 38-14 52z" fill={DEEP} />
+      <path d={PLANE} fill="#fff" transform="translate(132 26) rotate(40) scale(.2) translate(-50 -50)" />
+      {/* 왼쪽 헤드폰(뒤) */}
+      <circle cx="20" cy="96" r="15" fill="#e9f1f8" stroke={SKY} strokeWidth="3" />
+      {/* 후드 */}
+      <path d="M80 30c38 0 64 26 64 62 0 34-28 56-64 56s-64-22-64-56c0-36 26-62 64-62z" fill={DEEP} />
+      <path d="M30 60c14-22 34-31 52-31 22 0 42 10 54 28-20-8-38-11-54-11-20 0-36 5-52 14z" fill={YELLOW} />
+      {/* 얼굴 */}
+      <path d="M80 62c30 0 48 16 48 40 0 22-20 36-48 36s-48-14-48-36c0-24 18-40 48-40z" fill="#fff" />
+      <circle cx="54" cy="112" r="7" fill="#f7b4c2" />
+      <circle cx="106" cy="112" r="7" fill="#f7b4c2" />
+      {mood === "joy" ? (
+        <path d="M54 100q8-9 16 0M90 100q8-9 16 0" fill="none" stroke="#1d3157" strokeWidth="4" strokeLinecap="round" />
       ) : (
         <>
-          <circle cx="60" cy="54" r="5" fill="#2d2f4a" />
-          <circle cx="98" cy="54" r="5" fill="#2d2f4a" />
-          <path d="M70 66q9 9 18 0" fill="none" stroke="#2d2f4a" strokeWidth="4" strokeLinecap="round" />
+          <ellipse cx="62" cy="100" rx="7" ry="9" fill="#1d3157" />
+          <circle cx="64" cy="96" r="2.6" fill="#fff" />
+          {mood === "wink" ? (
+            <path d="M90 101q8-8 16 0" fill="none" stroke="#1d3157" strokeWidth="4" strokeLinecap="round" />
+          ) : (
+            <>
+              <ellipse cx="98" cy="100" rx="7" ry="9" fill="#1d3157" />
+              <circle cx="100" cy="96" r="2.6" fill="#fff" />
+            </>
+          )}
         </>
       )}
-      <ellipse cx="46" cy="66" rx="8" ry="5" fill="#f7a1c0" />
-      <ellipse cx="112" cy="66" rx="8" ry="5" fill="#f7a1c0" />
+      <path d="M55 84q6-4 12-2M93 82q6-2 12 2" fill="none" stroke={DEEP} strokeWidth="2.5" strokeLinecap="round" />
+      {mood === "wow" ? (
+        <ellipse cx="80" cy="120" rx="4" ry="5" fill="#d8455d" />
+      ) : (
+        <path d="M70 114q10 12 20 0z" fill="#d8455d" stroke="#1d3157" strokeWidth="2" strokeLinejoin="round" />
+      )}
+      {/* 오른쪽 헤드폰(앞) */}
+      <circle cx="141" cy="96" r="16" fill="#f4f8fc" stroke="#c9d6e3" strokeWidth="2" />
+      <circle cx="141" cy="96" r="10" fill={DEEP} stroke={SKY} strokeWidth="3" />
+      {hands && (
+        <>
+          <circle cx="50" cy="146" r="12" fill="#fff" />
+          <circle cx="110" cy="146" r="12" fill="#fff" />
+          <path d="M36 140q4-8 12-10M124 140q-4-8-12-10" fill="none" stroke={YELLOW} strokeWidth="6" strokeLinecap="round" />
+        </>
+      )}
     </>
   );
 }
 
-export function Mongge({ size = 120, wink = false }: { size?: number; wink?: boolean }) {
+export function Haneul({ size = 120, mood = "smile", hands = false }: { size?: number; mood?: Mood; hands?: boolean }) {
   return (
-    <svg viewBox="0 0 160 120" width={size} height={size * 0.75} aria-hidden="true">
-      <MonggeShape wink={wink} />
+    <svg viewBox="0 0 160 160" width={size} height={size} aria-hidden="true">
+      <HaneulShape mood={mood} hands={hands} />
     </svg>
   );
 }
 
 /** 표지와 인증 카드의 둥근 문장 */
 export function Emblem({ theme, size = 112 }: { theme: ThemeId; size?: number }) {
-  if (theme === "friend") return <Mongge size={size * 1.3} />;
+  if (theme === "friend") return <Haneul size={size * 1.15} hands />;
   const line = theme === "flight" ? "#d9a441" : "#ead7aa";
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
@@ -65,8 +98,8 @@ export function StampMark({ theme, size = 56 }: { theme: ThemeId; size?: number 
   if (theme === "friend")
     return (
       <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="#ff9fbd" stroke="#2d2f4a" strokeWidth="5" />
-        <path d={STAR} fill="#ffd84d" stroke="#2d2f4a" strokeWidth="5" strokeLinejoin="round" transform="translate(50 52) scale(.62) translate(-50 -50)" />
+        <circle cx="50" cy="50" r="46" fill={SKY} stroke={DEEP} strokeWidth="5" />
+        <path d={STAR} fill={YELLOW} stroke={DEEP} strokeWidth="5" strokeLinejoin="round" transform="translate(50 52) scale(.62) translate(-50 -50)" />
       </svg>
     );
   const ink = theme === "flight" ? "#c23b32" : "#8a3a2c";
@@ -109,16 +142,9 @@ function Backdrop({ role }: { role: string }) {
         <path d="M-20 300l90-150 90 150zM130 300l90-140 100 140z" fill="#8fb79a" />
       </>
     );
-  if (role === "friend")
-    return (
-      <>
-        <rect width="300" height="400" fill="#cde7ff" />
-        <Rainbow />
-      </>
-    );
   return (
     <>
-      <rect width="300" height="400" fill="#bcd7f1" />
+      <rect width="300" height="400" fill={role === "friend" ? "#cfeefb" : "#bcd7f1"} />
       <Cloud x={50} y={70} />
       <Cloud x={250} y={50} />
     </>
@@ -129,21 +155,13 @@ const Cloud = ({ x, y }: { x: number; y: number }) => (
   <path d={`M${x - 30} ${y + 14}a14 14 0 0 1 8-26 20 20 0 0 1 38-2 14 14 0 0 1 14 28z`} fill="#fff" />
 );
 
-const Rainbow = () => (
-  <g fill="none" strokeWidth="14">
-    <path d="M-10 330a160 160 0 0 1 320 0" stroke="#f9a8c4" />
-    <path d="M4 330a146 146 0 0 1 292 0" stroke="#ffe08a" />
-    <path d="M18 330a132 132 0 0 1 264 0" stroke="#bfe8c9" />
-    <path d="M32 330a118 118 0 0 1 236 0" stroke="#b9dcff" />
-  </g>
-);
-
 /**
- * 필터 옷. viewBox 300×400 에서 얼굴이 (150,190), 반지름 70 쯤에 온다고 보고 그린다.
- * 사진 필터와 완성 그림이 같은 옷을 쓴다.
+ * 필터 옷. 얼굴 가운데가 (150,190), 얼굴 폭이 150 쯤이라고 보고 그린다.
+ * 사진 필터는 이 좌표계를 찾은 얼굴 위치·크기·기울기에 맞춰 옮겨 그린다.
+ * 몸통은 아래로 길게(y 1050 까지) 내려 그려 얼굴이 작게 잡혀도 화면 아래가 비지 않는다. 완성 그림은 400 에서 잘린다.
  */
 export function Costume({ role }: { role: string }) {
-  const body = (fill: string) => <path d="M20 400c6-70 50-104 130-104s124 34 130 104z" fill={fill} />;
+  const body = (fill: string) => <path d="M-40 1050V420c10-80 70-124 190-124s180 44 190 124v630z" fill={fill} />;
   switch (role) {
     case "captain":
       return (
@@ -151,7 +169,7 @@ export function Costume({ role }: { role: string }) {
           {body("#1b2a52")}
           <path d="M118 298l32 52 32-52z" fill="#fff" />
           <path d="M144 312h12l6 44-12 14-12-14z" fill="#c23b32" />
-          <path d="M44 352l64-22M48 368l60-20M256 352l-64-22M252 368l-60-20" stroke="#d9a441" strokeWidth="8" strokeLinecap="round" />
+          <path d="M4 348l70-24M8 366l66-22M296 348l-70-24M292 366l-66-22" stroke="#d9a441" strokeWidth="9" strokeLinecap="round" />
           <path d="M70 120q80-100 160 0z" fill="#1b2a52" />
           <rect x="66" y="112" width="168" height="16" rx="4" fill="#d9a441" />
           <path d="M72 128q78 22 156 0l-8 12q-70 18-140 0z" fill="#111827" />
@@ -166,7 +184,7 @@ export function Costume({ role }: { role: string }) {
           <path d="M112 300l38 44 38-44z" fill="#fff" />
           <path d="M120 312l30 22 30-22-12 26-18-6-18 6z" fill="#c23b32" />
           <path d="M150 334l-16 34 16-8 16 8z" fill="#d9a441" />
-          <path d="M84 342l40-10M216 342l-40-10" stroke="#d9a441" strokeWidth="5" strokeLinecap="round" />
+          <path d="M40 340l50-12M260 340l-50-12" stroke="#d9a441" strokeWidth="6" strokeLinecap="round" />
           <g transform="rotate(-12 150 100)">
             <rect x="104" y="84" width="92" height="40" rx="10" fill="#1b2a52" />
             <rect x="104" y="112" width="92" height="10" fill="#d9a441" />
@@ -178,7 +196,7 @@ export function Costume({ role }: { role: string }) {
       return (
         <>
           {body("#c9a66b")}
-          <path d="M86 310c-8 40-4 70 0 90H26c4-50 24-78 60-90zM214 310c8 40 4 70 0 90h60c-4-50-24-78-60-90z" fill="#5f7d3f" />
+          <path d="M86 306c-8 40-4 74 0 94v650H-30V420c8-60 48-100 116-114zM214 306c8 40 4 74 0 94v650h116V420c-8-60-48-100-116-114z" fill="#5f7d3f" />
           <path d="M118 300l32 36 32-36" fill="none" stroke="#8a3a2c" strokeWidth="10" strokeLinejoin="round" />
           <circle cx="236" cy="360" r="14" fill="#fbf3e4" stroke="#8a3a2c" strokeWidth="4" />
           <path d={COMPASS} fill="#8a3a2c" transform="translate(236 360) scale(.18) translate(-50 -50)" />
@@ -188,13 +206,22 @@ export function Costume({ role }: { role: string }) {
         </>
       );
     case "friend":
+      // 하늘이 후드를 쓴 모습: 머리 위 노란 띠와 꼬리 날개, 귀 옆 헤드폰, 어깨 위 하늘이.
       return (
         <>
-          {body("#ff9fbd")}
-          <path d={STAR} fill="#ffd84d" stroke="#2d2f4a" strokeWidth="5" strokeLinejoin="round" transform="translate(150 60) scale(.5) translate(-50 -50)" />
-          <path d={STAR} fill="#ffd84d" stroke="#2d2f4a" strokeWidth="6" strokeLinejoin="round" transform="translate(40 120) scale(.3) translate(-50 -50)" />
-          <g transform="translate(190 228) scale(.7)">
-            <MonggeShape wink />
+          {body(DEEP)}
+          <path d="M112 300l38 40 38-40" fill="none" stroke="#fff" strokeWidth="12" strokeLinejoin="round" />
+          <path d="M150 340v80" stroke={YELLOW} strokeWidth="8" strokeLinecap="round" />
+          <path d="M196 70c8-30 30-46 54-52 6 26-2 52-20 70z" fill={DEEP} />
+          <path d={PLANE} fill="#fff" transform="translate(228 42) rotate(40) scale(.28) translate(-50 -50)" />
+          <path d="M66 140c14-58 50-84 84-84s70 26 84 84c-24-28-52-40-84-40s-60 12-84 40z" fill={DEEP} />
+          <path d="M80 112c16-30 42-44 70-44s54 14 70 44c-22-14-44-20-70-20s-48 6-70 20z" fill={YELLOW} />
+          <circle cx="66" cy="196" r="22" fill="#f4f8fc" stroke="#c9d6e3" strokeWidth="3" />
+          <circle cx="66" cy="196" r="13" fill={DEEP} stroke={SKY} strokeWidth="4" />
+          <circle cx="234" cy="196" r="22" fill="#f4f8fc" stroke="#c9d6e3" strokeWidth="3" />
+          <circle cx="234" cy="196" r="13" fill={DEEP} stroke={SKY} strokeWidth="4" />
+          <g transform="translate(196 270) scale(.62)">
+            <HaneulShape mood="wink" hands />
           </g>
         </>
       );
@@ -203,16 +230,15 @@ export function Costume({ role }: { role: string }) {
   }
 }
 
-/** 사진 필터 가장자리 장식. 얼굴을 가리지 않게 위쪽 귀퉁이에만 둔다. */
+/** 사진 필터 가장자리 장식. 얼굴을 가리지 않게 위쪽 귀퉁이에만 둔다. viewBox 0 0 300 400. */
 export function FilterDeco({ role }: { role: string }) {
   if (role === "friend")
     return (
-      <g fill="none" strokeWidth="9" opacity=".85">
-        <path d="M-6 110a96 96 0 0 1 96-96" stroke="#f9a8c4" />
-        <path d="M-6 100a86 86 0 0 1 86-86" stroke="#ffe08a" />
-        <path d="M-6 90a76 76 0 0 1 76-76" stroke="#bfe8c9" />
-        <path d="M-6 80a66 66 0 0 1 66-66" stroke="#b9dcff" />
-      </g>
+      <>
+        <Cloud x={46} y={40} />
+        <path d={STAR} fill={YELLOW} stroke={DEEP} strokeWidth="6" strokeLinejoin="round" transform="translate(262 40) scale(.28) translate(-50 -50)" />
+        <path d={STAR} fill={YELLOW} stroke={DEEP} strokeWidth="7" strokeLinejoin="round" transform="translate(230 74) scale(.18) translate(-50 -50)" />
+      </>
     );
   if (role === "explorer") return <circle cx="262" cy="40" r="22" fill="#f4d466" opacity=".9" />;
   return (
