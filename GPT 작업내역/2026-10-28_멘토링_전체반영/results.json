@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "desktop appointment accessibility",
+    "booking form submits through API and opens its saved confirmation",
+    "real API booking persists and returns confirmation",
+    "confirmation renders stored booking",
+    "mobile confirmation accessibility",
+    "mobile confirmation has no horizontal overflow",
+    "saved appointment survives navigation",
+    "staff appointment workspace accessibility",
+    "measured-effect dashboard accessibility",
+    "measured comparison is stored and displayed",
+    "/points/concourse accessibility",
+    "/points/print accessibility",
+    "meeting-point map and QR print pages work on mobile",
+    "stamp route follows the selected terminal",
+    "stamp route accessibility",
+    "no browser runtime errors"
+  ],
+  "errors": []
+}

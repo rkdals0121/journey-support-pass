@@ -1,3 +1,4 @@
+import { expireVisits } from "@/lib/support-visits";
 import { isCronAuthorized } from "@/lib/cron";
 import { getDb } from "@/lib/db";
 import { purge } from "@/lib/purge";
@@ -12,5 +13,6 @@ export async function GET(request: Request) {
     now = new Date();
   const result = await purge(db, now);
   await maintainAlertQueue(db, now);
+  await expireVisits(db, now);
   return Response.json(result);
 }

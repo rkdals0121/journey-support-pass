@@ -1,0 +1,16 @@
+"use client";
+import { useEffect, useState } from "react";
+import styles from "@/app/components/support-journey.module.css";
+interface Row {channel:string;task:string;n:number;seconds:number;relays:number;repeated:number;completed:number}
+const tasks: Record<string,string> = {guidance:"길 안내",mobility:"이동지원",facility:"시설 신고"};
+export function StudyComparison() {
+  const [rows,setRows] = useState<Row[]>([]), [notice,setNotice] = useState(""), [busy,setBusy] = useState(false);
+  async function load() {const r=await fetch("/api/staff/visits?study=1",{cache:"no-store"});const b=await r.json();if(!r.ok)throw Error(b.error);setRows(b.rows);}
+  useEffect(()=>{void load().catch(()=>setNotice("비교 자료를 불러오지 못했습니다."));},[]);
+  function download() {const csv="\uFEFF과제,방식,표본수,소요시간중앙값초,평균중계횟수,평균반복질문,완료수\n"+rows.map(r=>[tasks[r.task],r.channel==="phone"?"전화":"웹·QR",r.n,r.seconds,r.relays,r.repeated,r.completed].join(",")).join("\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="support-study.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  return <section className={styles.panel}><h2>같은 과제의 전후 비교</h2><p>시연에서 직접 잰 값만 기록하세요. 개인정보는 수집하지 않습니다. 소요시간은 중앙값, 중계·반복 질문은 평균입니다.</p>
+    <form className={styles.grid} onSubmit={async e=>{e.preventDefault();if(busy)return;const f=new FormData(e.currentTarget);setBusy(true);setNotice("");try{const r=await fetch("/api/staff/visits",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"study",channel:f.get("channel"),task:f.get("task"),seconds:Number(f.get("seconds")),relays:Number(f.get("relays")),repeated:Number(f.get("repeated")),completed:f.get("completed")==="yes"})});const b=await r.json();if(!r.ok)throw Error(b.error);await load();setNotice("측정값을 기록했습니다.");}catch(e){setNotice((e as Error).message);}finally{setBusy(false);}}}>
+    <label>방식<select name="channel"><option value="phone">기존 전화 전달</option><option value="web">웹·QR 지원</option></select></label><label>과제<select name="task">{Object.entries(tasks).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
+    <label>소요시간 · 초<input name="seconds" type="number" min={1} max={7200} required /></label><label>중계 횟수<input name="relays" type="number" min={0} max={50} defaultValue={0} required /></label><label>반복 질문 횟수<input name="repeated" type="number" min={0} max={50} defaultValue={0} required /></label><label>완료 여부<select name="completed"><option value="yes">완료</option><option value="no">미완료</option></select></label><button className={styles.button} disabled={busy}>측정값 기록</button></form><p role="status">{notice}</p>
+    {rows.length ? <><div style={{overflowX:"auto"}}><table><caption>방식별 실측 결과</caption><thead><tr>{["과제","방식","표본","시간(초)","중계","반복 질문","완료"].map(h=><th key={h} scope="col">{h}</th>)}</tr></thead><tbody>{rows.map(r=><tr key={r.task+r.channel}><th scope="row">{tasks[r.task]}</th><td>{r.channel==="phone"?"전화":"웹·QR"}</td><td>{r.n}</td><td>{r.seconds}</td><td>{r.relays}</td><td>{r.repeated}</td><td>{r.completed}/{r.n}</td></tr>)}</tbody></table></div><button type="button" className={styles.secondary} onClick={download}>CSV 내려받기</button></>:<p>측정 자료가 없습니다. 개선율은 실측 이후 비교할 수 있습니다.</p>}</section>;
+}

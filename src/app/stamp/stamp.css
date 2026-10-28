@@ -12,7 +12,7 @@
   color: var(--ink);
 }
 .sb[data-theme="flight"], .sb-pick [data-theme="flight"] {
-  --bg: #eef3fa; --ink: #1b2a52; --muted: #5b6787; --soft: #dfe6f1;
+  --bg: #eef3fa; --ink: #1b2a52; --muted: #505d7a; --soft: #dfe6f1;
   --cover: #1b2a52; --cover-ink: #fff; --kicker: #d9a441;
   --main: #1b2a52; --main-ink: #fff; --cta: #d9a441; --cta-ink: #1b2a52; --accent: #d9a441; --accent-ink: #1b2a52;
   --dark: #16223f; --idcard: #fbf6ea;
@@ -134,7 +134,7 @@
 .sb-progress { padding: 0.9rem 1rem; border: 2px solid var(--line); border-radius: 1rem; background: var(--card); }
 .sb-progress > div:first-child { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 800; }
 .sb-progress strong { color: var(--accent); }
-.sb[data-theme="flight"] .sb-progress strong { color: #a87414; }
+.sb[data-theme="flight"] .sb-progress strong { color: #8a5d0b; }
 .sb[data-theme="friend"] .sb-progress strong { color: #c2255c; }
 .sb-progress p { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.82rem; }
 .sb-bar { height: 0.7rem; overflow: hidden; border-radius: 999px; background: var(--soft); }
@@ -263,3 +263,5 @@
   .sb-print-hide { display: none; }
   .sb-print { padding: 0; }
 }
+
+.sb-fields select{width:100%;min-height:48px;padding:.65rem;border:1px solid var(--muted);border-radius:4px;background:var(--card);color:var(--ink);font:inherit}

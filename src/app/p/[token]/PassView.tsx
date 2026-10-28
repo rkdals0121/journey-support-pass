@@ -297,7 +297,8 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
   return (
     <FlowShell lang={lang} prefs={prefs} kiosk={false} screenKey="pass" speakText={speakText} onHome={home}>
       <Link className="btn btn-primary dx-pass-help" href={`/p/${token}/help`}>{lang === "en" ? "Request help with my saved needs" : "사전등록 내용으로 지금 도움 요청"}</Link>
-      <PassRequests token={token} lang={lang}/>
+      <Link className="btn btn-secondary" href={`/visits?pass=${encodeURIComponent(token)}`}>만날 장소·시간 예약</Link>
+              <PassRequests token={token} lang={lang}/>
 
       {isNew ? (
         <p className="success-head">
