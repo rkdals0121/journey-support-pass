@@ -13,7 +13,10 @@ export interface Checkpoint {
 
 // ponytail: 거점 6곳과 순서는 고정 모의값. 실제 도입 때는 공항 실내 지도의 미팅포인트 목록으로 바꾸고,
 // 경로형은 입력한 게이트까지의 실제 경로 위 거점만 골라 순서를 정한다.
-export const CHECKPOINTS: Checkpoint[] = SERVICE_HUBS.map(h => ({ code: h.code, place: h.label }));
+export const CHECKPOINTS: Checkpoint[] = SERVICE_HUBS.map((h) => ({
+  code: h.code,
+  place: h.label,
+}));
 
 export const GOAL = CHECKPOINTS.length;
 
@@ -26,7 +29,7 @@ interface Theme {
   nameLabel: string;
   gateLabel: string;
   photoSlot: string;
-  /** 도장 6개를 모으면 무엇이 생기는지 */
+  /** 현재 구역의 도장을 모으면 무엇이 생기는지 */
   promise: string;
   unit: string;
   /** 체크포인트 이름. 거점 순서와 같다 */
@@ -54,20 +57,36 @@ export const THEMES: Record<ThemeId, Theme> = {
     nameLabel: "이름",
     gateLabel: "탑승 게이트",
     photoSlot: "인증 사진 자리",
-    promise: "도장 6개를 모으면\n기장·승무원 인증 ID가 이 페이지에 채워져요",
+    promise:
+      "현재 구역의 도장을 모으면\n기장·승무원 인증 ID가 이 페이지에 채워져요",
     unit: "도장",
-    stops: ["이륙 준비", "활주로 진입", "순항 고도", "관제탑 교신", "착륙 준비", "최종 탑승"],
+    stops: [
+      "이륙 준비",
+      "활주로 진입",
+      "순항 고도",
+      "관제탑 교신",
+      "착륙 준비",
+      "최종 탑승",
+    ],
     scanHint: (n) => `체크포인트 ${n}의 QR을 비춰 주세요`,
     got: () => "도장 획득!",
     gotSub: (s, n) => `${s} · ${n}번째 도장`,
-    remain: (l) => (l ? `도장 ${l}개만 더 모으면 인증 필터가 열려요` : "인증 필터가 열렸어요!"),
+    remain: (l) =>
+      l
+        ? `도장 ${l}개만 더 모으면 인증 필터가 열려요`
+        : "인증 필터가 열렸어요!",
     next: "다음 체크포인트 보기",
     doneTitle: "비행 완료!",
     idKicker: "FLIGHT ID",
     idPrefix: "FL",
     roles: [
       { id: "captain", label: "기장", badge: "기장 인증", filter: "기장 필터" },
-      { id: "crew", label: "승무원", badge: "승무원 인증", filter: "승무원 필터" },
+      {
+        id: "crew",
+        label: "승무원",
+        badge: "승무원 인증",
+        filter: "승무원 필터",
+      },
     ],
     takePhoto: "사진 찍고 인증 ID 받기",
   },
@@ -79,18 +98,36 @@ export const THEMES: Record<ThemeId, Theme> = {
     nameLabel: "탐험대원",
     gateLabel: "목적지 게이트",
     photoSlot: "인증 사진 자리",
-    promise: "6곳을 모두 발견하면\n마스터 모험가 인증 ID가 이 페이지에 채워져요",
+    promise:
+      "현재 구역의 거점을 발견하면\n마스터 모험가 인증 ID가 이 페이지에 채워져요",
     unit: "발견",
-    stops: ["출발 캠프", "비밀 통로", "반짝 광장", "큰 날개 구경", "쉼 오아시스", "도착 베이스"],
+    stops: [
+      "출발 캠프",
+      "비밀 통로",
+      "반짝 광장",
+      "큰 날개 구경",
+      "쉼 오아시스",
+      "도착 베이스",
+    ],
     scanHint: (n) => `탐험지 ${n}의 QR을 비춰 주세요`,
     got: () => "새로운 곳을 발견했어요!",
     gotSub: (s, n) => `${s} · ${n}번째 발견`,
-    remain: (l) => (l ? `${l}곳을 더 발견하면 모험가 인증이 열려요` : "모험가 인증이 열렸어요!"),
+    remain: (l) =>
+      l
+        ? `${l}곳을 더 발견하면 모험가 인증이 열려요`
+        : "모험가 인증이 열렸어요!",
     next: "다음 탐험지 보기",
     doneTitle: "탐험 완료!",
     idKicker: "EXPLORER ID",
     idPrefix: "EX",
-    roles: [{ id: "explorer", label: "모험가", badge: "마스터 모험가 인증", filter: "모험가 필터" }],
+    roles: [
+      {
+        id: "explorer",
+        label: "모험가",
+        badge: "마스터 모험가 인증",
+        filter: "모험가 필터",
+      },
+    ],
     takePhoto: "사진 찍고 인증 ID 받기",
   },
   friend: {
@@ -101,18 +138,36 @@ export const THEMES: Record<ThemeId, Theme> = {
     nameLabel: "내 이름",
     gateLabel: "우리 게이트",
     photoSlot: "친구 사진 자리",
-    promise: "별 6개를 모으면\n하늘이 단짝 인증 ID가 이 페이지에 채워져요",
+    promise:
+      "현재 구역의 별을 모으면\n하늘이 단짝 인증 ID가 이 페이지에 채워져요",
     unit: "별",
-    stops: ["인사 도장", "구름 도장", "별 도장", "바람 도장", "무지개 도장", "도착 도장"],
+    stops: [
+      "인사 도장",
+      "구름 도장",
+      "별 도장",
+      "바람 도장",
+      "무지개 도장",
+      "도착 도장",
+    ],
     scanHint: () => "반짝이는 QR을 비춰 주세요",
     got: (s) => `${s} 획득!`,
     gotSub: (_, n) => `${n}번째 도장이에요`,
-    remain: (l) => (l ? `별 ${l}개를 더 모으면 친구들과 사진을 찍어요` : "친구들과 사진을 찍을 수 있어요!"),
+    remain: (l) =>
+      l
+        ? `별 ${l}개를 더 모으면 친구들과 사진을 찍어요`
+        : "친구들과 사진을 찍을 수 있어요!",
     next: "다음 도장 찾으러 가기",
     doneTitle: "공항 친구 완성!",
     idKicker: "FRIEND ID",
     idPrefix: "FR",
-    roles: [{ id: "friend", label: "단짝", badge: "하늘이 단짝 인증", filter: "하늘이 필터" }],
+    roles: [
+      {
+        id: "friend",
+        label: "단짝",
+        badge: "하늘이 단짝 인증",
+        filter: "하늘이 필터",
+      },
+    ],
     takePhoto: "친구들과 사진 찍기",
   },
 };
@@ -125,13 +180,17 @@ export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
  */
 export function checkpointOf(text: string): number {
   const raw = text.trim();
-  const code = (raw.match(/\/stamp\/c\/([A-Za-z0-9]+)/)?.[1] ?? raw).toUpperCase();
+  const code = (
+    raw.match(/\/stamp\/c\/([A-Za-z0-9]+)/)?.[1] ?? raw
+  ).toUpperCase();
   return CHECKPOINTS.findIndex((c) => c.code === code);
 }
 
-export const checkpointUrl = (origin: string, i: number) => `${origin}/stamp/c/${CHECKPOINTS[i].code}`;
+export const checkpointUrl = (origin: string, i: number) =>
+  `${origin}/stamp/c/${CHECKPOINTS[i].code}`;
 
 export interface BookState {
+  checkpointVersion?: number;
   theme: ThemeId | null;
   name: string;
   gate: string;
@@ -150,6 +209,7 @@ export interface BookState {
 }
 
 export const EMPTY: BookState = {
+  checkpointVersion: 2,
   theme: null,
   name: "",
   gate: "",
@@ -164,10 +224,15 @@ export const EMPTY: BookState = {
 export const countOf = (s: BookState) => Object.keys(s.stamps).length;
 
 /** 경로형에서 다음에 들를 곳. 순서를 건너뛰어 찍어도 도장은 받고, 아직 안 찍은 가장 앞 거점을 가리킨다. 다 찍었으면 -1. */
-export const nextStop = (s: BookState) => CHECKPOINTS.findIndex((_, i) => !(i in s.stamps));
+export const nextStop = (s: BookState) =>
+  CHECKPOINTS.findIndex((_, i) => !(i in s.stamps));
 
 /** 인증 ID. 예: FL-2026-7KQ3. 헷갈리는 글자(0·O·1·I)는 뺀다. */
-export function makeCertId(theme: ThemeId, now: Date, rand: () => number = Math.random): string {
+export function makeCertId(
+  theme: ThemeId,
+  now: Date,
+  rand: () => number = Math.random,
+): string {
   const abc = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   let tail = "";
   for (let i = 0; i < 4; i++) tail += abc[Math.floor(rand() * abc.length)];

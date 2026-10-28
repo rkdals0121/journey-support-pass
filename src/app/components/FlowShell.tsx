@@ -6,6 +6,7 @@ import type { Prefs } from "@/lib/catalog";
 import { textOf, type Lang } from "@/lib/i18n";
 import { useFocusTrap } from "./useFocusTrap";
 import { useSpeech } from "./useSpeech";
+import { SharedVisitPrivacy } from "./SharedVisitPrivacy";
 import { Brand } from "./Sunflower";
 import {
   resetViewSettings,
@@ -222,6 +223,7 @@ export function FlowShell({
       onClickCapture={swallowEarly}
     >
       <header className="flow-bar" ref={barRef}>
+        {kiosk && <SharedVisitPrivacy />}
         {serviceHome && <Brand />}
         <div className="flow-bar-side">
           {!serviceHome && (

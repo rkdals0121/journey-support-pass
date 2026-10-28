@@ -258,10 +258,29 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
               <h2>{r.label}</h2>
               <p>{RESOURCE_KIND[r.kind]}</p>
             </div>
-            <p className="inventory-zone">{r.zone}</p>
+            <p className="inventory-zone">
+              {r.zone}
+              {r.hubId && <small> · 거점 연동</small>}
+              {r.availableAfter && (
+                <small>
+                  {" "}
+                  ·{" "}
+                  {new Date(r.availableAfter).toLocaleTimeString("ko-KR", {
+                    timeZone: "Asia/Seoul",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  이후 가용
+                </small>
+              )}
+            </p>
             <p className="inventory-state" data-state={group(r)}>
               <strong className="resource-current-state">
-                {r.requestId ? "배차 중" : RESOURCE_STATUS[r.status]}
+                {r.availableAfter
+                  ? "복귀 중"
+                  : r.requestId
+                    ? "배차 중"
+                    : RESOURCE_STATUS[r.status]}
               </strong>
             </p>
             <div className="inventory-actions">

@@ -277,6 +277,19 @@ alter table calls drop constraint if exists calls_end_kind_check;
 alter table calls add constraint calls_end_kind_check check (end_kind in ('done','cancelled','expired'));
 alter table assist_requests add column if not exists end_kind text check (end_kind in ('done','cancelled','expired'));
 
+-- A booked visit and its fulfilment keep one public reference.
+alter table service_requests add column if not exists visit_id uuid;
+alter table service_requests add column if not exists planned_at timestamptz;
+alter table service_requests add column if not exists assigned_crew uuid;
+alter table service_requests add column if not exists target_zone text;
+alter table support_visits add column if not exists registration_id uuid;
+alter table support_visits add column if not exists lang text not null default 'ko';
+alter table support_visits add column if not exists handed_over_at timestamptz;
+alter table support_visits add column if not exists resource_id uuid;
+alter table support_visits add column if not exists flight_no text;
+alter table support_visits add column if not exists flight_date text;
+create unique index if not exists service_request_visit on service_requests(visit_id) where visit_id is not null;
+
 -- Work history is recorded atomically with each version change, including expiry/erasure.
 alter table service_requests add column if not exists last_action text not null default 'baseline';
 alter table service_requests add column if not exists last_actor_zone text;
@@ -378,8 +391,8 @@ alter table service_requests add column if not exists service_details jsonb not 
 create or replace view request_work_ledger as
 select id::text,id as source_id,'integrated'::text as queue,registration_id,service,state,place_id,choices,party,note,lang,source,
  assigned_zone,reason,created_at,updated_at,expires_at,version::double precision as version,
- accepted_at,arrived_at,started_at,ended_at,registration_linked,pending_place_id,pending_place_at,topic_id,business_id,destination_id,resolution_kind,resolution_business_id,resolution_message,service_details
-from service_requests
+ accepted_at,arrived_at,started_at,ended_at,registration_linked,pending_place_id,pending_place_at,topic_id,business_id,destination_id,resolution_kind,resolution_business_id,resolution_message,service_details,assigned_crew,visit_id,planned_at
+from service_requests where planned_at is null
 union all
 select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
  case when c.ended_at is null then case when c.accepted_at is null then 'received' else 'serving' end
@@ -388,7 +401,7 @@ select 'call:'||c.id::text,c.id,'call',c.registration_id,'guidance',
  c.place_id,coalesce(r.needs,'{}'::text[]),coalesce(r.party_size,1),coalesce(r.note,''),coalesce(r.lang,'ko'),'kiosk',
  c.accepted_zone,c.operator_reason,c.created_at,coalesce(c.ended_at,c.accepted_at,c.created_at),c.created_at+interval '24 hours',
  c.work_version::double precision,
- c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text,null::text,null::text,''::text,'{}'::jsonb
+ c.accepted_at,null::timestamptz,c.accepted_at,c.ended_at,c.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text,null::text,null::text,''::text,'{}'::jsonb,null::uuid,null::uuid,null::timestamptz
 from calls c left join registrations r on r.id=c.registration_id and r.status in ('active','pending')
 union all
 select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
@@ -397,7 +410,7 @@ select 'assist:'||a.id::text,a.id,'assist',a.registration_id,'mobility',
  case when a.place_id is null then 'web' else 'kiosk' end,a.assigned_zone,a.operator_reason,a.created_at,
  coalesce(a.ended_at,a.moving_at,a.assigned_at,a.created_at),a.created_at+interval '24 hours',
  a.work_version::double precision,
- a.assigned_at,null::timestamptz,a.moving_at,a.ended_at,a.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text,null::text,null::text,''::text,'{}'::jsonb
+ a.assigned_at,null::timestamptz,a.moving_at,a.ended_at,a.registration_linked,null::text,null::timestamptz,null::text,null::text,null::text,null::text,null::text,''::text,'{}'::jsonb,null::uuid,null::uuid,null::timestamptz
 from assist_requests a left join registrations r on r.id=a.registration_id and r.status in ('active','pending');
 
 -- Internal pilot inventory. No physical device is provisioned or commanded here.
@@ -410,6 +423,13 @@ create table if not exists dispatch_resources (
  version int not null default 0,
  created_at timestamptz not null, updated_at timestamptz not null
 );
+alter table dispatch_resources add column if not exists hub_id text;
+alter table dispatch_resources add column if not exists unit_no int;
+create unique index if not exists dispatch_hub_unit on dispatch_resources(hub_id,kind,unit_no) where hub_id is not null and unit_no is not null;
+create table if not exists support_resource_holds (
+ resource_id uuid primary key, visit_id uuid not null references support_visits(id) on delete cascade,
+ active boolean not null default true, release_at timestamptz, updated_at timestamptz not null
+);
 alter table service_requests add column if not exists resource_id uuid references dispatch_resources(id);
 create unique index if not exists one_active_request_per_resource on service_requests(resource_id)
  where resource_id is not null and state in ('received','assigned','en_route','arrived','serving');
@@ -419,12 +439,29 @@ create unique index if not exists one_active_request_per_resource on service_req
 create or replace function allocate_dispatch_resource(
  p_request uuid,p_version int,p_resource uuid,p_actor text,p_desk boolean,p_now timestamptz
 ) returns text language plpgsql as $$
-declare gear dispatch_resources%rowtype; job service_requests%rowtype;
+declare gear dispatch_resources%rowtype; job service_requests%rowtype; visit_ref uuid; scope_hub text; scope_kind text; operating support_hub_rules%rowtype; in_use int;
 begin
+ select visit_id into visit_ref from service_requests where id=p_request;
+ if visit_ref is not null then perform id from support_visits where id=visit_ref for update; end if;
+ if p_resource is not null then
+  select hub_id,kind into scope_hub,scope_kind from dispatch_resources where id=p_resource;
+  if scope_hub is not null then
+   insert into support_hub_rules(hub_id,service) values(scope_hub,scope_kind) on conflict do nothing;
+   select * into operating from support_hub_rules where hub_id=scope_hub and service=scope_kind for update;
+   if operating.state<>'ready' or operating.battery<20 or operating.capacity=0 or operating.available_after>p_now then return 'not_ready'; end if;
+   if extract(hour from p_now at time zone 'Asia/Seoul')<operating.open_hour or extract(hour from p_now at time zone 'Asia/Seoul')>=operating.close_hour then return 'not_ready'; end if;
+   select count(*) into in_use from (
+    select d.id from dispatch_resources d join service_requests r on r.resource_id=d.id where d.hub_id=scope_hub and d.kind=scope_kind and r.id<>p_request and r.state in ('received','assigned','en_route','arrived','serving')
+    union select h.resource_id from support_resource_holds h join dispatch_resources d on d.id=h.resource_id where d.hub_id=scope_hub and d.kind=scope_kind and h.visit_id<>coalesce(visit_ref,p_request) and (h.active or h.release_at>p_now)
+   ) occupied;
+   if in_use>=operating.capacity then return 'busy'; end if;
+  end if;
+ end if;
  if p_resource is not null then
   select * into gear from dispatch_resources where id=p_resource for update;
   if not found then return 'resource_missing'; end if;
   if gear.status<>'ready' then return 'not_ready'; end if;
+  if exists(select 1 from support_resource_holds where resource_id=p_resource and visit_id<>coalesce(visit_ref,p_request) and (active or release_at>p_now)) then return 'busy'; end if;
   if not exists(select 1 from zones where id=gear.zone_id and active) then return 'not_ready'; end if;
  end if;
  select * into job from service_requests where id=p_request for update;
@@ -444,6 +481,14 @@ begin
   last_action=case when p_resource is null then 'resource_release' else 'resource_assign' end,
   last_actor_zone=p_actor,last_action_reason=case when p_resource is null then '장비 배차 해제' else '장비 배차: '||gear.label end
  where id=p_request;
+ if visit_ref is not null then
+  update support_resource_holds set active=false,release_at=p_now+interval '5 minutes',updated_at=p_now where visit_id=visit_ref and resource_id is distinct from p_resource and active;
+  if p_resource is not null then
+   insert into support_resource_holds(resource_id,visit_id,active,updated_at) values(p_resource,visit_ref,true,p_now)
+   on conflict(resource_id) do update set visit_id=visit_ref,active=true,release_at=null,updated_at=p_now;
+  end if;
+  update support_visits set resource_id=p_resource,updated_at=p_now,version=version+1 where id=visit_ref and resource_id is distinct from p_resource;
+ end if;
  return 'ok';
 end $$;
 
@@ -456,6 +501,7 @@ begin
  if not found then return 'resource_missing'; end if;
  if gear.version<>p_version then return 'stale'; end if;
  if p_status not in ('ready','maintenance','offline') then return 'status'; end if;
+ if exists(select 1 from support_resource_holds where resource_id=p_id and (active or release_at>p_now)) then return 'busy'; end if;
  if exists(select 1 from service_requests where resource_id=p_id
   and state in ('received','assigned','en_route','arrived','serving')) then return 'busy'; end if;
  update dispatch_resources set status=p_status,version=version+1,updated_at=p_now where id=p_id;
@@ -478,18 +524,26 @@ create table if not exists request_alert_deliveries (
  error_code text not null default '', unique(request_id,subscription_id)
 );
 create index if not exists request_alert_due on request_alert_deliveries(state,next_attempt_at);
+alter table request_alerts add column if not exists kind text not null default 'request';
 create or replace function enqueue_request_alert() returns trigger language plpgsql as $$
+declare event_kind text; event_at timestamptz;
 begin
- insert into request_alerts(request_id,created_at,expires_at)
- values(NEW.id,NEW.created_at,NEW.created_at+interval '10 minutes');
+ if TG_OP='INSERT' then
+  event_kind:=case when NEW.planned_at is not null then 'reservation' else 'request' end;
+  event_at:=NEW.created_at;
+ elsif OLD.planned_at is not null and NEW.planned_at is null and NEW.state='received' then event_kind:='arrival'; event_at:=NEW.updated_at;
+ elsif NEW.last_action='handover' and NEW.version<>OLD.version and OLD.last_action<>'handover' then event_kind:='handover'; event_at:=NEW.updated_at;
+ else return NEW; end if;
+ delete from request_alert_deliveries where request_id=NEW.id;
+ insert into request_alerts(request_id,created_at,expires_at,kind)
+ values(NEW.id,event_at,event_at+interval '10 minutes',event_kind)
+ on conflict(request_id) do update set created_at=excluded.created_at,expires_at=excluded.expires_at,kind=excluded.kind,acknowledged_at=null,acknowledged_zone=null;
  insert into request_alert_deliveries(request_id,subscription_id,zone_id,next_attempt_at)
- select NEW.id,s.id,s.zone_id,NEW.created_at from request_push_subscriptions s
- where s.expires_at>NEW.created_at;
+ select NEW.id,s.id,s.zone_id,event_at from request_push_subscriptions s where s.expires_at>event_at and (NEW.visit_id is null or s.zone_id=NEW.target_zone or s.zone_id=NEW.assigned_zone or exists(select 1 from zones z where z.id=s.zone_id and z.is_desk and z.active));
  return NEW;
 end $$;
 drop trigger if exists enqueue_request_alert_trigger on service_requests;
-create trigger enqueue_request_alert_trigger after insert on service_requests
- for each row execute function enqueue_request_alert();
+create trigger enqueue_request_alert_trigger after insert or update on service_requests for each row execute function enqueue_request_alert();
 
 -- One live request for a registration/service across new and retained writers.
 -- A null owner quarantines pre-existing duplicates until all of them close.
@@ -583,3 +637,71 @@ begin
 end $$;
 drop trigger if exists support_visit_audit on support_visits;
 create trigger support_visit_audit after insert or update on support_visits for each row execute function audit_support_visit();
+
+-- Fulfilment is authoritative for ownership and terminal state; visits are its appointment view.
+create or replace function sync_support_fulfilment() returns trigger language plpgsql as $$
+declare next_state text;
+begin
+ if NEW.visit_id is null then return NEW; end if;
+ next_state:=case when NEW.last_action='missed' then 'missed' when NEW.state='done' then 'done' when NEW.state in ('cancelled','expired','unavailable') then 'cancelled' else null end;
+ update support_visits set assigned_crew=NEW.assigned_crew,
+  state=coalesce(next_state,state),ended_at=case when next_state is not null then coalesce(ended_at,NEW.ended_at,NEW.updated_at) else ended_at end,
+  updated_at=NEW.updated_at,version=version+1
+ where id=NEW.visit_id and (assigned_crew is distinct from NEW.assigned_crew or (next_state is not null and state<>next_state));
+ return NEW;
+end $$;
+drop trigger if exists sync_support_fulfilment_trigger on service_requests;
+create trigger sync_support_fulfilment_trigger after update on service_requests for each row execute function sync_support_fulfilment();
+create or replace function release_support_resource() returns trigger language plpgsql as $$
+begin
+ if NEW.state in ('done','cancelled','missed','handed_over') and NEW.state is distinct from OLD.state then
+  update support_resource_holds set active=false,release_at=NEW.updated_at+interval '5 minutes',updated_at=NEW.updated_at where visit_id=NEW.id and active;
+ end if;
+ return NEW;
+end $$;
+drop trigger if exists release_support_resource_trigger on support_visits;
+create trigger release_support_resource_trigger after update on support_visits for each row execute function release_support_resource();
+
+create unique index if not exists one_active_work_per_crew on service_requests(assigned_crew) where assigned_crew is not null and planned_at is null and state in ('received','assigned','en_route','arrived','serving');
+
+-- Ended appointments never keep personal fulfilment details until a formerly scheduled future date.
+create or replace function retain_support_work() returns trigger language plpgsql as $$
+begin
+ if NEW.visit_id is not null and NEW.state in ('done','cancelled','expired','unavailable') then
+  NEW.planned_at:=null;
+  NEW.expires_at:=least(NEW.expires_at,coalesce(NEW.ended_at,NEW.updated_at)+interval '24 hours');
+ end if;
+ return NEW;
+end $$;
+drop trigger if exists retain_support_work_trigger on service_requests;
+create trigger retain_support_work_trigger before update on service_requests for each row execute function retain_support_work();
+
+-- Additive upgrade for reservations already created by the previous deployment.
+update support_visits set state='checked_in',notice='운영 연결을 갱신했습니다. 안내 시작을 다시 선택해 주세요.',updated_at=now(),version=version+1
+ where state='responding' and request_id is null and resource_id is null;
+insert into service_requests(id,receipt_hash,service,state,place_id,choices,party,note,lang,source,created_at,updated_at,expires_at,device_key,last_action,topic_id,business_id,service_details,visit_id,planned_at,target_zone)
+ select v.id,v.receipt_hash,v.service,
+  case when v.state='done' then 'done' when v.state in ('cancelled','missed') then 'cancelled' else 'received' end,
+  h.place_id,v.choices,v.party,v.recognition,v.lang,'web',v.created_at,v.updated_at,
+  least(v.start_at+interval '24 hours',coalesce(v.ended_at+interval '24 hours',v.start_at+interval '24 hours')),
+  v.device_key,'baseline',case when v.service='robot' then 'robot' else 'mobility' end,'passenger-terminal',
+  jsonb_build_object('task',case when v.service='robot' then 'robot-visit' when v.task='wheelchair' then 'mobility-wheelchair' else 'mobility-escort' end,'fields','{}'::jsonb),
+  v.id,case when v.state='booked' then v.start_at else null end,h.zone_id
+ from support_visits v join (values
+  ('t1-departure','t1-info','desk-t1'),('t1-care','t1-care','desk-t1'),('t1-airside','t1-center','t1-c'),
+  ('concourse','cc-center','cc-center'),('t2-departure','t2-help','desk-t1'),('t2-airside','t2-center','t2-mid')
+ ) h(hub_id,place_id,zone_id) on h.hub_id=v.hub_id
+ where v.request_id is null
+ on conflict do nothing;
+update service_requests r set visit_id=v.id,planned_at=case when v.state='booked' then v.start_at else r.planned_at end
+ from support_visits v where (r.id=v.request_id or r.receipt_hash=v.receipt_hash) and r.visit_id is null;
+update support_visits v set request_id=r.id,handed_over_at=case when v.state='handed_over' then coalesce(v.handed_over_at,v.updated_at) else v.handed_over_at end
+ from service_requests r where r.visit_id=v.id and (v.request_id is distinct from r.id or (v.state='handed_over' and v.handed_over_at is null));
+
+update service_requests r set target_zone=h.zone_id from support_visits v join (values
+ ('t1-departure','desk-t1'),('t1-care','desk-t1'),('t1-airside','t1-c'),
+ ('concourse','cc-center'),('t2-departure','desk-t1'),('t2-airside','t2-mid')
+ ) h(hub_id,zone_id) on h.hub_id=v.hub_id where r.visit_id=v.id and r.target_zone is null;
+-- Legacy owner labels are advisory; actual work ownership becomes authoritative on upgrade.
+update support_visits v set assigned_crew=r.assigned_crew from service_requests r
+ where r.visit_id=v.id and v.assigned_crew is distinct from r.assigned_crew;

@@ -1,6 +1,15 @@
 "use client";
 
-import { BookOpen, Camera, Download, Lock, Palette, QrCode, RotateCcw, User } from "lucide-react";
+import {
+  BookOpen,
+  Camera,
+  Download,
+  Lock,
+  Palette,
+  QrCode,
+  RotateCcw,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Scanner } from "../components/Scanner";
 import {
@@ -10,13 +19,11 @@ import {
   THEME_IDS,
   THEMES,
   checkpointOf,
-  countOf,
   makeCertId,
-  nextStop,
   type BookState,
   type ThemeId,
 } from "@/lib/stamp-book";
-import { stampRoute } from "@/lib/stamp-routing";
+import { stampEligibility, stampRoute } from "@/lib/stamp-routing";
 import { SERVICE_HUBS } from "@/lib/service-hubs";
 import { Emblem, Haneul, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
@@ -29,7 +36,23 @@ const KEY = "jsp:stamp-book";
 function load(): BookState {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...EMPTY, ...JSON.parse(raw) } : EMPTY;
+    if (!raw) return EMPTY;
+    const saved = JSON.parse(raw);
+    if (
+      saved.checkpointVersion !== 2 &&
+      (Object.keys(saved.stamps ?? {}).length || saved.certId)
+    )
+      return {
+        ...EMPTY,
+        ...saved,
+        checkpointVersion: 2,
+        stamps: {},
+        certId: "",
+        certAt: 0,
+        certGoal: undefined,
+        telemetry: [],
+      };
+    return { ...EMPTY, ...saved, checkpointVersion: 2 };
   } catch {
     return EMPTY;
   }
@@ -59,7 +82,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
   const [scanErr, setScanErr] = useState("");
   const [typed, setTyped] = useState("");
   const [welcome, setWelcome] = useState("");
-  const [clock,setClock] = useState(0);
+  const [clock, setClock] = useState(0);
 
   // 처음 열 때 저장된 수첩을 읽는다. QR 주소로 들어왔으면 도장부터 찍는다.
   useEffect(() => {
@@ -67,12 +90,19 @@ export function StampBook({ scanned }: { scanned?: string }) {
     let first: View = !st.theme ? "themes" : !st.name ? "cover" : "home";
     if (scanned) {
       const i = checkpointOf(scanned);
-      if (i >= 0) {
+      const eligible = stampEligibility(st);
+      if (i >= 0 && eligible.indices.includes(i)) {
         const again = i in st.stamps;
         if (!again) st = { ...st, stamps: { ...st.stamps, [i]: Date.now() } };
         setGot({ i, again });
         if (first === "home") first = "got";
         else setWelcome("도장을 하나 받았어요! 먼저 수첩을 준비해요.");
+      } else {
+        const message =
+          eligible.reason ||
+          "현재 터미널·보안 구역에서 방문할 수 있는 거점의 QR을 이용해 주세요.";
+        setWelcome(message);
+        setScanErr(message);
       }
     }
     // 화면 이동을 브라우저 기록에 남겨 휴대전화 뒤로가기로 앞 화면에 돌아오게 한다.
@@ -80,10 +110,19 @@ export function StampBook({ scanned }: { scanned?: string }) {
     // QR 주소로 들어왔으면 주소를 스탬프북 첫 주소로 바꿔, 새로 고쳐도 같은 도장을 다시 찍은 것처럼 보이지 않게 한다.
     // 새로 고침·되돌아오기라 이미 기록이 있으면 기록을 더 쌓지 않고 그 화면을 이어 쓴다(카메라·도장 화면은 수첩 홈으로).
     const kept = (window.history.state as { sb?: View } | null)?.sb;
-    if (kept && !scanned && st.theme && st.name) first = kept === "themes" || kept === "cover" || kept === "done" ? kept : "home";
+    if (kept && !scanned && st.theme && st.name)
+      first =
+        kept === "themes" || kept === "cover" || kept === "done"
+          ? kept
+          : "home";
     else {
-      window.history.replaceState({ ...window.history.state, sb: "themes" }, "", "/stamp");
-      if (first !== "themes") window.history.pushState({ ...window.history.state, sb: first }, "");
+      window.history.replaceState(
+        { ...window.history.state, sb: "themes" },
+        "",
+        "/stamp",
+      );
+      if (first !== "themes")
+        window.history.pushState({ ...window.history.state, sb: first }, "");
     }
     setS(st);
     setView(first);
@@ -102,17 +141,30 @@ export function StampBook({ scanned }: { scanned?: string }) {
     if (s) save(s);
   }, [s]);
 
-  useEffect(() => {const timer = window.setInterval(() => setClock(Date.now()), 30000); return () => window.clearInterval(timer);}, []);
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
   useEffect(() => {
     if (!s?.theme || !s.name) return;
-    const route = stampRoute(s.gate, s.startHub, s.boardingAt, clock || Date.now());
-    const goal = s.mode === "route" ? route.indices.length : GOAL;
-    const n = s.mode === "route" ? route.indices.filter(i => i in s.stamps).length : countOf(s);
-    const events = ["stamp_start", ...(goal > 0 && n >= goal ? ["stamp_finish"] : [])].filter(k => !s.telemetry?.includes(k));
+    const route = stampEligibility(s, clock || Date.now());
+    const goal = route.indices.length;
+    const n = route.indices.filter((i) => i in s.stamps).length;
+    const events = [
+      "stamp_start",
+      ...(goal > 0 && n >= goal ? ["stamp_finish"] : []),
+    ].filter((k) => !s.telemetry?.includes(k));
     if (!events.length) return;
-    setS(old => old ? {...old,telemetry:[...(old.telemetry || []),...events]} : old);
-    for (const kind of events) void fetch("/api/experience", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind})}).catch(()=>{});
-  }, [s,clock]);
+    setS((old) =>
+      old ? { ...old, telemetry: [...(old.telemetry || []), ...events] } : old,
+    );
+    for (const kind of events)
+      void fetch("/api/experience", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind }),
+      }).catch(() => {});
+  }, [s, clock]);
 
   if (!s) return <div className="sb" data-theme="pick" />;
 
@@ -131,7 +183,11 @@ export function StampBook({ scanned }: { scanned?: string }) {
       <ThemePicker
         current={s.theme}
         note={welcome}
-        mine={s.theme && s.name ? `${THEMES[s.theme].title} · ${THEMES[s.theme].unit} ${countOf(s)}개` : ""}
+        mine={
+          s.theme && s.name
+            ? `${THEMES[s.theme].title} · ${THEMES[s.theme].unit} ${stampEligibility(s).indices.filter((i) => i in s.stamps).length}개`
+            : ""
+        }
         onOpen={() => go("cover")}
         onPick={(theme) => {
           update({ theme, role: THEMES[theme].roles[0].id });
@@ -142,9 +198,9 @@ export function StampBook({ scanned }: { scanned?: string }) {
 
   const theme = s.theme;
   const t = THEMES[theme];
-  const itinerary = stampRoute(s.gate, s.startHub, s.boardingAt, clock || Date.now());
-  const goal = s.mode === "route" ? itinerary.indices.length : GOAL;
-  const n = s.mode === "route" ? itinerary.indices.filter(i => i in s.stamps).length : countOf(s);
+  const itinerary = stampEligibility(s, clock || Date.now());
+  const goal = itinerary.indices.length;
+  const n = itinerary.indices.filter((i) => i in s.stamps).length;
   const complete = goal > 0 && n >= goal;
   const role = t.roles.find((r) => r.id === s.role) ?? t.roles[0];
 
@@ -159,8 +215,12 @@ export function StampBook({ scanned }: { scanned?: string }) {
 
   function onScan(text: string) {
     const i = checkpointOf(text);
-    if (i < 0) setScanErr("스탬프북 QR이 아니에요. 체크포인트의 QR을 비춰 주세요.");
-    else if (s!.mode === "route" && !itinerary.indices.includes(i)) setScanErr(itinerary.reason || "현재 경로에 포함된 거점의 QR을 찍어 주세요.");
+    if (i < 0)
+      setScanErr("스탬프북 QR이 아니에요. 체크포인트의 QR을 비춰 주세요.");
+    else if (!stampEligibility(s!, Date.now()).indices.includes(i))
+      setScanErr(
+        itinerary.reason || "현재 경로에 포함된 거점의 QR을 찍어 주세요.",
+      );
     else award(i);
   }
 
@@ -172,23 +232,52 @@ export function StampBook({ scanned }: { scanned?: string }) {
           <Emblem theme={theme} />
           <h1 className="sb-title">{t.title}</h1>
           <p className="sb-sub">{t.subtitle}</p>
-          {welcome && <p className="sb-welcome" role="status">{welcome}</p>}
+          {welcome && (
+            <p className="sb-welcome" role="status">
+              {welcome}
+            </p>
+          )}
           <section className="sb-idcard">
             <div className="sb-photo-slot">
-              {s.photo ? <img src={s.photo} alt={`${s.name}의 인증 사진`} /> : <><User aria-hidden="true" /><span>{t.photoSlot}</span></>}
+              {s.photo ? (
+                <img src={s.photo} alt={`${s.name}의 인증 사진`} />
+              ) : (
+                <>
+                  <User aria-hidden="true" />
+                  <span>{t.photoSlot}</span>
+                </>
+              )}
             </div>
             <div className="sb-fields">
               <label>
                 {t.nameLabel}
-                <input value={s.name} maxLength={12} placeholder="이름을 입력해요" onChange={(e) => update({ name: e.target.value })} />
+                <input
+                  value={s.name}
+                  maxLength={12}
+                  placeholder="이름을 입력해요"
+                  onChange={(e) => update({ name: e.target.value })}
+                />
               </label>
               <label>
                 {t.gateLabel}
-                <input value={s.gate} maxLength={4} inputMode="numeric" placeholder="게이트 번호 (선택)" className="sb-dashed" onChange={(e) => update({ gate: e.target.value.replace(/\D/g, "") })} />
+                <input
+                  value={s.gate}
+                  maxLength={4}
+                  inputMode="numeric"
+                  placeholder="게이트 번호 (선택)"
+                  className="sb-dashed"
+                  onChange={(e) =>
+                    update({ gate: e.target.value.replace(/\D/g, "") })
+                  }
+                />
               </label>
             </div>
           </section>
-          {s.certId ? <CertCard theme={theme} s={s} badge={role.badge} /> : <p className="sb-promise">{t.promise}</p>}
+          {s.certId ? (
+            <CertCard theme={theme} s={s} badge={role.badge} />
+          ) : (
+            <p className="sb-promise">{t.promise}</p>
+          )}
           <div className="sb-actions">
             <button
               type="button"
@@ -207,7 +296,10 @@ export function StampBook({ scanned }: { scanned?: string }) {
                 type="button"
                 className="sb-link"
                 onClick={() => {
-                  if (!confirm("모은 도장과 사진을 모두 지우고 처음부터 할까요?")) return;
+                  if (
+                    !confirm("모은 도장과 사진을 모두 지우고 처음부터 할까요?")
+                  )
+                    return;
                   setS(EMPTY);
                   setGot(null);
                   go("themes", true);
@@ -224,32 +316,105 @@ export function StampBook({ scanned }: { scanned?: string }) {
         <main className="sb-page">
           <header className="sb-head">
             <h1>{t.title}</h1>
-            <span className="sb-badge">{t.unit} {n} / {goal}</span>
+            <span className="sb-badge">
+              {t.unit} {n} / {goal}
+            </span>
           </header>
           <nav className="sb-tools" aria-label="수첩 메뉴">
-            <button type="button" onClick={() => go("cover")}><BookOpen aria-hidden="true" /> 내 수첩</button>
-            <button type="button" onClick={() => go("themes")}><Palette aria-hidden="true" /> 테마 바꾸기</button>
+            <button type="button" onClick={() => go("cover")}>
+              <BookOpen aria-hidden="true" /> 내 수첩
+            </button>
+            <button type="button" onClick={() => go("themes")}>
+              <Palette aria-hidden="true" /> 테마 바꾸기
+            </button>
           </nav>
           <div className="sb-tabs" role="tablist" aria-label="사용 방식">
             {(["play", "route"] as const).map((m) => (
-              <button key={m} type="button" role="tab" aria-selected={s.mode === m} onClick={() => update({ mode: m })}>
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={s.mode === m}
+                onClick={() => update({ mode: m })}
+              >
                 {m === "play" ? "놀이형" : "경로형"}
               </button>
             ))}
           </div>
+          {scanErr && (
+            <p className="sb-error" role="alert">
+              {scanErr}
+            </p>
+          )}
           <Progress theme={theme} n={n} goal={goal} />
-          {s.mode === "route" && <section className="sb-fields" aria-label="경로 설정">
-            <label>탑승구 번호<input value={s.gate} inputMode="numeric" maxLength={4} onChange={e => update({ gate: e.target.value.replace(/\D/g, "") })} /></label>
-            <label>현재 거점<select value={s.startHub || "t1-departure"} onChange={e => update({ startHub: e.target.value })}>{SERVICE_HUBS.map(h => <option key={h.id} value={h.id}>{h.label}</option>)}</select></label>
-            <label>탑승 시각 · 한국시간 · 선택<input type="datetime-local" value={s.boardingAt || ""} onChange={e => update({ boardingAt: e.target.value })} /></label>
-            {itinerary.reason ? <p role="status">{itinerary.reason}</p> : <p>시연 경로 약 {itinerary.minutes}분 · 탑승 전 여유 15분 별도. 실제 대기시간은 현장에서 확인해 주세요.</p>}
-          </section>}
+          {
+            <section className="sb-fields" aria-label="경로 설정">
+              {s.mode === "route" && (
+                <label>
+                  탑승구 번호
+                  <input
+                    value={s.gate}
+                    inputMode="numeric"
+                    maxLength={4}
+                    onChange={(e) =>
+                      update({ gate: e.target.value.replace(/\D/g, "") })
+                    }
+                  />
+                </label>
+              )}
+              <label>
+                현재 거점
+                <select
+                  value={s.startHub || ""}
+                  onChange={(e) => update({ startHub: e.target.value })}
+                >
+                  <option value="" disabled>
+                    현재 거점 선택
+                  </option>
+                  {SERVICE_HUBS.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                탑승 시각 · 한국시간 · 선택
+                <input
+                  type="datetime-local"
+                  value={s.boardingAt || ""}
+                  onChange={(e) => update({ boardingAt: e.target.value })}
+                />
+              </label>
+              {itinerary.reason ? (
+                <p role="status">{itinerary.reason}</p>
+              ) : (
+                <p>
+                  시연 경로 약 {itinerary.minutes}분 · 탑승 전 여유 15분 별도.
+                  실제 대기시간은 현장에서 확인해 주세요.
+                </p>
+              )}
+            </section>
+          }
           {s.mode === "play" ? <PlayList s={s} /> : <RouteMap s={s} />}
           <div className="sb-actions sb-sticky">
             {complete ? (
-              <button type="button" className="sb-btn sb-btn-accent" onClick={() => go("done")}>완성 보상 받으러 가기</button>
+              <button
+                type="button"
+                className="sb-btn sb-btn-accent"
+                onClick={() => go("done")}
+              >
+                완성 보상 받으러 가기
+              </button>
             ) : (
-              <button type="button" className="sb-btn sb-btn-main" disabled={s.mode === "route" && !!itinerary.reason} onClick={() => go("scan")}><QrCode aria-hidden="true" /> QR 스캔하기</button>
+              <button
+                type="button"
+                className="sb-btn sb-btn-main"
+                disabled={!!itinerary.reason}
+                onClick={() => go("scan")}
+              >
+                <QrCode aria-hidden="true" /> QR 스캔하기
+              </button>
             )}
           </div>
         </main>
@@ -263,13 +428,17 @@ export function StampBook({ scanned }: { scanned?: string }) {
             imageLabel="QR 사진으로 찍기"
             text={{
               starting: "카메라를 켜는 중이에요…",
-              ready: t.scanHint((nextStop(s) >= 0 ? nextStop(s) : 0) + 1),
+              ready: "현재 구역의 체크포인트 QR을 비춰 주세요",
               read: "읽었어요!",
               none: "카메라를 쓸 수 없어요. 아래에 체크포인트 번호를 눌러 주세요.",
               switchCamera: "카메라 바꾸기",
             }}
           />
-          {scanErr && <p className="sb-error" role="alert">{scanErr}</p>}
+          {scanErr && (
+            <p className="sb-error" role="alert">
+              {scanErr}
+            </p>
+          )}
           <form
             className="sb-typed"
             onSubmit={(e) => {
@@ -277,13 +446,35 @@ export function StampBook({ scanned }: { scanned?: string }) {
               onScan(typed);
             }}
           >
-            <label htmlFor="sb-code">QR이 안 찍히면 체크포인트에 적힌 번호(세 글자)를 눌러요</label>
+            <label htmlFor="sb-code">
+              QR이 안 찍히면 체크포인트에 적힌 번호(세 글자)를 눌러요
+            </label>
             <div>
-              <input id="sb-code" value={typed} maxLength={3} autoCapitalize="characters" autoComplete="off" placeholder="예: K7Q" onChange={(e) => setTyped(e.target.value.toUpperCase())} />
-              <button type="submit" className="sb-btn sb-btn-cta" disabled={typed.length < 3}>찍기</button>
+              <input
+                id="sb-code"
+                value={typed}
+                maxLength={3}
+                autoCapitalize="characters"
+                autoComplete="off"
+                placeholder="예: K7Q"
+                onChange={(e) => setTyped(e.target.value.toUpperCase())}
+              />
+              <button
+                type="submit"
+                className="sb-btn sb-btn-cta"
+                disabled={typed.length < 3}
+              >
+                찍기
+              </button>
             </div>
           </form>
-          <button type="button" className="sb-btn sb-btn-line sb-on-dark" onClick={() => go("home")}>수첩으로 돌아가기</button>
+          <button
+            type="button"
+            className="sb-btn sb-btn-line sb-on-dark"
+            onClick={() => go("home")}
+          >
+            수첩으로 돌아가기
+          </button>
         </main>
       )}
 
@@ -294,14 +485,28 @@ export function StampBook({ scanned }: { scanned?: string }) {
           </div>
           <section className="sb-sheet">
             <div className="sb-stamp-pop">
-              {theme === "friend" ? <Haneul size={170} mood="joy" hands /> : <StampMark theme={theme} size={140} />}
+              {theme === "friend" ? (
+                <Haneul size={170} mood="joy" hands />
+              ) : (
+                <StampMark theme={theme} size={140} />
+              )}
             </div>
-            <h1>{got.again ? "이미 받은 도장이에요" : t.got(t.stops[got.i])}</h1>
-            <p className="sb-sub-ink">{got.again ? `${t.stops[got.i]} · 다른 체크포인트를 찾아봐요` : t.gotSub(t.stops[got.i], n)}</p>
+            <h1>
+              {got.again ? "이미 받은 도장이에요" : t.got(t.stops[got.i])}
+            </h1>
+            <p className="sb-sub-ink">
+              {got.again
+                ? `${t.stops[got.i]} · 다른 체크포인트를 찾아봐요`
+                : t.gotSub(t.stops[got.i], n)}
+            </p>
             {theme === "friend" && <Stars n={n} />}
             <Progress theme={theme} n={n} goal={goal} note />
             <div className="sb-actions">
-              <button type="button" className={`sb-btn ${complete ? "sb-btn-accent" : "sb-btn-main"}`} onClick={() => go(complete ? "done" : "home")}>
+              <button
+                type="button"
+                className={`sb-btn ${complete ? "sb-btn-accent" : "sb-btn-main"}`}
+                onClick={() => go(complete ? "done" : "home")}
+              >
                 {complete ? "완성 보상 받으러 가기" : t.next}
               </button>
             </div>
@@ -313,19 +518,42 @@ export function StampBook({ scanned }: { scanned?: string }) {
         <main className="sb-page">
           <header className="sb-head">
             <h1>{complete ? t.doneTitle : t.title}</h1>
-            <span className="sb-badge sb-badge-accent">{t.unit} {n} / {goal}</span>
+            <span className="sb-badge sb-badge-accent">
+              {t.unit} {n} / {goal}
+            </span>
           </header>
           {!complete ? (
-            <p className="sb-promise">{goal > 0 ? t.remain(Math.max(0, goal - n)) : "현재 거점과 탑승구를 먼저 확인해 주세요."}</p>
+            <p className="sb-promise">
+              {goal > 0
+                ? t.remain(Math.max(0, goal - n))
+                : "현재 거점과 탑승구를 먼저 확인해 주세요."}
+            </p>
           ) : (
             <>
               <figure className="sb-portrait">
-                {s.photo ? <img src={s.photo} alt={`${role.filter}로 찍은 인증 사진`} /> : <><Portrait role={role.id} /><figcaption>{role.filter}</figcaption></>}
+                {s.photo ? (
+                  <img src={s.photo} alt={`${role.filter}로 찍은 인증 사진`} />
+                ) : (
+                  <>
+                    <Portrait role={role.id} />
+                    <figcaption>{role.filter}</figcaption>
+                  </>
+                )}
               </figure>
               {t.roles.length > 1 && !s.certId && (
-                <div className="sb-roles" role="radiogroup" aria-label="필터 고르기">
+                <div
+                  className="sb-roles"
+                  role="radiogroup"
+                  aria-label="필터 고르기"
+                >
                   {t.roles.map((r) => (
-                    <button key={r.id} type="button" role="radio" aria-checked={role.id === r.id} onClick={() => update({ role: r.id })}>
+                    <button
+                      key={r.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={role.id === r.id}
+                      onClick={() => update({ role: r.id })}
+                    >
                       {r.label}
                     </button>
                   ))}
@@ -334,19 +562,54 @@ export function StampBook({ scanned }: { scanned?: string }) {
               {s.certId && <CertCard theme={theme} s={s} badge={role.badge} />}
               <div className="sb-actions">
                 {s.photo && (
-                  <a className="sb-btn sb-btn-main" href={s.photo} onClick={() => { if (!s.telemetry?.includes("stamp_share")) {update({telemetry:[...(s.telemetry || []),"stamp_share"]});void fetch("/api/experience",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"stamp_share"})}).catch(()=>{});} }} download={`${s.certId || "stamp"}.jpg`}>
+                  <a
+                    className="sb-btn sb-btn-main"
+                    href={s.photo}
+                    onClick={() => {
+                      if (!s.telemetry?.includes("stamp_share")) {
+                        update({
+                          telemetry: [...(s.telemetry || []), "stamp_share"],
+                        });
+                        void fetch("/api/experience", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ kind: "stamp_share" }),
+                        }).catch(() => {});
+                      }
+                    }}
+                    download={`${s.certId || "stamp"}.jpg`}
+                  >
                     <Download aria-hidden="true" /> 사진 저장하기
                   </a>
                 )}
-                <button type="button" className={`sb-btn ${s.photo ? "sb-btn-line" : "sb-btn-accent"}`} onClick={() => go("camera")}>
-                  <Camera aria-hidden="true" /> {s.photo ? "다시 찍기" : t.takePhoto}
+                <button
+                  type="button"
+                  className={`sb-btn ${s.photo ? "sb-btn-line" : "sb-btn-accent"}`}
+                  onClick={() => go("camera")}
+                >
+                  <Camera aria-hidden="true" />{" "}
+                  {s.photo ? "다시 찍기" : t.takePhoto}
                 </button>
                 {!s.certId && (
-                  <button type="button" className="sb-link" onClick={() => update({ certId: makeCertId(theme, new Date()), certAt: Date.now(), certGoal: goal })}>
+                  <button
+                    type="button"
+                    className="sb-link"
+                    onClick={() =>
+                      update({
+                        certId: makeCertId(theme, new Date()),
+                        certAt: Date.now(),
+                        certGoal: goal,
+                      })
+                    }
+                  >
                     사진 없이 인증 ID만 받기
                   </button>
                 )}
-                <button type="button" className="sb-link" onClick={() => go("cover")}>
+                <button
+                  type="button"
+                  className="sb-link"
+                  onClick={() => go("cover")}
+                >
                   <BookOpen aria-hidden="true" /> 내 수첩 보기
                 </button>
               </div>
@@ -363,7 +626,12 @@ export function StampBook({ scanned }: { scanned?: string }) {
             caption={`${t.title} · ${s.name} · ${role.badge}`}
             onCancel={() => go("done")}
             onDone={(photo) => {
-              update({ photo, certId: s.certId || makeCertId(theme, new Date()), certAt: s.certAt || Date.now(), certGoal: goal });
+              update({
+                photo,
+                certId: s.certId || makeCertId(theme, new Date()),
+                certAt: s.certAt || Date.now(),
+                certGoal: goal,
+              });
               // 찍은 사진은 내 수첩의 인증 사진 자리에 들어간다. 바로 보여 준다.
               go("cover", true);
             }}
@@ -374,18 +642,45 @@ export function StampBook({ scanned }: { scanned?: string }) {
   );
 }
 
-function ThemePicker({ current, note, mine, onPick, onOpen }: { current: ThemeId | null; note: string; mine: string; onPick: (t: ThemeId) => void; onOpen: () => void }) {
+function ThemePicker({
+  current,
+  note,
+  mine,
+  onPick,
+  onOpen,
+}: {
+  current: ThemeId | null;
+  note: string;
+  mine: string;
+  onPick: (t: ThemeId) => void;
+  onOpen: () => void;
+}) {
   return (
     <div className="sb" data-theme="pick">
       <main className="sb-page">
-        <h1 className="sb-pick-title">어떤 수첩으로<br />공항을 여행할까요?</h1>
-        {note && <p className="sb-welcome" role="status">{note}</p>}
+        <h1 className="sb-pick-title">
+          어떤 수첩으로
+          <br />
+          공항을 여행할까요?
+        </h1>
+        {note && (
+          <p className="sb-welcome" role="status">
+            {note}
+          </p>
+        )}
         <p className="sb-pick-sub">나중에 바꿔도 모은 도장은 그대로예요.</p>
         <ul className="sb-pick">
           {THEME_IDS.map((id) => (
             <li key={id}>
-              <button type="button" data-theme={id} aria-pressed={current === id} onClick={() => onPick(id)}>
-                <span className="sb-pick-art"><Emblem theme={id} size={64} /></span>
+              <button
+                type="button"
+                data-theme={id}
+                aria-pressed={current === id}
+                onClick={() => onPick(id)}
+              >
+                <span className="sb-pick-art">
+                  <Emblem theme={id} size={64} />
+                </span>
                 <span className="sb-pick-text">
                   <strong>{THEMES[id].title}</strong>
                   <span>{THEMES[id].subtitle}</span>
@@ -400,8 +695,13 @@ function ThemePicker({ current, note, mine, onPick, onOpen }: { current: ThemeId
           ))}
         </ul>
         {mine && (
-          <button type="button" className="sb-link sb-pick-mine" onClick={onOpen}>
-            <BookOpen aria-hidden="true" /> 내 수첩 열어 보기 <small>({mine})</small>
+          <button
+            type="button"
+            className="sb-link sb-pick-mine"
+            onClick={onOpen}
+          >
+            <BookOpen aria-hidden="true" /> 내 수첩 열어 보기{" "}
+            <small>({mine})</small>
           </button>
         )}
       </main>
@@ -409,19 +709,49 @@ function ThemePicker({ current, note, mine, onPick, onOpen }: { current: ThemeId
   );
 }
 
-function Progress({ theme, n, note, goal = GOAL }: { theme: ThemeId; n: number; note?: boolean; goal?: number }) {
+function Progress({
+  theme,
+  n,
+  note,
+  goal = GOAL,
+}: {
+  theme: ThemeId;
+  n: number;
+  note?: boolean;
+  goal?: number;
+}) {
   const t = THEMES[theme];
-  const label = theme === "explorer" ? "탐험 진행도" : theme === "friend" ? "도장 진행도" : "비행 진행도";
+  const label =
+    theme === "explorer"
+      ? "탐험 진행도"
+      : theme === "friend"
+        ? "도장 진행도"
+        : "비행 진행도";
   return (
     <section className="sb-progress">
       <div>
         <span>{label}</span>
-        <strong>{n} / {goal}</strong>
+        <strong>
+          {n} / {goal}
+        </strong>
       </div>
-      <div className="sb-bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={Math.max(1, goal)} aria-valuenow={n}>
+      <div
+        className="sb-bar"
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={Math.max(1, goal)}
+        aria-valuenow={n}
+      >
         <i style={{ width: `${(n / Math.max(1, goal)) * 100}%` }} />
       </div>
-      {note && <p>{goal > 0 ? t.remain(Math.max(0, goal - n)) : "현재 거점과 탑승구를 먼저 확인해 주세요."}</p>}
+      {note && (
+        <p>
+          {goal > 0
+            ? t.remain(Math.max(0, goal - n))
+            : "현재 거점과 탑승구를 먼저 확인해 주세요."}
+        </p>
+      )}
     </section>
   );
 }
@@ -430,7 +760,9 @@ function Stars({ n }: { n: number }) {
   return (
     <p className="sb-stars" aria-label={`별 ${n}개`}>
       {CHECKPOINTS.map((_, i) => (
-        <span key={i} className={i < n ? "on" : ""} aria-hidden="true">★</span>
+        <span key={i} className={i < n ? "on" : ""} aria-hidden="true">
+          ★
+        </span>
       ))}
     </p>
   );
@@ -440,16 +772,29 @@ function Stars({ n }: { n: number }) {
 function PlayList({ s }: { s: BookState }) {
   const theme = s.theme!;
   const t = THEMES[theme];
-  const next = nextStop(s);
+  const eligible = stampEligibility(s);
+  const next = eligible.indices.find((i) => !(i in s.stamps));
   return (
     <>
       <p className="sb-hint">순서 없이 가까운 곳부터 찍어도 돼요.</p>
       <ol className="sb-list">
-        {CHECKPOINTS.map((c, i) => {
+        {eligible.indices.map((i) => {
+          const c = CHECKPOINTS[i];
           const done = i in s.stamps;
           return (
-            <li key={c.code} className={done ? "done" : i === next ? "next" : ""}>
-              <span className="sb-node">{done ? <StampMark theme={theme} size={48} /> : i === next ? <QrCode aria-hidden="true" /> : <Lock aria-hidden="true" />}</span>
+            <li
+              key={c.code}
+              className={done ? "done" : i === next ? "next" : ""}
+            >
+              <span className="sb-node">
+                {done ? (
+                  <StampMark theme={theme} size={48} />
+                ) : i === next ? (
+                  <QrCode aria-hidden="true" />
+                ) : (
+                  <Lock aria-hidden="true" />
+                )}
+              </span>
               <span className="sb-stop">
                 <strong>{t.stops[i]}</strong>
                 <small>{done ? `${t.unit} 획득 완료` : c.place}</small>
@@ -466,19 +811,44 @@ function PlayList({ s }: { s: BookState }) {
 function RouteMap({ s }: { s: BookState }) {
   const route = stampRoute(s.gate, s.startHub, s.boardingAt);
   if (route.reason) return null;
-  return <section aria-label="탑승구 방향 거점"><ol>{route.indices.map(i => <li key={CHECKPOINTS[i].code}><a href={`/points/${SERVICE_HUBS[i].id}`}>{CHECKPOINTS[i].place}</a> · {i in s.stamps ? "도장 완료" : "방문 예정"}</li>)}</ol><p>{s.gate}번 탑승구 방향 · 시연 배치도</p></section>;
+  return (
+    <section aria-label="탑승구 방향 거점">
+      <ol>
+        {route.indices.map((i) => (
+          <li key={CHECKPOINTS[i].code}>
+            <a href={`/points/${SERVICE_HUBS[i].id}`}>{CHECKPOINTS[i].place}</a>{" "}
+            · {i in s.stamps ? "도장 완료" : "방문 예정"}
+          </li>
+        ))}
+      </ol>
+      <p>{s.gate}번 탑승구 방향 · 시연 배치도</p>
+    </section>
+  );
 }
 
-function CertCard({ theme, s, badge }: { theme: ThemeId; s: BookState; badge: string }) {
+function CertCard({
+  theme,
+  s,
+  badge,
+}: {
+  theme: ThemeId;
+  s: BookState;
+  badge: string;
+}) {
   const t = THEMES[theme];
   const date = new Date(s.certAt || Date.now()).toLocaleDateString("ko-KR");
   return (
     <section className="sb-cert" aria-label="인증 ID">
-      <span className="sb-cert-mark"><Emblem theme={theme} size={52} /></span>
+      <span className="sb-cert-mark">
+        <Emblem theme={theme} size={52} />
+      </span>
       <span>
         <small className="sb-cert-kicker">{t.idKicker}</small>
         <strong>{badge}</strong>
-        <small>{s.name} · {t.unit} {s.certGoal || GOAL} / {s.certGoal || GOAL} 완료 · {date}</small>
+        <small>
+          {s.name} · {t.unit} {s.certGoal || GOAL} / {s.certGoal || GOAL} 완료 ·{" "}
+          {date}
+        </small>
         <small className="sb-cert-id num">{s.certId}</small>
       </span>
     </section>

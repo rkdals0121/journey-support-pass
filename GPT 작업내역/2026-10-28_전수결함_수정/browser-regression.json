@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "F07: browser-back restores hub, time, recognition and consent",
+    "F08: a confirmed booking is visible in My requests",
+    "F14: booking at 320/390/768/1440 has no horizontal overflow",
+    "F05: installed kiosk blocks private link and retains no private booking",
+    "F04/F05: installed device retrieves by reference and clears for next visitor",
+    "F10: direct T1 QR cannot grant a T2-route stamp",
+    "F09: free play includes only reachable current-zone points",
+    "F15: explorer contrast audit passes",
+    "F13/F14: staff queue renders first at mobile and desktop widths"
+  ],
+  "errors": []
+}

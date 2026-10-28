@@ -1,3 +1,4 @@
+import { expireVisits } from "./support-maintenance";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import webpush, { type PushSubscription } from "web-push";
 import type { Db } from "./db";
@@ -159,6 +160,7 @@ export async function alertSnapshots(
   );
 }
 export async function maintainAlertQueue(db: Db, now: Date) {
+  await expireVisits(db, now);
   await db.query(
     "delete from request_push_subscriptions where expires_at <= $1",
     [now],
@@ -197,6 +199,7 @@ export async function processAlertQueue(
     subscription_id: string;
     zone_id: string;
     attempts: number;
+    kind?: string;
   }>(
     `
     with due as (
@@ -211,7 +214,7 @@ export async function processAlertQueue(
     )
     update request_alert_deliveries d set state='sending',attempts=attempts+1,
      lease_token=$3,lease_until=$1::timestamptz+interval '30 seconds'
-    from due where d.id=due.id returning d.id,d.request_id,d.subscription_id,d.zone_id,d.attempts`,
+    from due where d.id=due.id returning d.id,d.request_id,d.subscription_id,d.zone_id,d.attempts,(select kind from request_alerts where request_id=d.request_id) as kind`,
     [now, limit, lease, options.requestId ?? null],
   );
   for (let i = 0; i < jobs.length; i += 5)
@@ -235,8 +238,22 @@ export async function processAlertQueue(
             await webpush.sendNotification(
               sub.subscription,
               JSON.stringify({
-                title: "새 도움 요청",
-                body: "통합 요청 화면에서 접수 내용을 확인해 주세요.",
+                title:
+                  job.kind === "reservation"
+                    ? "새 만남 예약"
+                    : job.kind === "arrival"
+                      ? "예약한 여객 도착"
+                      : job.kind === "handover"
+                        ? "직원 지원 인계"
+                        : "새 도움 요청",
+                body:
+                  job.kind === "reservation"
+                    ? "거점 예약 화면에서 예정된 지원을 확인해 주세요."
+                    : "통합 요청 화면에서 접수 내용을 확인해 주세요.",
+                url:
+                  job.kind === "reservation"
+                    ? "/staff/visits"
+                    : "/staff/requests",
                 tag: "request-" + job.request_id,
                 receivedToken: alertReceipt(job.id),
               }),

@@ -363,6 +363,14 @@ export function EntryKiosk({
             topics={["guidance", "mobility"]}
           />
         </div>
+        <Link
+          className="btn"
+          href={"/kiosk/visits" + (lang === "en" ? "?lang=en" : "")}
+        >
+          {lang === "en"
+            ? "Confirm a meeting appointment"
+            : "만남 예약 확인번호로 찾기"}
+        </Link>
         <details
           className="robot-number-entry"
           open={numberOpen}

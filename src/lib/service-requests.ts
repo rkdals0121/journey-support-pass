@@ -1,3 +1,4 @@
+import { operatingBlock } from "./support-operations";
 import { journeysByIds, isJourneyOver, lastRealPoll } from "./journey";
 import { createHash } from "node:crypto";
 import { kstDate } from "./flights/normalize";
@@ -77,6 +78,9 @@ interface Row {
   service_details?: ServiceDetails | Record<string, never>;
   topic_id?: string | null;
   business_id?: string | null;
+  visit_id?: string | null;
+  planned_at?: Date | null;
+  assigned_crew?: string | null;
   destination_id?: string | null;
   resolution_kind?: ResolutionKind | null;
   resolution_business_id?: string | null;
@@ -86,6 +90,9 @@ function view(r: Row): ServiceRequestView {
   const place = placeOf(r.place_id);
   return {
     id: r.id,
+    visitId: r.visit_id ?? null,
+    plannedAt: r.planned_at ?? null,
+    assignedCrew: r.assigned_crew ?? null,
     queue: r.queue ?? "integrated",
     service: r.service,
     state: r.state,
@@ -181,6 +188,8 @@ export async function createServiceRequest(
     return fail(400, "이 서비스는 현장 위치가 필요합니다");
   if (place.id.startsWith("report-") && body.topicId !== "facility")
     return fail(400, "신고 위치는 시설 신고에서만 사용할 수 있습니다");
+  const blocked = await operatingBlock(db, place.id, String(body.service), now);
+  if (blocked) return blocked;
   const topic =
     body.topicId === undefined || body.topicId === ""
       ? undefined
@@ -223,7 +232,10 @@ export async function createServiceRequest(
       !reportLocationLabel(details.fields))
   )
     return fail(400, "신고할 터미널·층·상세 위치를 확인해 주세요");
-  if (details?.task === "facility-access" || details?.task === "facility-inspection")
+  if (
+    details?.task === "facility-access" ||
+    details?.task === "facility-inspection"
+  )
     business = businessOf("passenger-terminal");
   const destination =
     body.destinationId === undefined || body.destinationId === ""
@@ -373,6 +385,21 @@ export async function cancelServiceRequest(
   if (!r) return fail(404, "요청을 찾을 수 없습니다");
   if (r.expires_at <= now) return fail(410, "보관 기간이 끝난 요청입니다");
   if (r.state === "cancelled") return ok({ request: view(r) });
+  if (r.visit_id) {
+    const { changeVisit } = await import("./support-visits");
+    const [visit] = await db.query<{ version: number }>(
+      "select version from support_visits where id=$1",
+      [r.visit_id],
+    );
+    return visit
+      ? changeVisit(
+          db,
+          { receipt, version: visit.version, action: "cancel" },
+          "",
+          now,
+        )
+      : fail(410, "예약의 보관 기간이 끝났습니다");
+  }
   const rows = await db.query<Row>(
     `update service_requests set state='cancelled',ended_at=$2,updated_at=$2,version=version+1,last_action='cancel',last_actor_zone=null,last_action_reason='',pending_place_id=null,pending_place_at=null
  where id=$1 and state in ('received','assigned','en_route','arrived') returning *`,
@@ -623,7 +650,7 @@ export async function listServiceRequests(
     zoneId: s!.zoneId,
     isDesk: s!.isDesk,
     summary,
-    resources: await resourceSnapshot(db),
+    resources: await resourceSnapshot(db, now),
     alerts: await alertSnapshots(
       db,
       rows.filter((r) => r.queue === "integrated").map((r) => r.id),
@@ -652,6 +679,7 @@ export async function actOnServiceRequest(
   id: string,
   body: Record<string, unknown>,
   now: Date,
+  context: { crewKey?: string; visitInternal?: boolean } = {},
 ): Promise<ApiResult> {
   const denied = staffDenied(s);
   if (denied) return denied;
@@ -666,6 +694,10 @@ export async function actOnServiceRequest(
     [id, now],
   );
   if (!r) return fail(404, "요청을 찾을 수 없습니다");
+  if (r.visit_id && !context.visitInternal) {
+    const { visitWorkAction } = await import("./support-visits");
+    return visitWorkAction(db, s!, context.crewKey ?? "", id, body, now);
+  }
   if (r.version !== body.version)
     return fail(409, "요청 상태가 바뀌었습니다. 최신 내용을 확인해 주세요");
   if (action === "accept_place" || action === "reject_place")
@@ -923,4 +955,17 @@ export async function registeredRequestProgress(
         : {}),
     })),
   });
+}
+
+export async function serviceRequestById(
+  db: Db,
+  id: string,
+): Promise<ApiResult> {
+  const [row] = await db.query<Row>(
+    "select * from service_requests where id=$1",
+    [id],
+  );
+  return row
+    ? ok({ request: view(row) })
+    : fail(404, "요청을 찾을 수 없습니다");
 }

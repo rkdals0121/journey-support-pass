@@ -24,25 +24,53 @@ export async function eraseRegistration(
      where registration_id = $1 and state = 'active'`,
     [id, finalStatus],
   );
-  await db.query("update passes set registration_id = null where registration_id = $1", [id]);
-  await db.query("update service_request_history set reason='' where request_id in (select id from service_requests where registration_id=$1)",[id]);
+  await db.query(
+    "update passes set registration_id = null where registration_id = $1",
+    [id],
+  );
+  await db.query(
+    "update service_request_history set reason='' where request_id in (select id from service_requests where registration_id=$1 or visit_id in(select id from support_visits where registration_id=$1))",
+    [id],
+  );
   // Bound DX requests carry a snapshot. Explicit erasure/flight expiry must remove it too.
-  await db.query(`update service_requests set state=case when state in ('received','assigned','en_route','arrived','serving') then 'cancelled' else state end,
+  await db.query(
+    `update service_requests set state=case when state in ('received','assigned','en_route','arrived','serving') then 'cancelled' else state end,
     registration_id=null, choices='{}', note='', reason='', device_key='', place_id='',party=1,last_action='privacy_erased',last_actor_zone=null,last_action_reason='',pending_place_id=null,pending_place_at=null,
-    ended_at=coalesce(ended_at,$2),expires_at=$2,updated_at=$2,version=version+1 where registration_id=$1`,[id,now]);
+    ended_at=coalesce(ended_at,$2),expires_at=$2,updated_at=$2,version=version+1 where registration_id=$1 or visit_id in(select id from support_visits where registration_id=$1)`,
+    [id, now],
+  );
+  await db.query(
+    "update support_visit_history set reason='' where visit_id in(select id from support_visits where registration_id=$1)",
+    [id],
+  );
+  await db.query(
+    `update support_visits set registration_id=null,choices='{}',recognition='',notice='',device_key='',flight_no=null,flight_date=null,
+    state=case when state in ('booked','checked_in','responding','handed_over') then 'cancelled' else state end,
+    ended_at=coalesce(ended_at,$2),updated_at=$2,version=version+1 where registration_id=$1`,
+    [id, now],
+  );
   // 여객이 떠났는데 끝나지 않은 호출은 닫는다.
   await db.query(
     "update calls set ended_at = $2, end_kind = 'cancelled' where registration_id = $1 and ended_at is null",
     [id, now],
   );
-  await db.query("update calls set registration_id = null,operator_reason='' where registration_id = $1", [id]);
+  await db.query(
+    "update calls set registration_id = null,operator_reason='' where registration_id = $1",
+    [id],
+  );
   // 끝나지 않은 이동지원 요청도 닫고 연결을 끊는다.
   await db.query(
     "update assist_requests set state = 'cancelled', ended_at = $2 where registration_id = $1 and state in ('received','assigned','moving')",
     [id, now],
   );
-  await db.query("update assist_requests set registration_id = null,operator_reason='' where registration_id = $1", [id]);
-  await db.query("update access_logs set registration_id = null where registration_id = $1", [id]);
+  await db.query(
+    "update assist_requests set registration_id = null,operator_reason='' where registration_id = $1",
+    [id],
+  );
+  await db.query(
+    "update access_logs set registration_id = null where registration_id = $1",
+    [id],
+  );
   await db.query(
     `update registrations set name = null, flight_date = null, flight_no = null, needs = '{}', categories = '{}',
        party_size = null, stroller_count = null, note = null, lang = 'ko', receipt_no = null, proof_status = 'none', status = $3, purged_at = $2
@@ -71,11 +99,19 @@ export async function purge(
   );
   for (const r of stale) await eraseRegistration(db, r.id, now);
 
-  const logCutoff = new Date(now.getTime() - config.logRetentionDays * 24 * HOUR);
-  const logs = await db.query("delete from access_logs where at < $1 returning id", [logCutoff]);
+  const logCutoff = new Date(
+    now.getTime() - config.logRetentionDays * 24 * HOUR,
+  );
+  const logs = await db.query(
+    "delete from access_logs where at < $1 returning id",
+    [logCutoff],
+  );
   await db.query("delete from events where at < $1", [logCutoff]);
   await db.query("delete from calls where created_at < $1", [logCutoff]);
-  await db.query("delete from assist_requests where created_at<$1 and state in ('done','cancelled')",[logCutoff]);
+  await db.query(
+    "delete from assist_requests where created_at<$1 and state in ('done','cancelled')",
+    [logCutoff],
+  );
   await db.query("delete from flight_polls where polled_at < $1", [logCutoff]);
   await db.query("delete from flights where sched_at < $1", [
     new Date(now.getTime() - FLIGHT_RETENTION_DAYS * 24 * HOUR),
