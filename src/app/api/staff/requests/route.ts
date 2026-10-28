@@ -1,3 +1,6 @@
+import { createHash } from "node:crypto";
+import type { ServiceRequestView } from "@/lib/service-request-model";
+import { crewKey } from "@/lib/support-crew-cookie";
 import {
   listServiceRequests,
   actOnServiceRequest,
@@ -25,6 +28,18 @@ export async function GET(request: Request) {
     zone: q.get("zone") ?? "all",
     order: q.get("order") ?? "newest",
   });
+  if (result.status === 200 && Array.isArray(result.body.requests)) {
+    const key = await crewKey();
+    const [me] = key
+      ? await db.query<{ id: string }>(
+          "select id from support_crew where session_hash=$1 and expires_at>$2",
+          [createHash("sha256").update(key).digest("hex"), now],
+        )
+      : [];
+    result.body.requests = (result.body.requests as ServiceRequestView[]).map(
+      (r) => ({ ...r, assignedToMe: !!me && me.id === r.assignedCrew }),
+    );
+  }
   if (result.status === 200)
     after(async () => {
       try {
@@ -45,6 +60,7 @@ export async function POST(request: Request) {
       typeof body.id === "string" ? body.id : "",
       body,
       now,
+      { crewKey: await crewKey(true) },
     ),
   );
 }

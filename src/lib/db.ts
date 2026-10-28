@@ -10,6 +10,7 @@ export interface Db {
   ): Promise<T[]>;
   /** 여러 문장을 한 트랜잭션으로 실행한다. 스키마 적용 전용. */
   exec(sql: string): Promise<void>;
+  transaction?<T>(work: (connection: Db) => Promise<T>): Promise<T>;
 }
 
 const SCHEMA_PATH = path.join(process.cwd(), "db", "schema.sql");
@@ -27,6 +28,23 @@ export async function openPglite(dataDir?: string): Promise<Db> {
     async query<T>(sql: string, params: unknown[] = []) {
       const res = await pg.query(sql, params as never[]);
       return res.rows as T[];
+    },
+    async transaction<T>(work: (connection: Db) => Promise<T>) {
+      return pg.transaction(async (transaction) => {
+        const connection: Db = {
+          async query<R>(sql: string, params: unknown[] = []) {
+            return (await transaction.query(sql, params as never[]))
+              .rows as R[];
+          },
+          async exec(sql: string) {
+            await transaction.exec(sql);
+          },
+          async transaction<R>(nested: (db: Db) => Promise<R>) {
+            return nested(connection);
+          },
+        };
+        return work(connection);
+      });
     },
     async exec(sql: string) {
       await pg.transaction(async (transaction) => {
@@ -62,6 +80,36 @@ async function openPg(url: string): Promise<Db> {
     async query<T>(sql: string, params: unknown[] = []) {
       const res = await pool.query(sql, params);
       return res.rows as T[];
+    },
+    async transaction<T>(work: (connection: Db) => Promise<T>) {
+      const client = await pool.connect();
+      let destroy = false;
+      try {
+        await client.query("BEGIN");
+        const connection: Db = {
+          async query<R>(sql: string, params: unknown[] = []) {
+            return (await client.query(sql, params)).rows as R[];
+          },
+          async exec(sql: string) {
+            await client.query(sql);
+          },
+          async transaction<R>(nested: (db: Db) => Promise<R>) {
+            return nested(connection);
+          },
+        };
+        const result = await work(connection);
+        await client.query("COMMIT");
+        return result;
+      } catch (error) {
+        try {
+          await client.query("ROLLBACK");
+        } catch {
+          destroy = true;
+        }
+        throw error;
+      } finally {
+        client.release(destroy);
+      }
     },
     async exec(sql: string) {
       const client = await pool.connect();

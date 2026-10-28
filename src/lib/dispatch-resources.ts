@@ -10,16 +10,23 @@ function denied(s: Session | null) {
   if (s.needsZone) return fail(409, "근무 구역을 먼저 골라 주세요");
   return null;
 }
-export async function resourceSnapshot(db: Db): Promise<DispatchResource[]> {
-  return db.query<DispatchResource>(`
+export async function resourceSnapshot(
+  db: Db,
+  now = new Date(),
+): Promise<DispatchResource[]> {
+  return db.query<DispatchResource>(
+    `
     select d.id,d.label,d.kind,d.zone_id as "zoneId",z.label as zone,
      case when z.active then d.status else 'offline' end as status,d.version,
-     r.id as "requestId"
+     coalesce(r.id,h.visit_id) as "requestId",d.hub_id as "hubId",h.release_at as "availableAfter"
     from dispatch_resources d join zones z on z.id=d.zone_id
     left join service_requests r on r.resource_id=d.id
      and r.state in ('received','assigned','en_route','arrived','serving')
+    left join support_resource_holds h on h.resource_id=d.id and (h.active or h.release_at>$1)
     order by d.kind,d.label
-  `);
+  `,
+    [now],
+  );
 }
 export async function listResources(
   db: Db,
@@ -30,7 +37,7 @@ export async function listResources(
   if (auth) return auth;
   await expireServiceRequests(db, now);
   return ok({
-    resources: await resourceSnapshot(db),
+    resources: await resourceSnapshot(db, now),
     zones: await db.query(
       "select id,label from zones where active and not is_kiosk and not is_common order by label",
     ),

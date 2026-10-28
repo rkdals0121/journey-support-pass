@@ -9,6 +9,8 @@ export interface DispatchResource {
   status: ResourceStatus;
   version: number;
   requestId: string | null;
+  hubId?: string | null;
+  availableAfter?: string | null;
 }
 export const RESOURCE_KIND = { robot: "안내로봇", mobility: "이동지원 장비" };
 export const RESOURCE_STATUS = {

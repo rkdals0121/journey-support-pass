@@ -811,7 +811,9 @@ export function RequestList({
           {visible.map((r) => {
             const next = nextRequestAction(r);
             const current = r.queue !== "call" && r.queue !== "assist";
-            const mine = r.assignedZone === zoneId;
+            const mine = r.visitId
+              ? r.assignedToMe === true
+              : r.assignedZone === zoneId;
             const open = OPEN_REQUEST_STATES.includes(r.state);
             return (
               <li
@@ -979,6 +981,14 @@ export function RequestList({
                     }
                   />
                 )}
+                {r.visitId && open && (
+                  <a
+                    className="btn btn-ghost"
+                    href={"/staff/visits?search=" + r.visitId}
+                  >
+                    예약 담당·교대 확인 →
+                  </a>
+                )}
                 {current && open && (
                   <details className="work-delivery">
                     <summary>알림 전달 상태</summary>
@@ -1010,7 +1020,11 @@ export function RequestList({
                   />
                 )}
                 {open && r.assignedZone && !mine && (
-                  <p>다른 구역에서 맡은 요청입니다.</p>
+                  <p>
+                    {r.visitId
+                      ? "다른 직원이 맡은 예약 지원입니다. 거점 예약 화면에서 교대 인계를 진행해 주세요."
+                      : "다른 구역에서 맡은 요청입니다."}
+                  </p>
                 )}
                 <details className="work-secondary-actions">
                   <summary>사유 입력·지원 불가·인계·이력</summary>
@@ -1061,7 +1075,7 @@ export function RequestList({
                         배정 해제 · 다시 접수
                       </button>
                     )}
-                  {current && isDesk && open && (
+                  {current && isDesk && open && !r.visitId && (
                     <div className="dx-ending">
                       <label htmlFor={`target-${r.id}`}>
                         담당 구역 지정 · 교대 인계

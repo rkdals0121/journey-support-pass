@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "browser Back leaves registration without deleting answers",
+    "browser Forward restores the same step and selected answers",
+    "reload also restores the current registration",
+    "Cheonjiin intermediate arae-a is not removed during composition",
+    "unfinished composition does not issue flight searches",
+    "completed Korean city text reaches actual flight search",
+    "entrance offers number lookup without opening a camera",
+    "closing number entry clears unfinished digits",
+    "unknown number shows an inline error and allows retry",
+    "number entry and touch keypad fit mobile width",
+    "touch number pad enters all six digits",
+    "number lookup loads the registered passenger's saved support",
+    "shared entrance never saves a private registration draft",
+    "a new registration history entry does not inherit old answers",
+    "no runtime errors"
+  ],
+  "errors": []
+}

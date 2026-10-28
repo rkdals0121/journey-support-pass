@@ -6,7 +6,18 @@ export async function crewKey(create = false) {
   let key = jar.get(NAME)?.value ?? "";
   if (!/^[a-f0-9]{64}$/.test(key)) {
     key = create ? randomBytes(32).toString("hex") : "";
-    if (create) jar.set(NAME, key, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 4 * 3600 });
+    if (create)
+      jar.set(NAME, key, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 4 * 3600,
+      });
   }
   return key;
+}
+
+export async function clearCrewKey() {
+  (await cookies()).delete(NAME);
 }

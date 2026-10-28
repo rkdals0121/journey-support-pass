@@ -77,6 +77,7 @@ class RequestError extends Error {
     message: string,
     public status: number,
     public code: string = "",
+    public alternatives?: { booking: string; staff: string },
   ) {
     super(message);
   }
@@ -95,6 +96,11 @@ async function post(path: string, body: unknown, signal?: AbortSignal) {
       result.error ?? "요청을 처리하지 못했습니다 / Request failed",
       response.status,
       typeof result.code === "string" ? result.code : "",
+      result.code === "support_unavailable" &&
+      /^\/visits\?hub=[a-z0-9-]+$/.test(result.alternativeHref) &&
+      /^\/help\?topic=guidance&place=[a-z0-9-]+&fresh=1$/.test(result.staffHref)
+        ? { booking: result.alternativeHref, staff: result.staffHref }
+        : undefined,
     );
   return result.request as ServiceRequestView;
 }
@@ -181,6 +187,10 @@ export function HelpFlow({
   const [request, setRequest] = useState<ServiceRequestView | null>(null);
   const [receipt, setReceipt] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [availability, setAvailability] = useState<{
+    booking: string;
+    staff: string;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [restoring, setRestoring] = useState(true);
   const [large, setLarge] = useState(savedChoices.includes("gd_large"));
@@ -206,8 +216,14 @@ export function HelpFlow({
       return;
     }
     try {
-      const d = JSON.parse(sessionStorage.getItem(DRAFT) ?? "null") as Draft | null;
-      if (d && Date.now() - d.at < DRAFT_TTL_MS && (d.topicId ?? "") === (initialTopic ?? "")) {
+      const d = JSON.parse(
+        sessionStorage.getItem(DRAFT) ?? "null",
+      ) as Draft | null;
+      if (
+        d &&
+        Date.now() - d.at < DRAFT_TTL_MS &&
+        (d.topicId ?? "") === (initialTopic ?? "")
+      ) {
         setService(d.service as ServiceType);
         setTaskId(d.taskId);
         setTaskFields(d.taskFields);
@@ -241,7 +257,21 @@ export function HelpFlow({
     try {
       sessionStorage.setItem(DRAFT, JSON.stringify(d));
     } catch {}
-  }, [sharedDevice, request, topicId, service, taskId, taskFields, placeId, destinationId, note, party, choices, inputStep, trafficIntent]);
+  }, [
+    sharedDevice,
+    request,
+    topicId,
+    service,
+    taskId,
+    taskFields,
+    placeId,
+    destinationId,
+    note,
+    party,
+    choices,
+    inputStep,
+    trafficIntent,
+  ]);
   const applyRequest = useCallback(
     (r: ServiceRequestView) =>
       setRequest((old) =>
@@ -394,6 +424,7 @@ export function HelpFlow({
     inFlight.current = true;
     setBusy(true);
     setError("");
+    setAvailability(null);
     let key = receipt;
     try {
       if (!key) {
@@ -447,12 +478,16 @@ export function HelpFlow({
         clearTimeout(limit);
       }
     } catch (e) {
+      if (e instanceof RequestError && e.alternatives)
+        setAvailability(e.alternatives);
       setError(
-        en && e instanceof RequestError && e.code === "duplicate_service"
-          ? "A request for this service is already active for your registration. Ask staff to check the existing request."
-          : e instanceof Error
-            ? e.message
-            : tr("연결을 확인해 주세요", "Check your connection"),
+        en && e instanceof RequestError && e.code === "support_unavailable"
+          ? "This service is unavailable now. Book another time or request staff guidance."
+          : en && e instanceof RequestError && e.code === "duplicate_service"
+            ? "A request for this service is already active for your registration. Ask staff to check the existing request."
+            : e instanceof Error
+              ? e.message
+              : tr("연결을 확인해 주세요", "Check your connection"),
       );
     } finally {
       inFlight.current = false;
@@ -560,10 +595,13 @@ export function HelpFlow({
     if (review) return setReview(false);
     if (inputStep > 0) {
       setInputStep((v) => v - 1);
-      document.getElementById("public-main")?.scrollIntoView({ block: "start" });
+      document
+        .getElementById("public-main")
+        ?.scrollIntoView({ block: "start" });
       return;
     }
-    if (topic?.id === "traffic" && trafficIntent === "dispatch") return setTrafficIntent("choose");
+    if (topic?.id === "traffic" && trafficIntent === "dispatch")
+      return setTrafficIntent("choose");
     if (window.history.length > 1) window.history.back();
     else window.location.assign("/services" + (en ? "?lang=en" : ""));
   }
@@ -613,6 +651,25 @@ export function HelpFlow({
         <p className="error-note" role="alert">
           {error}
         </p>
+      )}
+      {availability && (
+        <nav
+          className="row"
+          aria-label={tr("다른 지원 선택", "Alternative assistance")}
+        >
+          <a
+            className="btn btn-primary"
+            href={`${availability.booking}${en ? "&lang=en" : ""}`}
+          >
+            {tr("다른 시간 예약", "Book another time")}
+          </a>
+          <a
+            className="btn"
+            href={`${availability.staff}${en ? "&lang=en" : ""}`}
+          >
+            {tr("직원 안내 요청", "Request staff guidance")}
+          </a>
+        </nav>
       )}
       {restoring ? (
         <div className="request-loading" role="status">
@@ -722,8 +779,12 @@ export function HelpFlow({
                     "Your request will be sent to the handling team.",
                   )
                 : tr(
-                    noMeeting ? "전달할 요청 내용을 확인해 주세요." : "필요한 내용과 위치를 확인해 주세요.",
-                    noMeeting ? "Review the request you want to send." : "Confirm the service details and location.",
+                    noMeeting
+                      ? "전달할 요청 내용을 확인해 주세요."
+                      : "필요한 내용과 위치를 확인해 주세요.",
+                    noMeeting
+                      ? "Review the request you want to send."
+                      : "Confirm the service details and location.",
                   )}
             </p>
             <span className="service-demo-label">
@@ -807,7 +868,13 @@ export function HelpFlow({
                     </dd>
                   </div>
                   <div>
-                    <dt>{noMeeting ? tr("처리 방식", "Handling") : topic?.id === "facility" ? tr("신고 위치", "Report location") : tr("만날 곳", "Meeting point")}</dt>
+                    <dt>
+                      {noMeeting
+                        ? tr("처리 방식", "Handling")
+                        : topic?.id === "facility"
+                          ? tr("신고 위치", "Report location")
+                          : tr("만날 곳", "Meeting point")}
+                    </dt>
                     <dd>{en ? currentPlace?.labelEn : currentPlace?.label}</dd>
                   </div>
                   {destinationId && (
@@ -918,9 +985,14 @@ export function HelpFlow({
                 >
                   <h2>
                     <span>1</span>
-                    {topic ? tr("요청 내용", "Request details") : tr("필요한 서비스", "Your service")}
+                    {topic
+                      ? tr("요청 내용", "Request details")
+                      : tr("필요한 서비스", "Your service")}
                     {topic && (
-                      <Link className="request-change-service" href={"/services" + (en ? "?lang=en" : "")}>
+                      <Link
+                        className="request-change-service"
+                        href={"/services" + (en ? "?lang=en" : "")}
+                      >
                         {tr("서비스 변경", "Change service")}
                       </Link>
                     )}
@@ -963,7 +1035,9 @@ export function HelpFlow({
                   {task && (
                     <>
                       <fieldset className="request-task-options">
-                        <legend className={topic ? "sr-only" : undefined}>{tr("이용할 서비스", "Service option")}</legend>
+                        <legend className={topic ? "sr-only" : undefined}>
+                          {tr("이용할 서비스", "Service option")}
+                        </legend>
                         {availableTasks.map((t) => (
                           <label
                             key={t.id}
@@ -985,9 +1059,12 @@ export function HelpFlow({
                         ))}
                       </fieldset>
                       {/* 피드백: 직접 적는 칸 바로 위에 눈에 띄는 개인정보 경고. */}
-                      {task.fields.some((f) => !f.legacy && !f.options && f.type !== "datetime-local") && (
-                        <PrivacyWarning en={en} />
-                      )}
+                      {task.fields.some(
+                        (f) =>
+                          !f.legacy &&
+                          !f.options &&
+                          f.type !== "datetime-local",
+                      ) && <PrivacyWarning en={en} />}
                       <div className="service-task-fields">
                         {task.fields
                           .filter((f) => !f.legacy)
@@ -1260,7 +1337,10 @@ export function HelpFlow({
                       )}
                     />
                     <p className="request-privacy-note">
-                      {tr("접수 정보는 24시간 후 만료돼요.", "Details expire after 24 hours.")}
+                      {tr(
+                        "접수 정보는 24시간 후 만료돼요.",
+                        "Details expire after 24 hours.",
+                      )}
                     </p>
                   </section>
                 )}
@@ -1352,12 +1432,14 @@ function PrivacyWarning({ en }: { en: boolean }) {
       <p>
         {en ? (
           <>
-            <strong>Do not enter personal information.</strong> Name, phone number, address, resident registration number, passport
-            number, card number or boarding pass details.
+            <strong>Do not enter personal information.</strong> Name, phone
+            number, address, resident registration number, passport number, card
+            number or boarding pass details.
           </>
         ) : (
           <>
-            <strong>개인정보는 적지 마세요.</strong> 이름, 전화번호, 주소, 주민등록번호, 여권번호, 카드번호, 탑승권 정보
+            <strong>개인정보는 적지 마세요.</strong> 이름, 전화번호, 주소,
+            주민등록번호, 여권번호, 카드번호, 탑승권 정보
           </>
         )}
       </p>
@@ -1371,13 +1453,23 @@ function PrivacyWarning({ en }: { en: boolean }) {
  */
 function RobotIntro({ en }: { en: boolean }) {
   const items = en
-    ? ["Walks with you to your gate or a facility", "Guides you by voice and on its screen", "Shows your flight, gate and the way"]
-    : ["탑승구·편의시설까지 함께 이동", "소리와 화면으로 길 안내", "항공편·탑승구·가는 길 안내"];
+    ? [
+        "Walks with you to your gate or a facility",
+        "Guides you by voice and on its screen",
+        "Shows your flight, gate and the way",
+      ]
+    : [
+        "탑승구·편의시설까지 함께 이동",
+        "소리와 화면으로 길 안내",
+        "항공편·탑승구·가는 길 안내",
+      ];
   return (
     <section className="robot-intro" aria-labelledby="robot-intro-title">
       <Robot mood="happy" size={96} />
       <div>
-        <h3 id="robot-intro-title">{en ? "What the guide robot can do" : "안내로봇이 해 드리는 일"}</h3>
+        <h3 id="robot-intro-title">
+          {en ? "What the guide robot can do" : "안내로봇이 해 드리는 일"}
+        </h3>
         <ul>
           {items.map((i) => (
             <li key={i}>{i}</li>

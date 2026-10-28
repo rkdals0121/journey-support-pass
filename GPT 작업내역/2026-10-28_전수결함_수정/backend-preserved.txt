@@ -1,0 +1,32 @@
+export async function experienceEvent(db: Db, device: string, kind: string, value: number, now: Date) {
+  if (!["stamp_start", "stamp_finish", "stamp_share", "robot_complete", "handover", "delay", "paper_replaced"].includes(kind) || !Number.isInteger(value) || value < 0 || value > 1000) return;
+  const [count] = await db.query<{ n: number }>(`select count(*)::int as n from support_experience_events where device_key=$1 and at>$2::timestamptz - interval '1 hour'`, [device, now]);
+  if (count.n < 50) await db.query(`insert into support_experience_events(at,device_key,kind,value) values($1,$2,$3,$4)`, [now, device, kind, value]);
+}
+
+export async function updateHubRule(db: Db, s: Session | null, body: Record<string, unknown>, now: Date): Promise<ApiResult> {
+  if (staffDenied(s, now)) return fail(401, "직원 로그인이 필요합니다");
+  if (!s!.isDesk) return fail(403, "운영 기준 변경은 안내데스크에서 처리합니다");
+  const hub = hubOf(body.hubId);
+  if (!hub || !["robot", "mobility"].includes(String(body.service)) || ![body.openHour, body.closeHour, body.capacity, body.battery, body.version].every(Number.isInteger) || Number(body.openHour) < 0 || Number(body.closeHour) > 24 || Number(body.closeHour) <= Number(body.openHour) || Number(body.capacity) < 0 || Number(body.capacity) > 4 || Number(body.battery) < 0 || Number(body.battery) > 100 || !["ready", "paused", "charging"].includes(String(body.state))) return fail(400, "운영시간·정원·장비 준비 상태를 확인해 주세요");
+  const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+  if (reason.length > 150 || (body.state !== "ready" && !reason)) return fail(400, "운영 중지·충전 사유를 150자 이내로 적어 주세요");
+  const available = body.availableAfter ? new Date(String(body.availableAfter)) : null;
+  if (available && !Number.isFinite(available.getTime())) return fail(400, "운영 재개 예상 시각을 확인해 주세요");
+  const rows = await db.query(`insert into support_hub_rules(hub_id,service,open_hour,close_hour,capacity,state,battery,available_after,reason,version) select $1,$2,$3,$4,$5,$6,$7,$8,$9,1 where $10::int=0 on conflict(hub_id,service) do update set open_hour=$3,close_hour=$4,capacity=$5,state=$6,battery=$7,available_after=$8,reason=$9,version=support_hub_rules.version+1 where support_hub_rules.version=$10 returning version`, [hub.id, body.service, body.openHour, body.closeHour, body.capacity, body.state, body.battery, available, reason, body.version]);
+  if (!rows.length && Number(body.version) > 0) {
+    const updated = await db.query(`update support_hub_rules set open_hour=$3,close_hour=$4,capacity=$5,state=$6,battery=$7,available_after=$8,reason=$9,version=version+1 where hub_id=$1 and service=$2 and version=$10 returning version`, [hub.id, body.service, body.openHour, body.closeHour, body.capacity, body.state, body.battery, available, reason, body.version]);
+    if (!updated.length) return fail(409, "다른 직원이 변경했습니다. 최신 기준을 다시 불러와 주세요");
+  } else if (!rows.length) return fail(409, "다른 직원이 변경했습니다. 최신 기준을 다시 불러와 주세요");
+  return ok({ rules: await hubRules(db) });
+}
+
+
+export async function experienceSummary(db: Db, s: Session | null, now: Date): Promise<ApiResult> {
+  if (staffDenied(s, now) || !s!.isDesk) return fail(403, "안내데스크에서 확인해 주세요");
+  await expireVisits(db, now);
+  const [visits] = await db.query(`select count(*)::int as total,count(*) filter(where state='done' and service='robot' and handed_over_at is null)::int as "robotResolved",count(*) filter(where handed_over_at is not null)::int as handovers,count(*) filter(where state='missed')::int as missed,count(*) filter(where state='cancelled')::int as cancelled from support_visits where created_at>$1::timestamptz - interval '30 days'`, [now]);
+  const events = await db.query(`select kind,count(*)::int as n,sum(value)::int as value from support_experience_events where at>$1::timestamptz - interval '30 days' group by kind`, [now]);
+  const [response] = await db.query(`select (percentile_cont(.5) within group(order by extract(epoch from (accepted_at-created_at))) filter(where accepted_at is not null))::int as "medianAcceptSec",(percentile_cont(.5) within group(order by extract(epoch from (arrived_at-accepted_at))) filter(where arrived_at is not null))::int as "medianArrivalSec" from request_work_ledger where created_at>$1::timestamptz - interval '30 days'`, [now]);
+  return ok({ visits, events, response, simulation: true });
+}

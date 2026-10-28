@@ -176,6 +176,7 @@ describe("durable request notifications", () => {
       "receivedToken",
       "tag",
       "title",
+      "url",
     ]);
     expect(JSON.stringify(payload)).not.toContain("여객 상세");
     expect(

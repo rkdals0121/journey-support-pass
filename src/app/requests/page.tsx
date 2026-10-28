@@ -1,4 +1,5 @@
 import { PublicShell } from "../components/PublicShell";
+import { SavedVisits } from "../visits/SavedVisits";
 import { MyRequests } from "./MyRequests";
 import { currentSession } from "@/lib/session-server";
 import { placeOf } from "@/lib/airport";
@@ -16,6 +17,9 @@ export default async function Requests({
     );
   return (
     <PublicShell lang={en ? "en" : "ko"}>
+      <div className="wrap">
+        <SavedVisits en={en} />
+      </div>
       <MyRequests en={en} />
     </PublicShell>
   );

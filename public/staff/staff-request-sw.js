@@ -8,10 +8,26 @@ self.addEventListener("push", (event) => {
   }
   event.waitUntil(
     (async () => {
-      await self.registration.showNotification("새 도움 요청", {
-        body: "통합 요청 화면에서 접수 내용을 확인해 주세요.",
-        tag: typeof data.tag === "string" ? data.tag : "service-request",
-      });
+      await self.registration.showNotification(
+        ["새 만남 예약", "예약한 여객 도착", "직원 지원 인계"].includes(
+          data.title,
+        )
+          ? data.title
+          : "새 도움 요청",
+        {
+          body:
+            data.url === "/staff/visits"
+              ? "거점 예약 화면에서 예정된 지원을 확인해 주세요."
+              : "통합 요청 화면에서 접수 내용을 확인해 주세요.",
+          data: {
+            url:
+              data.url === "/staff/visits"
+                ? "/staff/visits"
+                : "/staff/requests",
+          },
+          tag: typeof data.tag === "string" ? data.tag : "service-request",
+        },
+      );
       if (typeof data.receivedToken === "string") {
         try {
           await fetch("/api/staff/push/received", {
@@ -35,11 +51,15 @@ self.addEventListener("notificationclick", (event) => {
         type: "window",
         includeUncontrolled: true,
       });
+      const target =
+        event.notification.data?.url === "/staff/visits"
+          ? "/staff/visits"
+          : "/staff/requests";
       const existing = windows.find(
-        (client) => new URL(client.url).pathname === "/staff/requests",
+        (client) => new URL(client.url).pathname === target,
       );
       if (existing) return existing.focus();
-      return self.clients.openWindow("/staff/requests");
+      return self.clients.openWindow(target);
     })(),
   );
 });

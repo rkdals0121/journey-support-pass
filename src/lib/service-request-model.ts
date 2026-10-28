@@ -82,6 +82,10 @@ export interface ServiceRequestView {
   businessId?: string | null;
   destinationId?: string | null;
   resolution?: RequestResolution;
+  visitId?: string | null;
+  plannedAt?: string | Date | null;
+  assignedCrew?: string | null;
+  assignedToMe?: boolean;
 }
 export type RequestAction =
   | "assign"

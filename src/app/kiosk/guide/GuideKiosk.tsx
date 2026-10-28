@@ -17,7 +17,11 @@ import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
 import type { GuideDto, GuideFacility } from "@/lib/guide";
 import { textOf, type Lang } from "@/lib/i18n";
-import { isBoardingScan, extractToken, PASS_NO_LENGTH } from "@/lib/pass-format";
+import {
+  isBoardingScan,
+  extractToken,
+  PASS_NO_LENGTH,
+} from "@/lib/pass-format";
 import { Banner, ErrorNote } from "../../components/Alert";
 import { FlowShell } from "../../components/FlowShell";
 import {
@@ -561,29 +565,103 @@ export function GuideKiosk({
           kiosk
           screenKey="scan"
           serviceHome
-          headerTools={<button className="bar-btn" onClick={() => setStartLang(l => l === "en" ? "ko" : "en")} lang={startLang === "en" ? "ko" : "en"}>{t.otherLang}</button>}
-          speakText={scanOpen ? `${t.scanTitle}. ${t.scanBody}` : (lang === "en" ? "Choose a service. Directions, mobility assistance, facility reports or transport." : "이용할 서비스를 선택하세요. 길 찾기, 이동 도움, 시설 불편, 교통 주차 서비스를 이용할 수 있어요.")}
+          headerTools={
+            <button
+              className="bar-btn"
+              onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))}
+              lang={startLang === "en" ? "ko" : "en"}
+            >
+              {t.otherLang}
+            </button>
+          }
+          speakText={
+            scanOpen
+              ? `${t.scanTitle}. ${t.scanBody}`
+              : lang === "en"
+                ? "Choose a service. Directions, mobility assistance, facility reports or transport."
+                : "이용할 서비스를 선택하세요. 길 찾기, 이동 도움, 시설 불편, 교통 주차 서비스를 이용할 수 있어요."
+          }
           speakKey={scanOpen ? "boarding" : "services"}
         >
           <div className="kiosk-scan-surface kiosk-taskhome">
             <section className="kiosk-task-heading">
-              <p>{lang === "en" ? "You are here" : "현재 위치"} · {here}</p>
-              <h1>{lang === "en" ? "What would you like to do?" : "어떤 서비스를 이용하시겠어요?"}</h1>
+              <p>
+                {lang === "en" ? "You are here" : "현재 위치"} · {here}
+              </p>
+              <h1>
+                {lang === "en"
+                  ? "What would you like to do?"
+                  : "어떤 서비스를 이용하시겠어요?"}
+              </h1>
             </section>
             <TaskLauncher en={lang === "en"} returnTo="/kiosk/guide" field />
-            <details className="kiosk-personalise" open={scanOpen} onToggle={e => setScanOpen(e.currentTarget.open)}>
-              <summary>{lang === "en" ? "Retrieve registered support with a boarding pass" : "탑승권으로 등록한 도움 불러오기"}</summary>
-              {scanOpen && <div className="kiosk-personalise-content">
-                <div>
-                  <h2>{lang === "en" ? "Show the code to the camera" : "탑승권의 코드를 보여 주세요"}</h2>
-                  <p>{lang === "en" ? "Use a mobile or paper boarding pass." : "모바일·종이 탑승권을 모두 읽을 수 있어요."}</p>
-                  <button className="btn" onClick={() => setView({ kind: "number" })}><Keyboard aria-hidden="true" />{t.scanNumber}</button>
-                  {error && <ErrorNote>{error}</ErrorNote>}
+            <Link
+              className="btn"
+              href={"/kiosk/visits" + (lang === "en" ? "?lang=en" : "")}
+            >
+              {lang === "en"
+                ? "Confirm a meeting appointment"
+                : "만남 예약 확인번호로 찾기"}
+            </Link>
+            <details
+              className="kiosk-personalise"
+              open={scanOpen}
+              onToggle={(e) => setScanOpen(e.currentTarget.open)}
+            >
+              <summary>
+                {lang === "en"
+                  ? "Retrieve registered support with a boarding pass"
+                  : "탑승권으로 등록한 도움 불러오기"}
+              </summary>
+              {scanOpen && (
+                <div className="kiosk-personalise-content">
+                  <div>
+                    <h2>
+                      {lang === "en"
+                        ? "Show the code to the camera"
+                        : "탑승권의 코드를 보여 주세요"}
+                    </h2>
+                    <p>
+                      {lang === "en"
+                        ? "Use a mobile or paper boarding pass."
+                        : "모바일·종이 탑승권을 모두 읽을 수 있어요."}
+                    </p>
+                    <button
+                      className="btn"
+                      onClick={() => setView({ kind: "number" })}
+                    >
+                      <Keyboard aria-hidden="true" />
+                      {t.scanNumber}
+                    </button>
+                    {error && <ErrorNote>{error}</ErrorNote>}
+                  </div>
+                  <div className="kiosk-scan-camera">
+                    <Scanner
+                      onScan={onScan}
+                      paused={busy}
+                      prefer="user"
+                      text={{
+                        starting: t.camStarting,
+                        ready: t.camReady,
+                        read: t.camRead,
+                        none: t.camNone,
+                        switchCamera: t.camSwitch,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="kiosk-scan-camera"><Scanner onScan={onScan} paused={busy} prefer="user" text={{ starting: t.camStarting, ready: t.camReady, read: t.camRead, none: t.camNone, switchCamera: t.camSwitch }} /></div>
-              </div>}
+              )}
             </details>
-            <div className="kiosk-task-utilities"><ListenStart t={t} /><Link className="btn" href={kioskHelpHref(null, lang, "guidance", "/kiosk/guide")}>{lang === "en" ? "Ask a member of staff" : "직원에게 안내 요청"}<ArrowRight aria-hidden="true" /></Link></div>
+            <div className="kiosk-task-utilities">
+              <ListenStart t={t} />
+              <Link
+                className="btn"
+                href={kioskHelpHref(null, lang, "guidance", "/kiosk/guide")}
+              >
+                {lang === "en" ? "Ask a member of staff" : "직원에게 안내 요청"}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
           </div>
           <p className="kiosk-foot">{here}</p>
         </FlowShell>
