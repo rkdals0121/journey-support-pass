@@ -80,7 +80,16 @@ export function VisitForm({
   const [slot, setSlot] = useState(edit?.visit.startAt ?? "");
   const [step, setStep] = useState(0);
   const [restored, setRestored] = useState(false);
-  const draftKey = `jsp-visit-draft-v2:${edit?.receipt ?? registrationToken ?? "public"}`;
+  const previousStep = useRef(0);
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    const frame = requestAnimationFrame(() =>
+      document.getElementById(`visit-stage-${step}`)?.focus(),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [step]);
+  const draftKey = `jsp-visit-draft-v2:${edit?.receipt ?? `${registrationToken ?? "public"}:${hubOf(initialHub)?.id ?? "any"}`}`;
   const [slots, setSlots] = useState<Slot[]>([]);
   const [rule, setRule] = useState<HubRule | null>(null);
   const [party, setParty] = useState(edit?.visit.party ?? 1);
@@ -102,6 +111,11 @@ export function VisitForm({
         ["robot", "mobility"].includes(d.service) &&
         /^\d{4}-\d{2}-\d{2}$/.test(d.day)
       ) {
+        receipt.current =
+          typeof d.pendingReceipt === "string" &&
+          /^[a-f0-9]{64}$/.test(d.pendingReceipt)
+            ? d.pendingReceipt
+            : "";
         setHub(d.hub);
         setService(d.service);
         setTask(
@@ -138,6 +152,7 @@ export function VisitForm({
           recognition,
           consent,
           step,
+          pendingReceipt: receipt.current,
           until: Date.now() + 3600000,
         }),
       );
@@ -157,6 +172,47 @@ export function VisitForm({
     consent,
     step,
   ]);
+  useEffect(() => {
+    if (!restored || edit) return;
+    const ctrl = new AbortController();
+    const recover = () => {
+      const cap = receipt.current;
+      if (!cap) return;
+      void fetch("/api/visits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "status", receipt: cap }),
+        cache: "no-store",
+        signal: AbortSignal.any([ctrl.signal, AbortSignal.timeout(10000)]),
+      })
+        .then(async (r) => {
+          if (!r.ok) return;
+          const b = await r.json();
+          if (ctrl.signal.aborted || !b.visit?.startAt) return;
+          rememberVisit(cap, b.visit.startAt);
+          try {
+            sessionStorage.removeItem(draftKey);
+          } catch {
+            /* Storage is optional. */
+          }
+          router.replace(`/visits/${cap}${en ? "?lang=en" : ""}`);
+        })
+        .catch(() => {
+          /* Keep the same attempt key for a safe retry. */
+        });
+    };
+    const onShow = (event: PageTransitionEvent) => {
+      if (event.persisted) recover();
+    };
+    recover();
+    window.addEventListener("pageshow", onShow);
+    window.addEventListener("online", recover);
+    return () => {
+      ctrl.abort();
+      window.removeEventListener("pageshow", onShow);
+      window.removeEventListener("online", recover);
+    };
+  }, [restored, draftKey, edit, router, en]);
   useEffect(() => {
     if (!restored) return;
     const ctrl = new AbortController();
@@ -192,10 +248,13 @@ export function VisitForm({
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hub, service, day, refresh, restored]);
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (step < 2) { if (step === 0 || slot) setStep(step+1); return; }
-    if (sending.current || !slot) return;
+    if (step < 2) {
+      if (step === 0 || slot) setStep(step + 1);
+      return;
+    }
+    if (sending.current || !slot || !e.currentTarget.reportValidity()) return;
     sending.current = true;
     setSaving(true);
     setError("");
@@ -203,6 +262,22 @@ export function VisitForm({
       receipt.current = [...crypto.getRandomValues(new Uint8Array(32))]
         .map((v) => v.toString(16).padStart(2, "0"))
         .join("");
+    // Journal the attempt before sending: a lost response must not create a new booking on return.
+    if (!edit)
+      try {
+        const draft = JSON.parse(sessionStorage.getItem(draftKey) ?? "{}");
+        sessionStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            ...draft,
+            pendingReceipt: receipt.current,
+            until: Date.now() + 3600000,
+          }),
+        );
+      } catch {
+        /* A same-page retry still uses the in-memory key. */
+      }
+    let definitiveFailure = false;
     try {
       const r = await fetch("/api/visits", {
         method: "POST",
@@ -233,7 +308,10 @@ export function VisitForm({
         ),
       });
       const b = await r.json();
-      if (!r.ok) throw Error(visitError(b, en));
+      if (!r.ok) {
+        definitiveFailure = r.status < 500;
+        throw Error(visitError(b, en));
+      }
       try {
         sessionStorage.removeItem(draftKey);
       } catch {
@@ -243,6 +321,7 @@ export function VisitForm({
       if (edit) edit.onChanged();
       else router.push(`/visits/${receipt.current}${en ? "?lang=en" : ""}`);
     } catch (e) {
+      if (!edit && !definitiveFailure) rememberVisit(receipt.current, slot);
       setError((e as Error).message);
     } finally {
       sending.current = false;
@@ -254,6 +333,7 @@ export function VisitForm({
       <form
         className={styles.panel}
         onSubmit={submit}
+        noValidate
         aria-label={t("만남 예약", "Book assistance")}
       >
         <nav
@@ -277,6 +357,9 @@ export function VisitForm({
           ))}
         </nav>
         <div hidden={step !== 0}>
+          <h2 id="visit-stage-0" tabIndex={-1}>
+            {t("장소와 지원 선택", "Choose place and assistance")}
+          </h2>
           <div className={styles.field}>
             <label htmlFor="visit-hub">{t("만날 장소", "Meeting point")}</label>
             <select
@@ -299,7 +382,7 @@ export function VisitForm({
               </label>
               <select
                 id="visit-service"
-                  disabled={saving}
+                disabled={saving}
                 value={service}
                 onChange={(e) => {
                   const next = e.target.value as VisitService;
@@ -326,7 +409,7 @@ export function VisitForm({
               </label>
               <select
                 id="visit-task"
-                  disabled={saving}
+                disabled={saving}
                 value={task}
                 onChange={(e) => setTask(e.target.value as typeof task)}
               >
@@ -355,7 +438,9 @@ export function VisitForm({
             />
           </div>
           <div className={styles.row}>
-            <h2>{t("만날 시간", "Meeting time")}</h2>
+            <h2 id="visit-stage-1" tabIndex={-1}>
+              {t("만날 시간", "Meeting time")}
+            </h2>
             <button
               className={styles.secondary}
               type="button"
@@ -430,6 +515,9 @@ export function VisitForm({
           )}
         </div>
         <div hidden={step !== 2}>
+          <h2 id="visit-stage-2" tabIndex={-1}>
+            {t("예약 내용 확인", "Review your appointment")}
+          </h2>
           <dl className={styles.summary}>
             <dt>{t("만날 장소", "Meeting point")}</dt>
             <dd>{en ? hubOf(hub)?.en : hubOf(hub)?.label}</dd>

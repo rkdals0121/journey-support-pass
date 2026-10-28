@@ -15,11 +15,36 @@ export interface StartPoint {
 
 /** 출국심사를 마치고 나오는 곳. 시연용 모의 위치다. */
 export const EXITS: StartPoint[] = [
-  { id: "t1-east", area: "T1", near: 11, label: "제1여객터미널 동편 출국심사 출구" },
-  { id: "t1-west", area: "T1", near: 40, label: "제1여객터미널 서편 출국심사 출구" },
-  { id: "cc-train", area: "CONCOURSE", near: 116, label: "탑승동 셔틀트레인에서 올라온 곳" },
-  { id: "t2-east", area: "T2", near: 234, label: "제2여객터미널 동편 출국심사 출구" },
-  { id: "t2-west", area: "T2", near: 262, label: "제2여객터미널 서편 출국심사 출구" },
+  {
+    id: "t1-east",
+    area: "T1",
+    near: 11,
+    label: "제1여객터미널 동편 출국심사 출구",
+  },
+  {
+    id: "t1-west",
+    area: "T1",
+    near: 40,
+    label: "제1여객터미널 서편 출국심사 출구",
+  },
+  {
+    id: "cc-train",
+    area: "CONCOURSE",
+    near: 116,
+    label: "탑승동 셔틀트레인에서 올라온 곳",
+  },
+  {
+    id: "t2-east",
+    area: "T2",
+    near: 234,
+    label: "제2여객터미널 동편 출국심사 출구",
+  },
+  {
+    id: "t2-west",
+    area: "T2",
+    near: 262,
+    label: "제2여객터미널 서편 출국심사 출구",
+  },
 ];
 
 /** 지금 있는 곳: 출국심사 출구이거나, 근처 체크포인트(번호). */
@@ -46,7 +71,11 @@ export interface StampPlan {
   minutes: number;
   reason: string;
 }
-const blocked = (reason: string): StampPlan => ({ indices: [], minutes: 0, reason });
+const blocked = (reason: string): StampPlan => ({
+  indices: [],
+  minutes: 0,
+  reason,
+});
 
 /** 출발점에서 차례로 들러 마지막 체크포인트까지 걸리는 시간(분). 구역이 바뀌면 셔틀트레인을 탄다. */
 export function minutesOf(start: StartPoint, indices: number[]): number {
@@ -56,7 +85,9 @@ export function minutesOf(start: StartPoint, indices: number[]): number {
   for (const i of indices) {
     const c = CHECKPOINTS[i];
     if (c.area !== area) {
-      m += Math.abs(at - gateX(area, TRAIN_AT[area] ?? 0)) / WALK_M_PER_MIN + TRAIN_MIN;
+      m +=
+        Math.abs(at - gateX(area, TRAIN_AT[area] ?? 0)) / WALK_M_PER_MIN +
+        TRAIN_MIN;
       area = c.area;
       at = gateX(area, TRAIN_AT[area] ?? 0);
     }
@@ -67,30 +98,52 @@ export function minutesOf(start: StartPoint, indices: number[]): number {
 }
 
 /** 탑승 시각이 가까우면 도장 대신 탑승구로 보낸다. 여유(spare)는 분. */
-function boardingBlock(boardingAt: string | undefined, minutes: number, spare: number, now: number): string {
+function boardingBlock(
+  boardingAt: string | undefined,
+  minutes: number,
+  spare: number,
+  now: number,
+): string {
   if (!boardingAt) return "";
-  const at = new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(boardingAt) ? boardingAt + "+09:00" : boardingAt).getTime();
+  const at = new Date(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(boardingAt)
+      ? boardingAt + "+09:00"
+      : boardingAt,
+  ).getTime();
   if (!Number.isFinite(at)) return "탑승 시각을 확인해 주세요.";
-  return at - now < (minutes + spare) * 60000 ? "탑승 시각이 가까워요. 도장 수집 대신 탑승구로 바로 이동해 주세요." : "";
+  return at - now < (minutes + spare) * 60000
+    ? "탑승 시각이 가까워요. 도장 수집 대신 탑승구로 바로 이동해 주세요."
+    : "";
 }
 
 /** list 에서 k 개를 고르게(처음·끝 쪽에 몰리지 않게) 뽑는다. 순서는 그대로. */
 function evenly<T>(list: T[], k: number): T[] {
   if (k <= 0) return [];
   if (k >= list.length) return list;
-  return Array.from({ length: k }, (_, j) => list[Math.floor(((j + 0.5) * list.length) / k)]);
+  return Array.from(
+    { length: k },
+    (_, j) => list[Math.floor(((j + 0.5) * list.length) / k)],
+  );
 }
 
 /** 경로형: 지금 있는 곳 → 탑승구. 길 위 체크포인트를 가는 순서대로 5~6곳. */
-export function stampRoute(gate: string, origin?: string, boardingAt = "", now = Date.now()): StampPlan {
+export function stampRoute(
+  gate: string,
+  origin?: string,
+  boardingAt = "",
+  now = Date.now(),
+): StampPlan {
   const target = GATE_PICKUP_POINTS.find((p) => p.gate === Number(gate));
   if (!gate.trim() || !target) return blocked("탑승구 번호를 입력해 주세요.");
   const start = startOf(origin);
   if (!start) return blocked("지금 있는 곳을 골라 주세요.");
   const ga = target.place.area;
   if ((start.area === "T2") !== (ga === "T2"))
-    return blocked("지금 있는 터미널과 탑승구의 터미널이 달라요. 탑승권의 터미널을 확인해 주세요.");
-  if (start.area === "CONCOURSE" && ga === "T1") return blocked("탑승동에서는 제1여객터미널로 돌아갈 수 없어요.");
+    return blocked(
+      "지금 있는 터미널과 탑승구의 터미널이 달라요. 탑승권의 터미널을 확인해 주세요.",
+    );
+  if (start.area === "CONCOURSE" && ga === "T1")
+    return blocked("탑승동에서는 제1여객터미널로 돌아갈 수 없어요.");
 
   const gx = gateX(ga, Number(gate));
   // 같은 구역이면 한 구간, 제1여객터미널 → 탑승동이면 두 구간(승강장 에스컬레이터까지 / 도착 에스컬레이터부터).
@@ -98,8 +151,16 @@ export function stampRoute(gate: string, origin?: string, boardingAt = "", now =
     start.area === ga
       ? [{ area: ga, from: gateX(ga, start.near), to: gx }]
       : [
-          { area: "T1" as Area, from: gateX("T1", start.near), to: gateX("T1", TRAIN_AT.T1!) },
-          { area: "CONCOURSE" as Area, from: gateX("CONCOURSE", TRAIN_AT.CONCOURSE!), to: gx },
+          {
+            area: "T1" as Area,
+            from: gateX("T1", start.near),
+            to: gateX("T1", TRAIN_AT.T1!),
+          },
+          {
+            area: "CONCOURSE" as Area,
+            from: gateX("CONCOURSE", TRAIN_AT.CONCOURSE!),
+            to: gx,
+          },
         ];
   // 가는 순서를 재는 값: 몇 번째 구간인지 + 그 구간에서 얼마나 나아갔는지.
   const progress = (i: number) => {
@@ -114,19 +175,26 @@ export function stampRoute(gate: string, origin?: string, boardingAt = "", now =
     if (k < 0) return false;
     const l = legs[k];
     const p = (xOf(i) - l.from) * (l.to >= l.from ? 1 : -1);
-    return p >= 0 && p <= Math.abs(l.to - l.from) + (k === legs.length - 1 ? SLACK_M : 0);
+    return (
+      p >= 0 &&
+      p <= Math.abs(l.to - l.from) + (k === legs.length - 1 ? SLACK_M : 0)
+    );
   };
 
   // 마지막: 탑승구에서 가장 가까운 체크포인트.
   const inGateArea = CHECKPOINTS.flatMap((c, i) => (c.area === ga ? [i] : []));
-  const final = inGateArea.reduce((a, b) => (Math.abs(xOf(b) - gx) < Math.abs(xOf(a) - gx) ? b : a));
+  const final = inGateArea.reduce((a, b) =>
+    Math.abs(xOf(b) - gx) < Math.abs(xOf(a) - gx) ? b : a,
+  );
   const must = new Set<number>([final]);
   // 탑승동으로 가면 두 셔틀트레인 에스컬레이터는 꼭 들른다. 지금 체크포인트 앞이면 거기서 시작한다.
   if (legs.length === 2) CHECKPOINTS.forEach((c, i) => c.train && must.add(i));
   const here = CHECKPOINTS.findIndex((c) => c.code === start.id);
   if (here >= 0) must.add(here);
 
-  const along = CHECKPOINTS.flatMap((_, i) => (inLeg(i) && !must.has(i) ? [i] : [])).sort((a, b) => progress(a) - progress(b));
+  const along = CHECKPOINTS.flatMap((_, i) =>
+    inLeg(i) && !must.has(i) ? [i] : [],
+  ).sort((a, b) => progress(a) - progress(b));
   let picked = [...must, ...evenly(along, GOAL - must.size)];
   // 길이 짧아 모자라면 탑승구 근처를 조금 더 둘러본다.
   if (picked.length < GOAL) {
@@ -135,7 +203,12 @@ export function stampRoute(gate: string, origin?: string, boardingAt = "", now =
       .sort((a, b) => Math.abs(xOf(a) - gx) - Math.abs(xOf(b) - gx));
     picked = [...picked, ...extra.slice(0, GOAL - picked.length)];
   }
-  const indices = [...picked.filter((i) => i !== final).sort((a, b) => progress(a) - progress(b)), final];
+  const indices = [
+    ...picked
+      .filter((i) => i !== final)
+      .sort((a, b) => progress(a) - progress(b)),
+    final,
+  ];
   const minutes = minutesOf(start, indices);
   const late = boardingBlock(boardingAt, minutes, 15, now);
   return late ? blocked(late) : { indices, minutes, reason: "" };
@@ -145,12 +218,18 @@ export function stampRoute(gate: string, origin?: string, boardingAt = "", now =
  * 놀이형 코스: 지금 있는 곳 근처(가까운 8곳 가운데 하나)를 중심으로, 그 둘레 9곳에서 6곳을 무작위로 고른다.
  * 서로 가까운 곳끼리라 여기 갔다 저기 갔다 하지 않는다. 지금 있는 곳에서 가까운 끝부터 한쪽 방향으로 돈다.
  */
-export function makeCourse(origin?: string, rand: () => number = Math.random): number[] {
+export function makeCourse(
+  origin?: string,
+  rand: () => number = Math.random,
+): number[] {
   const start = startOf(origin);
   if (!start) return [];
   const sx = gateX(start.area, start.near);
-  const area = CHECKPOINTS.flatMap((c, i) => (c.area === start.area ? [i] : []));
-  const nearest = (px: number) => [...area].sort((a, b) => Math.abs(xOf(a) - px) - Math.abs(xOf(b) - px));
+  const area = CHECKPOINTS.flatMap((c, i) =>
+    c.area === start.area ? [i] : [],
+  );
+  const nearest = (px: number) =>
+    [...area].sort((a, b) => Math.abs(xOf(a) - px) - Math.abs(xOf(b) - px));
   const around = nearest(sx).slice(0, 8);
   const anchor = around[Math.floor(rand() * around.length)];
   const pool = nearest(xOf(anchor)).slice(0, 9);
@@ -159,24 +238,46 @@ export function makeCourse(origin?: string, rand: () => number = Math.random): n
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   const course = pool.slice(0, GOAL).sort((a, b) => xOf(a) - xOf(b));
-  return Math.abs(xOf(course[0]) - sx) <= Math.abs(xOf(course[course.length - 1]) - sx) ? course : course.reverse();
+  return Math.abs(xOf(course[0]) - sx) <=
+    Math.abs(xOf(course[course.length - 1]) - sx)
+    ? course
+    : course.reverse();
 }
 
 /** 코스가 지금 있는 곳의 구역에 맞게 만들어져 있는가. */
-export function courseFits(course: number[] | undefined, origin?: string): course is number[] {
+export function courseFits(
+  course: number[] | undefined,
+  origin?: string,
+): course is number[] {
   const start = startOf(origin);
-  return !!start && !!course && course.length === GOAL && course.every((i) => CHECKPOINTS[i]?.area === start.area);
+  return (
+    !!start &&
+    !!course &&
+    course.length === GOAL &&
+    new Set(course).size === GOAL &&
+    course.every(
+      (i) => Number.isInteger(i) && CHECKPOINTS[i]?.area === start.area,
+    )
+  );
 }
 
 /** 카메라·사진·번호 입력·QR 주소 모두 같은 기준으로 도장을 받을 수 있는지 본다. */
 export function stampEligibility(
-  s: { mode: "play" | "route"; gate: string; startHub?: string; boardingAt?: string; course?: number[] },
+  s: {
+    mode: "play" | "route";
+    gate: string;
+    startHub?: string;
+    boardingAt?: string;
+    course?: number[];
+  },
   now = Date.now(),
 ): StampPlan {
-  if (s.mode === "route") return stampRoute(s.gate, s.startHub, s.boardingAt, now);
+  if (s.mode === "route")
+    return stampRoute(s.gate, s.startHub, s.boardingAt, now);
   const start = startOf(s.startHub);
   if (!start) return blocked("지금 있는 곳을 골라 주세요.");
-  if (!courseFits(s.course, s.startHub)) return blocked("코스를 만들고 있어요.");
+  if (!courseFits(s.course, s.startHub))
+    return blocked("코스를 만들고 있어요.");
   const minutes = minutesOf(start, s.course);
   const late = boardingBlock(s.boardingAt, minutes, 30, now);
   return late ? blocked(late) : { indices: s.course, minutes, reason: "" };

@@ -25,7 +25,12 @@ import {
   type BookState,
   type ThemeId,
 } from "@/lib/stamp-book";
-import { EXITS, courseFits, makeCourse, stampEligibility } from "@/lib/stamp-routing";
+import {
+  EXITS,
+  courseFits,
+  makeCourse,
+  stampEligibility,
+} from "@/lib/stamp-routing";
 import { Emblem, Haneul, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
 import "./stamp.css";
@@ -228,7 +233,8 @@ export function StampBook({ scanned }: { scanned?: string }) {
       setScanErr("스탬프북 QR이 아니에요. 체크포인트의 QR을 비춰 주세요.");
     else if (!stampEligibility(s!, Date.now()).indices.includes(i))
       setScanErr(
-        itinerary.reason || "이 체크포인트는 지금 코스·경로에 없어요. 수첩 목록에 있는 체크포인트를 찾아봐요.",
+        itinerary.reason ||
+          "이 체크포인트는 지금 코스·경로에 없어요. 수첩 목록에 있는 체크포인트를 찾아봐요.",
       );
     else award(i);
   }
@@ -375,7 +381,9 @@ export function StampBook({ scanned }: { scanned?: string }) {
                 지금 있는 곳 · 출국심사를 마친 뒤
                 <select
                   value={s.startHub || ""}
-                  onChange={(e) => update({ startHub: e.target.value, course: [] })}
+                  onChange={(e) =>
+                    update({ startHub: e.target.value, course: [] })
+                  }
                 >
                   <option value="" disabled>
                     지금 있는 곳 고르기
@@ -388,7 +396,10 @@ export function StampBook({ scanned }: { scanned?: string }) {
                     ))}
                   </optgroup>
                   {(["T1", "CONCOURSE", "T2"] as const).map((a) => (
-                    <optgroup key={a} label={`이 체크포인트 근처예요 · ${AREA_LABEL[a]}`}>
+                    <optgroup
+                      key={a}
+                      label={`이 체크포인트 근처예요 · ${AREA_LABEL[a]}`}
+                    >
                       {CHECKPOINTS.filter((c) => c.area === a).map((c) => (
                         <option key={c.code} value={c.code}>
                           {c.code} · {c.place}
@@ -410,8 +421,10 @@ export function StampBook({ scanned }: { scanned?: string }) {
                 <p role="status">{itinerary.reason}</p>
               ) : (
                 <p>
-                  {s.mode === "play" ? "코스 6곳을 도는 데" : "도장을 모으며 탑승구까지"} 약{" "}
-                  {itinerary.minutes}분 · 걸음이 느린 가족 기준 추정이에요.
+                  {s.mode === "play"
+                    ? "코스 6곳을 도는 데"
+                    : "도장을 모으며 탑승구까지"}{" "}
+                  약 {itinerary.minutes}분 · 걸음이 느린 가족 기준 추정이에요.
                   {s.mode === "route" && " 탑승 전 여유 15분은 따로 두세요."}
                 </p>
               )}
@@ -522,7 +535,9 @@ export function StampBook({ scanned }: { scanned?: string }) {
               )}
             </div>
             <h1>
-              {got.again ? "이미 받은 도장이에요" : t.got(stopName(t.stops, itinerary.indices, got.i))}
+              {got.again
+                ? "이미 받은 도장이에요"
+                : t.got(stopName(t.stops, itinerary.indices, got.i))}
             </h1>
             <p className="sb-sub-ink">
               {got.again
@@ -814,7 +829,8 @@ function PlayList({ s }: { s: BookState }) {
   return (
     <>
       <p className="sb-hint">
-        {AREA_LABEL[CHECKPOINTS[plan.indices[0]].area]} 근처 탐험 코스예요. 순서 없이 찍어도 되고, 위에서부터 돌면 한 번에 이어져요.
+        {AREA_LABEL[CHECKPOINTS[plan.indices[0]].area]} 근처 탐험 코스예요. 순서
+        없이 찍어도 되고, 위에서부터 돌면 한 번에 이어져요.
       </p>
       <Stops s={s} indices={plan.indices} />
     </>
@@ -827,13 +843,24 @@ function RouteMap({ s }: { s: BookState }) {
   if (plan.reason) return null;
   return (
     <section aria-label="탑승구 방향 거점">
-      <p className="sb-hint">위에서부터 차례로 들르면 마지막 체크포인트가 {s.gate}번 탑승구 바로 근처예요.</p>
+      <p className="sb-hint">
+        위에서부터 차례로 들르면 마지막 체크포인트가 {s.gate}번 탑승구 바로
+        근처예요.
+      </p>
       <Stops s={s} indices={plan.indices} gate={s.gate} />
     </section>
   );
 }
 
-function Stops({ s, indices, gate }: { s: BookState; indices: number[]; gate?: string }) {
+function Stops({
+  s,
+  indices,
+  gate,
+}: {
+  s: BookState;
+  indices: number[];
+  gate?: string;
+}) {
   const theme = s.theme!;
   const t = THEMES[theme];
   const next = indices.find((i) => !(i in s.stamps));
@@ -845,7 +872,13 @@ function Stops({ s, indices, gate }: { s: BookState; indices: number[]; gate?: s
         return (
           <li key={c.code} className={done ? "done" : i === next ? "next" : ""}>
             <span className="sb-node">
-              {done ? <StampMark theme={theme} size={48} /> : i === next ? <QrCode aria-hidden="true" /> : <Lock aria-hidden="true" />}
+              {done ? (
+                <StampMark theme={theme} size={48} />
+              ) : i === next ? (
+                <QrCode aria-hidden="true" />
+              ) : (
+                <Lock aria-hidden="true" />
+              )}
             </span>
             <span className="sb-stop">
               <strong>
@@ -854,7 +887,9 @@ function Stops({ s, indices, gate }: { s: BookState; indices: number[]; gate?: s
               <small>
                 {done ? `${t.unit} 획득 완료 · ` : ""}
                 {c.code} · {c.place}
-                {gate && k === indices.length - 1 ? ` · ${gate}번 탑승구 근처` : ""}
+                {gate && k === indices.length - 1
+                  ? ` · ${gate}번 탑승구 근처`
+                  : ""}
                 {c.train ? " · 셔틀트레인" : ""}
               </small>
             </span>

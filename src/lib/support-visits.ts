@@ -10,7 +10,7 @@ import { placeOf } from "./airport";
 import { atomicResult } from "./atomic-result";
 import {
   hubRules,
-  hubInventoryBlock,
+  availableHubRule,
   operatingBlock,
   claimHubResource,
   ensureHubUnits,
@@ -98,14 +98,10 @@ export async function visitSlots(
   )
     return fail(400, "날짜를 확인해 주세요", "visit_date");
   await expireVisits(db, now);
-  const rule = (await hubRules(db)).find(
+  const configuredRule = (await hubRules(db)).find(
     (r) => r.hubId === hub.id && r.service === service,
   )!;
-  const inventoryBlocked = await hubInventoryBlock(
-    db,
-    hub.id,
-    service as VisitService,
-  );
+  const rule = await availableHubRule(db, configuredRule);
   const used = await db.query<{ startAt: string; n: number }>(
     `select start_at as "startAt",count(*)::int as n from support_visits where hub_id=$1 and service=$2 and start_at>=$3 and start_at<$3::timestamptz+interval '1 day' and state in ('booked','checked_in','responding','handed_over') group by start_at`,
     [hub.id, service, day + "T00:00:00+09:00"],
@@ -118,7 +114,7 @@ export async function visitSlots(
   ) {
     const label = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
     const start = new Date(`${day}T${label}:00+09:00`),
-      reason = ruleBlock(rule, start, now) ?? inventoryBlocked;
+      reason = ruleBlock(rule, start, now);
     const remaining = reason
       ? 0
       : Math.max(
@@ -234,12 +230,13 @@ export async function bookVisit(
   return atomicResult(db, async (tx) => {
     const retry = await ownVisit(tx, body.receipt as string);
     if (retry) return statusOf(tx, retry);
-    const rule = await lockedRule(tx, hub.id, service);
+    const rule = await availableHubRule(
+      tx,
+      await lockedRule(tx, hub.id, service),
+    );
     const concurrentRetry = await ownVisit(tx, body.receipt as string);
     if (concurrentRetry) return statusOf(tx, concurrentRetry);
-    const blocked =
-      ruleBlock(rule, start, now) ??
-      (await hubInventoryBlock(tx, hub.id, service));
+    const blocked = ruleBlock(rule, start, now);
     if (blocked) return fail(409, blocked, "visit_time");
     const [limit] = await tx.query<{ n: number }>(
       `select count(*)::int as n from support_visits where device_key=$1 and created_at>$2::timestamptz-interval '24 hours'`,
@@ -255,6 +252,12 @@ export async function bookVisit(
       `select seat from support_visits where hub_id=$1 and service=$2 and start_at=$3 and state in ('booked','checked_in','responding','handed_over')`,
       [hub.id, service, start],
     );
+    if (seats.length >= rule.capacity)
+      return fail(
+        409,
+        "해당 시간대 정원이 찼습니다. 기존 예약은 유지됩니다",
+        "visit_full",
+      );
     const seat = Array.from({ length: rule.capacity }, (_, i) => i + 1).find(
       (n) => !seats.some((s) => s.seat === n),
     );
@@ -343,15 +346,22 @@ async function changeLocked(
       start = new Date(String(body.startAt));
     if (!nextHub || !Number.isFinite(start.getTime()))
       return fail(400, "거점과 시간을 확인해 주세요", "visit_input");
-    const rule = await lockedRule(tx, nextHub.id, v.service),
-      blocked =
-        ruleBlock(rule, start, now) ??
-        (await hubInventoryBlock(tx, nextHub.id, v.service));
+    const rule = await availableHubRule(
+        tx,
+        await lockedRule(tx, nextHub.id, v.service),
+      ),
+      blocked = ruleBlock(rule, start, now);
     if (blocked) return fail(409, blocked, "visit_time");
     const seats = await tx.query<{ seat: number }>(
       `select seat from support_visits where id<>$1 and hub_id=$2 and service=$3 and start_at=$4 and state in ('booked','checked_in','responding','handed_over')`,
       [v.id, nextHub.id, v.service, start],
     );
+    if (seats.length >= rule.capacity)
+      return fail(
+        409,
+        "해당 시간대 정원이 찼습니다. 기존 예약은 유지됩니다",
+        "visit_full",
+      );
     const seat = Array.from({ length: rule.capacity }, (_, i) => i + 1).find(
       (n) => !seats.some((s) => s.seat === n),
     );
@@ -738,6 +748,11 @@ export async function ensureCrew(db: Db, s: Session, key: string, now: Date) {
         new Date(Math.min(s.exp, now.getTime() + 4 * 3600000)),
       ],
     );
+  } else {
+    [crew] = await db.query(
+      `update support_crew set expires_at=$2,state=case when expires_at<=$3 then 'available' else state end where id=$1 returning id,state,zone_id as "zoneId",expires_at as "expiresAt"`,
+      [crew.id, new Date(Math.min(s.exp, now.getTime() + 4 * 3600000)), now],
+    );
   }
   return crew;
 }
@@ -1018,6 +1033,7 @@ export async function visitWorkAction(
 ): Promise<ApiResult> {
   if (staffDenied(s, now) || !key)
     return fail(401, "근무 기기에서 다시 로그인해 주세요");
+  await expireVisits(db, now);
   return atomicResult(db, async (tx) => {
     const [bound] = await tx.query<{ visitId: string }>(
       `select visit_id as "visitId" from service_requests where id=$1`,

@@ -565,3 +565,102 @@ it("erases registered support snapshots and free-text histories together", async
     )[0].note,
   ).toBe("");
 });
+
+it("reduces capacity when only part of the equipment pool is available", async () => {
+  await updateHubRule(
+    db,
+    deskSession(now),
+    {
+      hubId: "concourse",
+      service: "robot",
+      openHour: 9,
+      closeHour: 18,
+      capacity: 2,
+      state: "ready",
+      battery: 100,
+      availableAfter: null,
+      reason: "",
+      version: 0,
+    },
+    now,
+  );
+  const first = get(await book());
+  await act(1, first, "cancel");
+  await db.query(
+    "update dispatch_resources set status='maintenance' where hub_id='concourse' and unit_no=1",
+  );
+  expect((await book(2)).status).toBe(200);
+  expect((await book(3)).status).toBe(409);
+});
+
+it("keeps an actively working crew identity valid while background polling alone does not renew it", async () => {
+  const session = { ...deskSession(now), exp: now.getTime() + 12 * 3600000 };
+  let v = get(await book());
+  v = get(await act(1, v, "checkin"));
+  v = get(
+    await staffVisitAction(
+      db,
+      session,
+      "working",
+      { action: "claim", id: v.id, version: v.version },
+      now,
+    ),
+  );
+  let [job] = await db.query<{ version: number }>(
+    "select version from service_requests where id=$1",
+    [v.id],
+  );
+  expect(
+    (
+      await actOnServiceRequest(
+        db,
+        session,
+        v.id,
+        { action: "travel", version: job.version },
+        kst("2026-10-28 11:45"),
+        { crewKey: "working" },
+      )
+    ).status,
+  ).toBe(200);
+  [job] = await db.query<{ version: number }>(
+    "select version from service_requests where id=$1",
+    [v.id],
+  );
+  const activeAt = kst("2026-10-28 12:45");
+  expect(
+    (
+      await actOnServiceRequest(
+        db,
+        session,
+        v.id,
+        { action: "arrive", version: job.version },
+        activeAt,
+        { crewKey: "working" },
+      )
+    ).status,
+  ).toBe(200);
+  await maintainAlertQueue(db, kst("2026-10-28 13:16"));
+  const [after] = await db.query<{ assigned_crew: string; state: string }>(
+    "select assigned_crew,state from service_requests where id=$1",
+    [v.id],
+  );
+  expect(after.assigned_crew).toBe(v.assignedCrew);
+  expect(after.state).toBe("arrived");
+});
+
+it("does not apply the one-hour unaccepted-call timeout to a future appointment", async () => {
+  const v = get(
+      await book(1, "09:30", {
+        startAt: kst("2026-10-29 09:30").toISOString(),
+      }),
+    ),
+    later = kst("2026-10-28 12:00");
+  await listServiceRequests(db, deskSession(later), later, {});
+  expect(get(await visitStatus(db, receipt(1), later)).state).toBe("booked");
+  const [job] = await db.query<{ state: string; planned_at: Date }>(
+    "select state,planned_at from service_requests where id=$1",
+    [v.id],
+  );
+  expect(job.state).toBe("received");
+  expect(job.planned_at).toBeTruthy();
+});
