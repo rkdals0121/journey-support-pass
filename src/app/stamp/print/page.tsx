@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CHECKPOINTS, THEMES, checkpointUrl } from "@/lib/stamp-book";
+import { AREA_LABEL, CHECKPOINTS, checkpointUrl } from "@/lib/stamp-book";
 import "../stamp.css";
 
-// 체크포인트(안내로봇 미팅포인트 겸용) 거점에 붙일 QR 인쇄물. 한 장에 여섯 개.
+// 체크포인트(안내로봇 미팅포인트 겸용) 거점에 붙일 QR 인쇄물. 모두 에어사이드(출국심사 뒤)에 붙인다.
 export default function PrintPage() {
   const [qrs, setQrs] = useState<string[]>([]);
   useEffect(() => {
@@ -22,9 +22,8 @@ export default function PrintPage() {
       <div className="sb-print-grid">
         {CHECKPOINTS.map((c, i) => (
           <section key={c.code} className="sb-print-card">
-            <strong>체크포인트 {i + 1}</strong>
-            <small>{THEMES.flight.stops[i]} · {THEMES.explorer.stops[i]} · {THEMES.friend.stops[i]}</small>
-            <div className="qr" role="img" aria-label={`체크포인트 ${i + 1} QR`} dangerouslySetInnerHTML={{ __html: qrs[i] ?? "" }} />
+            <strong>{AREA_LABEL[c.area]} 체크포인트</strong>
+            <div className="qr" role="img" aria-label={`${c.code} 체크포인트 QR`} dangerouslySetInnerHTML={{ __html: qrs[i] ?? "" }} />
             <span className="sb-print-no">{c.code}</span>
             <small>{c.place}</small>
             <span className="sb-print-meet">안내로봇 미팅포인트</span>
