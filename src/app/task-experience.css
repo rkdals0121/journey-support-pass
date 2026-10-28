@@ -1442,3 +1442,12 @@ html[data-kiosk] .kiosk-taskhome.kiosk-scan-surface {
 .robot-preview .task-launcher-field .task-action { grid-column: auto; }
 
 .flow-service-home .kiosk-header-help { border: 1px solid #a8bfb0; border-radius: .375rem; margin-right: .5rem; padding-inline: .75rem; text-decoration: none; }
+
+@media (max-width: 760px) {
+  .task-home-intro { padding: .5rem 0 1rem; }
+  .task-home-intro > a { display: none; }
+  .task-home-intro h1 { font-size: 1.5rem; margin-bottom: .5rem; }
+  .task-home .home-gate-form { padding: 1.25rem; }
+  .task-home .home-gate-form > a { margin-top: .5rem; min-height: 2rem; }
+  .task-home-services { margin-top: 1.5rem; }
+}

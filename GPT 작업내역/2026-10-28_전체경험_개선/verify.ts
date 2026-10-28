@@ -5,7 +5,7 @@ import path from "node:path";
 import { readSeedZones } from "../../src/lib/zones";
 async function main() {
   const out = import.meta.dirname,
-    base = "http://127.0.0.1:3144",
+    base = process.env.JSP_CHECK_BASE ?? "http://127.0.0.1:3144",
     checks: unknown[] = [],
     errors: string[] = [];
   const browser = await puppeteer.launch({
@@ -24,7 +24,7 @@ async function main() {
       await p.goto(base + route);
       await p.waitForSelector("h1");
       await p
-        .waitForNetworkIdle({ idleTime: 400, timeout: 12000 })
+        .waitForNetworkIdle({ idleTime: 400, timeout: 2500 })
         .catch(() => {});
       await p.addScriptTag({
         path: path.resolve("node_modules/axe-core/axe.min.js"),
