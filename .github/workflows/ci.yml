@@ -13,7 +13,22 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: jsp_release_checks
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jsp_release_checks"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
+      JSP_TEST_DATABASE_URL: postgresql://postgres:local-ci-only@127.0.0.1:5432/jsp_release_checks
       DATA_MODE: mock
       BASE_URL: http://localhost:3000
       SESSION_SECRET: ci-only-session-not-for-deployment

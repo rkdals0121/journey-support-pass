@@ -228,6 +228,13 @@ export async function bookVisit(
     flightDate = found.journey.flightDate;
   }
   return atomicResult(db, async (tx) => {
+    // Serialize retries and the device quota across hubs, before taking a hub lock.
+    await tx.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
+      "visit-attempt:" + hash(body.receipt as string),
+    ]);
+    await tx.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
+      "visit-device:" + device,
+    ]);
     const retry = await ownVisit(tx, body.receipt as string);
     if (retry) return statusOf(tx, retry);
     const rule = await availableHubRule(
@@ -267,6 +274,15 @@ export async function bookVisit(
         "방금 예약이 마감됐습니다. 다른 시간대를 골라 주세요",
         "visit_full",
       );
+    if (registrationId) {
+      // Erasure takes the same row lock; never persist a pre-erasure snapshot afterwards.
+      const [registration] = await tx.query<{ status: string }>(
+        "select status from registrations where id=$1 for update",
+        [registrationId],
+      );
+      if (registration?.status !== "active")
+        return fail(410, "사전등록을 다시 확인해 주세요", "visit_registration");
+    }
     const id = randomUUID(),
       lang = body.lang === "en" ? "en" : "ko";
     const [visit] = await tx.query<VisitView>(
