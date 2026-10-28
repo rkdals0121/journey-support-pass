@@ -35,6 +35,10 @@ export function TaskHome({ en = false }: { en?: boolean }) {
             {en ? "Need someone to help you?" : "이동에 도움이 필요하신가요?"}
             <ArrowRight aria-hidden="true" />
           </Link>
+          <Link href={"/visits" + q}>
+            {en ? "Arrange a meeting before you arrive" : "방문 전에 만날 장소·시간 예약"}
+            <ArrowRight aria-hidden="true" />
+          </Link>
         </div>
         <form
           className="home-gate-form"

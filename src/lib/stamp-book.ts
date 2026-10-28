@@ -1,3 +1,4 @@
+import { SERVICE_HUBS } from "./service-hubs";
 // 가족 여행객 전자 스탬프북(구상안 「가족 여행객 스탬프북 × 안내로봇 미팅포인트」).
 // 체크포인트는 안내로봇 미팅포인트를 겸하는 오프라인 거점이다. 도장 기록은 그 휴대전화 안에만 둔다(서버에 보내지 않는다).
 
@@ -12,14 +13,7 @@ export interface Checkpoint {
 
 // ponytail: 거점 6곳과 순서는 고정 모의값. 실제 도입 때는 공항 실내 지도의 미팅포인트 목록으로 바꾸고,
 // 경로형은 입력한 게이트까지의 실제 경로 위 거점만 골라 순서를 정한다.
-export const CHECKPOINTS: Checkpoint[] = [
-  { code: "K7Q", place: "제1여객터미널 3층 출국장 입구" },
-  { code: "M2W", place: "3층 중앙 안내데스크 옆" },
-  { code: "R5T", place: "출국심사 뒤 면세구역 중앙" },
-  { code: "B8N", place: "탑승동 가는 열차 승강장" },
-  { code: "H3F", place: "탑승동 3층 중앙 휴게 공간" },
-  { code: "D6X", place: "탑승동 끝단 탑승구 앞" },
-];
+export const CHECKPOINTS: Checkpoint[] = SERVICE_HUBS.map(h => ({ code: h.code, place: h.label }));
 
 export const GOAL = CHECKPOINTS.length;
 
@@ -142,6 +136,10 @@ export interface BookState {
   name: string;
   gate: string;
   mode: "play" | "route";
+  startHub?: string;
+  boardingAt?: string;
+  certGoal?: number;
+  telemetry?: string[];
   /** 체크포인트 순번 → 찍은 시각(epoch ms) */
   stamps: Record<number, number>;
   role: string;

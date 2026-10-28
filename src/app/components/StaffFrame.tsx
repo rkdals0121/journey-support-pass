@@ -27,6 +27,7 @@ export function StaffFrame({
     {
       title: "현장 업무",
       items: [
+        { href: "/staff/visits", label: "거점 예약·현장 응대", Icon: ClipboardCheck },
         { href: "/staff/requests", label: "접수·배정", Icon: Inbox },
         { href: "/staff/resources", label: "장비 현황·배차", Icon: CarFront },
         ...(isDesk
@@ -51,6 +52,7 @@ export function StaffFrame({
         ...(isDesk
           ? [
               { href: "/staff/alerts", label: "알림 운영", Icon: Bell },
+              { href: "/staff/experience", label: "운영 효과·체험 집계", Icon: ChartColumn },
               { href: "/staff/integrations", label: "외부 연동", Icon: Plug },
             ]
           : []),

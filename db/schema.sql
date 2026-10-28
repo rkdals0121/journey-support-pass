@@ -180,6 +180,48 @@ create index if not exists access_logs_device on access_logs (device_key, action
 
 
 -- DX pilot: a request is distinct from pre-registration or an equipment reservation.
+-- Capacity is enforced by a partial unique seat index, including concurrent bookings.
+create table if not exists support_hub_rules (
+ hub_id text not null, service text not null check(service in ('robot','mobility')),
+ open_hour int not null default 9 check(open_hour between 0 and 23),
+ close_hour int not null default 18 check(close_hour between 1 and 24),
+ capacity int not null default 1 check(capacity between 0 and 4),
+ state text not null default 'ready' check(state in ('ready','paused','charging')),
+ battery int not null default 100 check(battery between 0 and 100),
+ available_after timestamptz, reason text not null default '', version int not null default 0,
+ primary key(hub_id,service), check(close_hour>open_hour)
+);
+create table if not exists support_visits (
+ id uuid primary key default gen_random_uuid(), receipt_hash text not null unique,
+ hub_id text not null, service text not null check(service in ('robot','mobility')),
+ start_at timestamptz not null, seat int not null check(seat between 1 and 4),
+ state text not null default 'booked' check(state in ('booked','checked_in','responding','handed_over','done','cancelled','missed')),
+ task text not null check(task in ('directions','wheelchair','escort')), choices text[] not null default '{}',
+ party int not null check(party between 1 and 20), recognition text not null default '',
+ destination_id text, request_id uuid, assigned_crew uuid,
+ version int not null default 0, created_at timestamptz not null, updated_at timestamptz not null,
+ ended_at timestamptz, device_key text not null
+);
+create unique index if not exists support_visits_seat on support_visits(hub_id,service,start_at,seat) where state in ('booked','checked_in','responding','handed_over');
+create unique index if not exists support_visits_crew on support_visits(assigned_crew) where assigned_crew is not null and state in ('checked_in','responding','handed_over');
+alter table support_visits add column if not exists notice text not null default '';
+create index if not exists support_visits_due on support_visits(state,start_at);
+create table if not exists support_visit_history (
+ visit_id uuid not null references support_visits(id) on delete cascade, version int not null,
+ action text not null, actor text not null, at timestamptz not null, reason text not null default '',
+ primary key(visit_id,version)
+);
+create table if not exists support_crew (
+ id uuid primary key default gen_random_uuid(), session_hash text not null unique,
+ zone_id text not null, label text not null,
+ state text not null check(state in ('available','busy','away')), expires_at timestamptz not null,
+ version int not null default 0
+);
+create table if not exists support_experience_events (
+ id uuid primary key default gen_random_uuid(), at timestamptz not null, device_key text not null,
+ kind text not null check(kind in ('stamp_start','stamp_finish','stamp_share','robot_complete','handover','delay','paper_replaced')),
+ value int not null default 1 check(value between 0 and 1000)
+);
 -- Existing registration/pass/assist tables and their behaviour stay intact.
 create table if not exists service_requests (
  id uuid primary key default gen_random_uuid(),
@@ -520,3 +562,24 @@ create trigger active_service_claim_trigger after insert or update or delete on 
 drop trigger if exists active_service_claim_trigger on assist_requests;
 create trigger active_service_claim_trigger after insert or update or delete on assist_requests
  for each row execute function maintain_active_service_claim();
+
+-- Anonymous paired-method study measurements; prototype trials only.
+create table if not exists support_studies (
+ id uuid primary key default gen_random_uuid(),
+ channel text not null check(channel in ('phone','web')),
+ task text not null check(task in ('guidance','mobility','facility')),
+ seconds integer not null check(seconds between 1 and 7200),
+ relays integer not null check(relays between 0 and 50),
+ repeated integer not null check(repeated between 0 and 50),
+ completed boolean not null, at timestamptz not null default now()
+);
+
+-- Every appointment mutation has an atomic state audit, including maintenance.
+create or replace function audit_support_visit() returns trigger language plpgsql as $$
+begin
+ insert into support_visit_history(visit_id,version,action,actor,at,reason)
+ values(new.id,new.version,case when tg_op='INSERT' then 'book' when old.state is distinct from new.state then new.state else 'updated' end,'system',new.updated_at,new.notice) on conflict do nothing;
+ return new;
+end $$;
+drop trigger if exists support_visit_audit on support_visits;
+create trigger support_visit_audit after insert or update on support_visits for each row execute function audit_support_visit();
