@@ -499,7 +499,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
                 ? `${t.stops[got.i]} · 다른 체크포인트를 찾아봐요`
                 : t.gotSub(t.stops[got.i], n)}
             </p>
-            {theme === "friend" && <Stars n={n} />}
+            {theme === "friend" && <Stars n={n} goal={goal} />}
             <Progress theme={theme} n={n} goal={goal} note />
             <div className="sb-actions">
               <button
@@ -756,10 +756,10 @@ function Progress({
   );
 }
 
-function Stars({ n }: { n: number }) {
+function Stars({ n, goal }: { n: number; goal: number }) {
   return (
     <p className="sb-stars" aria-label={`별 ${n}개`}>
-      {CHECKPOINTS.map((_, i) => (
+      {Array.from({ length: goal }, (_, i) => (
         <span key={i} className={i < n ? "on" : ""} aria-hidden="true">
           ★
         </span>

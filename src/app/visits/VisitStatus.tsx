@@ -51,6 +51,7 @@ export function VisitStatus({
     [editing, setEditing] = useState(false);
   const [work, setWork] = useState<{
     state: RequestState;
+    version: number;
     staffLabel?: string | null;
   } | null>(null);
   const saving = useRef(false);
@@ -73,7 +74,13 @@ export function VisitStatus({
           highestVersion.current = b.visit.version;
           setVisit(b.visit);
           setHistory(b.history);
-          setWork(b.work ?? null);
+          setWork((current) =>
+            !b.work
+              ? null
+              : !current || b.work.version >= current.version
+                ? b.work
+                : current,
+          );
           rememberVisit(receipt, b.visit.startAt);
         }
       } catch (e) {
@@ -119,7 +126,13 @@ export function VisitStatus({
         highestVersion.current = b.visit.version;
         setVisit(b.visit);
         setHistory(b.history);
-        setWork(b.work ?? null);
+        setWork((current) =>
+          !b.work
+            ? null
+            : !current || b.work.version >= current.version
+              ? b.work
+              : current,
+        );
       }
     } catch (e) {
       setError((e as Error).message);
@@ -361,12 +374,14 @@ export function VisitStatus({
                   {t("예약 취소", "Cancel appointment")}
                 </button>
               )}
-              <Link
-                className={styles.secondary}
-                href={`/help?place=${hub.placeId}&fresh=1${en ? "&lang=en" : ""}`}
-              >
-                {t("현장 도움 요청", "On-site assistance")}
-              </Link>
+              {finished && (
+                <Link
+                  className={styles.secondary}
+                  href={`/help?place=${hub.placeId}&fresh=1${en ? "&lang=en" : ""}`}
+                >
+                  {t("새로운 도움 요청", "Request more assistance")}
+                </Link>
+              )}
               {finished && (
                 <Link
                   className={styles.secondary}

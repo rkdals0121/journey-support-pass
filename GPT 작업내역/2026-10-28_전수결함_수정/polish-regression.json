@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "explicit meeting-point link does not inherit a different public draft",
+    "Enter advances to review without validating hidden consent or creating a booking",
+    "arrival and staff handover keep one booking and offer no duplicate intake link",
+    "installed device shows actual staff travel progress on the same reference",
+    "staff progress updates on passenger and shared-device views without a visit-version change",
+    "staff completion closes the same passenger and kiosk journey",
+    "real 90-second idle prompt and 30-second timeout clear the next visitor's unfinished reference"
+  ],
+  "errors": []
+}

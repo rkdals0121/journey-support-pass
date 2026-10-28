@@ -31,7 +31,12 @@ export default async function VisitsPage({
             : "시연 예약 · 실제 장비 운행 미연결"}
         </p>
         <SavedVisits en={en} />
-        <VisitForm initialHub={q.hub} registrationToken={q.pass} en={en} />
+        <VisitForm
+          key={`${q.pass ?? "public"}:${q.hub ?? "any"}`}
+          initialHub={q.hub}
+          registrationToken={q.pass}
+          en={en}
+        />
       </main>
     </PublicShell>
   );

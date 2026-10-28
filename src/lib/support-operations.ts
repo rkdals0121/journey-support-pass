@@ -158,17 +158,17 @@ export async function claimHubResource(
   return null;
 }
 
-/** Busy units may be booked later; out-of-service units must not be offered as capacity. */
-export async function hubInventoryBlock(
+/** A partial equipment outage reduces bookable capacity; active work only affects immediate dispatch. */
+export async function availableHubRule(
   db: Db,
-  hubId: string,
-  service: VisitService,
-) {
+  rule: HubRule,
+): Promise<HubRule> {
   const [pool] = await db.query<{ total: number; ready: number }>(
     `select count(*)::int as total,count(*) filter(where d.status='ready' and z.active)::int as ready from dispatch_resources d join zones z on z.id=d.zone_id where d.hub_id=$1 and d.kind=$2`,
-    [hubId, service],
+    [rule.hubId, rule.service],
   );
-  return pool.total > 0 && pool.ready === 0
-    ? "장비 점검·운영 중지 중입니다. 직원 안내 또는 다른 거점을 선택해 주세요"
-    : null;
+  return {
+    ...rule,
+    capacity: pool.total ? Math.min(rule.capacity, pool.ready) : rule.capacity,
+  };
 }

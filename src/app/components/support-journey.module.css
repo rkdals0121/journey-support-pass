@@ -573,3 +573,19 @@
   border-color: #285b40;
   font-weight: 700;
 }
+
+@media (min-width: 900px) and (min-height: 1300px) {
+  .devicePage {
+    min-height: calc(100svh - 12rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 1rem auto;
+  }
+  .devicePage > .secondary {
+    align-self: flex-start;
+  }
+  .devicePage > .panel {
+    margin-block: 1.5rem;
+  }
+}
