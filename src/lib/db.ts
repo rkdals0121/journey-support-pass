@@ -10,6 +10,7 @@ export interface Db {
   ): Promise<T[]>;
   /** 여러 문장을 한 트랜잭션으로 실행한다. 스키마 적용 전용. */
   exec(sql: string): Promise<void>;
+  close?(): Promise<void>;
   transaction?<T>(work: (connection: Db) => Promise<T>): Promise<T>;
 }
 
@@ -25,6 +26,9 @@ export async function openPglite(dataDir?: string): Promise<Db> {
   const pg = new PGlite(dataDir);
   await pg.waitReady;
   return {
+    async close() {
+      await pg.close();
+    },
     async query<T>(sql: string, params: unknown[] = []) {
       const res = await pg.query(sql, params as never[]);
       return res.rows as T[];
@@ -71,12 +75,15 @@ export function pgOptions(url: string): {
   return { connectionString: u.toString(), ssl: { rejectUnauthorized: false } };
 }
 
-async function openPg(url: string): Promise<Db> {
+export async function openPg(url: string): Promise<Db> {
   const { Pool } = await import("pg");
   const pool = new Pool({ ...pgOptions(url), max: 3 });
   // 유휴 연결이 끊겨도 서버가 죽지 않게 한다. 다음 질의에서 새 연결을 맺는다.
   pool.on("error", (e) => console.error("DB 연결 오류:", e.message));
   return {
+    async close() {
+      await pool.end();
+    },
     async query<T>(sql: string, params: unknown[] = []) {
       const res = await pool.query(sql, params);
       return res.rows as T[];
