@@ -157,4 +157,41 @@ describe.skipIf(!url)("real PostgreSQL release gate", () => {
     });
     expect(pass.token).toBeTruthy();
   });
+  it("rejects a booking whose registration was erased after initial lookup", async () => {
+    await addFlights(db, [flightRow("KE123", "2026-10-28 12:00")], now);
+    const { registration, pass } = await registerWithPass(db, now, {
+      flightDate: "2026-10-28",
+      flightNo: "KE123",
+    });
+    let erased = false;
+    const interrupted: Db = {
+      ...db,
+      transaction: async (work) => {
+        if (!erased) {
+          erased = true;
+          await eraseRegistration(db, registration.id, now, "revoked");
+        }
+        return db.transaction!(work);
+      },
+    };
+    const result = await bookVisit(
+      interrupted,
+      {
+        receipt: receipt(50),
+        consent: true,
+        hubId: "concourse",
+        service: "robot",
+        task: "directions",
+        party: 1,
+        startAt: kst("2026-10-28 09:30").toISOString(),
+        registrationToken: pass.token,
+      },
+      "erasure-race",
+      now,
+    );
+    expect(erased).toBe(true);
+    expect(result.status).toBe(410);
+    expect(await db.query("select id from support_visits")).toHaveLength(0);
+    expect(await db.query("select id from service_requests")).toHaveLength(0);
+  });
 });
