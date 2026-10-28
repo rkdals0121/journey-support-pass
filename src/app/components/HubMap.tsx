@@ -54,32 +54,32 @@ export function HubMap({
             width="398"
             height="278"
             rx="5"
-            fill="#f4f8f5"
-            stroke="#a4b9ac"
+            fill="var(--color-primary-faint)"
+            stroke="var(--color-muted)"
           />
-          <text x="20" y="28" fontSize="16" fontWeight="700" fill="#234b35">
+          <text x="20" y="28" fontSize="16" fontWeight="700" fill="var(--color-primary-hover)">
             {place.area} · 3F
           </text>
-          <text x="20" y="50" fontSize="13" fill="#385a46">
+          <text x="20" y="50" fontSize="13" fill="var(--color-primary-hover)">
             {t("보안검색 후 · 탑승구 구역", "Airside · boarding gates")}
           </text>
           <path
             d={concourse ? "M35 110H365" : "M35 82H365"}
-            stroke="#729280"
+            stroke="var(--color-muted)"
             strokeWidth="12"
           />
           {gates.map((gate, i) => (
             <g key={gate}>
               <path
                 d={`M${55 + i * 145} ${concourse ? 110 : 82}v-16`}
-                stroke="#456a54"
+                stroke="var(--color-primary)"
                 strokeWidth="2"
               />
               <text
                 x={55 + i * 145}
                 y={concourse ? 84 : 66}
                 textAnchor="middle"
-                fill="#234b35"
+                fill="var(--color-primary-hover)"
                 fontSize="15"
               >
                 {gate}
@@ -88,22 +88,22 @@ export function HubMap({
           ))}
           {!concourse && (
             <>
-              <path d="M20 142H380" stroke="#7d9384" strokeDasharray="6 5" />
-              <rect x="135" y="130" width="130" height="26" fill="#f4f8f5" />
+              <path d="M20 142H380" stroke="var(--color-muted)" strokeDasharray="6 5" />
+              <rect x="135" y="130" width="130" height="26" fill="var(--color-primary-faint)" />
               <text
                 x="200"
                 y="148"
                 fontSize="13"
                 textAnchor="middle"
-                fill="#34543f"
+                fill="var(--color-primary-hover)"
               >
                 {t("보안검색·출국심사", "Security / immigration")}
               </text>
-              <text x="20" y="180" fontSize="14" fill="#234b35">
+              <text x="20" y="180" fontSize="14" fill="var(--color-primary-hover)">
                 {t("출발층 · 보안검색 전", "Departures · landside")}
               </text>
-              <path d="M35 204H365" stroke="#bdcfc3" strokeWidth="10" />
-              <text x="22" y="254" fontSize="13" fill="#34543f">
+              <path d="M35 204H365" stroke="var(--color-art-leaf)" strokeWidth="10" />
+              <text x="22" y="254" fontSize="13" fill="var(--color-primary-hover)">
                 {t("체크인·안내 창구", "Check-in and information")}
               </text>
             </>
@@ -112,7 +112,7 @@ export function HubMap({
             <>
               <path
                 d="M200 133v57h100"
-                stroke="#567f65"
+                stroke="var(--color-primary)"
                 strokeWidth="2"
                 strokeDasharray="5 4"
                 fill="none"
@@ -123,22 +123,22 @@ export function HubMap({
                 width="24"
                 height="24"
                 rx="3"
-                fill="#e1ece4"
-                stroke="#567f65"
+                fill="var(--color-primary-soft)"
+                stroke="var(--color-primary)"
               />
               <text
                 x="299"
                 y="195"
                 textAnchor="middle"
                 fontSize="17"
-                fill="#234b35"
+                fill="var(--color-primary-hover)"
               >
                 ↕
               </text>
-              <text x="30" y="232" fontSize="14" fill="#234b35">
+              <text x="30" y="232" fontSize="14" fill="var(--color-primary-hover)">
                 {t("셔틀트레인 · 지하 1층", "Shuttle train · B1")}
               </text>
-              <text x="30" y="254" fontSize="13" fill="#34543f">
+              <text x="30" y="254" fontSize="13" fill="var(--color-primary-hover)">
                 {t(
                   "엘리베이터·이동 표지를 확인하세요",
                   "Follow the lift and transfer signs",
@@ -155,15 +155,15 @@ export function HubMap({
                   cx={x}
                   cy={y}
                   r={selected ? 19 : 14}
-                  fill={selected ? "#176541" : "#ffffff"}
-                  stroke="#176541"
+                  fill={selected ? "var(--color-primary-hover)" : "var(--color-surface)"}
+                  stroke="var(--color-primary-hover)"
                   strokeWidth={selected ? 3 : 2}
                 />
                 <text
                   x={x}
                   y={y + 5}
                   textAnchor="middle"
-                  fill={selected ? "#ffffff" : "#234b35"}
+                  fill={selected ? "var(--color-surface)" : "var(--color-primary-hover)"}
                   fontSize="16"
                   fontWeight="700"
                 >

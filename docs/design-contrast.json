@@ -1,0 +1,92 @@
+[
+  {
+    "fg": "text",
+    "bg": "canvas",
+    "ratio": 13.6,
+    "pass": true
+  },
+  {
+    "fg": "text",
+    "bg": "surface",
+    "ratio": 14.71,
+    "pass": true
+  },
+  {
+    "fg": "muted",
+    "bg": "canvas",
+    "ratio": 5.27,
+    "pass": true
+  },
+  {
+    "fg": "muted",
+    "bg": "surface",
+    "ratio": 5.7,
+    "pass": true
+  },
+  {
+    "fg": "surface",
+    "bg": "primary",
+    "ratio": 7.57,
+    "pass": true
+  },
+  {
+    "fg": "surface",
+    "bg": "primary-hover",
+    "ratio": 9.96,
+    "pass": true
+  },
+  {
+    "fg": "primary-hover",
+    "bg": "primary-soft",
+    "ratio": 8.52,
+    "pass": true
+  },
+  {
+    "fg": "accent-ink",
+    "bg": "accent",
+    "ratio": 5.32,
+    "pass": true
+  },
+  {
+    "fg": "accent-ink",
+    "bg": "accent-soft",
+    "ratio": 8.02,
+    "pass": true
+  },
+  {
+    "fg": "error",
+    "bg": "error-soft",
+    "ratio": 5.17,
+    "pass": true
+  },
+  {
+    "fg": "on-dark",
+    "bg": "dark",
+    "ratio": 12.43,
+    "pass": true
+  },
+  {
+    "fg": "on-dark-muted",
+    "bg": "dark",
+    "ratio": 9.5,
+    "pass": true
+  },
+  {
+    "fg": "blue",
+    "bg": "blue-soft",
+    "ratio": 6.65,
+    "pass": true
+  },
+  {
+    "fg": "purple",
+    "bg": "purple-soft",
+    "ratio": 5.83,
+    "pass": true
+  },
+  {
+    "fg": "rose",
+    "bg": "rose-soft",
+    "ratio": 4.71,
+    "pass": true
+  }
+]

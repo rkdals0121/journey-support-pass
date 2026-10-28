@@ -21,6 +21,7 @@ import puppeteer, { type Browser, type Page, type Viewport } from "puppeteer-cor
 import QRCode from "qrcode";
 import { passUrl } from "../src/lib/pass-format";
 import { readSeedZones } from "../src/lib/zones";
+import type { HubRule } from "../src/lib/service-hubs";
 
 
 // 점검용 브라우저가 쓰는 임시 폴더. 끝나면 지운다. 지우지 않으면 돌릴 때마다 수십 MB 씩 쌓인다.
@@ -56,7 +57,7 @@ const CHROME =
   ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"].find(
     (p) => fs.existsSync(p),
   );
-const WAIT = 240_000;
+const WAIT = Number(process.env.E2E_WAIT_MS ?? 240_000);
 const AXE = fs.readFileSync(path.join(process.cwd(), "node_modules", "axe-core", "axe.min.js"), "utf-8");
 
 const seed = readSeedZones();
@@ -143,6 +144,19 @@ async function waitGone(page: Page, s: string) {
 
 /** 글자가 들어 있는 것을 누른다. 화면에 보이는 것 가운데 글자가 가장 짧은 것을 고른다. */
 async function clickText(page: Page, selector: string, s: string) {
+  if(selector===".staff-nav a") {
+    const menu=await page.$(".workspace-mobile-menu");
+    if(menu&&await menu.isVisible()) {
+      if(!await menu.evaluate(el=>el.hasAttribute("open"))) await page.click(".workspace-mobile-menu > summary");
+      selector=".workspace-mobile-menu nav a";
+    } else selector=".workspace-side nav a";
+  }
+
+  if (s.includes("고유 일련 번호 누르기")) {
+    const summary=await page.$(".kiosk-personalise:not([open]) > summary");
+    if(summary) await summary.click();
+  }
+
   // 글자가 보이는 것만으로는 모자란다. 화면이 살아난 뒤(React 가 그 버튼을 넘겨받은 뒤)에 눌러야 눌림이 사라지지 않는다.
   await page.waitForFunction(
     (sel, t) =>
@@ -171,6 +185,8 @@ async function clickText(page: Page, selector: string, s: string) {
  * 그 화면이 나오면 「이대로 안내 받기」를 누르고 안내 첫 화면을 기다린다.
  */
 async function openGuide(page: Page, keep = "이대로 안내 받기", hello = "나에게 맞춘 안내") {
+  const scanDetails=await page.$(".kiosk-personalise:not([open]) > summary");
+  if(scanDetails) await scanDetails.click();
   await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
   if (await has(page, keep)) {
     await clickText(page, "button", keep);
@@ -455,18 +471,24 @@ async function resetFlights(clearLocks = false) {
   // ───────── 1. 여객 휴대전화: 첫 화면과 등록 ─────────
   section("여객 휴대전화: 등록");
   await page.goto(BASE, { waitUntil: "load", timeout: 300_000 });
-  check("첫 화면은 사전등록 유지와 현장 요청·처리 통합을 소개한다", await has(page, "필요한 도움을 미리 등록하거나 공항에서 바로 요청하세요"));
-  check("첫 화면에서 이름·연락처를 받지 않는다고 알린다", await has(page, "이름·연락처는 받지 않아요"));
+  check("첫 화면에서 사전등록·현장 요청·내 요청으로 연결된다", !!(await page.$('a[href="/prepare"]')) && !!(await page.$('a[href="/help"]')) && !!(await page.$('a[href="/requests"]')));
+  check("첫 화면은 이름·연락처를 입력받지 않는다", !(await page.$('input[type="tel"],input[type="email"],input[autocomplete="name"]')));
   check("첫 화면은 직원이 먼저 돕겠다는 약속을 하지 않는다", !(await has(page, "다시 묻지 않습니다")) && !(await has(page, "먼저 다가")));
-  check("링크를 못 본 여객은 지금처럼 체크인 카운터에서 확인받는다고 알린다", await has(page, "체크인 카운터"));
+  check("직접 안내받을 수 있는 안내데스크 위치가 연결된다", !!(await page.$('a[href="/services/desks"]')));
   await shot(page, "휴대전화-첫화면");
   // 제안서 1단계: 항공권 예매 완료 화면의 링크로 들어온다(시연용 모의 화면).
-  await clickText(page, "a", "예매 완료 화면에서 들어오는 모습 보기");
+  await page.click('a[href="/demo/booking"]');
   await waitText(page, "공항에서 필요한 도움이 있으신가요?");
   check("예매 완료 모의 화면은 시연용이라고 밝히고, 실제 항공사 이름을 쓰지 않는다", (await has(page, "시연용 모의 화면")) && !(await has(page, "대한항공")) && !(await has(page, "아시아나")));
   check("링크를 둘 수 없을 때의 대체 접점(예약 확인 문자)도 보여 준다", await has(page, "예약 확인 문자"));
   await shot(page, "예매완료-링크");
   await clickText(page, "a", "필요한 도움 미리 알려 두기");
+  await waitText(page, "예약정보 불러오기");
+  await clickText(page, "button", "시연값 넣기");
+  await clickText(page, "button", "예약 조회");
+  await waitText(page, "시연 항공편을 찾았어요");
+  check("예매 연결에서 시연 예약 조회를 이용할 수 있다", await has(page, "DX9001"));
+  await clickText(page, "a", "항공편 직접 선택해서 등록");
   await page.waitForFunction(() => location.pathname === "/register" && location.search.includes("via=booking"), { timeout: WAIT });
   check("링크에는 접점 표시(via=booking)만 있고 예약 정보는 싣지 않는다", !page.url().includes("DEMO01") && !page.url().includes("NRT"));
 
@@ -742,19 +764,29 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "내 등록");
   const myToken = page.url().split("/p/")[1].split("?")[0];
   check("증빙서류 파일은 어디에도 보내지 않는다 (냈다는 사실만 보낸다)", proofSent.length === 0, proofSent.join(", "));
-  check("등록을 마치면 준비 상황이 나온다: 등록됨, 증빙 확인됨, 아직 체크인 전", (await has(page, "필요한 도움을 등록했습니다")) && (await has(page, "증빙이 확인되었습니다")) && (await has(page, "아직 체크인 전입니다")));
+  check("등록을 마치면 준비 상황이 나온다: 등록됨, 증빙 확인됨, 아직 체크인 전", (await has(page, "필요한 도움을 등록했습니다")) && (await has(page, "증빙이 확인되었습니다")) && (await has(page, "탑승권 연결 전입니다")));
   check("체크인 전에는 탑승권 QR 이 없다 (체크인하면 전자토큰이 탑승권에 저장된다)", (await count(page, ".pass-qr-code")) === 0);
   await shot(page, "휴대전화-준비상황");
-  // 체크인하면 탑승권 바코드를 서버가 새로 그리도록 화면을 다시 불러온다. 다시 불러온 뒤에 읽는다.
-  await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: WAIT }), clickText(page, "button", "모의 체크인 하기")]);
-  await waitText(page, "전자토큰이 탑승권에 자동으로 저장되었습니다");
-  await page.waitForSelector(".boarding .pass-qr-code svg", { timeout: WAIT });
-  check("모의 체크인을 하면 모바일 탑승권에 '교통약자 우대 확인'과 탑승권 바코드가 나온다", (await has(page, "교통약자 우대 확인")) && (await count(page, ".boarding .pass-qr-code")) === 1);
-  check("우대출구에서 탑승권만 보여 주면 된다고 알린다", await has(page, "증빙서류는 꺼내지 않아도 됩니다"));
-  const myNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
-  check("탑승권에 QR 과 여섯 자리 고유 일련 번호가 나온다", /^\d{6}$/.test(myNo), myNo.replace(/\d{3}$/, "***"));
-  const qrText = await readQr(page, ".pass-qr-code svg");
-  check("탑승권 바코드에는 서비스 QR(패스 주소)이 아니라 항공사 탑승권을 흉내 낸 값(편, 탑승권 번호)만 들어 있다", /^BP1:\d{8}:MK127:[0-9A-Z]{10}$/.test(qrText) && !qrText.includes(myToken), qrText.replace(/:[0-9A-Z]{10}$/, ":…"));
+  // Existing boarding-pass linking replaced the former simulated issuance flow on main.
+  const beforeLink = (await post("/api/guide", {token:myToken})).body.guide;
+  const myNo = beforeLink.passNo;
+  const boardingReference = Date.now().toString(16).slice(-10).toUpperCase();
+  const qrText = `BP1:${beforeLink.flight.flightDate!.replaceAll("-", "")}:MK127:${boardingReference}`;
+  const boardingFile = path.join(os.tmpdir(), `jsp-boarding-link-${Date.now()}.png`);
+  tempFiles.push(boardingFile);
+  await QRCode.toFile(boardingFile, qrText, {width:600,margin:4});
+  await clickText(page, "button", "기존 탑승권 연결");
+  await page.waitForSelector('.boarding-link-panel input[type="file"]', {timeout:WAIT});
+  await Promise.all([
+    page.waitForNavigation({waitUntil:"networkidle0",timeout:WAIT}),
+    (await page.$('.boarding-link-panel input[type="file"]'))!.uploadFile(boardingFile),
+  ]);
+  await waitText(page, "기존 탑승권에 지원정보가 연결됐어요");
+  check("기존 탑승권 이미지를 읽어 지원정보를 연결한다", (await post("/api/guide", {token:myToken})).body.guide.checkedIn);
+  check("별도 지원 QR은 발급하지 않는다", (await count(page,".pass-qr-code"))===0);
+  check("우대출구에서 기존 탑승권을 보여 주면 된다고 알린다", await has(page,"증빙서류는 꺼내지 않아도 됩니다"));
+  check("번호 조회용 고유 일련 번호는 여섯 자리다", /^\d{6}$/.test(myNo),myNo.replace(/\d{3}$/, "***"));
+  check("기존 탑승권 코드에는 서비스 토큰을 넣지 않는다", !qrText.includes(myToken));
   check("패스 화면에 내 항공편과 탑승구가 나온다", (await has(page, "MK127")) && (await page.$eval(".gate-sign b", (e) => (e as HTMLElement).innerText)) === "127");
   check("탑승 마감까지 남은 시간에 '추정'이 붙는다", await has(page, "(추정)"));
   check("패스 화면에 고른 도움과 말씀이 나온다", (await has(page, "휠체어를 써요")) && (await has(page, "엘리베이터를 꼭 타야 합니다")));
@@ -768,7 +800,7 @@ async function resetFlights(clearLocks = false) {
   await shot(page, "휴대전화-내패스");
   await page.reload({ waitUntil: "load", timeout: 300_000 });
   await waitText(page, "내 등록");
-  check("화면을 닫았다 다시 열어도 같은 탑승권이 나온다", (await readQr(page, ".pass-qr-code svg")) === qrText);
+  check("화면을 다시 열어도 기존 탑승권 연결이 유지된다", (await post("/api/guide", {token:myToken})).body.guide.checkedIn);
   await page.goto(`${BASE}/P/${myToken}`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "내 등록");
   check("대문자 주소(/P/…)로도 같은 등록 화면이 열린다", (await has(page, "MK127")));
@@ -813,7 +845,7 @@ async function resetFlights(clearLocks = false) {
   section("키오스크 설치");
   await page.setViewport(KIOSK_WIDE);
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await waitText(page, "키오스크 설치");
+  await waitText(page, "현장 기기 설치");
   check("설치하지 않은 기기에서 키오스크 화면을 열면 설치 화면으로 간다", page.url().endsWith("/kiosk"));
   await shot(page, "키오스크-설치");
   check("키오스크 쓰임새는 공항 입구 안내로봇이 먼저다. 보안검색 전 자리를 고른다", (await has(page, "공항 입구 안내로봇")) && (await page.$$eval("#place option", (os) => os.some((o) => (o.textContent ?? "").includes("안내데스크")))));
@@ -828,7 +860,7 @@ async function resetFlights(clearLocks = false) {
   await fill(page, "#code", KIOSK_CODE);
   await page.keyboard.press("Enter");
   await page.waitForFunction(() => location.pathname === "/kiosk/guide", { timeout: WAIT });
-  await waitText(page, "탑승권을 카메라에 대 주세요");
+  await waitText(page, "어떤 서비스를 이용하시겠어요?");
   check("설치 코드와 자리를 넣으면 안내 키오스크가 된다", await has(page, "탑승동 지하 1층 셔틀트레인 도착층"));
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "직원 로그인");
@@ -843,6 +875,8 @@ async function resetFlights(clearLocks = false) {
   // ───────── 4. 안내 키오스크: 번호로 열기 ─────────
   section("안내 키오스크: 번호로 열기 (카메라 없음)");
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+  await page.waitForSelector(".kiosk-personalise > summary", {timeout:WAIT});
+  await page.click(".kiosk-personalise > summary");
   await waitText(page, "이 기기에서는 카메라를 쓸 수 없습니다");
   check("카메라가 없으면 번호를 누르라고 알려 준다", true);
   const callAt = await callSpot(page);
@@ -948,7 +982,7 @@ async function resetFlights(clearLocks = false) {
   await shot(page, "안내키오스크-만족도");
   await clickText(page, ".face", "도움이 됐어요");
   await waitText(page, "고맙습니다");
-  await waitText(page, "탑승권을 카메라에 대 주세요");
+  await waitText(page, "어떤 서비스를 이용하시겠어요?");
   check("답하면 처음 화면으로 돌아가고 앞사람의 내용은 남지 않는다", !(await has(page, "MK127")) && !(await has(page, "127")));
   check("처음 화면은 다시 보통 글자 크기다 (앞사람의 큰 글씨가 남지 않는다)", (await rootPx(page)) < kPx);
 
@@ -971,7 +1005,7 @@ async function resetFlights(clearLocks = false) {
   check("'계속 이용하기'를 누르면 보던 안내가 그대로 있다", await has(page, "나에게 맞춘 안내"));
   await waitText(page, "계속 이용하시겠어요?");
   await clickText(page, ".sheet-box button", "끝내기");
-  await waitText(page, "탑승권을 카메라에 대 주세요");
+  await waitText(page, "어떤 서비스를 이용하시겠어요?");
   // 앞사람이 「설정」을 열어 둔 채 떠난다. 처음 화면으로 돌아가면 설정 창이 닫혀 있어야 한다.
   await clickText(page, "button", "고유 일련 번호 누르기");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
@@ -984,7 +1018,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "화면 설정");
   await waitText(page, "계속 이용하시겠어요?");
   await clickText(page, ".sheet-box button", "끝내기");
-  await waitText(page, "탑승권을 카메라에 대 주세요");
+  await waitText(page, "어떤 서비스를 이용하시겠어요?");
   check("앞사람이 「설정」을 열어 둔 채 떠나도, 처음 화면으로 돌아가면 설정 창이 닫혀 있다", !(await has(page, "화면 설정")));
   check("묻는 창에서 '끝내기'를 누르면 처음 화면으로 돌아간다", !(await has(page, "MK127")));
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
@@ -1054,10 +1088,10 @@ async function resetFlights(clearLocks = false) {
   await hold("/api/guide", "POST");
   await page.waitForFunction("window.__held.length > 0", { timeout: 60_000 });
   await clickText(page, ".bar-btn", "처음으로");
-  await waitText(page, "탑승권을 카메라에 대 주세요");
+  await waitText(page, "어떤 서비스를 이용하시겠어요?");
   const lateGuide = await page.evaluate("window.__release()");
   await sleep(2500);
-  const startClean = !(await has(page, "MK112")) && (await has(page, "탑승권을 카메라에 대 주세요"));
+  const startClean = !(await has(page, "MK112")) && (await has(page, "어떤 서비스를 이용하시겠어요?"));
   await clickText(page, "button", "고유 일련 번호 누르기");
   await page.waitForFunction(() => /여섯 자리를 눌러 주세요|MK112|나에게 맞춘 안내/.test(document.body.innerText), { timeout: WAIT });
   check("「처음으로」를 누른 뒤 앞사람의 안내를 다시 받은 답이 늦게 와도, 다음 사람 화면에 앞사람의 항공편이나 안내가 나오지 않는다", startClean && !(await has(page, "MK112")) && !(await has(page, "나에게 맞춘 안내")), `늦은 답 ${lateGuide}개`);
@@ -1121,9 +1155,9 @@ async function resetFlights(clearLocks = false) {
   check("화면이 바뀌면 새 화면을 다시 읽어 준다", said2.length > said.length && said2[said2.length - 1].includes("124"));
   await shot(page, "안내키오스크-세로-길안내-그림");
   await clickText(page, ".bar-btn", "처음으로");
-  await waitText(page, "탑승권을 카메라에 대 주세요");
+  await waitText(page, "어떤 서비스를 이용하시겠어요?");
   await new Promise((r) => setTimeout(r, 3000));
-  check("안내를 끝낸 직후에는 같은 QR 이 카메라 앞에 있어도 곧바로 다시 열리지 않는다", await has(page, "탑승권을 카메라에 대 주세요"));
+  check("안내를 끝낸 직후에는 같은 QR 이 카메라 앞에 있어도 곧바로 다시 열리지 않는다", await has(page, "어떤 서비스를 이용하시겠어요?"));
   await shot(page, "안내키오스크-세로-처음");
   await browser.close();
 
@@ -1194,147 +1228,24 @@ async function resetFlights(clearLocks = false) {
   check("지연된 편은 바뀐 출발 시각을 함께 준다", delayed.body.guide.flight.delayed === true && typeof delayed.body.guide.flight.estTime === "string");
   await browser.close();
 
-  // ───────── 6. 등록 키오스크 ─────────
-  section("등록 키오스크");
-  browser = await launch();
-  page = await open(browser, KIOSK_WIDE);
-  await page.goto(`${BASE}/kiosk`, { waitUntil: "load", timeout: 300_000 });
-  await waitText(page, "키오스크 설치");
-  await page.waitForFunction(() => document.querySelectorAll(".setup-use label").length >= 1, { timeout: WAIT });
-  check("키오스크 설치에서 등록 키오스크(스티커 인쇄)는 주 흐름에서 빠졌다", !(await has(page, "등록 키오스크")));
-  await page.goto(`${BASE}/kiosk?reserve=1`, { waitUntil: "load", timeout: 300_000 });
-  await waitText(page, "키오스크 설치");
-  await clickText(page, ".setup-use label", "등록 키오스크 (예비)");
-  const regPlaces = await page.$$eval("#place option", (os) => os.map((o) => (o as HTMLOptionElement).textContent ?? ""));
-  check("등록 키오스크는 안심여행센터·안내데스크·헬프데스크 자리를 고른다", regPlaces.some((p) => p.includes("장애인 안심여행센터")) && regPlaces.some((p) => p.includes("헬프데스크")) && !regPlaces.some((p) => p.includes("면세구역")));
-  await page.select("#place", "t1-care");
-  await fill(page, "#code", KIOSK_CODE);
-  await page.keyboard.press("Enter");
-  await page.waitForFunction(() => location.pathname === "/kiosk/register", { timeout: WAIT });
-  // 느린 컴퓨터에서 점검 도중에 "계속 이용하시겠어요?"가 끼어들지 않게, 기다리는 시간을 길게 두고 다시 연다.
-  await page.goto(`${BASE}/kiosk/register?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await waitText(page, "교통약자 지원 등록");
-  // 키오스크 크기로 바뀐 뒤(화면이 살아난 뒤)에 자리를 잰다.
-  await page.waitForFunction(() => document.documentElement.hasAttribute("data-kiosk"), { timeout: WAIT });
-  check("등록 키오스크 첫 화면에 '등록 시작하기'와 '이미 등록했어요'가 있다", (await has(page, "등록 시작하기")) && (await has(page, "이미 등록했어요")));
-  const regCallAt = await callSpot(page);
-  check("등록 키오스크에도 「도움 요청하기」가 위쪽 줄 바로 아래에 있다", regCallAt !== null && (await callBelowBar(page)));
-  await shot(page, "등록키오스크-처음");
-  await clickText(page, "button", "등록 시작하기");
-  await waitText(page, "어떤 점이 불편하세요?");
-  check("키오스크의 질문은 휴대전화와 같고, 「도움 요청하기」가 같은 자리에 있다", sameSpot(await callSpot(page), regCallAt));
-  await clickText(page, '[role="checkbox"]', "걷기");
-  await clickText(page, '[role="checkbox"]', "안내 이해하기");
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "등록 전에 확인해 주세요");
-  await clickText(page, "button", "동의하고 계속");
-  await waitText(page, "「걷기」를 고르셨다면");
-  await clickText(page, '[role="checkbox"]', "휠체어를 빌릴래요");
-  await shot(page, "등록키오스크-이동");
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "「안내 이해하기」를 고르셨다면");
-  await clickText(page, '[role="checkbox"]', "그림과 함께 보여주세요");
-  check("그림을 고르면 그 화면에서 바로 그림이 커진다", await page.evaluate(() => document.documentElement.hasAttribute("data-picture")));
-  await shot(page, "등록키오스크-안내받는방식-그림");
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "함께 가시는 분이 있나요?");
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "도움은 어떻게 받으시겠어요?");
-  await clickText(page, '[role="checkbox"]', "제가 필요할 때 부를게요");
-  await page.waitForFunction(() => !!document.querySelector(".call-btn.call-big"), { timeout: WAIT });
-  check("'제가 필요할 때 부를게요'를 고르면 그 자리에서 「도움 요청하기」가 커진다. 자리는 그대로다", sameSpot(await callSpot(page), regCallAt));
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "가시는 길에 들르실 곳이 있나요?");
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "타실 항공편을 알려 주세요");
-  check("키오스크에는 화면 글자판이 있다 (기기 자판이 화면을 가리지 않게)", (await count(page, ".pad-alnum .pad-key")) === 37);
-
-  const desk = await staffCookie(DESK_CODE);
-  check("등록 중 도움 요청도 통합 접수 화면으로 간다", (await page.$eval(".call-btn",e=>(e as HTMLAnchorElement).getAttribute("href")))?.startsWith("/help?") === true);
-  const oldRegCall=await post("/api/kiosk/call",{screen:"register"},await kioskCookie("t1-info"));
-  check("이전 등록 호출을 취소할 수 있다",(await fetch(`${BASE}/api/kiosk/call/${oldRegCall.body.id}`,{method:"DELETE",headers:{Cookie:await kioskCookie("t1-info")}})).status === 200);
-
-  for (const k of "MK50") await clickText(page, ".pad-alnum .pad-key", k);
-  await page.waitForFunction(() => document.querySelectorAll(".flight-opt").length === 1, { timeout: WAIT });
-  check("화면 글자판으로 편명을 넣으면 후보가 뜬다", (await page.$eval("#reg-flight", (e) => (e as HTMLInputElement).value)) === "MK50");
-  await shot(page, "등록키오스크-편명-글자판");
-  await clickText(page, ".flight-opt", "MK501");
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "더 하고 싶은 말씀이 있나요?");
-  check("키오스크에는 서류 단계가 없다 (현장은 체크인 카운터에서 확인)", !(await has(page, "보여주실 서류가 있나요?")));
-  await clickText(page, ".flow-cta button", "다음");
-  await waitText(page, "이대로 등록할까요?");
-  await shot(page, "등록키오스크-확인");
-  await clickText(page, ".flow-cta button", "등록하기");
-  await waitText(page, "등록을 마쳤습니다");
-  const kioskNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
-  const kioskQr = await readQr(page, ".pass-qr-code svg");
-  check("등록을 마치면 QR 과 번호가 화면에 나오고 스티커를 뽑을 수 있다", /^\d{6}$/.test(kioskNo) && kioskQr.toUpperCase().startsWith(`${BASE.toUpperCase()}/P/`) && (await has(page, "스티커 뽑기")));
-  check("북클립에 붙여 여권에 끼우라고 안내한다", await has(page, "북클립"));
-  await shot(page, "등록키오스크-마침");
-  // 가로 키오스크에서 큰 글씨를 골라도 QR 과 번호가 아래 단추 줄(스티커 뽑기)에 가리지 않는다.
-  const qrClear = async () =>
-    page.evaluate(() => {
-      const cta = document.querySelector(".flow-cta")!.getBoundingClientRect().top;
-      const qr = document.querySelector(".pass-qr-code")!.getBoundingClientRect();
-      const no = document.querySelector(".pass-qr-no")!.getBoundingClientRect();
-      return { ok: qr.bottom <= cta && no.bottom <= cta && qr.width >= 150, cta: Math.round(cta), qr: Math.round(qr.bottom), no: Math.round(no.bottom), w: Math.round(qr.width) };
-    });
-  const qrFit: string[] = [];
-  const scale0 = await page.evaluate(() => document.documentElement.style.getPropertyValue("--scale"));
-  for (const vp of [KIOSK_WIDE, { ...KIOSK_WIDE, width: 1366, height: 768 }]) {
-    await page.setViewport(vp);
-    for (const scale of ["1", "1.25", "1.5"]) {
-      await page.evaluate((s) => document.documentElement.style.setProperty("--scale", s), scale);
-      await new Promise((r) => setTimeout(r, 150));
-      const r = await qrClear();
-      if (!r.ok) qrFit.push(`${vp.width}x${vp.height}@${scale} ${JSON.stringify(r)}`);
-    }
-  }
-  await page.evaluate((s) => document.documentElement.style.setProperty("--scale", s), scale0);
-  await page.setViewport(KIOSK_WIDE);
-  check("가로 키오스크에서 큰 글씨·아주 큰 글씨여도 QR 과 번호가 「스티커 뽑기」 줄에 가리지 않는다", qrFit.length === 0, qrFit.join(" / "));
-  // 스티커: 인쇄할 때는 QR 과 번호만 나온다.
-  await page.emulateMediaType("print");
-  const printed = await page.evaluate(() =>
-    [...document.querySelectorAll("body *")]
-      .filter((e) => (e as HTMLElement).offsetParent !== null && (e as HTMLElement).innerText?.trim() && e.children.length === 0)
-      .map((e) => (e as HTMLElement).innerText.trim()),
-  );
-  check("스티커에는 QR 과 번호만 찍힌다 (항공편·고른 항목·이름 없음)", printed.length === 1 && printed[0].replace(/\D/g, "") === kioskNo, printed.join(" | ").replace(/\d/g, "*"));
-  const stickerQr = await readQr(page, ".sticker-qr svg");
-  check("스티커의 QR 은 화면의 QR 과 같다", stickerQr === kioskQr);
-  await page.setViewport({ width: 378, height: 227, deviceScaleFactor: 3 });
-  await page.screenshot({ path: path.join(SHOTS, `${String(++shotNo).padStart(2, "0")}-스티커-인쇄모양.png`) as `${string}.png` });
-  await page.emulateMediaType("screen");
-  await page.setViewport(KIOSK_WIDE);
-  // 그림을 뜨는 데 오래 걸렸으면 "계속 이용하시겠어요?"가 떠 있을 수 있다. 어느 쪽이든 끝내기를 누른다.
-  await page.evaluate(() => {
-    const buttons = [...document.querySelectorAll(".sheet-box button, .flow-cta button")] as HTMLElement[];
-    buttons.find((b) => b.innerText.includes("끝내기"))?.click();
-  });
-  await waitText(page, "교통약자 지원 등록");
-  check("끝내면 처음 화면으로 돌아가고 앞사람의 QR 은 남지 않는다", (await count(page, ".pass-qr-code")) === 0);
+  // ───────── 6. Retired sticker path and existing kiosk registration compatibility ─────────
+  section("현장 등록: 기존 탑승권 경로");
+  browser = await launch(); page = await open(browser,KIOSK_WIDE);
+  const regKiosk=await kioskCookie("t1-info");
+  await useCookie(page,regKiosk);
+  await page.goto(`${BASE}/kiosk/register`,{waitUntil:"load",timeout:WAIT});
+  await page.waitForFunction(()=>location.pathname==="/kiosk/entry",{timeout:WAIT});
+  check("이전 등록 키오스크 주소는 기존 탑승권을 쓰는 입구 화면으로 연결된다",true);
+  check("현장 첫 화면에서 별도 지원 QR이나 스티커를 발급하지 않는다",(await count(page,".pass-qr-code,.sticker"))===0);
+  await shot(page,"현장등록-기존탑승권");
+  const desk=await staffCookie(DESK_CODE);
+  const kioskReg=await register("MK501",["tr_walk","mov_wheelchair_need","gd_picture"],"ko",regKiosk);
+  const kioskNo=kioskReg.passNo,kioskQr=passUrl(BASE,kioskReg.token);
+  check("기존 키오스크 등록 API의 고유 일련 번호 조회 호환성을 유지한다",/^\d{6}$/.test(kioskNo));
+  await register("MK111",["fac_calm"],"ko",regKiosk);
+  const oldRegCall=await post("/api/kiosk/call",{screen:"register"},regKiosk);
+  check("이전 등록 호출 API의 취소 호환성을 유지한다",(await fetch(`${BASE}/api/kiosk/call/${oldRegCall.body.id}`,{method:"DELETE",headers:{Cookie:regKiosk}})).status===200);
   await browser.close();
-
-  // 휴대전화로 이미 등록한 여객: QR 을 보여 주고 스티커만 뽑는다.
-  const tmp2 = await launch();
-  const reprintFile = await cameraFile(tmp2, enPass.token, false);
-  await tmp2.close();
-  browser = await launch(CAMERA(reprintFile));
-  page = await open(browser, KIOSK_WIDE);
-  const regKiosk = await kioskCookie("t1-info");
-  await useCookie(page, regKiosk);
-  await page.goto(`${BASE}/kiosk/register?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, "button", "이미 등록했어요");
-  await waitText(page, "SERIAL NUMBER");
-  const reNo = (await page.$eval(".pass-qr-no", (e) => (e as HTMLElement).innerText)).replace(/\D/g, "");
-  check("휴대전화로 등록한 여객이 QR 을 보여 주면 같은 번호의 스티커를 뽑을 수 있다 (화면은 그 여객의 언어로)", reNo === enPass.passNo && (await has(page, "Print sticker")));
-  await shot(page, "등록키오스크-스티커만뽑기-영어");
-  await browser.close();
-  fs.rmSync(reprintFile, { force: true });
-  const kioskReg = await register("MK111", ["fac_calm"], "ko", regKiosk);
-  check("키오스크에서 한 등록은 경로가 '키오스크'로 남는다", /^\d{6}$/.test(kioskReg.passNo));
 
   // ───────── 7. 직원 화면 ─────────
   section("직원: 호출 화면");
@@ -1366,7 +1277,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "오늘 근무하는 구역을 골라 주세요");
   await shot(page, "직원-구역고르기");
   await clickText(page, ".zone-opt", "중앙부");
-  await waitText(page, "통합 요청");
+  await waitText(page, "접수·배정");
   check("직원 로그인 후 통합 요청이 첫 화면이다",new URL(page.url()).pathname === "/staff/requests");
   await page.goto(`${BASE}/staff/legacy/calls`, {waitUntil:"load",timeout:300_000});
   await waitText(page, "직원 호출");
@@ -1430,7 +1341,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "안내데스크에서만 쓸 수 있습니다");
   check("현장 직원은 안내데스크 화면을 쓸 수 없다", true);
   await clickText(page, ".sign-btn, a, button", "통합 요청으로");
-  await waitText(page, "통합 요청");
+  await waitText(page, "접수·배정");
   await clickText(page, ".sign-btn", "구역 바꾸기");
   await waitText(page, "어느 구역으로 옮기나요?");
   await clickText(page, ".zone-opt", "끝단");
@@ -1445,8 +1356,9 @@ async function resetFlights(clearLocks = false) {
   await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) JSP-E2E-Desk");
   await fill(page, "#code", DESK_CODE);
   await page.keyboard.press("Enter");
-  await waitText(page, "통합 요청");
-  check("안내데스크 코드로 들어오면 메뉴에 안내데스크와 오늘 현황이 있다", (await has(page, "안내데스크")) && (await has(page, "오늘 현황")));
+  await waitText(page, "접수·배정");
+  await page.click(".workspace-mobile-menu > summary");
+  check("안내데스크 코드로 들어오면 운영 메뉴에 안내데스크와 통합 현황이 있다", (await has(page, "안내데스크")) && (await has(page, "통합 운영 현황")));
   await clickText(page, ".staff-nav a", "안내데스크");
   await waitText(page, "여객 대신 등록하기");
   check("안내데스크는 이름으로 여객을 찾지 않는다 (이름을 받지 않는다)", !(await has(page, "이름으로")));
@@ -1466,9 +1378,9 @@ async function resetFlights(clearLocks = false) {
   check("여객이 원하면 안내데스크에서 등록을 지운다", (await post("/api/guide", { token: kioskQr.split("/P/")[1] })).status === 410);
 
   await page.goto(`${BASE}/staff/desk/register`, { waitUntil: "load", timeout: 300_000 });
-  await waitText(page, "여객 대신 등록하기");
+  await waitText(page, "지원정보 대신 등록");
   check("대신 등록 화면에는 「도움 요청하기」가 없다", (await count(page, ".call-btn")) === 0);
-  await clickText(page, "button", "등록 시작하기");
+  await clickText(page, "button", "대신 등록 시작");
   await waitText(page, "어떤 점이 불편하세요?");
   check("대신 등록도 여객이 보는 것과 같은 질문을 같은 순서로 쓴다", await has(page, "어떤 점이 불편하세요?"));
   await clickText(page, '[role="checkbox"]', "지금은 없어요");
@@ -1484,11 +1396,21 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "더 하고 싶은 말씀이 있나요?");
   await clickText(page, ".flow-cta button", "다음");
   await waitText(page, "이대로 등록할까요?");
-  await clickText(page, ".flow-cta button", "등록하기");
-  await waitText(page, "등록을 마쳤습니다");
-  check("직원이 대신 등록하면 스티커 대신 여객 휴대전화로 QR 을 찍게 한다", (await has(page, "여객 휴대전화로 이 QR을 찍게 해 주세요")) && !(await has(page, "스티커 뽑기")));
-  check("현장 등록은 우대 확인을 체크인 카운터에서 한다고 알린다", await has(page, "체크인 카운터"));
-  await shot(page, "데스크-대신등록-마침");
+  const [assistedResponse]=await Promise.all([
+    page.waitForResponse(r=>r.url().endsWith("/api/desk/register")&&r.request().method()==="POST"),
+    clickText(page,".flow-cta button","등록하기"),
+  ]);
+  const assistedPass=await assistedResponse.json();
+  await waitText(page,"기존 탑승권 연결");
+  check("직원 대신 등록은 기존 탑승권 연결로 이어지고 별도 QR/스티커는 발급하지 않는다",(await count(page,".pass-qr-code,.sticker"))===0&&await has(page,"별도 QR이나 스티커는 발급하지 않습니다"));
+  const assistedGuide=(await post("/api/guide",{token:assistedPass.token})).body.guide;
+  const assistedCode=`BP1:${assistedGuide.flight.flightDate!.replaceAll("-","")}:MK127:${Date.now().toString(16).slice(-10).toUpperCase()}`;
+  const assistedImage=path.join(os.tmpdir(),`jsp-assisted-${Date.now()}.png`);tempFiles.push(assistedImage);
+  await QRCode.toFile(assistedImage,assistedCode,{width:600,margin:4});
+  await (await page.$('input[type="file"]'))!.uploadFile(assistedImage);
+  await waitText(page,"기존 탑승권 연결 완료");
+  check("직원이 대신 등록한 지원정보가 기존 탑승권에 연결된다",(await post("/api/guide",{token:assistedPass.token})).body.guide.checkedIn);
+  await shot(page,"데스크-대신등록-연결완료");
 
   // ───────── 우대출구 ─────────
   // 증빙이 확인되고 체크인한 여객의 탑승권을 우대출구 직원이 찍는다. 대상 여부와 필요한 지원만 나온다.
@@ -1517,6 +1439,11 @@ async function resetFlights(clearLocks = false) {
 
   // ───────── 공항 입구 안내로봇 ─────────
   section("공항 입구 안내로봇과 이동지원");
+  // 시간대에 따라 닫힌 운영 기준으로 UI 검사가 실패하지 않도록 격리된 로컬 fixture만 설정한다.
+  if (!["localhost", "127.0.0.1"].includes(new URL(BASE).hostname)) throw new Error("Local fixture required for robot dispatch scenario");
+  const originalMobilityRule = ((await get("/api/staff/visits", desk)).body.rules as HubRule[]).find((r: {hubId:string;service:string}) => r.hubId === "t1-departure" && r.service === "mobility");
+  const openedMobilityRule = await post("/api/staff/visits", {...originalMobilityRule!, action:"rule", openHour:0, closeHour:24, capacity:2, state:"ready", battery:100, availableAfter:null, reason:""}, desk);
+  check("로봇 이동지원 검사는 로컬 시험용 거점의 가용 시간에 독립적이다", openedMobilityRule.status === 200);
   // 미리 등록하지 않은 여객의 모의 탑승권(편과 탑승권 번호만)을 가짜 카메라에 보여 준다.
   const entryFlight = ((await get("/api/flights/search?q=MK5")).body.flights as { flightDate: string; flightNo: string; cancelled: boolean }[]).find((f) => !f.cancelled)!;
   const bpText = `BP1:${entryFlight.flightDate.replace(/-/g, "")}:${entryFlight.flightNo}:E2E${String(Date.now()).slice(-7)}`;
@@ -1527,6 +1454,7 @@ async function resetFlights(clearLocks = false) {
   page = await open(browser, KIOSK_WIDE);
   await useCookie(page, await kioskCookie("t1-info"));
   await page.goto(`${BASE}/kiosk/entry?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+  await page.$eval(".robot-pass-entry", e => (e as HTMLDetailsElement).open = true);
   await waitText(page, "어떤 점이 불편하세요?");
   check("탑승권을 찍으면 로봇이 깨어나고, 등록하지 않은 여객에게 체크리스트 1쪽의 불편(여섯 가지)을 묻는다", (await count(page, ".easy-tile")) === 6 && (await has(page, "왔군요!")) && (await has(page, entryFlight.flightNo)));
   await shot(page, "입구로봇-불편고르기");
@@ -1545,21 +1473,25 @@ async function resetFlights(clearLocks = false) {
   await page.waitForSelector("#dx-place");
   check("안내로봇의 이동지원은 위치가 고정된 통합 요청으로 이어진다",await page.$eval('#dx-place',e=>(e as HTMLSelectElement).value === 't1-info' && (e as HTMLSelectElement).disabled) && await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked));
   await page.click('input[type="checkbox"][required]');await page.click('button[type="submit"]');
-  await clickText(page,'button','이 내용으로 요청 접수');await page.waitForSelector('h2[role="status"]');
+  await clickText(page,'button','이 내용으로 요청 접수');await page.waitForSelector('.request-state-pill[role="status"]');
   const integrated=await page.evaluate(async()=>{const receipt=sessionStorage.getItem('jsp-dx-receipt-v1');return (await(await fetch('/api/requests/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receipt})})).json()).request;});
   check("이동지원 접수가 기존 별도 API 대신 통합 요청에 저장된다", integrated.service === 'mobility' && integrated.source === 'kiosk');
-  const staffBrowser=await launch();const staffPage=await open(staffBrowser,PHONE);await useCookie(staffPage,zoneStaff);
+  const staffBrowser=await launch();const staffPage=await open(staffBrowser,PHONE);await useCookie(staffPage,desk);
   await staffPage.goto(`${BASE}/staff/requests`,{waitUntil:'load',timeout:300_000});await staffPage.waitForSelector(`[data-request-id="${integrated.id}"]`);
   check("직원의 통합 화면에서 같은 이동지원 요청이 보인다",true);await shot(staffPage,"직원-통합이동지원");
-  const accepted=await post('/api/staff/requests',{id:integrated.id,version:integrated.version,action:'assign'},zoneStaff);
+  const accepted=await post('/api/staff/requests',{id:integrated.id,version:integrated.version,action:'assign'},desk);
   check("직원이 통합 요청을 배정한다",accepted.status === 200);await staffBrowser.close();
   await waitText(page,'담당자 배정');await shot(page,'입구로봇-통합배정');
   await clickText(page,'button','요청 취소');await waitText(page,'취소됨');
   await page.goto(`${BASE}/kiosk/entry?idle=1800`, { waitUntil: "load", timeout: 300_000 });
+  await page.$eval(".robot-pass-entry", e => (e as HTMLDetailsElement).open = true);
   await waitText(page, "미리 등록하신 내용이에요");
   check("같은 탑승권을 다시 찍으면 등록한 여객으로 알아보고 고른 도움을 확인하게 한다", (await has(page, "계단과 에스컬레이터")) && (await has(page, "고치기")));
   await shot(page, "입구로봇-도움확인");
   await browser.close();
+  const currentMobilityRule = ((await get("/api/staff/visits", desk)).body.rules as HubRule[]).find((r: {hubId:string;service:string}) => r.hubId === "t1-departure" && r.service === "mobility");
+  const restoredMobilityRule = await post("/api/staff/visits", {...originalMobilityRule!, action:"rule", version:currentMobilityRule!.version}, desk);
+  check("로컬 거점의 시험용 운영시간을 원래 기준으로 돌린다",restoredMobilityRule.status === 200);
   fs.rmSync(bpFile, { force: true });
 
   browser = await launch();
@@ -1577,11 +1509,11 @@ async function resetFlights(clearLocks = false) {
   check("「도움 요청하기」 횟수가 등록 중·안내 중으로 나뉘어 세어진다", summary.calls.total >= 3 && summary.calls.fromRegister >= 1 && summary.calls.fromGuide >= 2, JSON.stringify(summary.calls));
   check("현황에는 항공편이나 고른 항목이 없다 (건수와 시간뿐)", !JSON.stringify(summary).includes("MK") && !stats.includes("MK1"));
   check(
-    "예매 링크 등록 완료율, 증빙, 체크인, 우대출구 확인이 세어진다",
-    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins >= 3 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1,
+    "예매 링크 등록 완료율·증빙·모의 체크인 2건·우대출구 확인이 세어진다",
+    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins === 2 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1,
     JSON.stringify({ booking: summary.booking, proofDone: summary.proofDone, checkins: summary.checkins, exit: summary.exit }),
   );
-  const unifiedSummary=await get("/api/staff/requests",desk);
+  const unifiedSummary=await get("/api/staff/requests?scope=all",desk);
   check("새 이동지원 접수는 통합 요청 현황에 취소 기록까지 남는다",(unifiedSummary.body.requests as {id:string;service:string;state:string}[]).some(r=>r.id===integrated.id&&r.service==="mobility"&&r.state==="cancelled"));
   await shot(page, "데스크-오늘현황");
   check("현장 직원은 오늘 현황을 받을 수 없다 (403)", (await get("/api/desk/summary", zoneStaff)).status === 403);
