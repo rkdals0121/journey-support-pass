@@ -545,7 +545,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
           <section className="sb-sheet">
             <div className="sb-stamp-pop">
               {theme === "friend" ? (
-                <Haneul size={170} mood="joy" hands />
+                <Haneul size={170} />
               ) : (
                 <StampMark theme={theme} size={140} />
               )}
