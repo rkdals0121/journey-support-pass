@@ -2,20 +2,29 @@
 
 import {
   ArrowRight,
+  Bot,
+  Bus,
+  CalendarCheck,
+  CarFront,
   ChevronRight,
+  ClipboardCheck,
   ClipboardList,
   Frown,
   MapPin,
   Meh,
+  MessagesSquare,
   Navigation,
   Pencil,
   Smile,
-  Sunrise,
+  Wrench,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
 import type { GuideDto, GuideFacility } from "@/lib/guide";
+import { kioskHelpHref } from "@/lib/help-entry";
+import type { ServiceType } from "@/lib/service-request-model";
 import { textOf, type Lang } from "@/lib/i18n";
 import {
   isBoardingScan,
@@ -44,7 +53,7 @@ import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
-import { HaneuliWelcome } from "../../components/HaneuliWelcome";
+import { HaneuliSays, HaneuliWelcome } from "../../components/HaneuliWelcome";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import {
@@ -67,6 +76,8 @@ type View =
   | { kind: "number" }
   | { kind: "saved" }
   | { kind: "edit" }
+  | { kind: "register" }
+  | { kind: "services" }
   | { kind: "home" }
   | { kind: "route"; target: RouteTarget }
   | { kind: "survey" }
@@ -104,6 +115,11 @@ export function GuideKiosk({
   idleAnswerSec,
 }: Props) {
   useRobotTheme();
+  // 이 화면에만 거는 표시. 안내 키오스크의 모양(haneuli.css)이 입구 안내로봇 같은 다른 키오스크 화면으로 번지지 않게 한다.
+  useEffect(() => {
+    document.body.classList.add("kiosk-guide");
+    return () => document.body.classList.remove("kiosk-guide");
+  }, []);
   const [view, setView] = useState<View>({ kind: "scan" });
   const [awake, setAwake] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -250,7 +266,7 @@ export function GuideKiosk({
   }, []);
 
   const open = useCallback(
-    async (body: { scanned: string } | { passNo: string }) => {
+    async (body: { scanned: string } | { passNo: string }, then: "saved" | "services" = "saved") => {
       if (busyRef.current) return;
       busyRef.current = true;
       setAwake(true);
@@ -267,10 +283,11 @@ export function GuideKiosk({
       openCtrl.current = ctrl;
       const limit = setTimeout(() => ctrl.abort(), REFRESH_TIMEOUT_MS);
       try {
-        const res = await fetch("/api/kiosk/resolve", {
+        // 탑승권(QR)은 등록 여부까지 알려 주는 경로로, 번호는 기존 경로로 확인한다.
+        const res = await fetch("scanned" in body ? "/api/kiosk/entry" : "/api/kiosk/resolve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...body, purpose: "guide" }),
+          body: JSON.stringify("scanned" in body ? body : { ...body, purpose: "guide" }),
           signal: ctrl.signal,
         });
         if (mine !== openSeq.current) return;
@@ -294,6 +311,12 @@ export function GuideKiosk({
           setDigits("");
           return;
         }
+        // 등록하지 않은 탑승권이면 그 자리에서 필요한 도움을 적는 화면으로 간다.
+        if (data.registered === false) {
+          setDigits("");
+          setView({ kind: "register" });
+          return;
+        }
         setToken(data.token);
         setGuide(data.guide);
         setDigits("");
@@ -302,8 +325,8 @@ export function GuideKiosk({
         // 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
         if (callerWasGone) setCallSeq(null);
         emptyCall.current = null;
-        // 안내보다 먼저, 미리 등록한 내용을 보여 주고 고칠 것이 있는지 묻는다(피드백 3).
-        setView({ kind: "saved" });
+        // 안내보다 먼저, 미리 등록한 내용을 보여 주고 고칠 것이 있는지 묻는다(피드백 3). 방금 등록했으면 바로 서비스를 고른다.
+        setView({ kind: then });
       } catch {
         // 처음 화면으로 돌아가며 끊은 것이면 알리지 않는다. 알리면 다음 여객 앞에 앞사람의 오류가 뜬다.
         // 누른 번호도 지운다. 여섯 칸이 찬 채로 두면 번호판이 눌리지 않아 고장 난 것처럼 보인다.
@@ -361,7 +384,7 @@ export function GuideKiosk({
   // 안내를 보는 동안 탑승구와 남은 시간을 다시 받는다. 탑승구가 바뀌면 길도 바뀐다.
   // 안내와 길 화면을 오가도 시계를 새로 시작하지 않는다. 30초보다 자주 오가면 한 번도 다시 받지 못하기 때문이다.
   const viewing =
-    view.kind === "home" || view.kind === "route" || view.kind === "saved";
+    view.kind === "home" || view.kind === "route" || view.kind === "saved" || view.kind === "services";
   useEffect(() => {
     if (!token || !viewing) return;
     let alive = true;
@@ -566,6 +589,21 @@ export function GuideKiosk({
         </>
       );
     }
+    if (view.kind === "register") {
+      return (
+        <>
+          <RegisterFlow
+            mode="kiosk"
+            initialLang={lang}
+            onExit={reset}
+            onBackOut={() => setView({ kind: "scan" })}
+            onDone={(r) => void open({ passNo: r.passNo }, "services")}
+          />
+          {call}
+          {idle}
+        </>
+      );
+    }
     return (
       <>
         <FlowShell
@@ -585,7 +623,7 @@ export function GuideKiosk({
               </button>
             </>
           }
-          speakText={awake ? (lang === "en" ? "Choose an airport service, or show your boarding pass to retrieve your registration." : "필요한 서비스를 골라 주세요. 미리 등록하셨다면 탑승권을 보여 주세요.") : (lang === "en" ? "Touch the screen or show your boarding pass." : "화면을 누르거나 탑승권을 보여 주세요.")}
+          speakText={awake ? (lang === "en" ? "Let us check the help you need. If you filled it in before, scan your boarding pass. If not, choose the second button." : "필요한 도움을 확인할게요. 미리 작성하셨다면 탑승권을 스캔해 주세요. 아직이라면 두 번째 단추를 눌러 주세요.") : (lang === "en" ? "Scan your boarding pass to wake Haneuli, or touch Start with help." : "탑승권을 스캔하여 하늘이를 깨워 주세요. 또는 도움받아 시작을 눌러 주세요.")}
           speakKey={awake ? "services" : "welcome"}
         >
           <HaneuliWelcome
@@ -596,6 +634,7 @@ export function GuideKiosk({
             onWake={() => setAwake(true)}
             onRest={reset}
             onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
+            onNew={() => { setAwake(true); setView({ kind: "register" }); }}
             listen={<ListenStart t={t} />}
             error={error ? <ErrorNote>{error}</ErrorNote> : null}
             scanner={<Scanner onScan={onScan} paused={busy} prefer="user" text={{
@@ -629,7 +668,7 @@ export function GuideKiosk({
             <>
               <button
                 className="btn btn-primary"
-                onClick={() => setView({ kind: "home" })}
+                onClick={() => setView({ kind: "services" })}
               >
                 {t.savedKeep}
                 <ArrowRight size={24} aria-hidden="true" />
@@ -644,7 +683,7 @@ export function GuideKiosk({
           <p className="kicker">
             <ClipboardList size={20} aria-hidden="true" /> {t.savedTitle}
           </p>
-          <p className="haneuli-saved-greeting">{lang === "en" ? "Welcome back! I found your registration." : "반가워요! 미리 등록하신 내용을 찾았어요."}</p>
+          <HaneuliSays size="sm" text={lang === "en" ? "Welcome back! I found your registration." : "반가워요! 미리 등록하신 내용을 찾았어요."} />
           <h1>{t.savedAsk}</h1>
           <FlightBoard flight={guide.flight} t={t} lang={lang} />
           <SavedNeeds
@@ -674,7 +713,7 @@ export function GuideKiosk({
             onSaved: (g) => {
               setGuide(g);
               setEdited(true);
-              setView({ kind: "home" });
+              setView({ kind: "services" });
             },
           }}
         />
@@ -734,13 +773,72 @@ export function GuideKiosk({
           onHome={reset}
         >
           <div className="empty" role="status">
-            <span className="bubble bubble-sun">
-              <Sunrise size={32} aria-hidden="true" />
-            </span>
-            <h1>{t.thanks}</h1>
+            <h1 className="sr-only">{t.thanks}</h1>
+            <HaneuliSays size="lg" text={t.thanks} />
           </div>
         </FlowShell>
         {call}
+      </>
+    );
+  }
+
+  // ── 서비스 고르기: 등록 내용을 확인한 뒤 어떤 도움을 받을지 고른다 ──
+  if (view.kind === "services") {
+    const en = lang === "en";
+    const help = (service: ServiceType, topic?: string, resume = false) =>
+      kioskHelpHref(token, lang, service, "/kiosk/guide", resume) + (topic ? `&topic=${topic}` : "");
+    const cards = [
+      { key: "guidance", Icon: Navigation, main: true, to: null, title: en ? "Gate and facility guide" : "탑승구 및 편의시설 안내", body: en ? "Directions from where you are" : "지금 계신 곳에서 가는 길을 안내합니다" },
+      { key: "mobility", Icon: CarFront, to: help("mobility"), title: en ? "Mobility assistance service" : "이동 지원 서비스", body: en ? "Wheelchair or an escort" : "휠체어, 이동 동행이 필요하신가요?" },
+      { key: "robot", Icon: Bot, to: help("robot"), title: en ? "Call a guide robot" : "안내로봇 호출", body: en ? "Ask a robot to walk with you" : "이동할 때 로봇이 함께 갑니다" },
+      { key: "status", Icon: ClipboardCheck, to: help("guidance", undefined, true), title: en ? "Check your request" : "신청 내용 확인", body: en ? "See the status of your request" : "접수한 요청의 처리 상태를 확인합니다" },
+      { key: "facility", Icon: Wrench, to: help("guidance", "facility"), title: en ? "Report a facility issue" : "시설 불편 신고", body: en ? "Cleaning or facility inspection" : "청소, 시설 점검을 요청합니다" },
+      { key: "traffic", Icon: Bus, to: help("guidance", "traffic"), title: en ? "Transport and parking information" : "교통 및 주차 안내", body: en ? "Transport information or on-site help" : "승차 안내, 주차장 현장 지원" },
+      { key: "other", Icon: MessagesSquare, to: help("guidance", "other"), title: en ? "Other information and enquiries" : "기타 안내 및 문의", body: en ? "Enquiries and other requests" : "문의와 그 밖의 요청" },
+      { key: "meeting", Icon: CalendarCheck, sub: true, to: "/kiosk/visits" + (en ? "?lang=en" : ""), title: en ? "Meeting appointment" : "만남 예약 확인", body: en ? "Find your appointment" : "예약하신 만남을 확인합니다" },
+    ];
+    const heading = en ? "Which service do you need?" : "어떤 서비스가 필요하세요?";
+    return (
+      <>
+        <FlowShell
+          lang={lang}
+          prefs={prefs}
+          kiosk
+          screenKey="services"
+          speakText={[heading, ...cards.map((c) => c.title)].join(". ")}
+          onBack={() => setView({ kind: "saved" })}
+          onHome={reset}
+          cta={
+            <button className="btn finish-btn" onClick={() => setView({ kind: "survey" })}>
+              {t.finish}
+            </button>
+          }
+        >
+          <div className="guide-services">
+            <HaneuliSays size="md" text={heading} />
+            <h1 className="sr-only">{heading}</h1>
+            {edited && <Banner role="status">{t.editSaved}</Banner>}
+            <div className="svc-grid">
+              {cards.map(({ key, Icon, to, title, body, main, sub }) => {
+                const cls = "svc-card" + (main ? " is-main" : sub ? " is-sub" : "");
+                const inner = (
+                  <>
+                    <Icon size={40} aria-hidden="true" />
+                    <strong>{title}</strong>
+                    <span>{body}</span>
+                  </>
+                );
+                return to ? (
+                  <Link key={key} className={cls} prefetch={false} href={to}>{inner}</Link>
+                ) : (
+                  <button key={key} className={cls} onClick={() => setView({ kind: "home" })}>{inner}</button>
+                );
+              })}
+            </div>
+          </div>
+        </FlowShell>
+        {call}
+        {idle}
       </>
     );
   }
@@ -931,6 +1029,13 @@ export function GuideKiosk({
               noteText && <Banner role="status">{noteText}</Banner>
             )}
             <div className="kx-guide-actions">
+              <button
+                className="btn"
+                onClick={() => setView({ kind: "services" })}
+              >
+                <ArrowRight size={22} aria-hidden="true" />
+                {lang === "en" ? "Other services" : "다른 서비스 보기"}
+              </button>
               <button
                 className="btn"
                 onClick={() => setView({ kind: "saved" })}

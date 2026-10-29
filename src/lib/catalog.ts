@@ -157,7 +157,9 @@ export const ITEMS: Item[] = [
 const BY_CODE = new Map(ITEMS.map((i) => [i.code, i]));
 
 export function itemsOf(group: Group): Item[] {
-  return ITEMS.filter((i) => i.group === group);
+  // Keep retired codes readable on existing registrations, but do not offer
+  // the proactive staff-visit preference in new selection lists.
+  return ITEMS.filter((i) => i.group === group && i.code !== "stf_visit");
 }
 
 export function itemOf(code: string): Item | null {
