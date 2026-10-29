@@ -129,10 +129,10 @@ async function audit(page: Page, name: string) {
   await page.evaluate((y) => window.scrollTo(0, y), scrolled);
 }
 
-/** 키오스크 처음 화면(하늘이). 대기 중이면 「화면을 눌러 시작하기」로 깨워 서비스 고르기를 연다. */
+/** 키오스크 처음 화면(하늘이). 대기 중이면 「도움받아 시작」으로 깨워 필요한 도움 확인을 연다. */
 async function kioskServices(page: Page) {
   await page.waitForSelector(".haneuli-welcome", { timeout: WAIT });
-  if (!(await page.$(".haneuli-welcome.is-awake"))) await clickText(page, ".haneuli-start", "화면을 눌러 시작하기");
+  if (!(await page.$(".haneuli-welcome.is-awake"))) await clickText(page, ".haneuli-start", "도움받아 시작");
   await page.waitForSelector(".haneuli-welcome.is-awake", { timeout: WAIT });
 }
 const isKioskHome = async (page: Page) => !!(await page.$(".haneuli-welcome"));
@@ -643,9 +643,12 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".flow-cta button", "다음");
 
   await waitText(page, "도움은 어떻게 받으시겠어요?");
-  await clickText(page, '[role="checkbox"]', "직원이 먼저 찾아와 주세요");
   await clickText(page, '[role="checkbox"]', "제가 필요할 때 부를게요");
-  check("'직원이 먼저 찾아와 주세요'와 '제가 필요할 때 부를게요'는 둘 중 하나만 고른다", !(await page.evaluate(() => [...document.querySelectorAll('[role="checkbox"][aria-checked="true"]')].some((b) => (b as HTMLElement).innerText.includes("먼저 찾아와")))));
+  check("직원 선방문 항목은 없고 필요할 때 호출하는 방식을 선택할 수 있다", await page.evaluate(() => {
+    const options = [...document.querySelectorAll('[role="checkbox"]')];
+    return !options.some((b) => (b as HTMLElement).innerText.includes("먼저 찾아와"))
+      && options.some((b) => b.getAttribute("aria-checked") === "true" && (b as HTMLElement).innerText.includes("필요할 때"));
+  }));
   await clickText(page, ".flow-cta button", "다음");
 
   await waitText(page, "가시는 길에 들르실 곳이 있나요?");

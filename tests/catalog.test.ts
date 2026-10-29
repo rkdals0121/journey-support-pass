@@ -73,7 +73,7 @@ describe("선택 항목 (공항 이용 도움 체크리스트)", () => {
     ]);
     expect(labels("unsure")).toEqual(["질문을 하나씩 해 주세요"]);
     expect(labels("companion")).toEqual(["혼자 가요", "함께 가는 분이 있어요", "그중 도움이 필요한 분이 더 있어요"]);
-    expect(labels("help")).toEqual(["직원이 먼저 찾아와 주세요", "제가 필요할 때 부를게요", "탑승구까지 함께 가주세요", "로봇과 함께 갈래요"]);
+    expect(labels("help")).toEqual(["제가 필요할 때 부를게요", "탑승구까지 함께 가주세요", "로봇과 함께 갈래요"]);
     expect(labels("stops")).toEqual(["화장실", "수유실 · 기저귀 갈 곳", "유모차 빌리는 곳", "약국", "밥 먹을 곳", "조용히 쉴 곳", "들를 곳 없어요"]);
   });
 
