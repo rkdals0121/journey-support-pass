@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Vendored browser libraries: keep our map.js / graph.js / TSX under lint.
+      "public/airport-map/assets/**",
     ],
   },
 ];
