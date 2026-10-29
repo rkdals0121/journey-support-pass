@@ -207,6 +207,19 @@ export function HelpFlow({
   const needsDetails = service === "robot" && !referral;
   const noMeeting = topic?.id === "other" && placeId === NO_MEETING_PLACE;
   const lastInputStep = noMeeting ? 0 : needsDetails ? 2 : 1;
+  const lastPresentation = useRef(`${inputStep}:${review}`);
+  useEffect(() => {
+    const key = `${inputStep}:${review}`;
+    if (lastPresentation.current === key) return;
+    lastPresentation.current = key;
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      document.querySelector<HTMLElement>(review
+        ? ".request-review-card h2"
+        : `[data-request-step="${inputStep}"] h2`)?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [inputStep, review]);
   const reviewIndex = noMeeting ? 1 : 2;
   // 작성 중인 내용 되살리기. 같은 서비스로 다시 들어왔을 때만, 키오스크가 아닐 때만, 새로 시작하기(fresh)가 아닐 때만.
   const draftReady = useRef(false);
@@ -585,7 +598,7 @@ export function HelpFlow({
     for (const control of controls) if (!control.reportValidity()) return;
     setError("");
     setInputStep((v) => Math.min(lastInputStep, v + 1));
-    document.getElementById("public-main")?.scrollIntoView({ block: "start" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
   const readText = request
     ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
@@ -595,9 +608,7 @@ export function HelpFlow({
     if (review) return setReview(false);
     if (inputStep > 0) {
       setInputStep((v) => v - 1);
-      document
-        .getElementById("public-main")
-        ?.scrollIntoView({ block: "start" });
+      window.scrollTo({ top: 0, behavior: "instant" });
       return;
     }
     if (topic?.id === "traffic" && trafficIntent === "dispatch")
@@ -857,7 +868,7 @@ export function HelpFlow({
           {review ? (
             <div className="request-review-layout">
               <section className="request-review-card">
-                <h2>{tr("접수 내용", "Your request")}</h2>
+                <h2 tabIndex={-1}>{tr("접수 내용", "Your request")}</h2>
                 <dl className="service-detail-list">
                   <div>
                     <dt>{tr("서비스", "Service")}</dt>
@@ -933,12 +944,10 @@ export function HelpFlow({
               data-active-step={inputStep}
               data-short-flow={!needsDetails}
               data-last-step={lastInputStep}
+              data-final-step={inputStep === lastInputStep}
               onSubmit={(e) => {
                 e.preventDefault();
-                if (
-                  window.matchMedia("(max-width:760px)").matches &&
-                  inputStep < lastInputStep
-                ) {
+                if (inputStep < lastInputStep) {
                   advanceInput();
                   return;
                 }
@@ -972,9 +981,7 @@ export function HelpFlow({
                 }
                 setError("");
                 setReview(true);
-                document
-                  .getElementById("public-main")
-                  ?.scrollIntoView({ block: "start" });
+                window.scrollTo({ top: 0, behavior: "instant" });
               }}
             >
               <div className="request-form-main">
@@ -983,7 +990,7 @@ export function HelpFlow({
                   data-request-step="0"
                   onFocusCapture={() => setInputStep(0)}
                 >
-                  <h2>
+                  <h2 tabIndex={-1}>
                     <span>1</span>
                     {topic
                       ? tr("요청 내용", "Request details")
@@ -1168,7 +1175,7 @@ export function HelpFlow({
                     hidden={noMeeting}
                     onFocusCapture={() => setInputStep(1)}
                   >
-                    <h2>
+                    <h2 tabIndex={-1}>
                       <span>2</span>
                       {topic?.id === "facility" || topic?.id === "lost-property"
                         ? tr("신고할 위치", "Report location")
@@ -1268,7 +1275,7 @@ export function HelpFlow({
                     data-request-step="2"
                     onFocusCapture={() => setInputStep(2)}
                   >
-                    <h2>
+                    <h2 tabIndex={-1}>
                       <span>3</span>
                       {tr("함께 전달할 내용", "Additional details")}
                     </h2>

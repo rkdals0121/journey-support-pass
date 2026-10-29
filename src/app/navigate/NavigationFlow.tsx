@@ -137,9 +137,9 @@ export function NavigationFlow({
           {t("시연 지도 기준", "Prototype map")}
         </span>
       </header>
-      <div className="service-form-layout">
+      <div className="service-form-layout navigation-layout">
         <form
-          className="service-form-card"
+          className="service-form-card navigation-form"
           onSubmit={(e) => {
             e.preventDefault();
             find();

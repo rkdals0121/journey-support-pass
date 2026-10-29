@@ -595,3 +595,23 @@
  .printGrid article h2 { margin:0 0 2mm;font-size:var(--text-heading);line-height:1.2; }
  .printGrid article p { margin:2mm 0 0;font-size:var(--text-small);line-height:1.3; }
 }
+
+/* Scope booking density so staff and checkpoint pages keep their own layout. */
+.visitPage { margin:var(--space-4) auto var(--space-5); }
+.visitPage h1 { font-size:var(--text-title);margin:var(--space-2) 0; }
+.visitPage > p { margin-block:var(--space-2); }
+.visitLayout { gap:var(--space-4); }
+.visitLayout > .panel { padding:var(--space-4);margin:var(--space-2) 0; }
+.visitLayout .field { margin-bottom:var(--space-3);gap:var(--space-2); }
+.visitLayout .field > label { margin:0; }
+.visitLayout .draftSteps { margin-bottom:var(--space-3); }
+.visitLayout .actions { position:sticky;bottom:0;padding-block:var(--space-3);background:var(--color-surface); }
+@media (min-width: 1101px) {
+ .visitLayout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }
+ .visitLayout .hubMap { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:var(--space-2); }
+ .visitLayout .hubMap > h2,.visitLayout .hubMap > .landmark,.visitLayout .hubMap > .link { grid-column:1 / -1; }
+ .visitLayout .hubMap h2 { margin:0;font-size:var(--text-body); }
+ .visitLayout .hubMap .landmark { margin:0; }
+ .visitLayout .hubMap > figure { min-width:0; }
+ .visitLayout .mapLegend { margin:0;align-content:start; }
+}

@@ -300,3 +300,7 @@ html[data-kiosk] .flow-body { padding:1rem 1.5rem 1.5rem; }
 @media (min-width: 761px) {
 .task-device-preview.kiosk-preview .device-preview-body { justify-content: center; }
 }
+/* Shared help uses kiosk-sized targets even on the public /help route. */
+.request-shared :is(.public-button,.request-back,.request-speech,.request-service-options label,.request-task-options label,.request-check) { min-height:var(--target-kiosk-floor); }
+.request-shared .request-speech { min-width:var(--target-kiosk-floor); }
+.request-shared :is(input:not([type="radio"]):not([type="checkbox"]):not([type="file"]),select,textarea) { min-height:var(--target-kiosk-floor); }

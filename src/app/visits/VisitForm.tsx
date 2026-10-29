@@ -329,7 +329,7 @@ export function VisitForm({
     }
   }
   return (
-    <div className={styles.layout}>
+    <div className={`${styles.layout} ${styles.visitLayout}`}>
       <form
         className={styles.panel}
         onSubmit={submit}
