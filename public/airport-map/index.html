@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>공항 실내지도</title>
+    <link rel="stylesheet" href="map.css" />
+  </head>
+  <body>
+    <div id="map" role="region" aria-label="공항 실내지도"></div>
+    <div id="checkpoint-hint" class="checkpoint-hint" role="status">초록색 입구 번호를 눌러주세요</div>
+    <nav class="map-controls" aria-label="지도 조작">
+      <button id="zoom-in" aria-label="지도 확대">＋</button>
+      <button id="zoom-out" aria-label="지도 축소">−</button>
+      <button id="fit" aria-label="표시한 위치 전체 보기">⛶</button>
+    </nav>
+    <div id="status" class="map-status" role="status">지도를 불러오는 중…</div>
+    <section id="checkpoint-panel" aria-label="만날 곳 선택">
+      <small>시연용 배치 · 현장 확인 전</small>
+      <div id="checkpoint-options" role="group" aria-label="입구별 만날 곳"></div>
+      <button id="checkpoint-confirm" disabled>여기서 만나기</button>
+    </section>
+    <script src="assets/react.production.min.js"></script>
+    <script src="assets/react-dom.production.min.js"></script>
+    <script src="assets/airport-engine.js"></script>
+    <script src="graph.js"></script>
+    <script src="map.js"></script>
+  </body>
+</html>
