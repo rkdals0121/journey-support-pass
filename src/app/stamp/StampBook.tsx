@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   BookOpen,
   Camera,
   Download,
@@ -11,6 +12,7 @@ import {
   Shuffle,
   User,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Scanner } from "../components/Scanner";
 import {
@@ -736,6 +738,9 @@ function ThemePicker({
   return (
     <div className="sb" data-theme="pick">
       <main className="sb-page">
+        <Link href="/" className="sb-link sb-pick-home">
+          <ArrowLeft aria-hidden="true" /> 메인 화면으로
+        </Link>
         <h1 className="sb-pick-title">
           어떤 수첩으로
           <br />
