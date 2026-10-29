@@ -68,12 +68,17 @@ it("completes booking lookup → support registration → usable pass without st
   expect(rows[0]).toMatchObject({ flight_no: "DX9001", via: "booking", is_mock: true });
   expect(JSON.stringify(rows)).not.toMatch(/DEMO01|KIM|bookingContext/);
 });
-it("requires consent, valid choices, and the web route before provisioning", async () => {
+it("requires consent and valid choices before provisioning", async () => {
   expect((await registerHandler(db, { ...body(), consent: false }, null, "bad-consent", now)).status).toBe(400);
   expect((await registerHandler(db, { ...body(), choices: ["invalid"] }, null, "bad-choice", now)).status).toBe(400);
-  expect((await registerHandler(db, body(), kioskSession(now, "cc-108"), "kiosk", now)).status).toBe(400);
   expect(await db.query("select * from flights")).toEqual([]);
   expect(await db.query("select * from access_logs where action='register'")).toEqual([]);
+});
+it("lets on-site kiosk registration use the booking lookup too", async () => {
+  const res = await registerHandler(db, body(), kioskSession(now, "cc-108"), "kiosk", now);
+  expect(res.status).toBe(200);
+  const rows = await db.query<{ flight_no: string; route: string }>("select flight_no, route from registrations");
+  expect(rows).toEqual([expect.objectContaining({ flight_no: "DX9001", route: "kiosk" })]);
 });
 it("bounds lookup request bodies and returns non-cacheable errors", async () => {
   for (const value of ["not json", "[]", "null"]) {

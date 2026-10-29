@@ -5,7 +5,7 @@ import { prepareBookingFlight } from "../booking-demo";
 import { config } from "../config";
 import type { Db } from "../db";
 import { lastSuccessfulPoll } from "../flights/ingest";
-import { flightsToCity, suggestFlights, listDestinations } from "../flights/search";
+import { flightsToCity, getFlight, suggestFlights, listDestinations } from "../flights/search";
 import { buildGuide } from "../guide";
 import { getJourney, isJourneyOver, lastRealPoll, type Journey } from "../journey";
 import { logEvent, logLimitedEvent } from "../metrics";
@@ -50,6 +50,18 @@ export async function searchFlightsHandler(db: Db, q: string, now: Date, city = 
   // city 가 오면 도시 목록에서 고른 것이다. 그 도시와 이름이 정확히 같은 곳만 찾는다.
   const flights = city ? await flightsToCity(db, city, now) : await suggestFlights(db, q ?? "", now);
   return ok({ flights: flights.map((f) => toFlightDto(f, now)) });
+}
+
+/**
+ * 현장등록에서 탑승권 바코드·QR 로 편을 찾는다. 탑승권에서 날짜와 편명만 꺼내고, 예약번호나 이름은 쓰지도 남기지도 않는다.
+ * 운항 정보에 없는 편이면 찾지 못했다고 답한다(편명으로 찾기와 같다).
+ */
+export async function boardingFlightHandler(db: Db, scanned: unknown, now: Date): Promise<ApiResult> {
+  const bp = typeof scanned === "string" ? readBoardingPayload(scanned, now) : null;
+  if (!bp) return fail(400, "탑승권 바코드를 읽지 못했습니다", "boarding");
+  const flight = await getFlight(db, bp.flightDate, bp.flightNo);
+  if (!flight) return fail(404, "탑승권의 항공편을 운항 정보에서 찾지 못했습니다", "flight");
+  return ok({ flight: toFlightDto(flight, now) });
 }
 
 /** 오늘과 내일 떠날 편이 있는 도착 도시 목록. */
@@ -112,7 +124,8 @@ export async function registerHandler(
   let res: Awaited<ReturnType<typeof createRegistration>>;
   try {
     if (body.bookingContext !== undefined) {
-      if (route !== "web" || body.consent !== true || validateChoices(body.choices)) {
+      // 예약번호 조회는 사전등록(휴대전화)과 현장등록(키오스크·안내데스크)에서 모두 쓴다.
+      if (body.consent !== true || validateChoices(body.choices)) {
         await release();
         return fail(400, "등록 동의와 입력 내용을 확인해 주세요", "booking_context");
       }
