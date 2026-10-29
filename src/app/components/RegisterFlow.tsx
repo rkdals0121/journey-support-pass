@@ -591,7 +591,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     }
     if (k === "note") return extra.note ? [extra.note] : [];
     const items = groupsOfStep(k).flatMap((g) => pickedIn(g).map(itemLabel));
-    if (k === "trouble") return [lang === "en" ? "English" : "한국어", ...items];
+    // 언어는 불편한 점이 아니므로 「언어 · 한국어」로 따로 밝혀 맨 뒤에 둔다.
+    if (k === "trouble") return [...items, `${t.language} · ${lang === "en" ? "English" : "한국어"}`];
     if (k === "companion") {
       return [
         ...items,
@@ -750,6 +751,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         <>
           {/* 한국어 화면에도 영어 사용자가 언어 단추를 찾을 수 있게 "Language"를 덧붙인다. 영어 화면에서는 같은 말이 두 번 되므로 붙이지 않는다.
               덧붙인 영어에는 lang 을 달아 화면 읽기 프로그램이 영어로 읽게 하고, 묶음의 이름도 이 글로 삼아 두 말이 함께 들리게 한다. */}
+          <div className="ph-step-tools">
           <div className="lang-pick" role="radiogroup" aria-labelledby="lang-pick-label" onKeyDown={radioKeys}>
             <span className="lang-pick-label" id="lang-pick-label">
               {lang === "en" ? (
@@ -770,6 +772,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           <div className="read-offer">
             <p className="fine">{t.troubleRead}</p>
             <ListenStart t={t} />
+          </div>
           </div>
         </>
       )}

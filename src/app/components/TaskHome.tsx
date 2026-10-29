@@ -2,46 +2,69 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Navigation, Plane, ClipboardCheck } from "lucide-react";
+import { ArrowRight, CalendarClock, Plane, Search } from "lucide-react";
 import { TaskLauncher } from "./TaskLauncher";
 import { MyRequestPanel } from "./MyRequestPanel";
+
+/**
+ * 여객 첫 화면.
+ * 1) 무엇을 하는 곳인지 한 줄. 2) 공항에 오기 전이면 「여행 전 지원 등록」(이 서비스의 핵심, 화면의 강조 하나).
+ * 3) 공항에 있으면 바로 쓰는 서비스. 탑승구 번호로 바로 찾기는 서비스 묶음 맨 위에 둔다.
+ */
 export function TaskHome({ en = false }: { en?: boolean }) {
   const [gate, setGate] = useState("");
   const router = useRouter();
   const q = en ? "?lang=en" : "";
   return (
-    <>
-      <section className="task-home-hero" aria-labelledby="home-title">
-        <div className="task-home-intro">
-          <p>{en ? "AT THE AIRPORT" : "공항 현장 서비스"}</p>
+    <div className="ph-home">
+      <div className="ph-home-lead">
+        <section className="ph-hero" aria-labelledby="home-title">
           <h1 id="home-title">
-            {en ? (
-              <>
-                Airport services,
-                <br />
-                in one place.
-              </>
-            ) : (
-              <>
-                지금 필요한 공항 서비스
-                <br />
-                빠르게 찾아보세요.
-              </>
-            )}
+            {en ? "How can we help at the airport?" : "공항에서 무엇을 도와드릴까요?"}
           </h1>
-          <Link href={"/help?topic=mobility&fresh=1" + (en ? "&lang=en" : "")}>
-            {en ? "Need someone to help you?" : "이동에 도움이 필요하신가요?"}
+          <p>
+            {en
+              ? "Directions, mobility help and on-site requests for passengers who need a little more support."
+              : "도움이 조금 더 필요한 여객을 위한 길 안내, 이동 도움, 현장 요청을 한곳에서."}
+          </p>
+        </section>
+        <section className="ph-prepare" aria-labelledby="home-prepare-title">
+          <span className="ph-prepare-icon">
+            <Plane aria-hidden="true" />
+          </span>
+          <h2 id="home-prepare-title">
+            {en ? "Not at the airport yet?" : "공항에 가기 전이라면"}
+          </h2>
+          <p>
+            {en
+              ? "Register your flight and the help you need. Airport kiosks and staff pick it up from your boarding pass."
+              : "항공편과 필요한 도움을 미리 등록하세요. 공항 키오스크와 직원이 탑승권으로 그대로 이어받아요."}
+          </p>
+          <Link className="btn btn-primary ph-prepare-go" href={"/prepare" + q}>
+            {en ? "Register support before you travel" : "여행 전 지원 등록"}
             <ArrowRight aria-hidden="true" />
           </Link>
-          <Link href={"/visits" + q}>
-            {en
-              ? "Arrange a meeting before you arrive"
-              : "방문 전에 만날 장소·시간 예약"}
+          <Link className="ph-text-link" href={"/visits" + q}>
+            <CalendarClock aria-hidden="true" />
+            {en ? "Arrange a meeting before you arrive" : "만날 장소·시간 미리 예약"}
+          </Link>
+        </section>
+        <div className="task-home-status">
+          <MyRequestPanel lang={en ? "en" : "ko"} hideWhenEmpty />
+        </div>
+      </div>
+      <section className="ph-services" aria-labelledby="home-service-title">
+        <div className="ph-section-head">
+          <h2 id="home-service-title">
+            {en ? "Already at the airport" : "지금 공항에 있다면"}
+          </h2>
+          <Link href={"/services" + q}>
+            {en ? "All services" : "전체 서비스"}
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>
         <form
-          className="home-gate-form"
+          className="ph-gate"
           onSubmit={(e) => {
             e.preventDefault();
             const params = new URLSearchParams({ gate });
@@ -49,14 +72,10 @@ export function TaskHome({ en = false }: { en?: boolean }) {
             router.push("/navigate?" + params);
           }}
         >
-          <span className="home-form-symbol">
-            <Navigation aria-hidden="true" />
-          </span>
-          <h2>{en ? "Find your boarding gate" : "탑승구로 가는 길"}</h2>
           <label htmlFor="home-gate">
-            {en ? "Gate number" : "탑승구 번호"}
+            {en ? "Go straight to your gate" : "탑승구 번호로 바로 길 찾기"}
           </label>
-          <div className="home-gate-input">
+          <div className="ph-gate-row">
             <input
               id="home-gate"
               inputMode="numeric"
@@ -67,57 +86,13 @@ export function TaskHome({ en = false }: { en?: boolean }) {
               value={gate}
               onChange={(e) => setGate(e.target.value.replace(/\D/g, ""))}
             />
-            <button type="submit">
-              {en ? "Find route" : "경로 찾기"}
-              <ArrowRight aria-hidden="true" />
+            <button type="submit" aria-label={en ? "Find route" : "경로 찾기"}>
+              <Search aria-hidden="true" />
             </button>
           </div>
-          <Link href={"/navigate" + q}>
-            {en
-              ? "Find a restroom or another facility"
-              : "화장실·편의시설 찾기"}
-          </Link>
         </form>
-      </section>
-      <div className="task-home-status">
-        <MyRequestPanel lang={en ? "en" : "ko"} hideWhenEmpty />
-      </div>
-      <section
-        className="task-home-services"
-        aria-labelledby="home-service-title"
-      >
-        <div className="task-section-heading">
-          <h2 id="home-service-title">
-            {en ? "What would you like to do?" : "어떤 도움이 필요하세요?"}
-          </h2>
-          <Link href={"/services" + q}>
-            {en ? "Search all services" : "전체 서비스 검색"}
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </div>
         <TaskLauncher en={en} />
       </section>
-      <section
-        className="task-preflight"
-        aria-label={en ? "Before your visit" : "공항 도착 전"}
-      >
-        <Plane aria-hidden="true" />
-        <div>
-          <h2>
-            {en ? "Coming to the airport?" : "아직 공항에 도착하기 전이라면"}
-          </h2>
-          <p>
-            {en
-              ? "Save your flight and support needs before you travel."
-              : "항공편과 필요한 도움을 미리 등록해 두세요."}
-          </p>
-        </div>
-        <Link href={"/prepare" + q}>
-          <ClipboardCheck aria-hidden="true" />
-          {en ? "Register support needs" : "여행 전 지원등록"}
-          <ArrowRight aria-hidden="true" />
-        </Link>
-      </section>
-    </>
+    </div>
   );
 }

@@ -336,21 +336,39 @@ export function RequestList({
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className={"work-requests" + (selected ? " has-selection" : "")}>
-      <div className="work-contextbar">
-        <p>
-          근무 구역 <strong>{zoneLabels[zoneId] ?? "확인 중"}</strong>
-        </p>
-        <button type="button" onClick={() => void load()}>
+      <div className="sx-summary">
+        <dl>
+          <div>
+            <dt>근무 구역</dt>
+            <dd>{zoneLabels[zoneId] ?? "확인 중"}</dd>
+          </div>
+          {summary && (
+            <>
+              <div>
+                <dt>오늘 접수</dt>
+                <dd>
+                  <b className="num">{summary.total}</b>건
+                </dd>
+              </div>
+              <div>
+                <dt>완료</dt>
+                <dd>
+                  <b className="num">{summary.done}</b>건
+                </dd>
+              </div>
+              <div className={summary.awaitingAttention > 0 ? "sx-alert" : ""}>
+                <dt>확인 지연</dt>
+                <dd>
+                  <b className="num">{summary.awaitingAttention}</b>건
+                </dd>
+              </div>
+            </>
+          )}
+        </dl>
+        <button type="button" className="sx-refresh" onClick={() => void load()}>
           새로고침
         </button>
       </div>
-      {summary && (
-        <p className="work-today">
-          오늘 접수 <strong>{summary.total}</strong>건 <span>·</span> 완료{" "}
-          <strong>{summary.done}</strong>건 <span>·</span> 확인 지연{" "}
-          <strong>{summary.awaitingAttention}</strong>건
-        </p>
-      )}
       <details className="work-preferences">
         <summary>알림·설정</summary>
         <Link className="btn" href="/staff/resources">

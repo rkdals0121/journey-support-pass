@@ -9,9 +9,11 @@ import {
   Ear,
   Eye,
   Footprints,
+  Keyboard,
   Navigation,
   Pencil,
   PersonStanding,
+  ScanLine,
 } from "lucide-react";
 import Link from "next/link";
 import { kioskHelpHref } from "@/lib/help-entry";
@@ -29,7 +31,7 @@ import { Choice, NumPad } from "../../components/Inputs";
 import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { Robot } from "../../components/Robot";
-import { TaskLauncher } from "../../components/TaskLauncher";
+import { KioskHome } from "../../components/KioskHome";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { Scanner } from "../../components/Scanner";
 import { StaffCall } from "../../components/StaffCall";
@@ -346,144 +348,163 @@ export function EntryKiosk({
     screen = shell(
       "sleep",
       `${t.entrySleep}. ${lang === "en" ? "Find a gate or request mobility assistance." : "탑승구와 시설을 찾거나 이동 도움을 요청할 수 있어요."} ${scanOpen ? t.entrySleepHint : ""}`,
-      <div className="robot-home robot-portrait">
-        <div className="robot-panel">
-          <p className="robot-title">{t.entryTitle}</p>
-          <h1 className="sr-only">{t.entrySleep}</h1>
-          <div className="robot-stage">
-            <Robot mood="awake" size={200} />
-            <p className="robot-bubble">{t.entrySleep}</p>
+      <KioskHome
+        en={lang === "en"}
+        here={here}
+        title={t.entrySleep}
+        lead={
+          lang === "en"
+            ? "Find your way or ask for mobility help. If you registered before your trip, show your boarding pass."
+            : "길을 찾거나 이동 도움을 받을 수 있어요. 미리 등록하셨다면 탑승권을 보여 주세요."
+        }
+        figure={
+          <div className="kx-robot" aria-hidden="true">
+            <Robot mood="awake" size={120} />
+            <span>{t.entryTitle}</span>
           </div>
-        </div>
-        <div className="robot-direct-services">
-          <TaskLauncher
-            en={lang === "en"}
-            returnTo="/kiosk/entry"
-            field
-            topics={["guidance", "mobility"]}
-          />
-        </div>
-        <Link
-          className="btn"
-          href={"/kiosk/visits" + (lang === "en" ? "?lang=en" : "")}
-        >
-          {lang === "en"
-            ? "Confirm a meeting appointment"
-            : "만남 예약 확인번호로 찾기"}
-        </Link>
-        <details
-          className="robot-number-entry"
-          open={numberOpen}
-          onToggle={(e) => {
-            const open = e.currentTarget.open;
-            setNumberOpen(open);
-            if (open) {
-              setScanOpen(false);
-              setError(null);
-            } else setPassNo("");
-          }}
-        >
-          <summary>
-            {lang === "en"
-              ? "Find by registration number"
-              : "고유 일련 번호로 찾기"}
-          </summary>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void findNumber();
-            }}
-          >
-            <label htmlFor="entry-pass-number">
-              {lang === "en"
-                ? "6-digit registration number"
-                : "고유 일련 번호 6자리"}
-            </label>
-            <input
-              id="entry-pass-number"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              maxLength={6}
-              pattern="[0-9]{6}"
-              value={passNo}
-              disabled={busy}
-              aria-invalid={!!error}
-              aria-describedby={error ? "entry-number-error" : undefined}
-              onChange={(e) =>
-                setPassNo(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-            />
-            {error && (
-              <div id="entry-number-error">
-                <ErrorNote>{error}</ErrorNote>
-              </div>
-            )}
-            <fieldset disabled={busy} className="entry-number-pad">
-              <legend className="sr-only">
-                {lang === "en" ? "Number pad" : "숫자 입력판"}
-              </legend>
-              <NumPad
-                onKey={(digit) =>
-                  setPassNo((value) => (value + digit).slice(0, 6))
+        }
+        topics={["guidance", "mobility"]}
+        returnTo="/kiosk/entry"
+        appointmentLabel={
+          lang === "en" ? "Confirm a meeting appointment" : "만남 예약 확인"
+        }
+        listen={<ListenStart t={t} />}
+        pass={
+          <>
+            <details
+              className="robot-pass-entry kx-pass-option"
+              open={scanOpen}
+              onToggle={(e) => {
+                setScanOpen(e.currentTarget.open);
+                if (e.currentTarget.open) {
+                  setNumberOpen(false);
+                  setError(null);
                 }
-                onErase={() => setPassNo((value) => value.slice(0, -1))}
-                eraseLabel={lang === "en" ? "Delete a digit" : "한 자리 지우기"}
-              />
-            </fieldset>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={busy || passNo.length !== 6}
+              }}
             >
-              {busy
-                ? lang === "en"
-                  ? "Checking…"
-                  : "확인 중…"
-                : lang === "en"
-                  ? "Retrieve saved needs"
-                  : "등록한 도움 불러오기"}
-            </button>
-          </form>
-        </details>
-        <details
-          className="robot-pass-entry"
-          open={scanOpen}
-          onToggle={(e) => {
-            setScanOpen(e.currentTarget.open);
-            if (e.currentTarget.open) {
-              setNumberOpen(false);
-              setError(null);
-            }
-          }}
-        >
-          <summary>
-            {lang === "en"
-              ? "Retrieve saved needs with your boarding pass"
-              : "탑승권으로 등록한 도움 불러오기"}
-          </summary>
-          {scanOpen && (
-            <div className="robot-scan">
-              <Scanner
-                onScan={(s) => void onScan(s)}
-                paused={busy}
-                prefer="user"
-                text={{
-                  starting: t.camStarting,
-                  ready: t.entrySleepHint,
-                  read: t.camRead,
-                  none: t.entryCamNone,
-                  switchCamera: t.camSwitch,
+              <summary>
+                <ScanLine aria-hidden="true" className="kx-pass-icon" />
+                <span>
+                  <strong>
+                    {lang === "en"
+                      ? "Retrieve saved needs with your boarding pass"
+                      : "탑승권으로 등록한 도움 불러오기"}
+                  </strong>
+                  <small>
+                    {lang === "en"
+                      ? "For passengers who registered before the trip"
+                      : "여행 전에 미리 등록하신 분"}
+                  </small>
+                </span>
+              </summary>
+              {scanOpen && (
+                <div className="robot-scan kx-pass-body">
+                  <Scanner
+                    onScan={(s) => void onScan(s)}
+                    paused={busy}
+                    prefer="user"
+                    text={{
+                      starting: t.camStarting,
+                      ready: t.entrySleepHint,
+                      read: t.camRead,
+                      none: t.entryCamNone,
+                      switchCamera: t.camSwitch,
+                    }}
+                  />
+                </div>
+              )}
+            </details>
+            <details
+              className="robot-number-entry kx-pass-option"
+              open={numberOpen}
+              onToggle={(e) => {
+                const open = e.currentTarget.open;
+                setNumberOpen(open);
+                if (open) {
+                  setScanOpen(false);
+                  setError(null);
+                } else setPassNo("");
+              }}
+            >
+              <summary>
+                <Keyboard aria-hidden="true" className="kx-pass-icon" />
+                <span>
+                  <strong>
+                    {lang === "en"
+                      ? "Find by registration number"
+                      : "고유 일련 번호로 찾기"}
+                  </strong>
+                  <small>
+                    {lang === "en"
+                      ? "The 6 digits shown after registering"
+                      : "등록을 마치면 받은 숫자 6자리"}
+                  </small>
+                </span>
+              </summary>
+              <form
+                className="kx-pass-body"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void findNumber();
                 }}
-              />
-            </div>
-          )}
-        </details>
-        <div className="robot-actions">
-          <ListenStart t={t} />
-        </div>
-        <p className="kiosk-foot">{here}</p>
-      </div>,
+              >
+                <label htmlFor="entry-pass-number">
+                  {lang === "en"
+                    ? "6-digit registration number"
+                    : "고유 일련 번호 6자리"}
+                </label>
+                <input
+                  id="entry-pass-number"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  value={passNo}
+                  disabled={busy}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "entry-number-error" : undefined}
+                  onChange={(e) =>
+                    setPassNo(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                />
+                {error && (
+                  <div id="entry-number-error">
+                    <ErrorNote>{error}</ErrorNote>
+                  </div>
+                )}
+                <fieldset disabled={busy} className="entry-number-pad">
+                  <legend className="sr-only">
+                    {lang === "en" ? "Number pad" : "숫자 입력판"}
+                  </legend>
+                  <NumPad
+                    onKey={(digit) =>
+                      setPassNo((value) => (value + digit).slice(0, 6))
+                    }
+                    onErase={() => setPassNo((value) => value.slice(0, -1))}
+                    eraseLabel={
+                      lang === "en" ? "Delete a digit" : "한 자리 지우기"
+                    }
+                  />
+                </fieldset>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={busy || passNo.length !== 6}
+                >
+                  {busy
+                    ? lang === "en"
+                      ? "Checking…"
+                      : "확인 중…"
+                    : lang === "en"
+                      ? "Retrieve saved needs"
+                      : "등록한 도움 불러오기"}
+                </button>
+              </form>
+            </details>
+          </>
+        }
+      />,
     );
   } else if (view.kind === "confirm") {
     // 미리 등록한 내용을 먼저 보여 주고, 고칠 것이 있으면 체크리스트 질문 그대로 고친다(피드백 3).

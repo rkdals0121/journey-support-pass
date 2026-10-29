@@ -4,6 +4,12 @@ import { Barlow_Condensed } from "next/font/google";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./styles/tokens.css";
 import "./styles/components.css";
+import "./styles/passenger.css";
+import "./styles/devices.css";
+import "./styles/staff.css";
+import "./styles/passenger-layout.css";
+import "./styles/staff-layout.css";
+import "./styles/kiosk-layout.css";
 
 // 본문은 Pretendard, 숫자(탑승구·시각·편명·번호)는 공항 표지판처럼 굵고 좁은 Barlow Condensed.
 const num = Barlow_Condensed({

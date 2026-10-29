@@ -182,28 +182,34 @@ export function KioskVisitFlow({
     >
       <SharedVisitPrivacy />
       <main className={styles.devicePage + " kiosk-appointment-page"}>
-        <p className={styles.eyebrow}>
+        <p className="kx-here">
+          <MapPin aria-hidden="true" />
           {en ? (hub?.en ?? "Airport device") : (hub?.label ?? place)}
         </p>
         <h1>{title}</h1>
         {!visit && !meetingPoint && (
           <form
-            className={styles.panel}
+            className="kx-code"
             aria-busy={busy}
             onSubmit={(e) => {
               e.preventDefault();
               void send("lookup");
             }}
           >
-            <div className={styles.field}>
-              <label htmlFor="kiosk-visit-reference">
+            <div className="kx-code-entry">
+              <p className="kx-lead">
                 {t(
-                  "예약 확인번호 · 8자리",
-                  "Appointment reference · 8 characters",
+                  "예약할 때 받은 확인번호 8자리를 오른쪽 자판으로 눌러 주세요.",
+                  "Use the keypad to enter the 8-character reference from your booking.",
                 )}
+              </p>
+              <label htmlFor="kiosk-visit-reference" className="kx-code-label">
+                {t("예약 확인번호", "Appointment reference")}
+                <span>{reference.length} / 8</span>
               </label>
               <input
                 id="kiosk-visit-reference"
+                className="kx-code-input num"
                 value={reference}
                 maxLength={8}
                 autoComplete="off"
@@ -216,25 +222,43 @@ export function KioskVisitFlow({
                   )
                 }
               />
+              {error && (
+                <p className={styles.error + " kx-code-error"} role="alert">
+                  {error}
+                </p>
+              )}
+              <button
+                className="btn btn-primary kx-code-submit"
+                type="submit"
+                disabled={busy || reference.length !== 8}
+              >
+                {busy
+                  ? t("확인 중…", "Finding…")
+                  : reference.length === 8
+                    ? t("예약 확인", "Find appointment")
+                    : t("8자리를 모두 눌러 주세요", "Enter all 8 characters")}
+              </button>
             </div>
             <div
-              className={styles.hexKeys}
+              className="kx-keypad"
+              role="group"
               aria-label={t("확인번호 입력 키패드", "Reference keypad")}
             >
-              {"1234567890ABCDEF".split("").map((key) => (
+              {"123AB456CD789EF".split("").map((key) => (
                 <button
                   key={key}
                   type="button"
+                  className={
+                    "kx-key num" + (/[A-F]/.test(key) ? " kx-key-letter" : "")
+                  }
                   disabled={busy || reference.length >= 8}
                   onClick={() => setReference((v) => (v + key).slice(0, 8))}
                 >
                   {key}
                 </button>
               ))}
-            </div>
-            <div className={styles.actions}>
               <button
-                className={styles.secondary}
+                className="kx-key kx-key-erase"
                 type="button"
                 disabled={busy || !reference}
                 onClick={() => setReference((v) => v.slice(0, -1))}
@@ -242,13 +266,21 @@ export function KioskVisitFlow({
                 {t("한 글자 지우기", "Delete one")}
               </button>
               <button
-                className={styles.button}
-                type="submit"
-                disabled={busy || reference.length !== 8}
+                key="0"
+                type="button"
+                className="kx-key num"
+                disabled={busy || reference.length >= 8}
+                onClick={() => setReference((v) => (v + "0").slice(0, 8))}
               >
-                {busy
-                  ? t("확인 중…", "Finding…")
-                  : t("예약 확인", "Find appointment")}
+                0
+              </button>
+              <button
+                className="kx-key kx-key-erase kx-key-wide"
+                type="button"
+                disabled={busy || !reference}
+                onClick={() => setReference("")}
+              >
+                {t("모두 지우기", "Clear")}
               </button>
             </div>
           </form>
@@ -372,7 +404,7 @@ export function KioskVisitFlow({
             onHandover={() => void send("handover")}
           />
         )}
-        {error && (
+        {error && (visit || meetingPoint) && (
           <p className={styles.error} role="alert">
             {error}
           </p>

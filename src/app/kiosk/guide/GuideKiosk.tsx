@@ -6,9 +6,11 @@ import {
   ClipboardList,
   Frown,
   Keyboard,
+  MapPin,
   Meh,
   Navigation,
   Pencil,
+  ScanLine,
   Smile,
   Sunrise,
 } from "lucide-react";
@@ -44,8 +46,7 @@ import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
-import { TaskLauncher } from "../../components/TaskLauncher";
-import Link from "next/link";
+import { KioskHome } from "../../components/KioskHome";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import {
@@ -510,46 +511,54 @@ export function GuideKiosk({
             }}
             onHome={reset}
           >
-            <h1>{t.numberTitle}</h1>
-            <p className="lead">{t.numberHint}</p>
-            <p className="sr-only" role="status">
-              {lang === "en"
-                ? `${digits.length} of ${PASS_NO_LENGTH} digits`
-                : `${PASS_NO_LENGTH}자리 중 ${digits.length}자리`}
-            </p>
-            <div className="code-boxes" role="group" aria-label={t.passNo}>
-              {Array.from({ length: PASS_NO_LENGTH }, (_, i) => (
-                <span
-                  key={i}
-                  className={`num ${digits[i] ? "filled" : ""} ${i === 2 ? "gap" : ""}`}
-                >
-                  {digits[i] ?? ""}
-                </span>
-              ))}
-            </div>
-            {/* 오류 문구는 잠시 뒤 사라진다. 그때 번호판이 위로 올라가면 누르려던 자리에 다른 키가 온다.
-                그래서 문구가 차지하던 자리는 비워 둔 채로 두고 글만 감춘다. */}
-            <div className="pad-status">
-              {error ? (
-                <ErrorNote>{error}</ErrorNote>
-              ) : lastError ? (
-                <div aria-hidden="true" className="ghost">
-                  <ErrorNote>{lastError}</ErrorNote>
+            <div className="kx-code kx-number">
+              <div className="kx-code-entry">
+                <p className="kx-here">
+                  <MapPin aria-hidden="true" />
+                  {here}
+                </p>
+                <h1>{t.numberTitle}</h1>
+                <p className="kx-lead">{t.numberHint}</p>
+                <p className="sr-only" role="status">
+                  {lang === "en"
+                    ? `${digits.length} of ${PASS_NO_LENGTH} digits`
+                    : `${PASS_NO_LENGTH}자리 중 ${digits.length}자리`}
+                </p>
+                <div className="code-boxes" role="group" aria-label={t.passNo}>
+                  {Array.from({ length: PASS_NO_LENGTH }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`num ${digits[i] ? "filled" : ""} ${i === 2 ? "gap" : ""}`}
+                    >
+                      {digits[i] ?? ""}
+                    </span>
+                  ))}
                 </div>
-              ) : busy ? (
-                // 여객이 누른 번호를 확인하는 중이다. QR 을 읽었다고 하면 카메라를 못 쓴 여객이 헷갈린다.
-                <p className="hint center">{t.numberChecking}</p>
-              ) : null}
+                {/* 오류 문구는 잠시 뒤 사라진다. 그때 번호판이 위로 올라가면 누르려던 자리에 다른 키가 온다.
+                그래서 문구가 차지하던 자리는 비워 둔 채로 두고 글만 감춘다. */}
+                <div className="pad-status">
+                  {error ? (
+                    <ErrorNote>{error}</ErrorNote>
+                  ) : lastError ? (
+                    <div aria-hidden="true" className="ghost">
+                      <ErrorNote>{lastError}</ErrorNote>
+                    </div>
+                  ) : busy ? (
+                    // 여객이 누른 번호를 확인하는 중이다. QR 을 읽었다고 하면 카메라를 못 쓴 여객이 헷갈린다.
+                    <p className="hint center">{t.numberChecking}</p>
+                  ) : null}
+                </div>
+              </div>
+              <NumPad
+                onKey={(k) =>
+                  setDigits((d) =>
+                    d.length < PASS_NO_LENGTH && !busy ? d + k : d,
+                  )
+                }
+                onErase={() => setDigits((d) => d.slice(0, -1))}
+                eraseLabel={t.erase}
+              />
             </div>
-            <NumPad
-              onKey={(k) =>
-                setDigits((d) =>
-                  d.length < PASS_NO_LENGTH && !busy ? d + k : d,
-                )
-              }
-              onErase={() => setDigits((d) => d.slice(0, -1))}
-              eraseLabel={t.erase}
-            />
           </FlowShell>
           {call}
           {idle}
@@ -584,50 +593,67 @@ export function GuideKiosk({
           }
           speakKey={scanOpen ? "boarding" : "services"}
         >
-          <div className="kiosk-scan-surface kiosk-taskhome">
-            <section className="kiosk-task-heading">
-              <p>
-                {lang === "en" ? "You are here" : "현재 위치"} · {here}
-              </p>
-              <h1>
-                {lang === "en"
-                  ? "What would you like to do?"
-                  : "어떤 서비스를 이용하시겠어요?"}
-              </h1>
-            </section>
-            <div className="kiosk-assist-toolbar"><ListenStart t={t} /></div>
-            <TaskLauncher en={lang === "en"} returnTo="/kiosk/guide" field />
-            <Link
-              className="btn kiosk-appointment-link"
-              href={"/kiosk/visits" + (lang === "en" ? "?lang=en" : "")}
-            >
-              {lang === "en"
-                ? "Confirm a meeting appointment"
-                : "예약 확인번호 입력"}
-            </Link>
-            <details
-              className="kiosk-personalise"
-              open={scanOpen}
-              onToggle={(e) => setScanOpen(e.currentTarget.open)}
-            >
-              <summary>
-                {lang === "en"
-                  ? "Retrieve registered support with a boarding pass"
-                  : "탑승권으로 등록한 도움 불러오기"}
-              </summary>
-              {scanOpen && (
-                <div className="kiosk-personalise-content">
-                  <div>
-                    <h2>
+          <KioskHome
+            en={lang === "en"}
+            here={here}
+            title={
+              lang === "en"
+                ? "What would you like to do?"
+                : "어떤 서비스를 이용하시겠어요?"
+            }
+            lead={
+              lang === "en"
+                ? "Choose a service on the right. If you registered before your trip, show your boarding pass."
+                : "필요한 서비스를 누르세요. 미리 등록하셨다면 탑승권을 보여 주세요."
+            }
+            returnTo="/kiosk/guide"
+            appointmentLabel={
+              lang === "en" ? "Confirm a meeting appointment" : "만남 예약 확인"
+            }
+            listen={<ListenStart t={t} />}
+            pass={
+              <details
+                className="kiosk-personalise kx-pass-option"
+                open={scanOpen}
+                onToggle={(e) => setScanOpen(e.currentTarget.open)}
+              >
+                <summary>
+                  <ScanLine aria-hidden="true" className="kx-pass-icon" />
+                  <span>
+                    <strong>
                       {lang === "en"
-                        ? "Show the code to the camera"
-                        : "탑승권의 코드를 보여 주세요"}
-                    </h2>
+                        ? "Retrieve registered support with a boarding pass"
+                        : "탑승권으로 등록한 도움 불러오기"}
+                    </strong>
+                    <small>
+                      {lang === "en"
+                        ? "For passengers who registered before the trip"
+                        : "여행 전에 미리 등록하신 분"}
+                    </small>
+                  </span>
+                </summary>
+                {scanOpen && (
+                  <div className="kx-pass-body">
+                    <div className="kiosk-scan-camera">
+                      <Scanner
+                        onScan={onScan}
+                        paused={busy}
+                        prefer="user"
+                        text={{
+                          starting: t.camStarting,
+                          ready: t.camReady,
+                          read: t.camRead,
+                          none: t.camNone,
+                          switchCamera: t.camSwitch,
+                        }}
+                      />
+                    </div>
                     <p>
                       {lang === "en"
-                        ? "Use a mobile or paper boarding pass."
-                        : "모바일·종이 탑승권을 모두 읽을 수 있어요."}
+                        ? "Hold a mobile or paper boarding pass up to the camera."
+                        : "모바일·종이 탑승권의 코드를 카메라에 대 주세요."}
                     </p>
+                    {error && <ErrorNote>{error}</ErrorNote>}
                     <button
                       className="btn"
                       onClick={() => setView({ kind: "number" })}
@@ -635,26 +661,11 @@ export function GuideKiosk({
                       <Keyboard aria-hidden="true" />
                       {t.scanNumber}
                     </button>
-                    {error && <ErrorNote>{error}</ErrorNote>}
                   </div>
-                  <div className="kiosk-scan-camera">
-                    <Scanner
-                      onScan={onScan}
-                      paused={busy}
-                      prefer="user"
-                      text={{
-                        starting: t.camStarting,
-                        ready: t.camReady,
-                        read: t.camRead,
-                        none: t.camNone,
-                        switchCamera: t.camSwitch,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </details>
-          </div>
+                )}
+              </details>
+            }
+          />
         </FlowShell>
         {call}
       </>
@@ -943,68 +954,80 @@ export function GuideKiosk({
         onHome={reset}
       >
         {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
-        <h1 className="kicker">{t.guideHello}</h1>
-        {edited && <Banner role="status">{t.editSaved}</Banner>}
-        <FlightBoard flight={flight} t={t} lang={lang} />
-        {offlineNow ? (
-          <Banner role="status">{t.kioskOffline}</Banner>
-        ) : (
-          guide.poll.stale && <Banner role="status">{t.stale}</Banner>
-        )}
+        <div className="kx-guide">
+          <div className="kx-guide-main">
+            <h1 className="kicker">{t.guideHello}</h1>
+            {edited && <Banner role="status">{t.editSaved}</Banner>}
+            <FlightBoard flight={flight} t={t} lang={lang} />
+            {offlineNow ? (
+              <Banner role="status">{t.kioskOffline}</Banner>
+            ) : (
+              guide.poll.stale && <Banner role="status">{t.stale}</Banner>
+            )}
 
-        {guide.gateRoute && flight.gate !== null ? (
-          <button
-            className={`gate-go pace-${guide.pace ?? "ok"}`}
-            onClick={() =>
-              setView({
-                kind: "route",
-                target: { type: "gate", gate: flight.gate as number },
-              })
-            }
-          >
-            <span className="gate-go-ico">
-              <Navigation size={32} aria-hidden="true" />
-            </span>
-            <span className="gate-go-text">
-              <strong>{t.toGate(flight.gate)}</strong>
-              <RouteSummary route={guide.gateRoute} t={t} />
-              {guide.pace && (
-                <span className="gate-go-pace">{paceText(guide.pace, t)}</span>
-              )}
-            </span>
-            <ChevronRight size={28} aria-hidden="true" />
-          </button>
-        ) : (
-          noteText && <Banner role="status">{noteText}</Banner>
-        )}
-
-        {chosen.length > 0 && (
-          <>
-            <h2>{otherTerminal ? t.nearHere : t.myPlaces}</h2>
-            <div className="tiles">{chosen.map(tile)}</div>
-          </>
-        )}
-        {others.length > 0 && (
-          <>
-            {/* 고른 시설이 없으면 이 목록은 이 자리에서 종류마다 가장 가까운 곳이다. 영어의 myPlaces 는 "Places you chose"라
+            {guide.gateRoute && flight.gate !== null ? (
+              <button
+                className={`gate-go pace-${guide.pace ?? "ok"}`}
+                onClick={() =>
+                  setView({
+                    kind: "route",
+                    target: { type: "gate", gate: flight.gate as number },
+                  })
+                }
+              >
+                <span className="gate-go-ico">
+                  <Navigation size={32} aria-hidden="true" />
+                </span>
+                <span className="gate-go-text">
+                  <strong>{t.toGate(flight.gate)}</strong>
+                  <RouteSummary route={guide.gateRoute} t={t} />
+                  {guide.pace && (
+                    <span className="gate-go-pace">
+                      {paceText(guide.pace, t)}
+                    </span>
+                  )}
+                </span>
+                <ChevronRight size={28} aria-hidden="true" />
+              </button>
+            ) : (
+              noteText && <Banner role="status">{noteText}</Banner>
+            )}
+            <div className="kx-guide-actions">
+              <button
+                className="btn"
+                onClick={() => setView({ kind: "saved" })}
+              >
+                <ClipboardList size={22} aria-hidden="true" />
+                {t.savedTitle}
+              </button>
+              <button
+                className="btn finish-btn"
+                onClick={() => setView({ kind: "survey" })}
+              >
+                {t.finish}
+              </button>
+            </div>
+          </div>
+          <div className="kx-guide-side">
+            {chosen.length > 0 && (
+              <>
+                <h2>{otherTerminal ? t.nearHere : t.myPlaces}</h2>
+                <div className="tiles">{chosen.map(tile)}</div>
+              </>
+            )}
+            {others.length > 0 && (
+              <>
+                {/* 고른 시설이 없으면 이 목록은 이 자리에서 종류마다 가장 가까운 곳이다. 영어의 myPlaces 는 "Places you chose"라
                 고르지 않은 여객에게 틀린 말이 되므로, 고른 것이 없을 때는 "가까운 시설"이라고 밝힌다. */}
-            <h2>{chosen.length > 0 ? t.otherPlaces : t.nearHere}</h2>
-            <div className="tiles tiles-small">{others.map(tile)}</div>
-          </>
-        )}
-        <button className="btn" onClick={() => setView({ kind: "saved" })}>
-          <ClipboardList size={22} aria-hidden="true" />
-          {t.savedTitle}
-        </button>
-        <button
-          className="btn finish-btn"
-          onClick={() => setView({ kind: "survey" })}
-        >
-          {t.finish}
-        </button>
-        <p className="fine">
-          {here} · {t.mock}
-        </p>
+                <h2>{chosen.length > 0 ? t.otherPlaces : t.nearHere}</h2>
+                <div className="tiles tiles-small">{others.map(tile)}</div>
+              </>
+            )}
+            <p className="fine">
+              {here} · {t.mock}
+            </p>
+          </div>
+        </div>
       </FlowShell>
       {call}
       {idle}
