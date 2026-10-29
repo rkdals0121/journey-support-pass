@@ -28,6 +28,7 @@ import {
 import { EXITS, courseFits, gateProblem, makeCourse, stampEligibility } from "@/lib/stamp-routing";
 import { Emblem, Haneul, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
+import { StartMap } from "./StartMap";
 import "./stamp.css";
 
 type View = "themes" | "cover" | "home" | "scan" | "got" | "done" | "camera";
@@ -386,33 +387,44 @@ export function StampBook({ scanned }: { scanned?: string }) {
                 />
               </label>
               {s.mode === "route" && (
-                <label>
-                  지금 있는 곳 · 출국심사를 마친 뒤
-                  <select
-                    value={s.startHub || ""}
-                    onChange={(e) => update({ startHub: e.target.value, course: [] })}
-                  >
-                    <option value="" disabled>
-                      지금 있는 곳 고르기
-                    </option>
-                    <optgroup label="출국심사를 막 마쳤어요">
-                      {EXITS.map((e) => (
-                        <option key={e.id} value={e.id}>
-                          {e.label}
+                <>
+                  <StartMap
+                    gate={s.gate}
+                    value={s.startHub}
+                    onPick={(id) => update({ startHub: id, course: [] })}
+                  />
+                  {/* 지도가 불편하거나 화면 읽기 프로그램을 쓰면 목록으로 고른다. */}
+                  <details className="sb-map-list">
+                    <summary>목록으로 고르기</summary>
+                    <label>
+                      지금 있는 곳 · 출국심사를 마친 뒤
+                      <select
+                        value={s.startHub || ""}
+                        onChange={(e) => update({ startHub: e.target.value, course: [] })}
+                      >
+                        <option value="" disabled>
+                          지금 있는 곳 고르기
                         </option>
-                      ))}
-                    </optgroup>
-                    {(["T1", "CONCOURSE", "T2"] as const).map((a) => (
-                      <optgroup key={a} label={`이 체크포인트 근처예요 · ${AREA_LABEL[a]}`}>
-                        {CHECKPOINTS.filter((c) => c.area === a).map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.code} · {c.place}
-                          </option>
+                        <optgroup label="출국심사를 막 마쳤어요">
+                          {EXITS.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                        {(["T1", "CONCOURSE", "T2"] as const).map((a) => (
+                          <optgroup key={a} label={`이 체크포인트 근처예요 · ${AREA_LABEL[a]}`}>
+                            {CHECKPOINTS.filter((c) => c.area === a).map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.code} · {c.place}
+                              </option>
+                            ))}
+                          </optgroup>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
+                      </select>
+                    </label>
+                  </details>
+                </>
               )}
               <label>
                 탑승 시각 · 한국시간 · 선택
@@ -881,7 +893,7 @@ function Stops({ s, indices, gate }: { s: BookState; indices: number[]; gate?: s
           );
         })}
       </ol>
-      <p className="sb-hint">탑승구 위치 © OpenStreetMap contributors</p>
+      <p className="sb-hint">탑승구 위치: 인천국제공항 공식 지도</p>
     </>
   );
 }
