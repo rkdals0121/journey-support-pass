@@ -20,7 +20,7 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
 .orbit-two { transform:scale(.75); border-style:dashed; }
 .haneuli-start { display:flex; justify-content:space-between; align-items:center; gap:24px; width:100%; min-height:64px; border:0; border-radius:16px; padding:16px 20px; background:var(--h-green); color:white; font:inherit; font-weight:700; font-size:20px; cursor:pointer; }
 .haneuli-menu { position:relative; align-self:stretch; padding:28px; border-radius:28px; background:#eff2e7; transition:background .7s,box-shadow .7s; }
-.haneuli-menu-heading > span { color:#667757; font-size:13px; font-weight:700; letter-spacing:.1em; }
+.haneuli-menu-heading > span { color:#4a5a3c; font-size:13px; font-weight:700; letter-spacing:.1em; }
 .haneuli-menu-heading h2 { font-size:24px; margin:12px 0 24px; color:var(--h-ink); }
 .haneuli-service-grid { transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .7s; transform-origin:center; }
 .haneuli-service-grid .task-launcher { display:contents; }
@@ -30,7 +30,7 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
 .haneuli-service-grid .task-action-link { display:flex; gap:8px; justify-content:space-between; align-items:center; color:var(--h-ink); text-decoration:none; flex:1; }
 .haneuli-service-grid .task-action-link::after { position:absolute; content:""; inset:0; border-radius:18px; }
 .haneuli-service-grid .task-action-link strong { display:block; font-size:21px; line-height:1.35; }
-.haneuli-service-grid .task-action-link small { display:block; font-size:14px; line-height:1.5; color:#63715f; margin-top:7px; }
+.haneuli-service-grid .task-action-link small { display:block; font-size:14px; line-height:1.5; color:#4a5a3c; margin-top:7px; }
 .haneuli-service-grid .task-action-link > svg { width:20px; flex-shrink:0; }
 .haneuli-service-grid .task-action-mobility { background:#fff2ba; border-color:#edda87; }
 .haneuli-service-grid .task-action-guidance { background:#dde9d3; border-color:#ccdabc; }
@@ -78,7 +78,6 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
  body:has(.haneuli-welcome) .flow-bar-side { display:flex; flex-direction:row; flex-wrap:wrap; gap:4px; }
  body:has(.haneuli-welcome) .call-dock { top:0; }
  body:has(.haneuli-welcome) .call-dock-inner { height:70px; }
- body:has(.haneuli-welcome) .call-btn { font-size:14px; padding:10px 14px; }
 }/* Landscape kiosks use the available viewport, including laptop-height screens.
    The garden and service rows absorb the height difference, rather than pushing
    the scanner below the fold. No overflow clipping is used to conceal controls. */
@@ -90,8 +89,7 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
   body:has(.haneuli-welcome) .brand small { font-size:12px; }
   body:has(.haneuli-welcome) .brand .sunflower { width:40px; height:40px; }
   body:has(.haneuli-welcome) .flow-bar .bar-btn { font-size:18px; min-height:44px; padding:8px 12px; }
-  body:has(.haneuli-welcome) .call-dock-inner { height:76px; padding:8px 20px; }
-  body:has(.haneuli-welcome) .call-btn { font-size:18px; min-height:48px; padding:10px 20px; }
+  /* 「도움 요청하기」 크기·자리는 다른 키오스크 화면과 같게 둔다(kiosk-layout.css). */
   .flow:has(.haneuli-welcome) .flow-workspace,
   .flow:has(.haneuli-welcome) .flow-form-area { min-height:0; height:100%; }
   html[data-kiosk] .flow:has(.haneuli-welcome) .flow-body { min-height:0; height:100%; flex:1 1 0; padding:12px 24px; }
