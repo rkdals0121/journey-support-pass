@@ -1,0 +1,291 @@
+/*
+  키오스크·안내로봇 화면 구성.
+  색·글자·간격·움직임은 tokens.css 의 값만 쓴다. 이 파일은 맨 마지막에 읽혀 앞 파일의 같은 요소 규칙을 덮는다.
+  가로 화면: 왼쪽은 「여기가 어디고 무엇을 하는 화면인지」, 오른쪽은 누를 것.
+  세로 화면(안내로봇·세로 키오스크): 위에서 아래로 같은 순서.
+*/
+
+/* 휴대전화의 도움 줄 높이. 공통 체계로 옮기며 빠져서 도움 줄이 본문 첫 줄을 가리고 있었다. */
+:root { --call-h: 3.25rem; }
+
+/* ── 머리 ──
+   머리는 화면 끝까지 흰 띠로 깔고, 안의 내용은 본문과 같은 너비로 맞춘다.
+   키오스크의 「도움 요청하기」(직원 부르기)는 머리 줄의 오른쪽 끝에 둔다. 어느 화면에서나 같은 자리이고, 따로 한 줄을 차지하지 않는다.
+   노랑은 이 버튼에만 쓴다. */
+html[data-kiosk] { --call-h: 0rem; --call-w: 14rem; }
+html[data-kiosk] .flow-bar {
+  border-bottom: 0.0625rem solid var(--color-line);
+  box-shadow: 0 0 0 100vmax var(--color-surface);
+  clip-path: inset(0 -100vmax);
+}
+html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; padding-right: calc(var(--call-w) + 1.25rem); }
+html[data-kiosk] .call-dock {
+  top: 0;
+  left: auto;
+  right: max(0rem, calc((100vw - var(--col)) / 2));
+  z-index: 21;
+  border: 0;
+  background: transparent;
+}
+html[data-kiosk] .call-dock-inner { height: var(--bar-real, var(--bar-h)); padding: 0 1.25rem; }
+html[data-kiosk] .call-btn {
+  min-height: 3rem;
+  padding: 0.5rem 1.25rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-text);
+  font-size: var(--text-body);
+  font-weight: var(--weight-heading);
+  transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
+}
+html[data-kiosk] .call-btn:active { transform: scale(0.98); }
+html[data-kiosk] .call-btn svg { width: 1.375rem; height: 1.375rem; }
+
+/* ── 처음 화면 ── */
+.kx-home {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-7);
+  align-items: start;
+  padding: var(--space-5) 0 var(--space-6);
+}
+.kx-home-intro { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.kx-here {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  line-height: 1.4;
+}
+.kx-here svg { width: 1.125rem; height: 1.125rem; flex: none; }
+html[data-kiosk] .flow-body .kx-home-intro h1 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-title);
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+}
+.kx-lead { margin: 0 0 var(--space-6); color: var(--color-muted); font-size: var(--text-body); line-height: 1.6; }
+
+/* 미리 등록한 도움 불러오기: 이 서비스의 핵심이라 첫 화면 왼쪽에 크게 둔다. */
+.kx-pass { display: grid; gap: var(--space-3); width: 100%; }
+.kx-pass-option {
+  margin: 0;
+  border: 0.0625rem solid var(--color-line);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+.kx-pass-option[open] { border-color: var(--color-primary); }
+.kx-pass-option > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 5.5rem;
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-text);
+  list-style: none;
+  cursor: pointer;
+}
+.kx-pass-option > summary::-webkit-details-marker { display: none; }
+.kx-pass-option > summary::after {
+  content: "";
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin: 0 var(--space-1) 0 auto;
+  border-right: 0.125rem solid var(--color-muted);
+  border-bottom: 0.125rem solid var(--color-muted);
+  transform: rotate(45deg);
+  transition: transform var(--motion-normal) var(--ease-out);
+}
+.kx-pass-option[open] > summary::after { transform: rotate(-135deg); }
+.kx-pass-option > summary strong { display: block; font-size: var(--text-body); font-weight: var(--weight-heading); line-height: 1.4; }
+.kx-pass-option > summary small { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+.kx-pass-icon {
+  flex: none;
+  box-sizing: content-box;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-medium);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+.kx-pass-body { display: grid; gap: var(--space-4); padding: 0 var(--space-5) var(--space-5); }
+.kx-pass-body .scanner { max-width: 18rem; margin: 0; }
+.kx-pass-body > p { margin: 0; color: var(--color-muted); font-size: var(--text-small); line-height: 1.6; }
+.kx-pass-body .btn { justify-self: start; width: auto; margin: 0; }
+.kx-listen { margin-top: var(--space-5); }
+.kx-listen .listen-start { width: auto; min-height: 3rem; margin: 0; }
+
+/* 바로 이용하기: 같은 크기의 칸. 가장 많이 쓰는 길 찾기만 초록으로 칠한다. */
+.kx-home-services { min-width: 0; }
+.kx-home-services h2 {
+  margin: 0 0 var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  letter-spacing: 0.02em;
+}
+.kx-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.kx-tiles .task-launcher { display: contents; }
+.kx-tiles .task-action {
+  grid-column: auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  min-height: 7rem;
+  margin: 0;
+  padding: var(--space-5);
+  border: 0.0625rem solid var(--color-line);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  transition: background-color var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
+}
+.kx-tiles .task-action:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
+.kx-tiles .task-action:active { transform: scale(0.99); }
+.kx-tiles .task-action-icon { width: 2rem; height: 2rem; margin: 0; color: var(--color-primary); }
+.kx-tiles .task-action-link { width: 100%; align-items: flex-end; margin-top: auto; }
+.kx-tiles .task-action-link strong { color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); }
+.kx-tiles .task-action-link small { margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+.kx-tiles .task-action-link > svg { width: 1.375rem; height: 1.375rem; color: var(--color-primary); }
+.kx-tiles .task-action-guidance { border-color: var(--color-primary); background: var(--color-primary); }
+.kx-tiles .task-action-guidance:hover { border-color: var(--color-primary-hover); background: var(--color-primary-hover); }
+.kx-tiles .task-action-guidance :is(.task-action-icon, strong, small, .task-action-link > svg) { color: var(--color-surface); }
+.kx-tiles-few .task-action-appointment { grid-column: 1 / -1; min-height: 6rem; }
+
+/* 세로 화면과 좁은 화면: 위에서 아래로 */
+@media (orientation: portrait), (max-width: 56rem) {
+  .kx-home { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); padding-top: var(--space-5); }
+  .kx-lead { margin-bottom: var(--space-5); }
+}
+@media (max-width: 30rem) {
+  .kx-tiles { grid-template-columns: minmax(0, 1fr); }
+  .kx-tiles .task-action { min-height: 6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kx-pass-option, .kx-pass-option > summary::after, .kx-tiles .task-action, html[data-kiosk] .call-btn { transition: none; }
+  .kx-tiles .task-action:active, html[data-kiosk] .call-btn:active { transform: none; }
+}
+
+/* ── 번호 넣는 화면 (만남 예약 확인번호) ──
+   왼쪽: 무엇을 넣는지, 넣은 번호, 확인 버튼. 오른쪽: 자판(숫자는 왼쪽 세 줄, 글자는 오른쪽 두 줄). */
+html[data-kiosk] .kiosk-appointment-page { width: auto; max-width: none; margin: 0; padding: var(--space-5) 0 var(--space-6); }
+html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-title);
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+}
+.kx-code { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-7); align-items: start; }
+.kx-code-entry { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.kx-code-entry .kx-lead { margin: 0 0 var(--space-2); }
+.kx-code-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--color-text);
+  font-size: var(--text-body);
+  font-weight: var(--weight-label);
+}
+.kx-code-label span { color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-body); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-code-input {
+  width: 100%;
+  min-height: 5rem;
+  padding: 0 var(--space-5);
+  border: 0.125rem solid var(--color-control-line);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-large);
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+.kiosk-appointment-page .kx-code-input::placeholder { color: var(--color-line); }
+.kiosk-appointment-page .kx-code-input:focus-visible { border-color: var(--color-primary); outline: 0.1875rem solid var(--color-primary-soft); outline-offset: 0; }
+.kx-code-error { margin: 0; }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-code-submit { width: 100%; min-height: 4.5rem; margin: var(--space-2) 0 0; font-size: var(--text-heading); }
+.kiosk-appointment-page .kx-code-submit:disabled { border-color: var(--color-line); background: var(--color-primary-faint); color: var(--color-muted); opacity: 1; }
+
+.kx-keypad { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key {
+  min-height: 5rem;
+  margin: 0;
+  border: 0.0625rem solid var(--color-control-line);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-title);
+  font-weight: var(--weight-label);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
+}
+html[data-kiosk] .flow-body .kx-keypad .kx-key:nth-child(5n + 4) { margin-left: var(--space-3); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-letter { background: var(--color-primary-faint); }
+.kiosk-appointment-page .kx-key:active:not(:disabled) { background: var(--color-primary-soft); transform: scale(0.97); }
+.kiosk-appointment-page .kx-key:disabled { color: var(--color-line); cursor: default; }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family: var(--font-body); font-size: var(--text-small); }
+html[data-kiosk] .flow-body .kx-keypad .kx-key-wide { grid-column: span 3; margin-left: var(--space-3); }
+.kiosk-appointment-page .kx-key:focus-visible { outline: 0.1875rem solid var(--color-focus); outline-offset: 0.125rem; }
+
+@media (orientation: portrait), (max-width: 56rem) {
+  .kx-code { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .kx-code-entry { order: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-appointment-page .kx-key { transition: none; }
+  .kiosk-appointment-page .kx-key:active:not(:disabled) { transform: none; }
+}
+
+/* ── 고유 일련 번호 넣는 화면 ── 같은 틀: 왼쪽 번호 칸, 오른쪽 숫자판 */
+html[data-kiosk] .flow-body .kx-number { padding: var(--space-5) 0 var(--space-6); align-items: center; }
+html[data-kiosk] .flow-body .kx-number h1 { margin: 0; font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.3; letter-spacing: -0.03em; }
+html[data-kiosk] .flow-body .kx-number .kx-here { align-self: flex-start; margin-bottom: var(--space-2); }
+html[data-kiosk] .flow-body .kx-number .code-boxes { justify-content: flex-start; margin: var(--space-2) 0 0; }
+html[data-kiosk] .flow-body .kx-number .code-boxes span { width: 3.5rem; height: 4.5rem; background: var(--color-surface); }
+html[data-kiosk] .flow-body .kx-number .pad-num { width: 100%; max-width: 30rem; margin: 0 auto; gap: var(--space-3); }
+html[data-kiosk] .flow-body .kx-number .pad-key { min-height: 5rem; box-shadow: none; border-width: 0.0625rem; transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
+html[data-kiosk] .flow-body .kx-number .pad-key:active { background: var(--color-primary-soft); transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-kiosk] .flow-body .kx-number .pad-key { transition: none; }
+  html[data-kiosk] .flow-body .kx-number .pad-key:active { transform: none; }
+}
+
+/* ── 입구 안내로봇 처음 화면 ── 같은 틀에 로봇 얼굴만 더한다 */
+.kx-robot { display: flex; align-items: center; gap: var(--space-4); margin: 0 0 var(--space-4); }
+.kx-robot span { color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-label); }
+.kx-pass-body label { color: var(--color-text); font-size: var(--text-small); font-weight: var(--weight-label); }
+html[data-kiosk] .flow-body .kx-pass-body input[inputmode="numeric"] {
+  width: 100%;
+  min-height: 4rem;
+  border: 0.125rem solid var(--color-control-line);
+  border-radius: var(--radius-medium);
+  font-family: var(--font-num);
+  font-size: var(--text-title);
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+.kx-pass-body .entry-number-pad { margin: 0; padding: 0; border: 0; }
+html[data-kiosk] .flow-body .kx-pass-body .pad-num { max-width: none; margin: 0; }
+html[data-kiosk] .flow-body .kx-pass-body .pad-key { min-height: 4rem; box-shadow: none; }
+html[data-kiosk] .flow-body .kx-pass-body .btn-primary { justify-self: stretch; width: 100%; min-height: 4rem; }
+/* 예전 안내로봇 칸 모양(테두리·안쪽 여백·목록 표시)을 지운다. */
+.kx-pass .robot-number-entry, .kx-pass .robot-pass-entry { padding: 0; border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); }
+.kx-pass .robot-number-entry[open], .kx-pass .robot-pass-entry[open] { border-color: var(--color-primary); }
+.kx-pass .robot-number-entry > summary, .kx-pass .robot-pass-entry > summary { display: flex; min-height: 5.5rem; padding: var(--space-4) var(--space-5); color: var(--color-text); font-size: var(--text-body); }
+.kx-pass .robot-number-entry form { margin: 0; }
+.kx-pass .robot-pass-entry .robot-scan { width: 100%; padding: 0 var(--space-5) var(--space-5); border: 0; }
+@media (orientation: portrait) {
+  .kx-robot svg { width: 9rem; height: auto; }
+  .kx-robot span { font-size: var(--text-body); }
+}

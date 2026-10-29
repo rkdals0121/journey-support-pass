@@ -397,12 +397,15 @@ async function callSpot(page: Page): Promise<string | null> {
   });
 }
 
-/** 「도움 요청하기」가 위쪽 줄의 버튼(이전, 처음으로, 설정)을 가리지 않고 그 아래에 있는가. */
-async function callBelowBar(page: Page): Promise<boolean> {
+/**
+ * 「도움 요청하기」가 위쪽 줄의 버튼(이전, 처음으로, 설정)을 가리지 않는가.
+ * 키오스크에서는 위쪽 줄의 오른쪽 끝에, 휴대전화에서는 위쪽 줄 바로 아래에 있다. 어느 쪽이든 겹치지만 않으면 된다.
+ */
+async function callClearOfBar(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const call = document.querySelector(".call-btn")?.getBoundingClientRect();
     const buttons = [...document.querySelectorAll(".flow-bar .bar-btn")].map((b) => b.getBoundingClientRect());
-    return !!call && buttons.length >= 3 && buttons.every((b) => b.bottom <= call.top + 1);
+    return !!call && buttons.length >= 3 && buttons.every((b) => b.right <= call.left + 1 || b.left >= call.right - 1 || b.bottom <= call.top + 1 || b.top >= call.bottom - 1);
   });
 }
 
@@ -880,7 +883,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "이 기기에서는 카메라를 쓸 수 없습니다");
   check("카메라가 없으면 번호를 누르라고 알려 준다", true);
   const callAt = await callSpot(page);
-  check("처음 화면에도 「도움 요청하기」가 있다. 「이전·처음으로·설정」 줄 바로 아래에 있고 그 버튼들을 가리지 않는다", callAt !== null && (await callBelowBar(page)), String(callAt));
+  check("처음 화면에도 「도움 요청하기」가 있다. 「이전·처음으로·설정」 줄의 버튼들을 가리지 않는다", callAt !== null && (await callClearOfBar(page)), String(callAt));
   check("처음 화면에는 여객 정보가 하나도 없다", !(await has(page, "MK1")));
   await clickText(page, ".listen-start", "소리로 안내 듣기");
   await page.waitForFunction(() => document.querySelector(".listen-start")?.getAttribute("aria-pressed") === "true", { timeout: WAIT });
@@ -916,7 +919,7 @@ async function resetFlights(clearLocks = false) {
   check("'제가 필요할 때 부를게요'를 고른 여객에게는 「도움 요청하기」가 크게 보인다", (await count(page, ".call-btn.call-big")) === 1);
   check("모의 자료라는 안내가 화면에 있다", await has(page, "시연용 모의 자료"));
   check("안내 화면에 이름이 없다", !(await has(page, "이름")));
-  check("안내 화면에서도 「도움 요청하기」가 위쪽 줄의 버튼을 가리지 않는다", await callBelowBar(page));
+  check("안내 화면에서도 「도움 요청하기」가 위쪽 줄의 버튼을 가리지 않는다", await callClearOfBar(page));
   await clickText(page, ".bar-btn", "설정");
   await waitText(page, "화면 설정");
   await clickText(page, ".size-pick button", "아주 크게");
@@ -925,9 +928,9 @@ async function resetFlights(clearLocks = false) {
   await page.waitForFunction(() => {
     const call = document.querySelector(".call-btn")?.getBoundingClientRect();
     const buttons = [...document.querySelectorAll(".flow-bar .bar-btn")].map(b => b.getBoundingClientRect());
-    return !!call && buttons.length >= 3 && buttons.every(b => b.bottom <= call.top + 1);
+    return !!call && buttons.length >= 3 && buttons.every(b => b.right <= call.left + 1 || b.left >= call.right - 1 || b.bottom <= call.top + 1 || b.top >= call.bottom - 1);
   }, {timeout:WAIT});
-  check("키오스크에서도 설정으로 글자와 그림을 더 키울 수 있다. 「도움 요청하기」는 여전히 위쪽 줄 아래에 있다", (await rootPx(page)) > kPx && (await callBelowBar(page)));
+  check("키오스크에서도 설정으로 글자와 그림을 더 키울 수 있다. 「도움 요청하기」는 여전히 위쪽 줄의 버튼을 가리지 않는다", (await rootPx(page)) > kPx && (await callClearOfBar(page)));
   check("글자를 아주 크게 해도 설정의 닫는 버튼이 화면 안에 보인다 (안내키오스크)", await closeInView(page));
   await shot(page, "안내키오스크-설정-아주크게");
   await clickText(page, ".sheet-box button", "처음 고른 대로 되돌리기");
