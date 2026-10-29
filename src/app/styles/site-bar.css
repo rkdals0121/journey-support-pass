@@ -1,7 +1,7 @@
 /*
-  사이트 전체의 위쪽 바를 하나의 모양으로 맞춘다. 기준은 사전등록 화면의 둥근 바(해바라기 노랑이 옅게 번지는 흰 띠).
+  사이트 전체의 위쪽 바를 하나의 모양으로 맞춘다. 기준은 메인 화면의 둥근 바(해바라기 노랑이 옅게 번지는 흰 띠).
   여객 공용 머리(PublicShell), 여행 전 등록 첫 화면(/prepare), 키오스크의 서비스 화면(FieldTaskShell)이 같은 모양을 쓴다.
-  키오스크 처음 화면과 안내 화면(html[data-kiosk] 의 FlowShell)은 화면 끝까지 까는 흰 띠를 그대로 둔다.
+  키오스크의 FlowShell도 같은 바 크기를 쓴다.
   이 파일은 맨 마지막에 읽힌다.
 */
 
@@ -111,4 +111,46 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
   /* 소리 안내는 그림만 보인다(이름은 aria-label 에 있다). 아랫줄이 화면 폭을 넘지 않게. */
   .flow-pretrip .bar-listen > span { display: none; }
   .flow-pretrip .flow-bar-right { flex-wrap: wrap; min-width: 0; }
+}
+
+/* Main-page dimensions are shared by every passenger and kiosk header. */
+:root {
+  --site-bar-width: 1344px;
+  --site-bar-height: 98px;
+  --site-bar-gutter: 20px;
+}
+.public-site .public-header,
+.pretrip-site .pretrip-header,
+.field-task-shell .field-task-header,
+.flow .flow-bar,
+html[data-kiosk] .flow .flow-bar {
+  box-sizing: border-box;
+  width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  max-width: var(--site-bar-width);
+  min-height: var(--site-bar-height);
+  margin: 12px auto 0;
+  padding: 8px 12px 8px 24px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 45%);
+  box-shadow: var(--shadow-1);
+  clip-path: none;
+  align-self: center;
+}
+@media (min-width: 60rem) {
+  .public-site .public-header,
+  .pretrip-site .pretrip-header,
+  .field-task-shell .field-task-header,
+  .flow .flow-bar,
+  html[data-kiosk] .flow .flow-bar { height: var(--site-bar-height); flex-shrink: 0; }
+}
+@media (max-width: 40rem) {
+  :root { --site-bar-gutter: 12px; --site-bar-height: 128px; }
+  .public-site .public-header,
+  .pretrip-site .pretrip-header,
+  .field-task-shell .field-task-header,
+  .flow .flow-bar,
+  html[data-kiosk] .flow .flow-bar {
+    height: auto; border-radius: var(--radius-medium); padding: var(--space-2) var(--space-3);
+  }
 }
