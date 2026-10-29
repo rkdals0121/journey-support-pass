@@ -110,6 +110,11 @@ html[data-kiosk] .flow-body .kx-home-intro h1 {
 .kx-pass-option[open] > summary::after { transform: rotate(-135deg); }
 .kx-pass-option > summary strong { display: block; font-size: var(--text-body); font-weight: var(--weight-heading); line-height: 1.4; }
 .kx-pass-option > summary small { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+/* 「여기서 도움 새로 등록하기」: 위 두 칸(펼치는 칸)과 같은 모양의 누르는 칸 */
+.kx-pass-new { display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: 5.5rem; padding: var(--space-4) var(--space-5); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.kx-pass-new strong { display: block; font-size: var(--text-body); font-weight: var(--weight-heading); line-height: 1.4; }
+.kx-pass-new small { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+.kx-pass-new:hover, .kx-pass-new:focus-visible { border-color: var(--color-primary); }
 .kx-pass-icon {
   flex: none;
   box-sizing: content-box;

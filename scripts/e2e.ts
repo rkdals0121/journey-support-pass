@@ -654,6 +654,21 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".flow-cta button", "다음");
 
   await waitText(page, "타실 항공편을 알려 주세요");
+  // 사전등록은 예약번호로 찾는 칸이 먼저 열린다. 지금은 항공사와 연결되어 있지 않아 시연 예약(DEMO01 / KIM)만 찾는다.
+  check("사전등록의 항공편은 예약번호로 찾기가 먼저 열린다", (await count(page, "#reg-booking-ref")) === 1 && (await count(page, "#reg-flight")) === 0);
+  await fill(page, "#reg-booking-ref", "nope99");
+  await fill(page, "#reg-booking-surname", "kim");
+  await clickText(page, ".booking-find button", "예약 조회");
+  await waitText(page, "찾지 못했습니다");
+  check("없는 예약번호는 찾지 못했다고 알려 준다", (await isDisabled(page, "다음")) === true);
+  await clickText(page, ".booking-find button", "시연값 넣기");
+  await clickText(page, ".booking-find button", "예약 조회");
+  await waitText(page, "DX9001");
+  check("예약번호로 조회하면 그 예약의 항공편이 골라진다", (await has(page, "시연 예약에서 불러온")) && (await isDisabled(page, "다음")) === false);
+  await shot(page, "휴대전화-예약번호로-찾기");
+  await clickText(page, ".flight-methods .pick", "편명·도시로 찾기");
+  await page.waitForSelector("#reg-flight", { timeout: WAIT });
+  check("편명으로 찾기로 바꾸면 예약에서 고른 편은 비운다", (await isDisabled(page, "다음")) === true);
   check("이름을 묻는 칸이 없다", (await count(page, "input")) === 1 && !(await has(page, "이름")));
   check("항공편을 고르기 전에는 다음으로 갈 수 없다", (await isDisabled(page, "다음")) === true);
   // 항공권은 몇 달 전에 예매한다. 오늘·내일 편이 아니면 날짜와 편명으로 미리 등록한다.
