@@ -1,315 +1,72 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import {
-  Navigation,
-  ArrowRight,
-  MapPin,
-  Clock,
-  Accessibility,
-} from "lucide-react";
+import { useState } from "react";
+import { Navigation, ArrowRight, MapPin } from "lucide-react";
 import { PlaceFinder } from "../components/PlaceFinder";
+import { FacilityMapPicker } from "../components/FacilityMapPicker";
 import { IdleGuard } from "../components/IdleGuard";
+import { placeOf } from "@/lib/airport";
+import { MAP_FACILITIES, facilityId, mapFacilityOf, facilityForPlace, areaBuilding, type MapFacility } from "@/lib/map-facilities";
+import type { MapState } from "../../../components/AirportMap";
 import type { KioskReturn } from "@/lib/help-entry";
-import {
-  placeOf,
-  GATE_PICKUP_POINTS,
-  routeToGateFrom,
-  nearestFacilities,
-  routeOptionsOf,
-  type Route,
-  type FacilityKind,
-} from "@/lib/airport";
 import { textOf } from "@/lib/i18n";
-const floorKo = (n: number) => (n < 0 ? `지하 ${-n}층` : `${n}층`);
-const floorEn = (n: number) => (n < 0 ? `B${-n}` : `${n}F`);
-export function NavigationFlow({
-  en,
-  initialGate = "",
-  initialPlace = "",
-  fixedPlace = false,
-  returnTo = "/kiosk/guide",
-  idleAskSec = 120,
-  idleAnswerSec = 30,
-}: {
-  en: boolean;
-  initialGate?: string;
-  initialPlace?: string;
-  fixedPlace?: boolean;
-  returnTo?: KioskReturn;
-  idleAskSec?: number;
-  idleAnswerSec?: number;
+
+export function NavigationFlow({en, initialGate="", initialPlace="", fixedPlace=false, returnTo="/kiosk/guide", idleAskSec=120, idleAnswerSec=30}: {
+  en: boolean; initialGate?: string; initialPlace?: string; fixedPlace?: boolean;
+  returnTo?: KioskReturn; idleAskSec?: number; idleAnswerSec?: number;
 }) {
-  const t = (ko: string, english: string) => (en ? english : ko),
-    labels = textOf(en ? "en" : "ko").facility;
-  const [place, setPlace] = useState(initialPlace),
-    [kind, setKind] = useState("gate"),
-    [gate, setGate] = useState(initialGate),
-    [stepFree, setStepFree] = useState(true),
-    [result, setResult] = useState<{ title: string; route: Route } | null>(
-      null,
-    ),
-    [error, setError] = useState("");
-  const resultHeading = useRef<HTMLHeadingElement>(null);
-  const errorMessage = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    if (result) {
-      resultHeading.current?.focus({ preventScroll: true });
-      if (window.matchMedia("(max-width: 850px)").matches)
-        resultHeading.current?.scrollIntoView({ block: "center" });
-    } else if (error) errorMessage.current?.focus();
-  }, [result, error]);
+  const t = (ko: string, english: string) => en ? english : ko;
+  const [place, setPlace] = useState(initialPlace);
+  const [mapStart, setMapStart] = useState<MapFacility|null>(null);
+  const [destination, setDestination] = useState(()=>{
+    const p = MAP_FACILITIES.find(p=>p.name === `탑승구 ${initialGate}`);
+    return p ? facilityId(p) : "";
+  });
+  const [mode, setMode] = useState<"start"|"destination">("destination");
+  const [route, setRoute] = useState<MapState["route"]>(null);
+  const [distance, setDistance] = useState<number|null>(null);
+  const [error, setError] = useState("");
+  const from = mapStart ?? facilityForPlace(placeOf(place));
+  const target = mapFacilityOf(destination);
+  function clearRoute() {setRoute(null);setDistance(null);setError("");}
   function find() {
-    setResult(null);
-    setError("");
-    const from = placeOf(place);
-    if (!from) {
-      setError(
-        t(
-          "현재 위치 후보를 먼저 확인해 주세요.",
-          "Confirm your current location first.",
-        ),
-      );
-      return;
+    clearRoute();
+    if (!from) {setError(fixedPlace ? t("이 기기의 정확한 출발 위치가 지도에 연결되지 않았어요. 현장 안내를 요청해 주세요.", "This kiosk location has not been linked to the map. Please ask staff.") : t("지도에서 ‘출발지 선택’을 누르고 현재 계신 시설을 터치해 주세요.", "Choose Start on map and tap the facility where you are."));return;}
+    if (!target) {setError(t("지도에서 목적지 시설을 터치해 주세요.", "Tap a destination facility on the map."));return;}
+    if (from.building !== target.building || from.area !== target.area) {
+      setError(t("서로 다른 터미널·보안구역 사이의 경로는 이 지도에서 안내하지 않아요. 현장 안내를 요청해 주세요.", "This map cannot route between different terminals or security areas. Please ask staff."));return;
     }
-    const opts = routeOptionsOf(stepFree ? ["mov_no_stairs"] : []);
-    if (kind === "gate") {
-      const target = GATE_PICKUP_POINTS.find((p) => p.gate === Number(gate));
-      if (!/^\d{1,3}$/.test(gate) || !target) {
-        setError(
-          t(
-            "지원하는 탑승구 번호를 입력해 주세요.",
-            "Enter a supported gate number.",
-          ),
-        );
-        return;
-      }
-      const route = routeToGateFrom(from, target.place.area, Number(gate), opts);
-      if (route)
-        setResult({ title: t(`${gate}번 탑승구`, `Gate ${gate}`), route });
-      else
-        setError(
-          t(
-            "이 위치에서는 그 탑승구로 걸어서 갈 수 없어요. 터미널이 다르면 터미널 사이 셔틀버스를 타야 해요. 항공권에 적힌 터미널을 확인하시거나 현장 안내를 불러 주세요.",
-            "You cannot walk to that gate from here. Different terminals are linked by the inter-terminal shuttle bus. Check the terminal on your ticket, or request on-site guidance.",
-          ),
-        );
-    } else {
-      const near = nearestFacilities(from, opts).find((f) => f.kind === kind);
-      if (near)
-        setResult({
-          title: `${labels[kind as FacilityKind]} · ${near.nearGate}${t("번 부근", " nearby")}`,
-          route: near.route,
-        });
-      else
-        setError(
-          t(
-            "이 위치에서 확인된 시설 경로가 없어요.",
-            "No facility route is available from this location.",
-          ),
-        );
-    }
+    if(from.id===target.id){setError(t("출발지와 목적지가 같아요.", "Start and destination are the same."));return;}
+    setRoute({start:{poiId:from.id},end:{poiId:target.id}});
   }
-  return (
-    <main id="public-main" className="service-workspace">
-      <IdleGuard
-        t={textOf(en ? "en" : "ko")}
-        enabled={fixedPlace}
-        askSec={idleAskSec}
-        answerSec={idleAnswerSec}
-        onTimeout={() =>
-          window.location.assign(returnTo + (en ? "?lang=en" : ""))
-        }
-      />
-      <header className="service-heading">
-        <span className="service-kicker">
-          <Navigation aria-hidden="true" />
-          {t("바로 이용하는 안내", "SELF-SERVICE DIRECTIONS")}
-        </span>
-        <h1>{t("어디로 가시나요?", "Where are you heading?")}</h1>
-        <p>
-          {t(
-            "현재 위치와 목적지를 고르면 이동 경로가 나와요.",
-            "Choose your location and destination for directions.",
-          )}
-        </p>
-        <span className="service-demo-label">
-          {t("시연 지도 기준", "Prototype map")}
-        </span>
-      </header>
-      <div className="service-form-layout">
-        <form
-          className="service-form-card"
-          onSubmit={(e) => {
-            e.preventDefault();
-            find();
-          }}
-        >
-          <section className="request-section">
-            <h2>
-              <span>1</span>
-              {t("출발 위치", "Start location")}
-            </h2>
-            {fixedPlace ? (
-              <p className="field-current-location">
-                <MapPin aria-hidden="true" />
-                {en ? placeOf(place)?.labelEn : placeOf(place)?.label}
-              </p>
-            ) : (
-              <PlaceFinder
-                id="nav-place"
-                value={place}
-                onChange={(id) => {
-                  setPlace(id);
-                  setResult(null);
-                }}
-                en={en}
-              />
-            )}
-          </section>
-          <section className="request-section">
-            <h2>
-              <span>2</span>
-              {t("목적지", "Destination")}
-            </h2>
-            <label htmlFor="nav-kind">{t("찾을 곳", "Destination type")}</label>
-            <select
-              id="nav-kind"
-              value={kind}
-              onChange={(e) => {
-                setKind(e.target.value);
-                setResult(null);
-              }}
-            >
-              <option value="gate">{t("탑승구", "Boarding gate")}</option>
-              {Object.entries(labels).map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            {kind === "gate" && (
-              <>
-                <label htmlFor="nav-gate">
-                  {t("탑승구 번호", "Gate number")}
-                </label>
-                <input
-                  id="nav-gate"
-                  inputMode="numeric"
-                  maxLength={3}
-                  value={gate}
-                  onChange={(e) => {
-                    setGate(e.target.value);
-                    setResult(null);
-                  }}
-                  required
-                  placeholder="130"
-                />
-              </>
-            )}
-            <label className="request-check">
-              <input
-                type="checkbox"
-                checked={stepFree}
-                onChange={(e) => {
-                  setStepFree(e.target.checked);
-                  setResult(null);
-                }}
-              />
-              <Accessibility aria-hidden="true" />
-              {t("계단 없는 경로", "Step-free route")}
-            </label>
-          </section>
-          {error && (
-            <p
-              className="error-note"
-              role="alert"
-              ref={errorMessage}
-              tabIndex={-1}
-            >
-              {error}
-            </p>
-          )}
-          <button className="public-button" type="submit">
-            {t("경로 보기", "Show route")}
-            <ArrowRight aria-hidden="true" />
-          </button>
-        </form>
-        <aside
-          className="service-route-result"
-          aria-label={t("경로 결과", "Route result")}
-          aria-live="polite"
-        >
-          {result ? (
-            <>
-              <span className="service-kicker">
-                {t("이동 경로", "YOUR ROUTE")}
-              </span>
-              <h2 ref={resultHeading} tabIndex={-1}>
-                {result.title}
-              </h2>
-              <div className="route-metrics">
-                <span>
-                  <Clock aria-hidden="true" />
-                  {t(
-                    `약 ${result.route.minutes}분`,
-                    `About ${result.route.minutes} min`,
-                  )}
-                </span>
-                <span>{Math.round(result.route.meters)}m</span>
-              </div>
-              <ol className="journey-route-steps">
-                <li>
-                  <MapPin aria-hidden="true" />
-                  {en ? placeOf(place)?.labelEn : placeOf(place)?.label}
-                </li>
-                {result.route.steps.map((s, i) => (
-                  <li key={i}>
-                    {s.kind === "walk"
-                      ? t(
-                          `${s.towardGate}번 방향으로 ${Math.round(s.meters)}m 이동`,
-                          `Walk ${Math.round(s.meters)}m towards gate ${s.towardGate}`,
-                        )
-                      : s.kind === "shuttle"
-                        ? t("셔틀트레인 이용", "Take the shuttle train")
-                        : s.kind === "security"
-                          ? t("출국장에서 보안검색·출국심사", "Security and passport control")
-                          : t(
-                            `${s.kind === "elevator" ? "엘리베이터" : "에스컬레이터"}로 ${floorKo(s.fromLevel)} → ${floorKo(s.toLevel)}`,
-                            `Take the ${s.kind} from ${floorEn(s.fromLevel)} to ${floorEn(s.toLevel)}`,
-                          )}
-                  </li>
-                ))}
-                <li>{result.title}</li>
-              </ol>
-              <p className="service-muted">
-                {t(
-                  "거리·시간은 시연 지도 기준 추정치예요.",
-                  "Estimated using the prototype map.",
-                )}
-              </p>
-            </>
-          ) : (
-            <div className="route-empty">
-              <Navigation aria-hidden="true" />
-              <h2>{t("나에게 맞는 경로", "Your route")}</h2>
-              <p>
-                {t(
-                  "출발 위치와 목적지를 선택해 주세요.",
-                  "Choose your start and destination.",
-                )}
-              </p>
-            </div>
-          )}
-          <Link
-            className="public-text-link"
-            href={`/help?topic=guidance&fresh=1${place ? "&place=" + encodeURIComponent(place) : ""}${fixedPlace ? "&returnTo=" + encodeURIComponent(returnTo) : ""}${en ? "&lang=en" : ""}`}
-          >
-            {t("현장 안내 지원 요청", "Request on-site guidance")}
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </aside>
-      </div>
-    </main>
-  );
+  return <main id="public-main" className="service-workspace">
+    <IdleGuard t={textOf(en?"en":"ko")} enabled={fixedPlace} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={()=>window.location.assign(returnTo+(en?"?lang=en":""))}/>
+    <header className="service-heading"><span className="service-kicker"><Navigation aria-hidden="true"/>{t("바로 이용하는 안내", "SELF-SERVICE DIRECTIONS")}</span><h1>{t("어디로 가시나요?", "Where are you heading?")}</h1><p>{t("지도에서 시설을 터치해 출발지와 목적지를 정해 주세요.", "Tap facilities on the map to set your start and destination.")}</p><span className="service-demo-label">{t("3층 시연 지도 기준", "3F prototype map")}</span></header>
+    <div className="service-form-layout"><form className="service-form-card" onSubmit={e=>{e.preventDefault();find();}}>
+      <section className="request-section"><h2><span>1</span>{t("출발 위치", "Start location")}</h2>
+        {fixedPlace ? <p className="field-current-location"><MapPin/>{en?placeOf(place)?.labelEn:placeOf(place)?.label}</p> : <PlaceFinder id="nav-place" value={place} en={en} onChange={id=>{setPlace(id);setMapStart(null);clearRoute();}}/>}
+        {from && <p role="status">{t("출발지: ","Start: ")}{from.name} · {from.description}</p>}
+      </section>
+      <section className="request-section"><h2><span>2</span>{t("목적지", "Destination")}</h2>
+        <div role="group" aria-label={t("지도에서 선택할 위치", "Location to select on map")} style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {!fixedPlace && <button type="button" className="btn" aria-pressed={mode==="start"} onClick={()=>setMode("start")}>{t("출발지 선택", "Choose start")}</button>}
+          <button type="button" className="btn" aria-pressed={mode==="destination"} onClick={()=>setMode("destination")}>{t("목적지 선택", "Choose destination")}</button>
+        </div>
+        <p role="status">{mode==="start"?t("현재 계신 시설을 터치하세요.", "Tap the facility where you are."):t("가고 싶은 시설을 터치하세요.", "Tap the facility you want to visit.")}</p>
+        <FacilityMapPicker value={mode==="start"&&mapStart?facilityId(mapStart):mode==="destination"?destination:""} en={en}
+          initialBuilding={areaBuilding(placeOf(place)?.area)} start={from} route={route}
+          onChange={id=>{clearRoute();if(mode==="start"){setMapStart(mapFacilityOf(id));if(id)setMode("destination");}else setDestination(id);}}
+          onRoute={r=>{if(route){setDistance(r?.distance??null);if(!r)setError(t("연결된 통로를 찾지 못했어요. 현장 안내를 요청해 주세요.", "No connected route found. Please ask staff."));}}}
+          onError={message=>{setDistance(null);setError(message);}}/>
+        {target && <p>{t("목적지: ","Destination: ")}{target.name} · {target.description}</p>}
+        <p className="service-muted">{t("같은 터미널·보안구역의 3층 통로만 시연합니다. 계단 없는 이동의 실제 가능 여부는 직원에게 확인해 주세요.", "Prototype routes use same-area 3F corridors. Confirm step-free access with staff.")}</p>
+      </section>
+      {error&&<p className="error-note" role="alert">{error}</p>}
+      <button className="public-button" type="submit">{t("경로 보기", "Show route")}<ArrowRight aria-hidden="true"/></button>
+    </form><aside className="service-route-result" aria-live="polite" aria-label={t("경로 결과", "Route result")}>
+      <Navigation aria-hidden="true"/><h2>{distance!==null?target?.name:t("나에게 맞는 경로", "Your route")}</h2>
+      {distance!==null?<><p>{t("지도에 경로를 표시했어요.","Your route is shown on the map.")}</p><div className="route-metrics"><span>{Math.round(distance)} m</span></div><p>{from?.name} → {target?.name}</p><small>{t("거리와 경로는 시연 자료 기준입니다.","Distance and route use prototype data.")}</small></>:<p>{t("출발지와 목적지를 정한 뒤 경로 보기를 눌러 주세요.","Choose start and destination, then show the route.")}</p>}
+      <Link className="public-text-link" href={`/help?topic=guidance&fresh=1${place?"&place="+encodeURIComponent(place):""}${fixedPlace?"&returnTo="+encodeURIComponent(returnTo):""}${en?"&lang=en":""}`}>{t("현장 안내 지원 요청", "Request on-site guidance")}<ArrowRight aria-hidden="true"/></Link>
+    </aside></div>
+  </main>;
 }

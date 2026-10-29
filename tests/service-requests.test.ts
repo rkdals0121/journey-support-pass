@@ -1,3 +1,4 @@
+import { MAP_FACILITIES, facilityId } from "@/lib/map-facilities";
 import { beforeAll, beforeEach, describe, it, expect } from "vitest";
 import {
   createServiceRequest,
@@ -220,6 +221,16 @@ describe("DX independent and pre-registered requests", () => {
       (await create(2, { topicId: "facility", service: "robot" })).status,
     ).toBe(400);
     expect((await create(3, { businessId: "unknown" })).status).toBe(400);
+  });
+  it("stores a map facility destination and rejects a foreign-terminal or forged ID", async () => {
+    const p = MAP_FACILITIES.find(p => p.building === 3 && p.area === "AIR")!;
+    const accepted = await create(1, {service:"mobility", topicId:"mobility", destinationId:facilityId(p)});
+    expect(accepted.status).toBe(200);
+    expect(get(accepted).destinationId).toBe(facilityId(p));
+    expect(get(await serviceRequestStatus(db, receipt(1), now)).destinationId).toBe(facilityId(p));
+    const foreign = MAP_FACILITIES.find(p=>p.building===2 && p.area==="AIR")!;
+    expect((await create(2, {service:"mobility", destinationId:facilityId(foreign)})).status).toBe(400);
+    expect((await create(3, {service:"mobility", destinationId:"map-poi-forged"})).status).toBe(400);
   });
   it("only saves valid mobility destinations within a terminal and security boundary", async () => {
     expect(

@@ -5,6 +5,7 @@ import { PLACES, NO_MEETING_PLACE } from "@/lib/airport";
 import {
   requestPlaceOf as placeOf,
   reportLocationLabel,
+  destinationPlaceOf,
 } from "@/lib/service-locations";
 import { labelOf } from "@/lib/catalog";
 import {
@@ -42,7 +43,8 @@ import {
 } from "lucide-react";
 import { useSpeech } from "../components/useSpeech";
 import { SERVICE_CATALOG, supportTopic } from "@/lib/service-catalog";
-import { pilotDestinations } from "@/lib/operating-profile";
+import { FacilityMapPicker } from "../components/FacilityMapPicker";
+import { areaBuilding } from "@/lib/map-facilities";
 
 const STORAGE = "jsp-dx-receipt-v1";
 // 작성 중인 요청(피드백: 뒤로 갔다 다시 들어와도 내용이 남아 있게). 접수하거나 30분이 지나면 지운다.
@@ -882,8 +884,8 @@ export function HelpFlow({
                       <dt>{tr("목적지", "Destination")}</dt>
                       <dd>
                         {en
-                          ? placeOf(destinationId)?.labelEn
-                          : placeOf(destinationId)?.label}
+                          ? destinationPlaceOf(destinationId)?.labelEn
+                          : destinationPlaceOf(destinationId)?.label}
                       </dd>
                     </div>
                   )}
@@ -1235,29 +1237,22 @@ export function HelpFlow({
                     {service === "mobility" &&
                       task?.id !== "mobility-wheelchair" && (
                         <>
-                          <label htmlFor="dx-destination">
+                          <p>
                             {tr(
                               "가고 싶은 곳 · 선택",
                               "Destination · optional",
                             )}
-                          </label>
-                          <select
-                            id="dx-destination"
+                          </p>
+                          <FacilityMapPicker
                             value={destinationId}
-                            onChange={(e) => setDestinationId(e.target.value)}
-                          >
-                            <option value="">
-                              {tr(
-                                "담당자와 상담해 정할게요",
-                                "Confirm with staff",
-                              )}
-                            </option>
-                            {pilotDestinations(placeId).map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {en ? p.labelEn : p.label}
-                              </option>
-                            ))}
-                          </select>
+                            onChange={setDestinationId}
+                            en={en}
+                            disabled={busy}
+                            pickup={placeOf(placeId)}
+                            restrictToPickup
+                            initialBuilding={areaBuilding(placeOf(placeId)?.area)}
+                          />
+                          <p className="service-muted">{tr("선택하지 않으면 담당자와 상담해서 정할 수 있어요.", "You can leave this blank and confirm with staff.")}</p>
                         </>
                       )}
                   </section>

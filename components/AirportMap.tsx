@@ -18,6 +18,7 @@ export type MapState = {
   /** Select a registered entrance checkpoint. Disable after matching. */
   checkpointSelection?: boolean;
   showCheckpoints?: boolean;
+  selectedPoiId?: string | number | null;
   markers?: Partial<
     Record<"user" | "robot" | "checkpoint" | "destination", MapLocation | null>
   >;
@@ -118,7 +119,7 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title="공항 실내지도"
-      src="/airport-map/index.html"
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility" : "/airport-map/index.html"}
       loading="eager"
       className={className}
       style={{

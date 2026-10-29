@@ -1,3 +1,4 @@
+import { validMapDestination } from "./map-facilities";
 import { operatingBlock } from "./support-operations";
 import { journeysByIds, isJourneyOver, lastRealPoll } from "./journey";
 import { createHash } from "node:crypto";
@@ -247,7 +248,7 @@ export async function createServiceRequest(
     destination !== null &&
     (body.service !== "mobility" ||
       typeof destination !== "string" ||
-      !pilotDestinations(place.id).some((p) => p.id === destination))
+      (!pilotDestinations(place.id).some((p) => p.id === destination) && !validMapDestination(place, destination)))
   )
     return fail(
       400,

@@ -214,7 +214,7 @@
   }
   function redrawRoute() {
     routes.clear();
-    if (!state.route) return;
+    if (!state.route) { emit("route-result", {route:null}); return; }
     const result = computeRoute(state.route);
     if (result && result.coordinates.length > 1) {
       const f = fmt.readFeatures(
@@ -257,8 +257,8 @@
         new E.Style({
           image: new E.Icon({
             src: p.icon || badge("i", "#3689ac"),
-            width: focused ? 26 : 20,
-            height: focused ? 26 : 20,
+            width: focused ? 34 : 26,
+            height: focused ? 34 : 26,
           }),
           text: new E.Text({
             text: detailed || focused ? p.name : "",
@@ -322,6 +322,7 @@
       fit: next.fit !== false,
       checkpointSelection: next.checkpointSelection ?? state.checkpointSelection,
       showCheckpoints: next.showCheckpoints ?? state.showCheckpoints,
+      selectedPoiId: next.selectedPoiId ?? null,
     };
     state = merged;
     try {
@@ -335,6 +336,7 @@
       throw error;
     }
     state.markers = state.markers || {};
+    selected = state.selectedPoiId;
     if(changed || !state.checkpointSelection || (next.markers !== undefined && next.markers?.checkpoint?.checkpointId !== pendingCheckpoint?.id)) pendingCheckpoint=null;
     drawCheckpoints();
     geometryLayers.forEach((layer, id) =>
@@ -381,6 +383,7 @@
       new URLSearchParams(location.search).get("building"),
     );
     if ([1, 2, 3].includes(buildingParam)) state.building = buildingParam;
+    if (new URLSearchParams(location.search).get("mode") === "facility") {state.checkpointSelection=false;state.showCheckpoints=false;}
     view = new E.View({
       center: E.fromLonLat(centers[state.building]),
       zoom: 18,
@@ -442,7 +445,7 @@
             return true;
           }
         },
-        { hitTolerance: 6 },
+        { hitTolerance: 12 },
       );
       const xy = event.coordinate,
         lon = ((xy[0] / 6378137) * 180) / Math.PI,
