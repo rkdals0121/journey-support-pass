@@ -1,19 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowRight, CalendarClock, Plane, Search, Stamp } from "lucide-react";
+import { ArrowRight, CalendarClock, Plane, Stamp } from "lucide-react";
 import { TaskLauncher } from "./TaskLauncher";
 import { MyRequestPanel } from "./MyRequestPanel";
 
 /**
  * 여객 첫 화면.
  * 1) 무엇을 하는 곳인지 한 줄. 2) 공항에 오기 전이면 「여행 전 지원 등록」(이 서비스의 핵심, 화면의 강조 하나).
- * 3) 공항에 있으면 바로 쓰는 서비스. 탑승구 번호로 바로 찾기는 서비스 묶음 맨 위에 둔다.
+ * 3) 공항에서 바로 쓰는 서비스 카드를 보여 준다.
  */
 export function TaskHome({ en = false }: { en?: boolean }) {
-  const [gate, setGate] = useState("");
-  const router = useRouter();
   const q = en ? "?lang=en" : "";
   return (
     <div className="ph-home">
@@ -53,44 +49,7 @@ export function TaskHome({ en = false }: { en?: boolean }) {
           <MyRequestPanel lang={en ? "en" : "ko"} hideWhenEmpty />
         </div>
       </div>
-      <section className="ph-services" aria-labelledby="home-service-title">
-        <div className="ph-section-head">
-          <h2 id="home-service-title">
-            {en ? "Already at the airport" : "지금 공항에 있다면"}
-          </h2>
-          <Link href={"/services" + q}>
-            {en ? "All services" : "전체 서비스"}
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </div>
-        <form
-          className="ph-gate"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const params = new URLSearchParams({ gate });
-            if (en) params.set("lang", "en");
-            router.push("/navigate?" + params);
-          }}
-        >
-          <label htmlFor="home-gate">
-            {en ? "Go straight to your gate" : "탑승구 번호로 바로 길 찾기"}
-          </label>
-          <div className="ph-gate-row">
-            <input
-              id="home-gate"
-              inputMode="numeric"
-              pattern="[0-9]{1,3}"
-              maxLength={3}
-              required
-              placeholder={en ? "e.g. 130" : "예: 130"}
-              value={gate}
-              onChange={(e) => setGate(e.target.value.replace(/\D/g, ""))}
-            />
-            <button type="submit" aria-label={en ? "Find route" : "경로 찾기"}>
-              <Search aria-hidden="true" />
-            </button>
-          </div>
-        </form>
+      <section className="ph-services" aria-label={en ? "Airport services" : "공항 서비스"}>
         {/* 서비스 칸과 스탬프북을 한 묶음(2열 × 3줄)으로 둔다. 스탬프북은 한국어 화면만 있다. */}
         <div className="ph-list">
           <TaskLauncher en={en} />
