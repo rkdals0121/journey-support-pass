@@ -5,12 +5,10 @@ import {
   ChevronRight,
   ClipboardList,
   Frown,
-  Keyboard,
   MapPin,
   Meh,
   Navigation,
   Pencil,
-  ScanLine,
   Smile,
   Sunrise,
 } from "lucide-react";
@@ -46,7 +44,7 @@ import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
-import { KioskHome } from "../../components/KioskHome";
+import { HaneuliWelcome } from "../../components/HaneuliWelcome";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import {
@@ -107,7 +105,7 @@ export function GuideKiosk({
 }: Props) {
   useRobotTheme();
   const [view, setView] = useState<View>({ kind: "scan" });
-  const [scanOpen, setScanOpen] = useState(false);
+  const [awake, setAwake] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [guide, setGuide] = useState<GuideDto | null>(null);
   const [startLang, setStartLang] = useState<Lang>(initialLang);
@@ -240,7 +238,7 @@ export function GuideKiosk({
     setCallSeq(null);
     emptyCall.current = null;
     setView({ kind: "scan" });
-    setScanOpen(false);
+    setAwake(false);
     setToken(null);
     setGuide(null);
     setDigits("");
@@ -255,11 +253,14 @@ export function GuideKiosk({
     async (body: { scanned: string } | { passNo: string }) => {
       if (busyRef.current) return;
       busyRef.current = true;
+      setAwake(true);
       setBusy(true);
       setError(null);
       const tt = textOf(startLang);
       // QR 을 찍거나 여섯째 숫자를 누른 때. 빈 화면에서 부른 사람이 이때까지 떠나 있었는지 본다(아래, callerLeft).
       const at = Date.now();
+      const callerWasGone = callerLeft(at);
+      lastTouch.current = at;
       // 답이 오지 않는 요청은 끊는다. 끊긴 것은 catch 로 가서 연결 오류로 알리고, 다시 찍거나 누를 수 있게 된다.
       const mine = ++openSeq.current;
       const ctrl = new AbortController();
@@ -299,7 +300,7 @@ export function GuideKiosk({
         // 빈 화면에서 부른 사람이 떠나 있었으면 그 호출은 이 안내의 자동 종료를 막지 않는다(위 emptyCall). 계속 화면을 쓰던
         // 사람이면 그 사람의 호출로 둔다. 어느 쪽이든 이제 안내가 열렸으니 빈 화면의 호출은 여기서 끝난다.
         // 호출을 놓은 여객이 지금 다시 누르면 다시 그 여객의 호출이 된다.
-        if (callerLeft(at)) setCallSeq(null);
+        if (callerWasGone) setCallSeq(null);
         emptyCall.current = null;
         // 안내보다 먼저, 미리 등록한 내용을 보여 주고 고칠 것이 있는지 묻는다(피드백 3).
         setView({ kind: "saved" });
@@ -410,7 +411,7 @@ export function GuideKiosk({
     viewSettings.picture !== null ||
     viewSettings.voice !== null ||
     startLang !== "ko" ||
-    view.kind === "number";
+    view.kind === "number" || awake;
   const quietIdle =
     !guide &&
     (view.kind === "scan" || (view.kind === "number" && digits === "")) &&
@@ -584,87 +585,23 @@ export function GuideKiosk({
               </button>
             </>
           }
-          speakText={
-            scanOpen
-              ? `${t.scanTitle}. ${t.scanBody}`
-              : lang === "en"
-                ? "Choose a service. Directions, mobility assistance, facility reports or transport."
-                : "이용할 서비스를 선택하세요. 길 찾기, 이동 도움, 시설 불편, 교통 주차 서비스를 이용할 수 있어요."
-          }
-          speakKey={scanOpen ? "boarding" : "services"}
+          speakText={awake ? (lang === "en" ? "Choose an airport service, or show your boarding pass to retrieve your registration." : "필요한 서비스를 골라 주세요. 미리 등록하셨다면 탑승권을 보여 주세요.") : (lang === "en" ? "Touch the screen or show your boarding pass." : "화면을 누르거나 탑승권을 보여 주세요.")}
+          speakKey={awake ? "services" : "welcome"}
         >
-          <KioskHome
+          <HaneuliWelcome
             en={lang === "en"}
             here={here}
-            title={
-              lang === "en"
-                ? "What would you like to do?"
-                : "어떤 서비스를 이용하시겠어요?"
-            }
-            lead={
-              lang === "en"
-                ? "Choose a service on the right. If you registered before your trip, show your boarding pass."
-                : "필요한 서비스를 누르세요. 미리 등록하셨다면 탑승권을 보여 주세요."
-            }
-            returnTo="/kiosk/guide"
-            appointmentLabel={
-              lang === "en" ? "Confirm a meeting appointment" : "만남 예약 확인"
-            }
+            awake={awake}
+            busy={busy}
+            onWake={() => setAwake(true)}
+            onRest={reset}
+            onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
             listen={<ListenStart t={t} />}
-            pass={
-              <details
-                className="kiosk-personalise kx-pass-option"
-                open={scanOpen}
-                onToggle={(e) => setScanOpen(e.currentTarget.open)}
-              >
-                <summary>
-                  <ScanLine aria-hidden="true" className="kx-pass-icon" />
-                  <span>
-                    <strong>
-                      {lang === "en"
-                        ? "Retrieve registered support with a boarding pass"
-                        : "탑승권으로 등록한 도움 불러오기"}
-                    </strong>
-                    <small>
-                      {lang === "en"
-                        ? "For passengers who registered before the trip"
-                        : "여행 전에 미리 등록하신 분"}
-                    </small>
-                  </span>
-                </summary>
-                {scanOpen && (
-                  <div className="kx-pass-body">
-                    <div className="kiosk-scan-camera">
-                      <Scanner
-                        onScan={onScan}
-                        paused={busy}
-                        prefer="user"
-                        text={{
-                          starting: t.camStarting,
-                          ready: t.camReady,
-                          read: t.camRead,
-                          none: t.camNone,
-                          switchCamera: t.camSwitch,
-                        }}
-                      />
-                    </div>
-                    <p>
-                      {lang === "en"
-                        ? "Hold a mobile or paper boarding pass up to the camera."
-                        : "모바일·종이 탑승권의 코드를 카메라에 대 주세요."}
-                    </p>
-                    {error && <ErrorNote>{error}</ErrorNote>}
-                    <button
-                      className="btn"
-                      onClick={() => setView({ kind: "number" })}
-                    >
-                      <Keyboard aria-hidden="true" />
-                      {t.scanNumber}
-                    </button>
-                  </div>
-                )}
-              </details>
-            }
+            error={error ? <ErrorNote>{error}</ErrorNote> : null}
+            scanner={<Scanner onScan={onScan} paused={busy} prefer="user" text={{
+              starting: t.camStarting, ready: t.camReady, read: t.camRead,
+              none: t.camNone, switchCamera: t.camSwitch,
+            }} />}
           />
         </FlowShell>
         {call}
@@ -707,6 +644,7 @@ export function GuideKiosk({
           <p className="kicker">
             <ClipboardList size={20} aria-hidden="true" /> {t.savedTitle}
           </p>
+          <p className="haneuli-saved-greeting">{lang === "en" ? "Welcome back! I found your registration." : "반가워요! 미리 등록하신 내용을 찾았어요."}</p>
           <h1>{t.savedAsk}</h1>
           <FlightBoard flight={guide.flight} t={t} lang={lang} />
           <SavedNeeds
