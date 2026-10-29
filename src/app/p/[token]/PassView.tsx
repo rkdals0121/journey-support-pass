@@ -297,10 +297,6 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
 
   return (
     <FlowShell lang={lang} prefs={prefs} kiosk={false} screenKey="pass" speakText={speakText} onHome={home}>
-      <Link className="btn btn-primary dx-pass-help" href={`/p/${token}/help`}>{lang === "en" ? "Request help with my saved needs" : "사전등록 내용으로 지금 도움 요청"}</Link>
-      <Link className="btn btn-secondary" href={`/visits?pass=${encodeURIComponent(token)}`}>만날 장소·시간 예약</Link>
-              <PassRequests token={token} lang={lang}/>
-
       {isNew ? (
         <p className="success-head">
           <CircleCheck size={28} aria-hidden="true" />
@@ -309,8 +305,22 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
       ) : (
         <p className="kicker">Journey Support Pass</p>
       )}
-      <h1>{t.passTitle}</h1>
-      <dl className="pass-reference"><dt>{t.passNo}</dt><dd className="num">{formatPassNo(guide.passNo)}</dd></dl>
+      <div className="ph-pass-head">
+        <h1>{t.passTitle}</h1>
+        <dl className="pass-reference"><dt>{t.passNo}</dt><dd className="num">{formatPassNo(guide.passNo)}</dd></dl>
+      </div>
+      <FlightBoard flight={flight} t={t} lang={lang} />
+      {old && <Banner role="status">{asOf}</Banner>}
+      {/* 운항 정보가 아직 없는 먼 날짜 편에는 "운항 정보가 늦어지고 있습니다"가 맞지 않는다. */}
+      {stale && !flight.awaiting && <Banner role="status">{t.stale}</Banner>}
+      <div className="ph-pass-actions">
+        <Link className="btn btn-primary dx-pass-help" href={`/p/${token}/help`}>{lang === "en" ? "Request help with my saved needs" : "사전등록 내용으로 지금 도움 요청"}</Link>
+        <Link className="btn btn-secondary" href={`/visits?pass=${encodeURIComponent(token)}`}>{lang === "en" ? "Book a meeting place and time" : "만날 장소·시간 예약"}</Link>
+      </div>
+      <PassRequests token={token} lang={lang} />
+      {/* 이동지원(전동차) 요청과 접수 상태. 공항 입구 안내로봇에서 청한 것도 여기서 보인다. */}
+      {/* 먼 날짜에 미리 등록한 편은 아직 공항에 올 때가 아니므로 이동지원을 청하지 않는다(받지 않은 요청은 60분 뒤 닫힌다). */}
+      {online && !flight.awaiting && <AssistBox token={token} t={t} />}
 
       <h2>{t.readyTitle}</h2>
       <ol className="ready">
@@ -371,15 +381,6 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
           <span>{t.passSave}</span>
         </div>
       </div>
-
-      <h2>{t.passFlight}</h2>
-      <FlightBoard flight={flight} t={t} lang={lang} />
-      {/* 이동지원(전동차) 요청과 접수 상태. 공항 입구 안내로봇에서 청한 것도 여기서 보인다. */}
-      {/* 먼 날짜에 미리 등록한 편은 아직 공항에 올 때가 아니므로 이동지원을 청하지 않는다(받지 않은 요청은 60분 뒤 닫힌다). */}
-      {online && !flight.awaiting && <AssistBox token={token} t={t} />}
-      {old && <Banner role="status">{asOf}</Banner>}
-      {/* 운항 정보가 아직 없는 먼 날짜 편에는 "운항 정보가 늦어지고 있습니다"가 맞지 않는다. */}
-      {stale && !flight.awaiting && <Banner role="status">{t.stale}</Banner>}
 
       <h2>{t.passChoices}</h2>
       <SavedNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
