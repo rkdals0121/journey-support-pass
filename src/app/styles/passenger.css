@@ -334,7 +334,7 @@
 .airport-prepare-link h2, .airport-portal-support .my-request-panel h2 { font-size: var(--text-body); }
 .airport-prepare-link p, .airport-portal-support .my-request-panel p { font-size: var(--text-small); }
 .airport-portal-support .my-request-panel { margin: 0; padding: 1.5rem 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; min-height: 8rem; display: grid; grid-template-columns: 1fr auto; gap: 0.5rem 1rem; }
-.airport-site .public-footer { border-top: 0.0625rem solid var(--ui-rule); padding: 1.5rem max(2rem, calc((100% - 77rem) / 2)); background: var(--color-canvas); font-size: var(--text-caption); gap: 1.5rem; align-items: flex-start; padding-block: 2rem; }
+.airport-site .public-footer { border-top: 0.0625rem solid var(--ui-rule); padding: 1rem max(2rem, calc((100% - 77rem) / 2)); background: var(--color-canvas); font-size: var(--text-caption); gap: 1.5rem; align-items: center; padding-block: 1rem; }
 .airport-site .public-footer-links a { color: var(--color-muted); text-decoration: none; }
 .airport-site .public-footer-links a:hover { text-decoration: underline; }
 .airport-site .public-button, .pretrip-site .public-button { border-radius: var(--radius-small); box-shadow: none; font-weight: var(--weight-label); min-height: 3.25rem; }
@@ -454,7 +454,8 @@
 .public-logo { display: flex; align-items: center; gap: 0.5rem; color: var(--color-primary-hover); text-decoration: none; font-weight: var(--weight-heading); font-size: var(--text-heading); }
 .public-logo small { display: block; color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-body); letter-spacing: .01em; margin-top: 0.25rem; }
 .public-footer { border-top: .0625rem solid var(--color-line); background: var(--color-canvas); padding: 2rem max(1.25rem,calc((100vw - 70rem)/2)); display: flex; justify-content: space-between; gap: 2rem; padding-block: 1.75rem; font-size: var(--text-small); }
-.task-home { max-width: 74rem; margin: auto; padding: 2.5rem 2rem 3rem; }
+/* 첫 화면 본문은 위쪽 바와 같은 너비, 바 안쪽 글자와 같은 왼쪽 끝(site-bar.css 의 --site-bar-*). */
+.task-home { box-sizing: border-box; width: min(var(--site-bar-width, 84rem), calc(100% - 2 * var(--site-bar-gutter, 1.25rem))); max-width: none; margin: 0 auto; padding: var(--space-5) var(--space-5) var(--space-5); }
 .task-home-hero { display: grid; grid-template-columns: minmax(0,1fr) minmax(20rem,.85fr); gap: 4rem; align-items: center; border-bottom: .0625rem solid var(--color-line); padding: 1rem 0 2.5rem; }
 .task-home-intro h1 { color: var(--color-dark); font-size: var(--text-large); line-height: 1.3; letter-spacing: -.035em; font-weight: var(--weight-heading); margin: 0 0 1.5rem; }
 .task-home-intro > a { display: inline-flex; align-items: center; gap: 1rem; color: var(--color-primary-hover); font-size: var(--text-small); text-decoration: none; text-underline-offset: 0.35em; min-height: max(2.75rem,var(--target-floor)); margin-top: .25rem; }
@@ -585,7 +586,7 @@
 .public-request-layout .dx-page .place-area-filter { gap: 0.5rem; }
 .public-request-layout form.dx-card>fieldset { grid-template-columns: 1fr; }
 .public-request-layout .dx-page .place-area-filter label { font-size: var(--text-caption); min-height: max(2.5rem,var(--target-floor)); padding: 0.5rem 0.5rem; }
-.task-home { padding: 1.5rem 1.25rem 2rem; }
+.task-home { width: 100%; padding: 1.5rem 1.25rem 2rem; }
 .task-home-hero { display: block; border: 0; border-radius: 0; padding: 0; }
 .task-home-intro h1 { font-size: var(--text-title); margin-bottom: 0.5rem; margin: 0 0 1rem; }
 .task-home .home-gate-form { padding: 1.5rem; margin: .5rem 0 0; }

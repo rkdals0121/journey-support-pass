@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   BookOpen,
   Camera,
   Download,
@@ -11,6 +12,7 @@ import {
   Shuffle,
   User,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Scanner } from "../components/Scanner";
 import {
@@ -92,10 +94,10 @@ export function StampBook({ scanned }: { scanned?: string }) {
   // 처음 열 때 저장된 수첩을 읽는다. QR 주소로 들어왔으면 도장부터 찍는다.
   useEffect(() => {
     let st = load();
-    // 테마만 고르고 시작하기를 누르지 않았으면(이름이 없으면) 다시 테마 고르기부터 연다.
-    // QR로 들어왔을 때만 고른 테마의 표지로 바로 가서 수첩을 마저 준비하게 한다.
-    let first: View =
-      !st.theme || (!st.name && !scanned) ? "themes" : !st.name ? "cover" : "home";
+    // 스탬프북에 새로 들어오면(메인 화면의 스탬프북 버튼 등) 수첩을 시작했든 안 했든 늘 테마 고르기부터 연다.
+    // 이어서 하려면 테마 고르기 아래 "내 수첩 열어 보기"를 누른다. 새로 고침·뒤로가기는 보던 화면을 이어 쓴다(아래 kept).
+    // QR로 들어왔을 때만 고른 수첩으로 바로 가서 도장을 찍는다(수첩을 아직 준비하지 않았으면 표지).
+    let first: View = !scanned || !st.theme ? "themes" : !st.name ? "cover" : "home";
     if (scanned) {
       const i = checkpointOf(scanned);
       const eligible = stampEligibility(st);
@@ -736,6 +738,9 @@ function ThemePicker({
   return (
     <div className="sb" data-theme="pick">
       <main className="sb-page">
+        <Link href="/" className="sb-link sb-pick-home">
+          <ArrowLeft aria-hidden="true" /> 메인 화면으로
+        </Link>
         <h1 className="sb-pick-title">
           어떤 수첩으로
           <br />

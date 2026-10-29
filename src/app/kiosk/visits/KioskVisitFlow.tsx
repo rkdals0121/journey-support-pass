@@ -11,7 +11,7 @@ import { textOf } from "@/lib/i18n";
 import { hubOf, VISIT_STATES, type VisitView } from "@/lib/service-hubs";
 import { VISIT_STATE_EN, visitError } from "@/lib/visit-labels";
 import { HubMap } from "../../components/HubMap";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, Delete } from "lucide-react";
 import { FlowShell } from "../../components/FlowShell";
 import { IdleGuard } from "../../components/IdleGuard";
 import { SharedVisitPrivacy } from "../../components/SharedVisitPrivacy";
@@ -182,12 +182,8 @@ export function KioskVisitFlow({
     >
       <SharedVisitPrivacy />
       <main className={styles.devicePage + " kiosk-appointment-page"}>
-        <p className="kx-here">
-          <MapPin aria-hidden="true" />
-          {en ? (hub?.en ?? "Airport device") : (hub?.label ?? place)}
-        </p>
-        <h1>{title}</h1>
-        {!visit && !meetingPoint && (
+        {/* 번호 넣는 화면은 카드 하나에 담는다. 왼쪽: 무엇을 넣는지와 넣은 번호(8칸), 오른쪽: 자판. */}
+        {!visit && !meetingPoint ? (
           <form
             className="kx-code"
             aria-busy={busy}
@@ -197,6 +193,11 @@ export function KioskVisitFlow({
             }}
           >
             <div className="kx-code-entry">
+              <p className="kx-here">
+                <MapPin aria-hidden="true" />
+                {en ? (hub?.en ?? "Airport device") : (hub?.label ?? place)}
+              </p>
+              <h1>{title}</h1>
               <p className="kx-lead">
                 {t(
                   "예약할 때 받은 확인번호 8자리를 오른쪽 자판으로 눌러 주세요.",
@@ -205,23 +206,39 @@ export function KioskVisitFlow({
               </p>
               <label htmlFor="kiosk-visit-reference" className="kx-code-label">
                 {t("예약 확인번호", "Appointment reference")}
-                <span>{reference.length} / 8</span>
+                <span className="num">{reference.length} / 8</span>
               </label>
-              <input
-                id="kiosk-visit-reference"
-                className="kx-code-input num"
-                value={reference}
-                maxLength={8}
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                placeholder="AB12CD34"
-                onChange={(e) =>
-                  setReference(
-                    e.target.value.toUpperCase().replace(/[^A-F0-9]/g, ""),
-                  )
-                }
-              />
+              {/* 넣은 글자는 여덟 칸에 보여 준다. 실제 입력란은 칸 위에 투명하게 겹쳐 두어 키보드로도 넣을 수 있다. */}
+              <div className="kx-code-slots">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <span
+                    key={i}
+                    aria-hidden="true"
+                    className={
+                      "kx-code-slot num" +
+                      (reference[i] ? " filled" : "") +
+                      (i === reference.length ? " next" : "")
+                    }
+                  >
+                    {reference[i] ?? ""}
+                  </span>
+                ))}
+                <input
+                  id="kiosk-visit-reference"
+                  className="kx-code-input"
+                  value={reference}
+                  maxLength={8}
+                  inputMode="none"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  onChange={(e) =>
+                    setReference(
+                      e.target.value.toUpperCase().replace(/[^A-F0-9]/g, ""),
+                    )
+                  }
+                />
+              </div>
               {error && (
                 <p className={styles.error + " kx-code-error"} role="alert">
                   {error}
@@ -261,9 +278,10 @@ export function KioskVisitFlow({
                 className="kx-key kx-key-erase"
                 type="button"
                 disabled={busy || !reference}
+                aria-label={t("한 글자 지우기", "Delete one")}
                 onClick={() => setReference((v) => v.slice(0, -1))}
               >
-                {t("한 글자 지우기", "Delete one")}
+                <Delete aria-hidden="true" />
               </button>
               <button
                 key="0"
@@ -280,10 +298,18 @@ export function KioskVisitFlow({
                 disabled={busy || !reference}
                 onClick={() => setReference("")}
               >
-                {t("모두 지우기", "Clear")}
+                {t("전체 지우기", "Clear all")}
               </button>
             </div>
           </form>
+        ) : (
+          <>
+            <p className="kx-here">
+              <MapPin aria-hidden="true" />
+              {en ? (hub?.en ?? "Airport device") : (hub?.label ?? place)}
+            </p>
+            <h1>{title}</h1>
+          </>
         )}
         {meetingPoint && (
           <section className={styles.panel + " kiosk-meeting-destination"}>

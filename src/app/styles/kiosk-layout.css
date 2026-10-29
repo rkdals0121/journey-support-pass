@@ -110,6 +110,11 @@ html[data-kiosk] .flow-body .kx-home-intro h1 {
 .kx-pass-option[open] > summary::after { transform: rotate(-135deg); }
 .kx-pass-option > summary strong { display: block; font-size: var(--text-body); font-weight: var(--weight-heading); line-height: 1.4; }
 .kx-pass-option > summary small { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+/* 「여기서 도움 새로 등록하기」: 위 두 칸(펼치는 칸)과 같은 모양의 누르는 칸 */
+.kx-pass-new { display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: 5.5rem; padding: var(--space-4) var(--space-5); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.kx-pass-new strong { display: block; font-size: var(--text-body); font-weight: var(--weight-heading); line-height: 1.4; }
+.kx-pass-new small { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+.kx-pass-new:hover, .kx-pass-new:focus-visible { border-color: var(--color-primary); }
 .kx-pass-icon {
   flex: none;
   box-sizing: content-box;
@@ -178,8 +183,11 @@ html[data-kiosk] .flow-body .kx-home-intro h1 {
 }
 
 /* ── 번호 넣는 화면 (만남 예약 확인번호) ──
-   왼쪽: 무엇을 넣는지, 넣은 번호, 확인 버튼. 오른쪽: 자판(숫자는 왼쪽 세 줄, 글자는 오른쪽 두 줄). */
-html[data-kiosk] .kiosk-appointment-page { width: auto; max-width: none; margin: 0; padding: var(--space-5) 0 var(--space-6); }
+   카드 하나: 왼쪽은 무엇을 넣는지·넣은 번호(8칸)·확인 버튼, 오른쪽은 옅은 판 위의 자판.
+   두 칸의 위·아래 끝선이 같고, 카드는 남는 높이의 가운데에 놓인다. */
+html[data-kiosk] .kiosk-appointment-page { width: auto; max-width: none; margin: 0; padding: var(--space-4) 0 var(--space-3); }
+html[data-kiosk] .flow-body:has(> .kiosk-appointment-page > .kx-code) { display: flex; flex-direction: column; }
+html[data-kiosk] .kiosk-appointment-page:has(> .kx-code) { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; }
 html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
   margin: 0 0 var(--space-3);
   font-size: var(--text-title);
@@ -187,60 +195,112 @@ html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
   line-height: 1.3;
   letter-spacing: -0.03em;
 }
-.kx-code { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-7); align-items: start; }
-.kx-code-entry { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.kx-code-entry .kx-lead { margin: 0 0 var(--space-2); }
+.kx-code {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--space-6);
+  align-items: stretch;
+  align-self: stretch;
+  /* 위쪽 바와 같은 너비·같은 끝선. 감싼 칸이 더 좁으면 바처럼 양쪽으로 같은 만큼 내민다. */
+  --kx-card-w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  box-sizing: border-box;
+  width: var(--kx-card-w);
+  max-width: none;
+  margin-block: 0;
+  margin-inline: calc((100% - var(--kx-card-w)) / 2);
+  padding: var(--space-5) var(--space-6);
+  border: 0.0625rem solid var(--color-line);
+  border-radius: calc(var(--radius-medium) * 2);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+}
+.kx-code-entry { display: flex; flex-direction: column; min-width: 0; }
+.kx-code-entry .kx-here { align-self: flex-start; margin-bottom: var(--space-4); }
+.kx-code-entry .kx-lead { margin: 0 0 var(--space-4); color: var(--color-muted); font-size: var(--text-body); line-height: 1.6; }
 .kx-code-label {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  margin: 0 0 var(--space-2);
   color: var(--color-text);
-  font-size: var(--text-body);
+  font-size: var(--text-small);
   font-weight: var(--weight-label);
 }
-.kx-code-label span { color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-body); }
-html[data-kiosk] .flow-body .kiosk-appointment-page .kx-code-input {
-  width: 100%;
-  min-height: 5rem;
-  padding: 0 var(--space-5);
-  border: 0.125rem solid var(--color-control-line);
-  border-radius: var(--radius-medium);
-  background: var(--color-surface);
+.kx-code-label span { color: var(--color-muted); font-weight: var(--weight-body); }
+
+/* 여덟 칸. 네 칸씩 두 묶음(예약 확인번호를 읽기 쉽게). 다음에 들어갈 칸에 테두리를 굵게 둔다. */
+.kx-code-slots { position: relative; margin-bottom: var(--space-4); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) var(--space-2) repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+.kx-code-slot:nth-child(5) { grid-column: 6; }
+.kx-code-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.75rem;
+  border: 0.125rem solid var(--color-line);
+  border-radius: var(--radius-small);
+  background: var(--color-canvas);
   color: var(--color-text);
-  font-size: var(--text-large);
-  letter-spacing: 0.18em;
-  text-align: center;
+  font-size: var(--text-title);
+  font-weight: var(--weight-heading);
 }
-.kiosk-appointment-page .kx-code-input::placeholder { color: var(--color-line); }
-.kiosk-appointment-page .kx-code-input:focus-visible { border-color: var(--color-primary); outline: 0.1875rem solid var(--color-primary-soft); outline-offset: 0; }
-.kx-code-error { margin: 0; }
-html[data-kiosk] .flow-body .kiosk-appointment-page .kx-code-submit { width: 100%; min-height: 4.5rem; margin: var(--space-2) 0 0; font-size: var(--text-heading); }
+.kx-code-slot.filled { border-color: var(--color-primary); background: var(--color-surface); }
+.kx-code-slot.next { border-color: var(--color-primary); border-style: dashed; background: var(--color-surface); }
+.kx-code-input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; color: transparent; caret-color: transparent; opacity: 0; cursor: pointer; }
+.kx-code-slots:focus-within .kx-code-slot.next { outline: 0.1875rem solid var(--color-primary-soft); }
+.kx-code-error { margin: 0 0 var(--space-4); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-code-submit { width: 100%; min-height: 3.5rem; margin: auto 0 0; font-size: var(--text-body); }
 .kiosk-appointment-page .kx-code-submit:disabled { border-color: var(--color-line); background: var(--color-primary-faint); color: var(--color-muted); opacity: 1; }
 
-.kx-keypad { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); }
+/* 자판: 숫자 세 줄과 글자 두 줄 사이에 빈 칸 하나. 모든 단추 너비가 같다. */
+.kx-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) var(--space-1) repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(clamp(3.25rem, 8vh, 4.75rem), 1fr);
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: calc(var(--radius-medium) * 1.5);
+  background: var(--color-canvas);
+}
+.kx-keypad .kx-key-letter:nth-child(5n + 4) { grid-column: 5; }
 html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key {
-  min-height: 5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 0;
   margin: 0;
-  border: 0.0625rem solid var(--color-control-line);
+  border: 0.0625rem solid var(--color-line);
   border-radius: var(--radius-medium);
   background: var(--color-surface);
+  box-shadow: 0 0.0625rem 0 var(--color-line);
   color: var(--color-text);
   font-size: var(--text-title);
   font-weight: var(--weight-label);
   cursor: pointer;
   transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
 }
-html[data-kiosk] .flow-body .kx-keypad .kx-key:nth-child(5n + 4) { margin-left: var(--space-3); }
-html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-letter { background: var(--color-primary-faint); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-letter { color: var(--color-primary); }
 .kiosk-appointment-page .kx-key:active:not(:disabled) { background: var(--color-primary-soft); transform: scale(0.97); }
 .kiosk-appointment-page .kx-key:disabled { color: var(--color-line); cursor: default; }
-html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family: var(--font-body); font-size: var(--text-small); }
-html[data-kiosk] .flow-body .kx-keypad .kx-key-wide { grid-column: span 3; margin-left: var(--space-3); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family: var(--font-body); font-size: var(--text-small); color: var(--color-muted); }
+.kx-key-erase svg { width: 1.75rem; height: 1.75rem; flex: none; }
+.kx-keypad .kx-key-wide { grid-column: 3 / -1; }
 .kiosk-appointment-page .kx-key:focus-visible { outline: 0.1875rem solid var(--color-focus); outline-offset: 0.125rem; }
+.kiosk-appointment-page:has(> .kx-code) > p:last-child { margin: var(--space-3) auto 0; text-align: center; }
 
+/* 낮은 화면(노트북 브라우저 등): 스크롤 없이 한 화면에 들어오게 여백과 단추 높이부터 줄인다. */
+@media (max-height: 700px) {
+  html[data-kiosk] .kiosk-appointment-page { padding-top: var(--space-2); }
+  .kx-code { gap: var(--space-5); padding: var(--space-5); }
+  html[data-kiosk] .flow-body .kiosk-appointment-page h1 { margin-bottom: var(--space-2); font-size: var(--text-heading); }
+  .kx-code-entry .kx-here { margin-bottom: var(--space-2); }
+  .kx-code-entry .kx-lead { margin-bottom: var(--space-3); font-size: var(--text-small); }
+  .kx-code-slot { height: 3.5rem; }
+  .kx-keypad { grid-auto-rows: minmax(3rem, 1fr); padding: var(--space-3); }
+  html[data-kiosk] .flow-body .kiosk-appointment-page .kx-code-submit { min-height: 3.5rem; }
+}
 @media (orientation: portrait), (max-width: 56rem) {
   .kx-code { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
-  .kx-code-entry { order: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .kiosk-appointment-page .kx-key { transition: none; }
@@ -326,10 +386,3 @@ html[data-kiosk] .svc-card:first-child :is(svg, strong, span) { color: var(--col
 @media (prefers-reduced-motion: reduce) {
   html[data-kiosk] .kx-guide-side .tile, html[data-kiosk] .svc-card { transition: none; }
 }
-
-/* ── 키오스크 머리: 알약 모양·노란 그라데이션·그림자 없이 평평한 흰 띠 ── */
-html[data-kiosk] body .flow .flow-bar { background: var(--color-surface); border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; margin-top: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); }
-
-/* ── 안내가 열린 뒤: 항공편 판·길 단추·시설 칸을 같은 평평한 선과 같은 모서리로 ── */
-html[data-kiosk] .kx-guide .tile,
-html[data-kiosk] .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }

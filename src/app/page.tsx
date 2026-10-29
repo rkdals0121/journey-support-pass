@@ -1,6 +1,5 @@
 import { PublicShell } from "./components/PublicShell";
 import { TaskHome } from "./components/TaskHome";
-import { PortalSupport } from "./components/PortalSupport";
 export default async function Home({
   searchParams,
 }: {
@@ -11,7 +10,6 @@ export default async function Home({
     <PublicShell lang={lang}>
       <main id="public-main" className="task-home">
         <TaskHome en={lang === "en"} />
-        <PortalSupport lang={lang} showRequests={false} showPrepare={false} />
       </main>
     </PublicShell>
   );

@@ -38,6 +38,7 @@ import type { Target } from "@/lib/docscan";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { REGISTRATION_DRAFT, readRegistrationDraft, normalizeFlightQuery } from "@/lib/registration-draft";
 import { TextSizeControl } from "./TextSizeControl";
+import { FlightMethodTabs, methodsOf, PassFind, useBookingFind, type FlightMethod } from "./FlightMethods";
 
 export interface FlightOption {
   airline: string;
@@ -76,6 +77,8 @@ interface Props {
   onPrefs?: (lang: Lang, prefs: Prefs) => void;
   /** 들어온 접점. booking 이면 항공권 예매 완료 창의 링크로 들어왔다. 건수를 따로 세는 데만 쓴다. */
   via?: "booking" | "";
+  /** 키오스크에서도 휴대전화 사전등록처럼 옆에 단계 목록과 작성 내용 요약을 보여 준다. 주지 않으면 휴대전화(web)에서만 보인다. */
+  sideSteps?: boolean;
   /** edit: 고칠 등록. 키오스크가 탑승권으로 연 등록의 값과 지금 고른 것. */
   edit?: { token: string; choices: string[]; extra: Extra; onSaved: (guide: GuideDto) => void };
 }
@@ -154,7 +157,7 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
 }
 
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. 안내 키오스크는 같은 질문으로 등록을 고친다. */
-export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", edit, booking }: Props) {
+export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", sideSteps = false, edit, booking }: Props) {
   const kiosk = mode !== "web";
   // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
   // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
@@ -193,6 +196,11 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   const [retry, setRetry] = useState(0);
   const [searching, setSearching] = useState(false);
   const [flight, setFlight] = useState<FlightOption | null>(mode === "web" ? booking?.flight ?? null : null);
+  // 항공편 찾는 방법. 사전등록은 예약번호부터, 현장등록은 편명부터 보여 주고 예약번호·탑승권으로 바꿀 수 있다.
+  const methods = methodsOf(mode);
+  const [method, setMethod] = useState<FlightMethod>(methods[0]);
+  // 예약번호로 불러온 예약. 등록할 때 조회 확인값을 함께 보낸다. 예매 완료 화면에서 조회해 들어온 예약도 같다.
+  const [found, setFound] = useState<BookingHandoff | null>(mode === "web" ? booking ?? null : null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.
@@ -212,6 +220,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       setStep(Math.min(d.step, orderOf(mode, d.choices).length - 1));
       setQuery(d.query); setLater(d.later); setLaterDate(d.laterDate); setLaterNo(d.laterNo);
       setFlight(d.flight ?? booking?.flight ?? null);
+      // 편명이나 날짜로 고른 편을 되살렸으면 그 찾기 화면으로 연다.
+      if (d.later || (d.flight && !(booking && sameFlight(d.flight, booking.flight)))) setMethod("flight");
       setDocs(d.docs); setNoDocs(d.noDocs); setProofOk(d.proofOk);
     }
     setDraftReady(true);
@@ -333,6 +343,35 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
     setCityOpen(false);
   };
 
+  // 찾는 방법을 바꾸면 다른 방법으로 고른 편은 비운다. 어떤 방법으로 고른 편인지 헷갈리지 않게 한다.
+  const switchMethod = (m: FlightMethod) => {
+    if (m === method) return;
+    touched();
+    setMethod(m);
+    setFlight(null);
+    setQuery("");
+    setOptions(null);
+    setCityPick(null);
+    setCityOpen(false);
+    setBucket(null);
+    setAirline(null);
+    setLater(false);
+    setError(null);
+  };
+  const bookingFind = useBookingFind({
+    lang,
+    onScreenPad: mode === "kiosk" || (mode === "assisted" && padWide),
+    onFound: (b) => {
+      touched();
+      setFound(b);
+      setFlight(b.flight);
+    },
+  });
+  const pickFound = (f: FlightOption) => {
+    touched();
+    setFlight(f);
+  };
+
   const goTo = (target: number, revisit: boolean) => {
     revisiting.current = revisit;
     setError(null);
@@ -422,7 +461,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         body: JSON.stringify({
           flightDate: flight.flightDate,
           flightNo: flight.flightNo,
-          ...(mode === "web" && booking && sameFlight(flight, booking.flight) ? { bookingContext: booking.context } : {}),
+          ...(mode !== "edit" && found && sameFlight(flight, found.flight) ? { bookingContext: found.context } : {}),
           choices,
           party: extra.party,
           strollers: extra.strollers,
@@ -729,7 +768,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
       onStepSelect={index => { if (index < step) goTo(index, true); }}
       desktopSteps={
-        mode === "web"
+        mode === "web" || sideSteps
           ? ORDER.map((k, i) => ({
               label: stepName(k),
               current: i === step,
@@ -737,8 +776,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
             }))
           : undefined
       }
+      stepsHeading={mode !== "web" ? (lang === "en" ? { kicker: "ON-SITE REGISTRATION", title: "Register the help you need" } : { kicker: "현장 등록", title: "필요한 도움 등록" }) : undefined}
       desktopSummary={
-        mode === "web" ? (
+        mode === "web" || sideSteps ? (
           <>
             <span className="public-eyebrow">
               {lang === "en" ? "YOUR SAVED NEEDS" : "지금까지 선택한 내용"}
@@ -771,7 +811,21 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         <h1>{titleOf(kind)}</h1>
         {multipleSelectionStep && <p className="multi-select-note"><Sunflower />{lang === "en" ? "Multiple selections" : "중복 선택 가능"}</p>}
       </div>
-      {kind === "flight" && <p className="flight-search-note">{lang === "en" ? "Search by flight number or destination city." : "편명 또는 도착지로 항공편을 검색할 수 있습니다."}</p>}
+      {kind === "flight" && (
+        <p className="flight-search-note">
+          {method === "booking"
+            ? lang === "en"
+              ? "Enter the booking reference from your ticket confirmation."
+              : "항공권을 예매할 때 받은 예약번호로 항공편을 불러옵니다."
+            : method === "pass"
+              ? lang === "en"
+                ? "Read the code on your boarding pass."
+                : "탑승권의 바코드·QR 코드로 항공편을 불러옵니다."
+              : lang === "en"
+                ? "Search by flight number or destination city."
+                : "편명 또는 도착지로 항공편을 검색할 수 있습니다."}
+        </p>
+      )}
       {hint && !multipleSelectionStep && kind !== "flight" && kind !== "note" && <p className="lead">{hint}</p>}
       </div>
 
@@ -899,7 +953,48 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       {kind === "flight" && (
         <div className="flight-layout">
           <div ref={flightZone} tabIndex={-1} className="flight-zone">
-            {later ? (
+            <FlightMethodTabs methods={methods} value={method} lang={lang} onChange={switchMethod} />
+            {method !== "flight" ? (
+              flight ? (
+                <>
+                  <p className="hint" aria-live="polite">{t.flightPicked}</p>
+                  <div role="radiogroup" aria-label={t.flightChoice} className="choices">
+                    <button role="radio" aria-checked="true" className={`flight-opt on ${flight.cancelled ? "cancelled" : ""}`} onClick={() => pickFound(flight)}>
+                      <span className="flight-opt-no num">{flight.flightNo}</span>
+                      <span className="flight-opt-main">
+                        <strong>{destOf(flight)}</strong>
+                        <span>
+                          {whenOf(flight)} {flight.cancelled ? `· ${t.cancelled}` : t.departs}
+                        </span>
+                        {flight.airline && <span>{airlineLabel(lang, flight)}</span>}
+                      </span>
+                      <span className="choice-mark" aria-hidden="true">
+                        <Check size={18} strokeWidth={3} />
+                      </span>
+                    </button>
+                  </div>
+                  {flight.cancelled && <ErrorNote>{t.cancelledNote}</ErrorNote>}
+                  {method === "booking" && found && sameFlight(flight, found.flight) && (
+                    <p className="booking-provenance" role="note">
+                      {lang === "en" ? "Loaded from the demo booking · fictional flight." : "시연 예약에서 불러온 가상 항공편입니다."}
+                    </p>
+                  )}
+                  <button
+                    className="link-btn"
+                    onClick={() => {
+                      setFlight(null);
+                      flightZone.current?.focus({ preventScroll: true });
+                    }}
+                  >
+                    {method === "booking" ? (lang === "en" ? "Look up another booking" : "다른 예약 조회") : lang === "en" ? "Scan another boarding pass" : "다른 탑승권 읽기"}
+                  </button>
+                </>
+              ) : method === "booking" ? (
+                bookingFind.form
+              ) : (
+                <PassFind lang={lang} kiosk={mode === "kiosk"} onFound={pickFound} />
+              )
+            ) : later ? (
               <LaterPanel
                 t={t}
                 date={laterDate}
@@ -1146,7 +1241,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           </div>
 
           {/* 가로로 놓인 키오스크에서는 글자판이 입력란 옆에 온다. 글자판이 「다음」 버튼 밑으로 내려가지 않는다. */}
-          {onScreenPad && !later && !flight && !cityOpen && !cityPick && (
+          {method === "booking" && !flight && bookingFind.pad}
+          {method === "flight" && onScreenPad && !later && !flight && !cityOpen && !cityPick && (
             <AlnumPad onKey={(k) => typeFlight(query + k)} onErase={() => typeFlight(query.slice(0, -1))} eraseLabel={t.erase} />
           )}
         </div>

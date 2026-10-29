@@ -50,6 +50,8 @@ interface Props {
   ctaAfterContent?: boolean;
   children: React.ReactNode;
   desktopSteps?: { label: string; current: boolean; done: boolean }[];
+  /** 옆 단계 목록의 제목. 주지 않으면 휴대전화 사전등록 문구를 쓴다. */
+  stepsHeading?: { kicker: string; title: string };
   desktopSummary?: React.ReactNode;
   onStepSelect?: (index: number) => void;
   serviceHome?: boolean;
@@ -81,6 +83,7 @@ export function FlowShell({
   ctaAfterContent,
   children,
   desktopSteps,
+  stepsHeading,
   desktopSummary,
   onStepSelect,
   serviceHome = false,
@@ -327,9 +330,9 @@ export function FlowShell({
       <div className="flow-workspace">
         {desktopSteps && (
           <aside className="flow-desktop-steps">
-            <p>{lang === "en" ? "PRE-REGISTRATION" : "여행 전 사전등록"}</p>
+            <p>{stepsHeading?.kicker ?? (lang === "en" ? "PRE-REGISTRATION" : "여행 전 사전등록")}</p>
             <h2>
-              {lang === "en" ? "Your registration" : "필요한 도움 미리 등록"}
+              {stepsHeading?.title ?? (lang === "en" ? "Your registration" : "필요한 도움 미리 등록")}
             </h2>
             <ol>
               {desktopSteps.map((s, i) => (
