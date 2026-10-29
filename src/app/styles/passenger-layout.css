@@ -4,120 +4,78 @@
   화면마다 「이 화면에서 할 일」 하나가 가장 먼저 보이게 한다. 노랑은 화면마다 강조 하나에만.
 */
 
-/* ── 첫 화면 ──
-   휴대전화: 한 줄 소개 → 여행 전 지원 등록(강조) → 서비스 목록.
-   넓은 화면: 왼쪽 소개·등록, 오른쪽 서비스. */
-.ph-home { display: grid; gap: var(--space-6); padding: var(--space-5) 0 var(--space-7); }
-.ph-home-lead { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
-.ph-hero h1 {
-  margin: 0 0 var(--space-3);
-  color: var(--color-text);
-  font-size: var(--text-title);
-  font-weight: var(--weight-heading);
-  line-height: 1.3;
-  letter-spacing: -0.03em;
+/* ── 첫 화면: 캐릭터 소개 영역 + 사전등록 카드 + 균등한 서비스 카드 ── */
+.ph-home { display: grid; gap: var(--space-5); padding: 0; }
+.ph-home-lead { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.ph-hero {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(10rem, .45fr);
+  align-items: center; gap: var(--space-5); padding: var(--space-6) var(--space-7);
+  border: 1px solid var(--color-line); border-radius: var(--radius-medium);
+  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%);
 }
-.ph-hero p { margin: 0; color: var(--color-muted); font-size: var(--text-body); line-height: 1.6; }
-
-.ph-prepare {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-3) var(--space-3);
-  padding: var(--space-5);
-  border: 0.0625rem solid var(--color-line);
-  border-radius: var(--radius-medium);
-  background: var(--color-surface);
-}
-.ph-prepare-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: var(--radius-pill);
-  background: var(--color-accent);
-  color: var(--color-text);
-}
-.ph-prepare-icon svg { width: 1.25rem; height: 1.25rem; }
+.ph-hero-copy { min-width: 0; }
+.ph-hero-label { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-primary); font-size: var(--text-small); font-weight: var(--weight-label); margin-bottom: var(--space-3); }
+.ph-hero-label svg { width: 1.125rem; height: 1.125rem; }
+.ph-hero h1 { margin: 0 0 var(--space-3); max-width: 20ch; color: var(--color-text); font-size: var(--text-large); line-height: 1.25; font-weight: var(--weight-heading); letter-spacing: -.04em; text-wrap: balance; }
+.ph-hero p { margin: 0; max-width: 40rem; color: var(--color-muted); font-size: var(--text-body); line-height: 1.7; }
+.ph-hero-art { position: relative; display: grid; place-items: center; min-width: 0; }
+.ph-hero-art::before { content: ""; position: absolute; width: 13rem; max-width: 100%; aspect-ratio: 1; border-radius: var(--radius-pill); background: var(--color-accent-soft); border: 1px solid var(--color-accent); }
+.ph-hero-art img { position: relative; width: min(100%, 14rem); height: auto; object-fit: contain; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
+.ph-hero-orbit { position: absolute; width: 15rem; max-width: 100%; aspect-ratio: 1; border: 1px dashed var(--color-line); border-radius: var(--radius-pill); }
+.ph-prepare { display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; align-items: center; gap: var(--space-3); height: 100%; padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-primary-faint); }
+.ph-prepare-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: var(--radius-medium); background: var(--color-accent); color: var(--color-text); }
+.ph-prepare-icon svg { width: 1.375rem; height: 1.375rem; }
 .ph-prepare > :not(.ph-prepare-icon):not(h2) { grid-column: 1 / -1; }
-.ph-prepare h2 { margin: 0; color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); letter-spacing: -0.02em; }
-.ph-prepare p { margin: 0; color: var(--color-muted); font-size: var(--text-small); line-height: 1.65; }
-.ph-prepare .ph-prepare-go { width: 100%; min-height: 3.5rem; margin: var(--space-1) 0 0; }
-.ph-prepare .ph-text-link { justify-self: start; min-height: 2.5rem; margin-top: calc(-1 * var(--space-2)); }
+.ph-prepare h2 { margin: 0; color: var(--color-primary-hover); font-size: var(--text-heading); line-height: 1.4; font-weight: var(--weight-heading); letter-spacing: -.02em; }
+.ph-prepare p { margin: 0; color: var(--color-muted); font-size: var(--text-small); line-height: 1.7; }
+.ph-prepare .ph-prepare-go { width: 100%; min-height: 3.5rem; margin: var(--space-2) 0 0; }
 .ph-prepare .ph-prepare-go svg { width: 1.125rem; height: 1.125rem; }
-.ph-text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  color: var(--color-primary-hover);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  text-underline-offset: 0.25em;
-}
+.ph-text-link { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; color: var(--color-primary-hover); font-size: var(--text-small); font-weight: var(--weight-label); text-underline-offset: .25em; }
 .ph-text-link svg { width: 1.125rem; height: 1.125rem; flex: none; }
 .ph-home .task-home-status { margin: 0; border: 0; }
 .ph-home .task-home-status:empty { display: none; }
-
 .ph-services { min-width: 0; }
-/* 서비스 목록: 서비스 칸 5개 + 스탬프북을 한 묶음(.ph-list)으로. 휴대전화는 한 줄에 하나, 넓은 화면은 2열 × 3줄. */
-.ph-list {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  border: 0.0625rem solid var(--color-line);
-  border-radius: var(--radius-medium);
-  background: var(--color-surface);
-  overflow: hidden;
-}
+.ph-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); height: 100%; }
 .ph-list .task-launcher { display: contents; }
-.ph-list .task-action {
-  align-items: center;
-  min-height: 4.5rem;
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  border: 0;
-  border-top: 0.0625rem solid var(--color-line);
-  border-radius: 0;
-}
-.ph-list .task-action:first-child { border-top: 0; }
-.ph-list .task-action-icon {
-  box-sizing: content-box;
-  width: 1.375rem;
-  height: 1.375rem;
-  margin: 0;
-  padding: var(--space-2);
-  border-radius: var(--radius-medium);
-  background: var(--color-primary-faint);
-  color: var(--color-primary);
-}
-.ph-list .task-action-link strong { color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
-.ph-list .task-action-link small { margin-top: 0.125rem; }
-.ph-list .task-action-link > svg { color: var(--color-muted); }
-
-/* 꼬리말을 화면 아래에 붙여, 내용이 짧아도 가운데가 비어 보이지 않게 한다. */
+.ph-list .task-action { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); min-height: 7.5rem; margin: 0; padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); transition: border-color var(--motion-normal) var(--ease-out), box-shadow var(--motion-normal) var(--ease-out), transform var(--motion-normal) var(--ease-out); }
+.ph-list .task-action:hover { border-color: var(--color-primary); box-shadow: var(--shadow-1); transform: translateY(-.125rem); }
+.ph-list .task-action:focus-within { outline: .1875rem solid var(--color-focus); outline-offset: .125rem; }
+.ph-list .task-action-icon { box-sizing: content-box; width: 1.375rem; height: 1.375rem; margin: 0; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
+.ph-list .task-action-link { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; min-height: 2.75rem; }
+.ph-list .task-action-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.ph-list .task-action-link > span { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.ph-list .task-action-link strong { display: block; color: var(--color-text); font-size: var(--text-body); line-height: 1.5; font-weight: var(--weight-heading); word-break: keep-all; padding-right: var(--space-4); }
+.ph-list .task-action-link small { display: block; margin-top: var(--space-2); color: var(--color-muted); font-size: var(--text-small); line-height: 1.5; }
+.ph-list .task-action-link > svg { position: absolute; right: var(--space-4); top: var(--space-4); width: 1rem; height: 1rem; color: var(--color-primary); }
+.ph-list .task-action-stamp { background: var(--color-accent-soft); }
 .public-site:has(.ph-home) { display: flex; flex-direction: column; min-height: 100dvh; }
-.public-site:has(.ph-home) > main { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; }
-
-/* 넓은 화면: 위쪽 바와 같은 너비·같은 왼쪽 끝. 두 칸은 같은 줄에서 시작해 같은 줄에서 끝난다. */
-@media (min-width: 60rem) {
-  .ph-home {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: var(--space-6);
-    align-items: stretch;
-    padding: 0;
-  }
-  .ph-home-lead { gap: var(--space-4); }
-  .ph-hero h1 { margin-bottom: var(--space-2); font-size: var(--text-title); line-height: 1.3; }
-  .ph-services { display: flex; flex-direction: column; }
-  .ph-list { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(5.25rem, 1fr); flex: 1 1 auto; }
-  .ph-list .task-action:nth-child(2) { border-top: 0; }
-  .ph-list .task-action:nth-child(even) { border-left: 0.0625rem solid var(--color-line); }
-  /* 「공항에 가기 전이라면」 상자가 남은 높이를 채워 오른쪽 목록과 아래 끝을 맞춘다. 버튼은 상자 아래에. */
-  .ph-prepare { flex: 1 1 auto; grid-template-rows: auto 1fr auto auto; }
+.public-site:has(.ph-home) > main { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
+@media (min-width: 1101px) {
+  .ph-home { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
+  .ph-hero { grid-column: 1 / -1; }
+  .ph-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ph-prepare { grid-template-rows: auto 1fr auto auto; }
   .ph-prepare p { align-self: start; }
 }
-
+@media (min-width: 761px) and (max-width: 1100px) {
+  .ph-home { grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); }
+  .ph-hero { grid-column: 1 / -1; padding-inline: var(--space-6); }
+}
+@media (max-width: 760px) {
+  .ph-hero { grid-template-columns: minmax(0, 1fr); padding: var(--space-5); gap: var(--space-3); }
+  .ph-hero h1 { font-size: var(--text-title); }
+  .ph-hero-art { grid-row: 1; }
+  .ph-hero-art img { width: 9rem; }
+  .ph-hero-art::before { width: 8rem; }
+  .ph-hero-orbit { width: 10rem; }
+  .ph-list { grid-template-columns: minmax(0, 1fr); }
+  .ph-list .task-action { min-height: 5.5rem; align-items: center; }
+}
+@media (max-height: 700px) {
+  .ph-hero { padding-block: var(--space-4); }
+  .ph-hero-art img { max-height: 10rem; width: auto; max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .ph-list .task-action { transition: none; transform: none; } }
 
 /* ── 사전등록 단계 ──
    진행 막대를 다시 보이게 하고(몇 번째 질문인지), 언어·소리 안내는 질문 아래 한 줄로 작게 모은다.
