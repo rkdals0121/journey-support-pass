@@ -412,7 +412,7 @@ margin: 0;
 .later-picked { display: flex; gap: 0.5rem; align-items: center; color: var(--green-press); font-weight: var(--weight-heading); }
 .later-open { margin-top: 0.75rem; }
 /* 항공편 찾는 방법(예약번호·편명·탑승권). 사전등록은 앞의 둘, 현장등록은 셋 다. */
-.flight-methods { margin: 0 0 1rem; }
+.flight-methods { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 1rem; }
 .booking-find-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); gap: 0 1rem; }
 .booking-find-fields label { margin-top: 0; }
 .booking-find input { font-family: var(--font-num); font-size: var(--text-heading); font-weight: var(--weight-label); letter-spacing: 0.06em; }

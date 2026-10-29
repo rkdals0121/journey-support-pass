@@ -27,7 +27,7 @@ const LABEL: Record<FlightMethod, { ko: string; en: string }> = {
 
 export function FlightMethodTabs({ methods, value, lang, onChange }: { methods: FlightMethod[]; value: FlightMethod; lang: Lang; onChange: (m: FlightMethod) => void }) {
   return (
-    <div className="pick-row flight-methods" role="group" aria-label={lang === "en" ? "How to find your flight" : "항공편 찾는 방법"}>
+    <div className="flight-methods" role="group" aria-label={lang === "en" ? "How to find your flight" : "항공편 찾는 방법"}>
       {methods.map((m) => (
         <button key={m} type="button" className={`pick ${value === m ? "on" : ""}`} aria-pressed={value === m} onClick={() => onChange(m)}>
           {LABEL[m][lang === "en" ? "en" : "ko"]}
