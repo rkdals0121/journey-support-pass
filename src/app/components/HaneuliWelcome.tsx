@@ -6,6 +6,15 @@ import { useEffect, useState, type ReactNode } from "react";
 import { TaskLauncher } from "./TaskLauncher";
 import Link from "next/link";
 
+/** 공항 안내에서 쓰는 이름으로 맞춘 서비스 칸. 기능과 이동 경로는 그대로다. */
+const GUIDE_LABELS = {
+  guidance: { ko: "탑승구 및 편의시설 안내", en: "Gate and facility guide" },
+  mobility: { ko: "이동 지원 서비스", en: "Mobility assistance service" },
+  facility: { ko: "시설 불편 신고", en: "Report a facility issue" },
+  traffic: { ko: "교통 및 주차 안내", en: "Transport and parking information" },
+  other: { ko: "기타 안내 및 문의", en: "Other information and enquiries" },
+} as const;
+
 /** The camera stays mounted across sleep, wake and menu transitions. */
 export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, scanner, error, listen }: {
   en: boolean; here: string; awake: boolean; busy: boolean;
@@ -30,8 +39,8 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
       <section className="haneuli-intro">
         <p className="haneuli-location"><MapPin aria-hidden="true" />{here}</p>
         <p className="haneuli-eyebrow"><Flower2 aria-hidden="true" />{en ? "A little help, a brighter journey" : "작은 배려로 피어나는 편안한 여행"}</p>
-        <h1>{awake ? (en ? "How can I help you?" : "어떤 도움이\n필요하세요?") : (en ? "Your journey,\nwith Haneuli" : "당신의 여행에\n하늘이가 함께해요")}</h1>
-        <p className="haneuli-description">{awake ? (en ? "Choose a service. I’ll help you from here." : "필요한 서비스를 골라 주세요.\n여기서부터 함께할게요.") : (en ? "Touch the screen or show your boarding pass." : "화면을 누르거나 탑승권을 보여 주세요.")}</p>
+        <h1>{awake ? (en ? "How can I help you?" : "어떤 도움이\n필요하세요?") : (en ? "Airport\nAssistance" : "공항 이용 지원")}</h1>
+        <p className="haneuli-description">{awake ? (en ? "Please choose a service." : "필요한 서비스를 선택해 주세요.") : (en ? "From boarding to getting around, we are here to help." : "탑승부터 이동까지,\n편안한 공항 이용을 도와드립니다.")}</p>
         <div className="haneuli-garden" aria-hidden="true">
           <span className="haneuli-orbit orbit-one" /><span className="haneuli-orbit orbit-two" />
           <div className="haneuli-wander"><div className="haneuli-character">
@@ -47,19 +56,19 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
       </section>
 
       <section className="haneuli-menu" aria-label={en ? "Airport services" : "공항 이용 서비스"}>
-        <div className="haneuli-menu-heading"><span>01 — {en ? "AIRPORT ASSIST" : "공항 이용 안내"}</span><h2>{en ? "A more comfortable airport" : "공항 이용이 더 편안해지도록"}</h2></div>
+        <div className="haneuli-menu-heading"><span>01 — {en ? "AIRPORT ASSIST" : "공항 이용 안내"}</span><h2>{en ? "Choose a service" : "이용하실 서비스를 선택해 주세요"}</h2></div>
         <div className="haneuli-service-grid" inert={!awake}>
-          <TaskLauncher en={en} returnTo="/kiosk/guide" field />
-          <article className="task-action haneuli-appointment"><CalendarCheck className="task-action-icon" aria-hidden="true" /><Link className="task-action-link" href={"/kiosk/visits" + (en ? "?lang=en" : "")}><span><strong>{en ? "Meeting appointment" : "만남 예약 확인"}</strong><small>{en ? "Find your appointment" : "예약한 만남을 확인해요"}</small></span><ArrowRight aria-hidden="true" /></Link></article>
+          <TaskLauncher en={en} returnTo="/kiosk/guide" field labels={GUIDE_LABELS} />
+          <article className="task-action haneuli-appointment"><CalendarCheck className="task-action-icon" aria-hidden="true" /><Link className="task-action-link" href={"/kiosk/visits" + (en ? "?lang=en" : "")}><span><strong>{en ? "Meeting appointment" : "만남 예약 확인"}</strong><small>{en ? "Find your appointment" : "예약하신 만남을 확인합니다"}</small></span><ArrowRight aria-hidden="true" /></Link></article>
         </div>
 
       </section>
 
       <section className="haneuli-scan" aria-label={en ? "Boarding pass scanner" : "탑승권 스캔"}>
-        <div className="haneuli-scan-copy"><span className="haneuli-scan-icon"><ScanLine aria-hidden="true" /></span><div><h2>{en ? "Registered before your trip?" : "미리 등록하고 오셨나요?"}</h2><p>{en ? "Show your boarding pass. I’ll find your saved support." : "탑승권을 보여 주시면 등록한 내용을 바로 불러와요."}</p></div></div>
+        <div className="haneuli-scan-copy"><span className="haneuli-scan-icon"><ScanLine aria-hidden="true" /></span><div><h2>{en ? "Registered before your trip?" : "미리 등록하셨나요?"}</h2><p>{en ? "Scan your boarding pass to load your saved support." : "탑승권을 스캔하시면 등록하신 내용을 불러옵니다."}</p></div></div>
         <div className="haneuli-camera">{scanner}</div>
         <button className="haneuli-number" onClick={onNumber} disabled={busy}><Keyboard aria-hidden="true" />{en ? "Enter pass number" : "번호로 찾기"}</button>
-        <div className="haneuli-status" aria-live="polite">{busy ? <p role="status">{en ? "Checking your registration…" : "탑승권을 확인하고 있어요…"}</p> : error}</div>
+        <div className="haneuli-status" aria-live="polite">{busy ? <p role="status">{en ? "Checking your registration…" : "탑승권을 확인하고 있습니다…"}</p> : error}</div>
       </section>
     </div>
   );

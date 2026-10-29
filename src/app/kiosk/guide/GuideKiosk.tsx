@@ -104,6 +104,11 @@ export function GuideKiosk({
   idleAnswerSec,
 }: Props) {
   useRobotTheme();
+  // 이 화면에만 거는 표시. 안내 키오스크의 모양(haneuli.css)이 입구 안내로봇 같은 다른 키오스크 화면으로 번지지 않게 한다.
+  useEffect(() => {
+    document.body.classList.add("kiosk-guide");
+    return () => document.body.classList.remove("kiosk-guide");
+  }, []);
   const [view, setView] = useState<View>({ kind: "scan" });
   const [awake, setAwake] = useState(false);
   const [token, setToken] = useState<string | null>(null);

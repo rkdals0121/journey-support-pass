@@ -138,7 +138,10 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
 /* Flat, plain kiosk look. Same markup, text and behavior: only the decoration goes.
    No gradients, glows, orbits or pastel panels; solid fills, 2px edges, one yellow (help button). */
 body:has(.haneuli-welcome) { background: var(--color-canvas); }
-html[data-kiosk] body:has(.haneuli-welcome) .flow-bar { background: var(--color-surface); border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); margin-top: 0; }
+/* 안내 키오스크의 모든 화면(번호, 등록 내용, 안내, 길)의 머리. body.kiosk-guide 는 GuideKiosk 가 건다. */
+html[data-kiosk] body.kiosk-guide .flow .flow-bar { background: var(--color-surface); border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); margin-top: 0; }
+html[data-kiosk] body.kiosk-guide .kx-guide .tile,
+html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }
 .haneuli-welcome { --h-ink: var(--color-text); --h-green: var(--color-primary); }
 
 .haneuli-intro { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
@@ -162,3 +165,9 @@ html[data-kiosk] body:has(.haneuli-welcome) .flow-bar { background: var(--color-
 .haneuli-scan-icon { background: var(--color-primary-soft); color: var(--color-primary); border-radius: var(--radius-medium); }
 .haneuli-number { border: 2px solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-surface); }
 .haneuli-saved-greeting { background: var(--color-primary-soft); color: var(--color-primary-hover); border-radius: var(--radius-medium); }
+
+/* 중요도에 따른 차이: 탑승권 확인(아래 띠)은 초록 테두리로 드러내고, 만남 예약 확인은 보조 칸으로 낮춘다. */
+.haneuli-scan { border: 2px solid var(--color-primary); }
+.haneuli-scan-copy h2 { color: var(--color-text); font-weight: 800; }
+.haneuli-service-grid .haneuli-appointment { border-width: 1px; background: var(--color-canvas); }
+.haneuli-service-grid .haneuli-appointment .task-action-link strong { font-weight: 700; }
