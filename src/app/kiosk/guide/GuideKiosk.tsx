@@ -954,68 +954,80 @@ export function GuideKiosk({
         onHome={reset}
       >
         {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
-        <h1 className="kicker">{t.guideHello}</h1>
-        {edited && <Banner role="status">{t.editSaved}</Banner>}
-        <FlightBoard flight={flight} t={t} lang={lang} />
-        {offlineNow ? (
-          <Banner role="status">{t.kioskOffline}</Banner>
-        ) : (
-          guide.poll.stale && <Banner role="status">{t.stale}</Banner>
-        )}
+        <div className="kx-guide">
+          <div className="kx-guide-main">
+            <h1 className="kicker">{t.guideHello}</h1>
+            {edited && <Banner role="status">{t.editSaved}</Banner>}
+            <FlightBoard flight={flight} t={t} lang={lang} />
+            {offlineNow ? (
+              <Banner role="status">{t.kioskOffline}</Banner>
+            ) : (
+              guide.poll.stale && <Banner role="status">{t.stale}</Banner>
+            )}
 
-        {guide.gateRoute && flight.gate !== null ? (
-          <button
-            className={`gate-go pace-${guide.pace ?? "ok"}`}
-            onClick={() =>
-              setView({
-                kind: "route",
-                target: { type: "gate", gate: flight.gate as number },
-              })
-            }
-          >
-            <span className="gate-go-ico">
-              <Navigation size={32} aria-hidden="true" />
-            </span>
-            <span className="gate-go-text">
-              <strong>{t.toGate(flight.gate)}</strong>
-              <RouteSummary route={guide.gateRoute} t={t} />
-              {guide.pace && (
-                <span className="gate-go-pace">{paceText(guide.pace, t)}</span>
-              )}
-            </span>
-            <ChevronRight size={28} aria-hidden="true" />
-          </button>
-        ) : (
-          noteText && <Banner role="status">{noteText}</Banner>
-        )}
-
-        {chosen.length > 0 && (
-          <>
-            <h2>{otherTerminal ? t.nearHere : t.myPlaces}</h2>
-            <div className="tiles">{chosen.map(tile)}</div>
-          </>
-        )}
-        {others.length > 0 && (
-          <>
-            {/* 고른 시설이 없으면 이 목록은 이 자리에서 종류마다 가장 가까운 곳이다. 영어의 myPlaces 는 "Places you chose"라
+            {guide.gateRoute && flight.gate !== null ? (
+              <button
+                className={`gate-go pace-${guide.pace ?? "ok"}`}
+                onClick={() =>
+                  setView({
+                    kind: "route",
+                    target: { type: "gate", gate: flight.gate as number },
+                  })
+                }
+              >
+                <span className="gate-go-ico">
+                  <Navigation size={32} aria-hidden="true" />
+                </span>
+                <span className="gate-go-text">
+                  <strong>{t.toGate(flight.gate)}</strong>
+                  <RouteSummary route={guide.gateRoute} t={t} />
+                  {guide.pace && (
+                    <span className="gate-go-pace">
+                      {paceText(guide.pace, t)}
+                    </span>
+                  )}
+                </span>
+                <ChevronRight size={28} aria-hidden="true" />
+              </button>
+            ) : (
+              noteText && <Banner role="status">{noteText}</Banner>
+            )}
+            <div className="kx-guide-actions">
+              <button
+                className="btn"
+                onClick={() => setView({ kind: "saved" })}
+              >
+                <ClipboardList size={22} aria-hidden="true" />
+                {t.savedTitle}
+              </button>
+              <button
+                className="btn finish-btn"
+                onClick={() => setView({ kind: "survey" })}
+              >
+                {t.finish}
+              </button>
+            </div>
+          </div>
+          <div className="kx-guide-side">
+            {chosen.length > 0 && (
+              <>
+                <h2>{otherTerminal ? t.nearHere : t.myPlaces}</h2>
+                <div className="tiles">{chosen.map(tile)}</div>
+              </>
+            )}
+            {others.length > 0 && (
+              <>
+                {/* 고른 시설이 없으면 이 목록은 이 자리에서 종류마다 가장 가까운 곳이다. 영어의 myPlaces 는 "Places you chose"라
                 고르지 않은 여객에게 틀린 말이 되므로, 고른 것이 없을 때는 "가까운 시설"이라고 밝힌다. */}
-            <h2>{chosen.length > 0 ? t.otherPlaces : t.nearHere}</h2>
-            <div className="tiles tiles-small">{others.map(tile)}</div>
-          </>
-        )}
-        <button className="btn" onClick={() => setView({ kind: "saved" })}>
-          <ClipboardList size={22} aria-hidden="true" />
-          {t.savedTitle}
-        </button>
-        <button
-          className="btn finish-btn"
-          onClick={() => setView({ kind: "survey" })}
-        >
-          {t.finish}
-        </button>
-        <p className="fine">
-          {here} · {t.mock}
-        </p>
+                <h2>{chosen.length > 0 ? t.otherPlaces : t.nearHere}</h2>
+                <div className="tiles tiles-small">{others.map(tile)}</div>
+              </>
+            )}
+            <p className="fine">
+              {here} · {t.mock}
+            </p>
+          </div>
+        </div>
       </FlowShell>
       {call}
       {idle}

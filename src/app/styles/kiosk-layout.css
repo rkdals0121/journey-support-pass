@@ -289,3 +289,40 @@ html[data-kiosk] .flow-body .kx-pass-body .btn-primary { justify-self: stretch; 
   .kx-robot svg { width: 9rem; height: auto; }
   .kx-robot span { font-size: var(--text-body); }
 }
+
+/* ── 모든 키오스크 화면: 본문이 머리에 붙지 않게 위쪽 여백 ── */
+html[data-kiosk] .flow-body { padding-top: var(--space-5); }
+/* 아래 버튼 줄의 보조 버튼(끝내기 등)이 꺼진 버튼처럼 회색으로 보이지 않게 흰 바탕으로 */
+html[data-kiosk] .flow-cta .btn:not(.btn-primary):not(:disabled) { border-color: var(--color-control-line); background: var(--color-surface); color: var(--color-text); }
+
+/* ── 안내가 열린 뒤 (나에게 맞춘 안내) ──
+   가로 화면: 왼쪽에 내 항공편·탑승구 가는 길·다음 할 일, 오른쪽에 시설. 세로 화면: 위→아래. */
+.kx-guide { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-6); align-items: start; }
+.kx-guide-main, .kx-guide-side { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+html[data-kiosk] .flow-body .kx-guide h1.kicker { margin: 0; color: var(--color-primary-hover); font-size: var(--text-body); font-weight: var(--weight-heading); letter-spacing: 0; }
+html[data-kiosk] .flow-body .kx-guide-side h2 { margin: 0; color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-label); letter-spacing: 0.02em; }
+html[data-kiosk] .flow-body .kx-guide-side h2 ~ h2 { margin-top: var(--space-3); }
+html[data-kiosk] .kx-guide-side .tiles { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+html[data-kiosk] .kx-guide-side .tile { min-height: 5rem; border-width: 0.0625rem; box-shadow: none; transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
+html[data-kiosk] .kx-guide-side .tile:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
+html[data-kiosk] .kx-guide .gate-go { box-shadow: none; }
+.kx-guide-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
+html[data-kiosk] .flow-body .kx-guide-actions .btn { flex: 1 1 14rem; width: auto; margin: 0; }
+html[data-kiosk] .kx-guide-side .fine { margin: var(--space-2) 0 0; }
+@media (orientation: portrait), (max-width: 56rem) {
+  .kx-guide { grid-template-columns: minmax(0, 1fr); }
+  html[data-kiosk] .kx-guide-side .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 30rem) {
+  html[data-kiosk] .kx-guide-side .tiles { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── 입구 안내로봇: 무엇을 도와드릴까요 ── 같은 칸 모양, 그림자 대신 얇은 선 */
+html[data-kiosk] .svc-grid { gap: var(--space-4); }
+html[data-kiosk] .svc-card { min-height: 9rem; padding: var(--space-5); border-width: 0.0625rem; border-color: var(--color-line); border-radius: var(--radius-medium); box-shadow: none; transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
+html[data-kiosk] .svc-card:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
+html[data-kiosk] .svc-card:first-child { border-color: var(--color-primary); background: var(--color-primary); }
+html[data-kiosk] .svc-card:first-child :is(svg, strong, span) { color: var(--color-surface); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-kiosk] .kx-guide-side .tile, html[data-kiosk] .svc-card { transition: none; }
+}
