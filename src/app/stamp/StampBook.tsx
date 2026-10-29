@@ -91,7 +91,10 @@ export function StampBook({ scanned }: { scanned?: string }) {
   // 처음 열 때 저장된 수첩을 읽는다. QR 주소로 들어왔으면 도장부터 찍는다.
   useEffect(() => {
     let st = load();
-    let first: View = !st.theme ? "themes" : !st.name ? "cover" : "home";
+    // 테마만 고르고 시작하기를 누르지 않았으면(이름이 없으면) 다시 테마 고르기부터 연다.
+    // QR로 들어왔을 때만 고른 테마의 표지로 바로 가서 수첩을 마저 준비하게 한다.
+    let first: View =
+      !st.theme || (!st.name && !scanned) ? "themes" : !st.name ? "cover" : "home";
     if (scanned) {
       const i = checkpointOf(scanned);
       const eligible = stampEligibility(st);
