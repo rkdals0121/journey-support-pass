@@ -124,8 +124,9 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .field-task-shell .field-task-header,
 .flow .flow-bar,
 html[data-kiosk] .flow .flow-bar {
+  --site-bar-now: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
   box-sizing: border-box;
-  width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  width: var(--site-bar-now);
   max-width: var(--site-bar-width);
   min-height: var(--site-bar-height);
   margin: 12px auto 0;
@@ -137,6 +138,10 @@ html[data-kiosk] .flow .flow-bar {
   clip-path: none;
   align-self: center;
 }
+/* 등록·키오스크 화면은 바를 감싼 칸(.flow)이 바보다 좁을 수 있다. 그때 auto 여백은 0 이 되어 바가 오른쪽으로만 넘친다
+   (가운데가 어긋나고 옆으로 스크롤이 생긴다). 양쪽으로 같은 만큼 내밀어 화면 가운데에 둔다. */
+.flow .flow-bar,
+html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-now)) / 2); }
 @media (min-width: 60rem) {
   .public-site .public-header,
   .pretrip-site .pretrip-header,

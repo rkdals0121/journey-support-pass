@@ -6,6 +6,7 @@ import {
   BookOpen,
   CarFront,
   ClipboardCheck,
+  ClipboardPlus,
   Ear,
   Eye,
   Footprints,
@@ -92,6 +93,7 @@ type View =
   | { kind: "proof"; boarding: string; flight: FlightLite }
   | { kind: "consent"; boarding: string; flight: FlightLite }
   | { kind: "declined" }
+  | { kind: "register" }
   | { kind: "services"; token: string; guide: GuideDto }
   | { kind: "guide"; token: string; guide: GuideDto };
 
@@ -502,6 +504,28 @@ export function EntryKiosk({
                 </button>
               </form>
             </details>
+            {/* 현장등록: 미리 등록하지 않은 여객이 여기서 바로 등록한다. 항공편은 편명, 예약번호, 탑승권 바코드·QR 로 찾는다. */}
+            <button
+              type="button"
+              className="kx-pass-option kx-pass-new"
+              onClick={() => {
+                setError(null);
+                setScanOpen(false);
+                setNumberOpen(false);
+                startedAt.current = new Date().toISOString();
+                setView({ kind: "register" });
+              }}
+            >
+              <ClipboardPlus aria-hidden="true" className="kx-pass-icon" />
+              <span>
+                <strong>{lang === "en" ? "Register the help you need here" : "여기서 도움 새로 등록하기"}</strong>
+                <small>
+                  {lang === "en"
+                    ? "Find your flight by flight number, booking reference or boarding pass"
+                    : "편명, 예약번호, 탑승권 바코드·QR로 항공편을 찾아요"}
+                </small>
+              </span>
+            </button>
           </>
         }
       />,
@@ -548,6 +572,25 @@ export function EntryKiosk({
           {t.savedEdit}
         </button>
       </>,
+    );
+  } else if (view.kind === "register") {
+    screen = (
+      <RegisterFlow
+        mode="kiosk"
+        initialLang={lang}
+        onExit={reset}
+        onDone={async (r) => {
+          // 등록을 마치면 받은 번호로 안내를 불러와 곧바로 이 키오스크의 서비스 화면을 연다.
+          setLang(r.lang);
+          try {
+            const res = await post("/api/kiosk/resolve", { passNo: r.passNo, purpose: "guide" });
+            if (res.status !== 200) return failed(res.status, res.body);
+            setView({ kind: "services", token: res.body.token as string, guide: res.body.guide as GuideDto });
+          } catch {
+            setError(t.offline);
+          }
+        }}
+      />
     );
   } else if (view.kind === "edit") {
     const { token: tok, guide } = view;
