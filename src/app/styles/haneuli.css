@@ -5,18 +5,23 @@ body:has(.haneuli-welcome) { background: var(--color-blue-soft); }
 
 /* 안내 키오스크의 모든 화면(번호, 등록 내용, 안내, 길)의 머리: 알약·그라데이션 없이 평평한 흰 띠 */
 html[data-kiosk] body.kiosk-guide .flow .flow-bar { background: var(--color-surface); border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); margin-top: 0; }
+/* 현장 등록(옆에 단계 목록이 붙는 화면)은 /register 와 같은 크기로 보여 준다: 키오스크의 글자 키우기와 넓은 폭을 이 화면에서만 푼다.
+   키오스크 「글자 크기」 설정(--scale)은 그대로 곱한다. */
+html[data-kiosk]:has(body.kiosk-guide .flow-pretrip) { font-size: calc(100% * var(--scale, 1)); --col: min(97.5rem, 100vw); }
 html[data-kiosk] body.kiosk-guide .kx-guide .tile,
 html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }
 
-/* ── 처음 화면: 왼쪽은 하늘이, 오른쪽은 해야 할 일 ── */
-.haneuli-welcome { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: var(--space-6); align-items: stretch; min-height: calc(100dvh - 9rem); padding: var(--space-4) 0 var(--space-5); color: var(--color-text); }
-.haneuli-stage { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; padding: var(--space-2) 0; }
+/* ── 처음 화면: 가운데에 큰 하늘이와 말풍선, 왼쪽·오른쪽 가장자리에 해야 할 일 ── */
+.haneuli-welcome { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 3fr); gap: var(--space-5); align-items: stretch; min-height: calc(100dvh - 9rem); padding: var(--space-4) 0 var(--space-5); color: var(--color-text); }
+.haneuli-side { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.haneuli-right { justify-content: flex-end; }
+.haneuli-left .haneuli-actions { margin-top: auto; }
+.haneuli-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-5); min-width: 0; }
 .haneuli-location { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-primary-hover); font-size: var(--text-body); font-weight: var(--weight-heading); }
 .haneuli-location svg { flex: none; width: 1.25rem; height: 1.25rem; }
-.haneuli-hero { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); min-height: 12rem; }
-.haneuli-bubble { position: relative; margin: 0; padding: var(--space-4) var(--space-6); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.4; text-align: center; white-space: pre-line; }
+.haneuli-bubble { position: relative; margin: 0; padding: var(--space-4) var(--space-6); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font-size: 2rem; font-weight: var(--weight-heading); line-height: 1.35; text-align: center; white-space: pre-line; max-width: 100%; }
 .haneuli-bubble::after { content: ""; position: absolute; left: 50%; bottom: -0.5rem; width: 1rem; height: 1rem; background: var(--color-surface); transform: translateX(-50%) rotate(45deg); }
-.haneuli-character { position: relative; width: min(100%, 24rem, 38dvh); aspect-ratio: 1; }
+.haneuli-character { position: relative; width: min(100%, 34rem, 48dvh); aspect-ratio: 1; }
 .haneuli-character img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 /* 잠든 모습: 새 그림에는 눈 감은 모습이 없어서, 자는 동안 두 눈 위에 감은 눈(◡)을 얹는다 */
 .haneuli-lid { position: absolute; width: 13%; height: 15%; border-radius: 50%; background: var(--color-surface); box-shadow: 0 0 0.5rem 0.4rem var(--color-surface); opacity: 0; }
@@ -24,32 +29,31 @@ html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; borde
 .haneuli-lid-l { left: 20%; top: 52%; }
 .haneuli-lid-r { left: 51%; top: 41%; }
 .is-idle .haneuli-lid { opacity: 1; }
-.haneuli-zzz { position: absolute; top: 6%; right: 4%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
+.haneuli-zzz { position: absolute; top: -2%; right: -6%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
 .is-idle .haneuli-zzz { animation: haneuli-dream 3s ease-in-out infinite; }
 .is-idle .haneuli-character { animation: haneuli-breathe var(--motion-breathe) ease-in-out infinite; }
 .is-awake .haneuli-character { animation: haneuli-bob 3s ease-in-out infinite; }
 
-.haneuli-actions { display: flex; align-items: stretch; gap: var(--space-3); }
+.haneuli-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); }
 .haneuli-actions > * { min-width: 0; margin: 0; }
-.haneuli-actions .listen-start { flex: 1 1 0; width: auto; min-height: 4rem; }
-.haneuli-start { flex: 1.4 1 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 4rem; padding: var(--space-3) var(--space-5); border: 0; border-radius: var(--radius-medium); background: var(--color-primary); color: var(--color-surface); font: inherit; font-size: var(--text-heading); font-weight: var(--weight-heading); cursor: pointer; }
+.haneuli-actions .listen-start { width: auto; min-height: 4rem; }
+.haneuli-start { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 4rem; padding: var(--space-3) var(--space-5); border: 0; border-radius: var(--radius-medium); background: var(--color-primary); color: var(--color-surface); font: inherit; font-size: var(--text-heading); font-weight: var(--weight-heading); cursor: pointer; }
 .haneuli-start:disabled { opacity: 0.6; cursor: default; }
-.haneuli-rest { flex: 1 1 0; min-height: 4rem; border: 0.125rem solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-body); font-weight: var(--weight-label); cursor: pointer; }
+.haneuli-rest { min-height: 4rem; border: 0.125rem solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-body); font-weight: var(--weight-label); cursor: pointer; }
 
-.haneuli-panel { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .haneuli-title h1, .haneuli-choose h1 { margin: 0 0 var(--space-2); color: var(--color-text); font-size: var(--text-large); font-weight: var(--weight-heading); line-height: 1.2; letter-spacing: -0.03em; }
 .haneuli-title p { margin: 0; color: var(--color-muted); font-size: var(--text-heading); line-height: 1.5; }
 
 /* 깨운 뒤: 미리 작성했는지 먼저 묻는다 */
-.haneuli-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-.haneuli-choice { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-height: 7rem; padding: var(--space-4); border: 0.125rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
+.haneuli-choices { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.haneuli-choice { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-height: 6rem; padding: var(--space-3) var(--space-4); border: 0.125rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
 .haneuli-choice svg { width: 2rem; height: 2rem; color: var(--color-primary); }
-.haneuli-choice strong { font-size: 1.375rem; line-height: 1.25; }
-.haneuli-choice span { color: var(--color-muted); font-size: var(--text-body); line-height: 1.4; }
+.haneuli-choice strong { font-size: 1.25rem; line-height: 1.25; }
+.haneuli-choice span { color: var(--color-muted); font-size: var(--text-small); line-height: 1.4; }
 .haneuli-choice:hover, .haneuli-choice[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary-faint); }
 
 /* 탑승권 스캔: 처음 화면의 가장 중요한 칸이라 초록 테두리로 드러낸다 */
-.haneuli-scan { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-3) var(--space-4); align-items: center; padding: var(--space-4); border: 0.125rem solid var(--color-primary); border-radius: var(--radius-medium); background: var(--color-surface); }
+.haneuli-scan { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3) var(--space-4); align-items: center; padding: var(--space-4); border: 0.125rem solid var(--color-primary); border-radius: var(--radius-medium); background: var(--color-surface); }
 .is-pre .haneuli-scan { background: var(--color-primary-faint); }
 .haneuli-scan-copy { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-4); }
 .haneuli-scan-icon { display: grid; place-items: center; padding: var(--space-3); border-radius: var(--radius-medium); background: var(--color-primary-soft); color: var(--color-primary); }
@@ -58,7 +62,9 @@ html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; borde
 .haneuli-scan-copy p { margin: 0; color: var(--color-muted); font-size: var(--text-body); line-height: 1.5; }
 .haneuli-camera { min-width: 0; }
 .haneuli-camera .scanner { width: 100%; max-width: none; aspect-ratio: 16 / 9; margin: 0; }
-.is-awake .haneuli-camera .scanner { aspect-ratio: 21 / 9; }
+.is-awake .haneuli-camera .scanner { aspect-ratio: 3 / 1; }
+.is-awake .haneuli-bubble { font-size: 1.75rem; }
+.haneuli-choose h1 { font-size: var(--text-title); }
 .is-awake .haneuli-scan-copy p { display: none; }
 .haneuli-camera .scan-hint { margin: var(--space-2) 0 0; font-size: var(--text-small); line-height: 1.4; }
 .haneuli-camera .scan > .btn { min-height: 3rem; margin: var(--space-2) 0 0; }
@@ -91,7 +97,9 @@ html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; borde
 .guide-services .svc-card.is-sub { border-width: 0.0625rem; background: var(--color-canvas); }
 
 @media (orientation: portrait), (max-width: 1100px) {
-  .haneuli-welcome { grid-template-columns: minmax(0, 1fr); }
+  .haneuli-welcome { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .haneuli-center { order: -1; }
+  .haneuli-right { justify-content: flex-start; }
   .guide-services .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
