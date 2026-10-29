@@ -1,81 +1,44 @@
-// 스탬프북 그림. 모두 손으로 그린 SVG 라 따로 받아 올 파일이 없다.
-// 「하늘이」는 팀이 디자인한 인천공항 교통약자 지원 마스코트 시안을 옮겨 그린 것이다.
+// 스탬프북 그림. 문장·도장·장식은 손으로 그린 SVG 다.
+// 「하늘이」는 팀이 디자인한 인천공항 마스코트 시안 그림(public/stamp/haneul.webp)을 그대로 쓰고,
+// 기장·승무원·탐험가 필터 옷은 팀이 준 옷 사진(public/stamp/costume-*.webp, 배경·얼굴 자리를 투명하게 다듬은 것)을 쓴다.
+import Image from "next/image";
 import type { ThemeId } from "@/lib/stamp-book";
 
 const PLANE = "M50 18c3 0 5 3 5 7v17l24 14v7l-24-7v14l7 6v6l-12-4-12 4v-6l7-6V56l-24 7v-7l24-14V25c0-4 2-7 5-7z";
 const STAR = "M50 8l11 27 29 2-22 19 7 28-25-15-25 15 7-28-22-19 29-2z";
 const COMPASS = "M50 6l9 35 35 9-35 9-9 35-9-35-35-9 35-9z";
 
-// 하늘이 색 (시안의 Color Palette)
 const DEEP = "var(--color-blue)";
 const YELLOW = "var(--color-accent)";
 const SKY = "var(--color-art-sky)";
+// 하늘이 시안 색: 파란 후드, 보라빛 띠, 청록 스카프·헤드폰 불빛
+const HOOD = "#4a72c6";
+const BAND = "#a9b3e9";
+const TEAL = "#3cc4d6";
 
-export type Mood = "smile" | "wink" | "joy" | "wow";
+export const HANEUL_SRC = "/stamp/haneul.webp";
 
-/** 하늘이: 꼬리 날개 달린 파란 후드, 노란 띠, 헤드폰. viewBox 0 0 160 160 안의 g 모양(사진 필터 svg 안에도 그대로 넣는다). */
-function HaneulShape({ mood, hands }: { mood: Mood; hands: boolean }) {
-  return (
-    <>
-      {/* 꼬리 날개 */}
-      <path d="M108 44c6-22 22-34 40-38 4 18-2 38-14 52z" fill={DEEP} />
-      <path d={PLANE} fill="var(--color-surface)" transform="translate(132 26) rotate(40) scale(.2) translate(-50 -50)" />
-      {/* 왼쪽 헤드폰(뒤) */}
-      <circle cx="20" cy="96" r="15" fill="var(--color-blue-soft)" stroke={SKY} strokeWidth="3" />
-      {/* 후드 */}
-      <path d="M80 30c38 0 64 26 64 62 0 34-28 56-64 56s-64-22-64-56c0-36 26-62 64-62z" fill={DEEP} />
-      <path d="M30 60c14-22 34-31 52-31 22 0 42 10 54 28-20-8-38-11-54-11-20 0-36 5-52 14z" fill={YELLOW} />
-      {/* 얼굴 */}
-      <path d="M80 62c30 0 48 16 48 40 0 22-20 36-48 36s-48-14-48-36c0-24 18-40 48-40z" fill="var(--color-surface)" />
-      <circle cx="54" cy="112" r="7" fill="var(--color-art-skin)" />
-      <circle cx="106" cy="112" r="7" fill="var(--color-art-skin)" />
-      {mood === "joy" ? (
-        <path d="M54 100q8-9 16 0M90 100q8-9 16 0" fill="none" stroke="var(--color-art-outline)" strokeWidth="4" strokeLinecap="round" />
-      ) : (
-        <>
-          <ellipse cx="62" cy="100" rx="7" ry="9" fill="var(--color-art-outline)" />
-          <circle cx="64" cy="96" r="2.6" fill="var(--color-surface)" />
-          {mood === "wink" ? (
-            <path d="M90 101q8-8 16 0" fill="none" stroke="var(--color-art-outline)" strokeWidth="4" strokeLinecap="round" />
-          ) : (
-            <>
-              <ellipse cx="98" cy="100" rx="7" ry="9" fill="var(--color-art-outline)" />
-              <circle cx="100" cy="96" r="2.6" fill="var(--color-surface)" />
-            </>
-          )}
-        </>
-      )}
-      <path d="M55 84q6-4 12-2M93 82q6-2 12 2" fill="none" stroke={DEEP} strokeWidth="2.5" strokeLinecap="round" />
-      {mood === "wow" ? (
-        <ellipse cx="80" cy="120" rx="4" ry="5" fill="var(--color-rose)" />
-      ) : (
-        <path d="M70 114q10 12 20 0z" fill="var(--color-rose)" stroke="var(--color-art-outline)" strokeWidth="2" strokeLinejoin="round" />
-      )}
-      {/* 오른쪽 헤드폰(앞) */}
-      <circle cx="141" cy="96" r="16" fill="var(--color-surface)" stroke="var(--color-art-sky)" strokeWidth="2" />
-      <circle cx="141" cy="96" r="10" fill={DEEP} stroke={SKY} strokeWidth="3" />
-      {hands && (
-        <>
-          <circle cx="50" cy="146" r="12" fill="var(--color-surface)" />
-          <circle cx="110" cy="146" r="12" fill="var(--color-surface)" />
-          <path d="M36 140q4-8 12-10M124 140q-4-8-12-10" fill="none" stroke={YELLOW} strokeWidth="6" strokeLinecap="round" />
-        </>
-      )}
-    </>
-  );
-}
+/**
+ * 옷 사진과 그 안의 얼굴 자리(타원). 사진은 600×1200(아래는 몸통 끝 줄을 늘여 둔 것)이고 얼굴 자리는 투명하다.
+ * 사진 필터와 완성 화면 그림이 이 값으로 얼굴을 맞춘다.
+ */
+export const COSTUME_PHOTO: Record<string, { src: string; cx: number; cy: number; rx: number; ry: number }> = {
+  captain: { src: "/stamp/costume-captain.webp", cx: 282, cy: 353, rx: 81, ry: 98 },
+  crew: { src: "/stamp/costume-crew.webp", cx: 295, cy: 343, rx: 81, ry: 88 },
+  explorer: { src: "/stamp/costume-explorer.webp", cx: 300, cy: 352, rx: 80, ry: 97 },
+};
+export const COSTUME_SIZE = { w: 600, h: 1200 };
 
-export function Haneul({ size = 120, mood = "smile", hands = false }: { size?: number; mood?: Mood; hands?: boolean }) {
-  return (
-    <svg viewBox="0 0 160 160" width={size} height={size} aria-hidden="true">
-      <HaneulShape mood={mood} hands={hands} />
-    </svg>
-  );
+/** 하늘이 친구 필터에서 어깨 위에 앉는 하늘이 자리(Costume 좌표). */
+export const BUDDY = { x: 190, y: 262, size: 112 };
+
+export function Haneul({ size = 120 }: { size?: number }) {
+  return <Image src={HANEUL_SRC} alt="" width={size} height={size} className="sb-haneul" aria-hidden="true" />;
 }
 
 /** 표지와 인증 카드의 둥근 문장 */
 export function Emblem({ theme, size = 112 }: { theme: ThemeId; size?: number }) {
-  if (theme === "friend") return <Haneul size={size * 1.15} hands />;
+  if (theme === "friend") return <Haneul size={size * 1.15} />;
   const line = theme === "flight" ? "var(--color-accent)" : "var(--color-accent)";
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
@@ -119,16 +82,33 @@ export function StampMark({ theme, size = 56 }: { theme: ThemeId; size?: number 
 
 /** 사진을 찍기 전 완성 화면에 보여 줄 그림. 고른 필터의 옷을 입은 아이. */
 export function Portrait({ role }: { role: string }) {
+  const photo = COSTUME_PHOTO[role];
+  // 옷 사진은 얼굴 자리 폭이 150 이 되게 줄여 (150,fy) 에 맞춘다. 모자 꼭대기가 잘리지 않게 조금 내린다.
+  const k = photo ? 75 / photo.rx : 1;
+  const fy = photo ? 212 : 190;
   return (
     <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" className="sb-art" aria-hidden="true">
       <Backdrop role={role} />
-      <circle cx="150" cy="190" r="72" fill="var(--color-art-skin)" />
-      <path d="M78 196q-4-84 72-86t72 86q-16-44-72-48-56 4-72 48z" fill="var(--color-art-hair)" />
-      <circle cx="124" cy="190" r="7" fill="var(--color-art-outline)" />
-      <circle cx="176" cy="190" r="7" fill="var(--color-art-outline)" />
-      <path d="M128 222q22 18 44 0" fill="none" stroke="var(--color-art-outline)" strokeWidth="6" strokeLinecap="round" />
-      <rect x="132" y="250" width="36" height="50" fill="var(--color-art-skin)" />
-      <Costume role={role} />
+      <ellipse cx="150" cy={fy} rx={photo ? 77 : 72} ry={photo ? photo.ry * k + 2 : 72} fill="var(--color-art-skin)" />
+      {!photo && <path d="M78 196q-4-84 72-86t72 86q-16-44-72-48-56 4-72 48z" fill="var(--color-art-hair)" />}
+      <circle cx="124" cy={fy - 4} r="7" fill="var(--color-art-outline)" />
+      <circle cx="176" cy={fy - 4} r="7" fill="var(--color-art-outline)" />
+      <path d={`M128 ${fy + 28}q22 18 44 0`} fill="none" stroke="var(--color-art-outline)" strokeWidth="6" strokeLinecap="round" />
+      {photo ? (
+        <image
+          href={photo.src}
+          x={150 - photo.cx * k}
+          y={fy - photo.cy * k}
+          width={COSTUME_SIZE.w * k}
+          height={COSTUME_SIZE.h * k}
+        />
+      ) : (
+        <>
+          <rect x="132" y="250" width="36" height="50" fill="var(--color-art-skin)" />
+          <Costume role={role} />
+          <image href={HANEUL_SRC} x={BUDDY.x} y={BUDDY.y} width={BUDDY.size} height={BUDDY.size} />
+        </>
+      )}
     </svg>
   );
 }
@@ -156,78 +136,28 @@ const Cloud = ({ x, y }: { x: number; y: number }) => (
 );
 
 /**
- * 필터 옷. 얼굴 가운데가 (150,190), 얼굴 폭이 150 쯤이라고 보고 그린다.
- * 사진 필터는 이 좌표계를 찾은 얼굴 위치·크기·기울기에 맞춰 옮겨 그린다.
- * 몸통은 아래로 길게(y 1050 까지) 내려 그려 얼굴이 작게 잡혀도 화면 아래가 비지 않는다. 완성 그림은 400 에서 잘린다.
+ * 하늘이 친구 필터 옷(SVG). 얼굴 가운데가 (150,190), 얼굴 폭이 150 쯤이라고 보고 그린다.
+ * 사진 필터는 이 좌표계를 찾은 얼굴 위치·크기·기울기에 맞춰 옮겨 그린다. 어깨 위 하늘이(BUDDY)는 그림 파일이라 따로 얹는다.
+ * 몸통은 아래로 길게(y 1050 까지) 내려 그려 얼굴이 작게 잡혀도 화면 아래가 비지 않는다.
+ * 기장·승무원·탐험가는 옷 사진(COSTUME_PHOTO)을 쓰므로 여기서 그리지 않는다.
  */
 export function Costume({ role }: { role: string }) {
-  const body = (fill: string) => <path d="M-40 1050V420c10-80 70-124 190-124s180 44 190 124v630z" fill={fill} />;
-  switch (role) {
-    case "captain":
-      return (
-        <>
-          {body("var(--color-art-outline)")}
-          <path d="M118 298l32 52 32-52z" fill="var(--color-surface)" />
-          <path d="M144 312h12l6 44-12 14-12-14z" fill="var(--color-rose)" />
-          <path d="M4 348l70-24M8 366l66-22M296 348l-70-24M292 366l-66-22" stroke="var(--color-accent)" strokeWidth="9" strokeLinecap="round" />
-          <path d="M70 120q80-100 160 0z" fill="var(--color-art-outline)" />
-          <rect x="66" y="112" width="168" height="16" rx="4" fill="var(--color-accent)" />
-          <path d="M72 128q78 22 156 0l-8 12q-70 18-140 0z" fill="var(--color-art-outline)" />
-          <circle cx="150" cy="86" r="14" fill="var(--color-accent)" />
-          <circle cx="150" cy="86" r="6" fill="var(--color-art-outline)" />
-        </>
-      );
-    case "crew":
-      return (
-        <>
-          {body("var(--color-art-outline)")}
-          <path d="M112 300l38 44 38-44z" fill="var(--color-surface)" />
-          <path d="M120 312l30 22 30-22-12 26-18-6-18 6z" fill="var(--color-rose)" />
-          <path d="M150 334l-16 34 16-8 16 8z" fill="var(--color-accent)" />
-          <path d="M40 340l50-12M260 340l-50-12" stroke="var(--color-accent)" strokeWidth="6" strokeLinecap="round" />
-          <g transform="rotate(-12 150 100)">
-            <rect x="104" y="84" width="92" height="40" rx="10" fill="var(--color-art-outline)" />
-            <rect x="104" y="112" width="92" height="10" fill="var(--color-accent)" />
-            <path d="M136 98h28M140 92l10 6 10-6" stroke="var(--color-accent)" strokeWidth="4" fill="none" strokeLinecap="round" />
-          </g>
-        </>
-      );
-    case "explorer":
-      return (
-        <>
-          {body("var(--color-art-skin)")}
-          <path d="M86 306c-8 40-4 74 0 94v650H-30V420c8-60 48-100 116-114zM214 306c8 40 4 74 0 94v650h116V420c-8-60-48-100-116-114z" fill="var(--color-art-leaf)" />
-          <path d="M118 300l32 36 32-36" fill="none" stroke="var(--color-rose)" strokeWidth="10" strokeLinejoin="round" />
-          <circle cx="236" cy="360" r="14" fill="var(--color-accent-soft)" stroke="var(--color-rose)" strokeWidth="4" />
-          <path d={COMPASS} fill="var(--color-rose)" transform="translate(236 360) scale(.18) translate(-50 -50)" />
-          <ellipse cx="150" cy="126" rx="112" ry="22" fill="var(--color-art-skin)" />
-          <path d="M90 124q4-62 60-62t60 62z" fill="var(--color-accent)" />
-          <rect x="90" y="108" width="120" height="14" fill="var(--color-art-hair)" />
-        </>
-      );
-    case "friend":
-      // 하늘이 후드를 쓴 모습: 머리 위 노란 띠와 꼬리 날개, 귀 옆 헤드폰, 어깨 위 하늘이.
-      return (
-        <>
-          {body(DEEP)}
-          <path d="M112 300l38 40 38-40" fill="none" stroke="var(--color-surface)" strokeWidth="12" strokeLinejoin="round" />
-          <path d="M150 340v80" stroke={YELLOW} strokeWidth="8" strokeLinecap="round" />
-          <path d="M196 70c8-30 30-46 54-52 6 26-2 52-20 70z" fill={DEEP} />
-          <path d={PLANE} fill="var(--color-surface)" transform="translate(228 42) rotate(40) scale(.28) translate(-50 -50)" />
-          <path d="M66 140c14-58 50-84 84-84s70 26 84 84c-24-28-52-40-84-40s-60 12-84 40z" fill={DEEP} />
-          <path d="M80 112c16-30 42-44 70-44s54 14 70 44c-22-14-44-20-70-20s-48 6-70 20z" fill={YELLOW} />
-          <circle cx="66" cy="196" r="22" fill="var(--color-surface)" stroke="var(--color-art-sky)" strokeWidth="3" />
-          <circle cx="66" cy="196" r="13" fill={DEEP} stroke={SKY} strokeWidth="4" />
-          <circle cx="234" cy="196" r="22" fill="var(--color-surface)" stroke="var(--color-art-sky)" strokeWidth="3" />
-          <circle cx="234" cy="196" r="13" fill={DEEP} stroke={SKY} strokeWidth="4" />
-          <g transform="translate(196 270) scale(.62)">
-            <HaneulShape mood="wink" hands />
-          </g>
-        </>
-      );
-    default:
-      return null;
-  }
+  if (role !== "friend") return null;
+  // 하늘이 후드를 쓴 모습: 보라빛 띠를 두른 파란 후드, 꼬리 날개, 귀 옆 헤드폰, 청록 스카프.
+  return (
+    <>
+      <path d="M-40 1050V420c10-80 70-124 190-124s180 44 190 124v630z" fill={HOOD} />
+      <path d="M104 300q46 40 92 0l10 22q-56 44-112 0z" fill={TEAL} />
+      <path d="M196 70c8-30 30-46 54-52 6 26-2 52-20 70z" fill={HOOD} />
+      <path d={PLANE} fill="var(--color-surface)" transform="translate(228 42) rotate(40) scale(.28) translate(-50 -50)" />
+      <path d="M66 140c14-58 50-84 84-84s70 26 84 84c-24-28-52-40-84-40s-60 12-84 40z" fill={HOOD} />
+      <path d="M80 112c16-30 42-44 70-44s54 14 70 44c-22-14-44-20-70-20s-48 6-70 20z" fill={BAND} />
+      <circle cx="66" cy="196" r="22" fill="var(--color-surface)" stroke="#c8ccd4" strokeWidth="3" />
+      <circle cx="66" cy="196" r="13" fill="#8fa3b5" stroke={TEAL} strokeWidth="4" />
+      <circle cx="234" cy="196" r="22" fill="var(--color-surface)" stroke="#c8ccd4" strokeWidth="3" />
+      <circle cx="234" cy="196" r="13" fill="#8fa3b5" stroke={TEAL} strokeWidth="4" />
+    </>
+  );
 }
 
 /** 사진 필터 가장자리 장식. 얼굴을 가리지 않게 위쪽 귀퉁이에만 둔다. viewBox 0 0 300 400. */

@@ -1199,3 +1199,9 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
+
+/* 하늘이 그림(시안 이미지) */
+.sb-haneul {
+  display: block;
+  height: auto;
+}
