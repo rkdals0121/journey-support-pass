@@ -1,0 +1,20 @@
+[
+  {
+    "label": "소리로 듣기",
+    "selector": "bar-btn bar-icon ",
+    "width": 39.59375,
+    "height": 44
+  },
+  {
+    "label": "한국어",
+    "selector": "on",
+    "width": 56.265625,
+    "height": 36
+  },
+  {
+    "label": "English",
+    "selector": "",
+    "width": 67.03125,
+    "height": 36
+  }
+]

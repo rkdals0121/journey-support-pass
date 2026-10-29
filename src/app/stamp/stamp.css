@@ -93,7 +93,7 @@
 }
 .sb input {
   width: 100%;
-  min-height: 2.75rem;
+  min-height: max(2.75rem,var(--target-floor));
   padding: 0 0.75rem;
   border: 2px solid var(--ink);
   border-radius: var(--radius-small);
@@ -182,7 +182,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  min-height: 2.75rem;
+  min-height: max(2.75rem,var(--target-floor));
   border: 0;
   background: none;
   color: inherit;
@@ -388,7 +388,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  min-height: 2.5rem;
+  min-height: max(2.5rem,var(--target-floor));
   padding: 0 0.75rem;
   border: 0;
   border-radius: var(--radius-pill);
@@ -410,7 +410,7 @@
   background: var(--soft);
 }
 .sb-tabs button {
-  min-height: 2.75rem;
+  min-height: max(2.75rem,var(--target-floor));
   border: 0;
   border-radius: var(--radius-small);
   background: none;
@@ -466,7 +466,7 @@
   height: 100%;
   border-radius: var(--radius-small);
   background: var(--accent);
-  transition: width 0.6s ease;
+  transition: width var(--motion-normal) ease;
 }
 .sb-hint {
   margin: 0;
@@ -641,7 +641,7 @@
 .sb-scan .scan .btn {
   display: block;
   margin: 0.75rem auto 0;
-  min-height: 2.75rem;
+  min-height: max(2.75rem,var(--target-floor));
   padding: 0 1rem;
   border: 1px solid var(--color-overlay);
   border-radius: var(--radius-pill);
@@ -680,7 +680,7 @@
   text-transform: uppercase;
 }
 .sb-typed .sb-btn {
-  min-height: 2.75rem;
+  min-height: max(2.75rem,var(--target-floor));
 }
 
 /* 2. 도장 획득 */
@@ -732,22 +732,7 @@
   width: 100%;
 }
 .sb-stamp-pop {
-  animation: sb-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
-}
-@keyframes sb-pop {
-  from {
-    transform: scale(2.2) rotate(-20deg);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sb-stamp-pop {
-    animation: none;
-  }
+  animation: sb-pop var(--motion-normal) var(--ease-out) both;
 }
 .sb-stars {
   display: flex;
@@ -802,7 +787,7 @@
   gap: 0.5rem;
 }
 .sb-roles button {
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   border: 2px solid var(--main);
   border-radius: var(--radius-pill);
   background: none;
@@ -1006,18 +991,10 @@
   font-size: var(--text-small);
   font-weight: var(--weight-heading);
 }
-@media print {
-  .sb-print-hide {
-    display: none;
-  }
-  .sb-print {
-    padding: 0;
-  }
-}
 
 .sb-fields select {
   width: 100%;
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   padding: 0.75rem;
   border: 1px solid var(--muted);
   border-radius: var(--radius-small);
@@ -1032,4 +1009,21 @@
 .sb-pick-mine small {
   font-weight: var(--weight-label);
   opacity: 0.8;
+}
+@keyframes sb-pop {from { opacity:0; transform:translateY(.25rem); } to { opacity:1; transform:none; }
+}
+
+@media print {
+  .sb-print-hide {
+    display: none;
+  }
+  .sb-print {
+    padding: 0;
+  }
+ .sb-print-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm; }
+ .sb-print-card { padding:5mm;gap:1mm;border-width:.3mm;line-height:1.2; }
+ .sb-print-card strong { font-size:var(--text-small);line-height:1.2; }
+ .sb-print-card .qr { width:40mm; }
+ .sb-print-no { font-size:var(--text-title);line-height:1.1; }
+ .sb-print-card small,.sb-print-meet { font-size:var(--text-caption);line-height:1.2; }
 }

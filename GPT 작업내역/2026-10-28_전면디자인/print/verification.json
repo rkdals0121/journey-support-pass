@@ -1,0 +1,18 @@
+[
+  {
+    "document": "points",
+    "pages": 1,
+    "expectedCodes": 6,
+    "missingCodes": [],
+    "a4": true,
+    "blankPages": []
+  },
+  {
+    "document": "stamp",
+    "pages": 13,
+    "expectedCodes": 73,
+    "missingCodes": [],
+    "a4": true,
+    "blankPages": []
+  }
+]

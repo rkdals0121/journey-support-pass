@@ -1,0 +1,84 @@
+{
+  "base": "origin/main",
+  "baseCommit": "fe751df7a2da43d12e39d29b6a9a9ec36d018d43",
+  "files": [
+    {
+      "file": "src/lib/design-theme.ts",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/layout.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/styles/passenger-layout.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/styles/kiosk-layout.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/styles/staff-layout.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/components/KioskHome.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/components/RegisterFlow.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/components/TaskHome.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/kiosk/entry/EntryKiosk.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/kiosk/guide/GuideKiosk.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/kiosk/visits/KioskVisitFlow.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/p/[token]/PassView.tsx",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/staff/requests/RequestList.tsx",
+      "unchanged": true
+    }
+  ],
+  "screenGeometry": [
+    {
+      "file": "src/app/styles/components.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/styles/passenger.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/styles/staff.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/stamp/stamp.css",
+      "unchanged": true
+    },
+    {
+      "file": "src/app/components/support-journey.module.css",
+      "unchanged": true
+    }
+  ]
+}

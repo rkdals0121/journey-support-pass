@@ -62,10 +62,11 @@
   --text-caption: .75rem; --text-small: .875rem; --text-body: 1rem; --text-heading: 1.25rem; --text-title: 1.75rem; --text-large: 2.5rem; --text-display: 3.5rem;
   --weight-body: 400; --weight-label: 600; --weight-heading: 700;
   --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem; --space-8: 4rem;
+  --target-floor: 44px; --target-kiosk-floor: 64px;
   --radius-small: .375rem; --radius-medium: .75rem; --radius-pill: 999rem;
   --radius: var(--radius-small); --radius-lg: var(--radius-medium);
   --shadow-1: 0 .125rem .5rem var(--color-shadow); --shadow-2: 0 .5rem 2rem var(--color-shadow);
-  --motion-fast: 120ms; --motion-normal: 180ms; --motion-slow: 240ms; --ease-in: cubic-bezier(.4,0,1,1); --ease-out: cubic-bezier(0,0,.2,1);
+  --motion-loading: 1.4s; --motion-spin: 1s; --motion-breathe: 4s; --motion-fast: 120ms; --motion-normal: 180ms; --motion-slow: 240ms; --ease-in: cubic-bezier(.4,0,1,1); --ease-out: cubic-bezier(0,0,.2,1);
   --nav-h: 4rem; --bar-h: 3.5rem; --col: 32.5rem;
 }
-@media (forced-colors: active) { :root { --color-primary: ButtonText; --color-text: CanvasText; --color-muted: CanvasText; --color-canvas: Canvas; --color-surface: Canvas; --color-line: CanvasText; --color-control-line: ButtonText; --color-focus: Highlight; } }
+@media (forced-colors: active) { :root { --color-primary: ButtonText; --color-text: CanvasText; --color-muted: CanvasText; --color-canvas: Canvas; --color-surface: Canvas; --color-line: CanvasText; --color-control-line: ButtonText; --color-focus: Highlight; --color-primary-hover: CanvasText; --color-primary-soft: Canvas; --color-primary-faint: Canvas; --color-accent: Canvas; --color-accent-soft: Canvas; --color-accent-ink: CanvasText; --color-dark: Canvas; --color-on-dark: CanvasText; --color-on-dark-muted: CanvasText; --color-error: CanvasText; --color-error-soft: Canvas; --color-blue: CanvasText; --color-blue-soft: Canvas; --color-purple: CanvasText; --color-purple-soft: Canvas; --color-rose: CanvasText; --color-rose-soft: Canvas; --ink: CanvasText; } }

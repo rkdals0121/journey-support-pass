@@ -1,0 +1,2275 @@
+{
+  "phase": "after",
+  "rows": [
+    {
+      "route": "/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "home-390.webp",
+      "actualPath": "/",
+      "title": "공항에서 무엇을 도와드릴까요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1439
+    },
+    {
+      "route": "/",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "home-1280.webp",
+      "actualPath": "/",
+      "title": "공항에서 무엇을 도와드릴까요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 969
+    },
+    {
+      "route": "/",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "home-1080.webp",
+      "actualPath": "/",
+      "title": "공항에서 무엇을 도와드릴까요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/check",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "check-390.webp",
+      "actualPath": "/check",
+      "title": "기기 점검",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1893
+    },
+    {
+      "route": "/check",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "check-1280.webp",
+      "actualPath": "/check",
+      "title": "기기 점검",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1783
+    },
+    {
+      "route": "/check",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "check-1080.webp",
+      "actualPath": "/check",
+      "title": "기기 점검",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/devices",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "devices-390.webp",
+      "actualPath": "/devices",
+      "title": "키오스크 · 안내로봇",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1407
+    },
+    {
+      "route": "/devices",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "devices-1280.webp",
+      "actualPath": "/devices",
+      "title": "키오스크 · 안내로봇",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 968
+    },
+    {
+      "route": "/devices",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "devices-1080.webp",
+      "actualPath": "/devices",
+      "title": "키오스크 · 안내로봇",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/help",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-390.webp",
+      "actualPath": "/help",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1231
+    },
+    {
+      "route": "/help",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-1280.webp",
+      "actualPath": "/help",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1610
+    },
+    {
+      "route": "/help",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-1080.webp",
+      "actualPath": "/help",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/kiosk",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "kiosk-390.webp",
+      "actualPath": "/kiosk",
+      "title": "현장 기기 설치",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/kiosk",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "kiosk-1280.webp",
+      "actualPath": "/kiosk",
+      "title": "현장 기기 설치",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 905
+    },
+    {
+      "route": "/kiosk",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "kiosk-1080.webp",
+      "actualPath": "/kiosk",
+      "title": "현장 기기 설치",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/navigate",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "navigate-390.webp",
+      "actualPath": "/navigate",
+      "title": "어디로 가시나요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1816
+    },
+    {
+      "route": "/navigate",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "navigate-1280.webp",
+      "actualPath": "/navigate",
+      "title": "어디로 가시나요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1437
+    },
+    {
+      "route": "/navigate",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "navigate-1080.webp",
+      "actualPath": "/navigate",
+      "title": "어디로 가시나요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/points",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "points-390.webp",
+      "actualPath": "/points",
+      "title": "만남 장소 찾기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1768
+    },
+    {
+      "route": "/points",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "points-1280.webp",
+      "actualPath": "/points",
+      "title": "만남 장소 찾기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1168
+    },
+    {
+      "route": "/points",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "points-1080.webp",
+      "actualPath": "/points",
+      "title": "만남 장소 찾기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/prepare",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "prepare-390.webp",
+      "actualPath": "/prepare",
+      "title": "출발 전 지원등록",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 974
+    },
+    {
+      "route": "/prepare",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "prepare-1280.webp",
+      "actualPath": "/prepare",
+      "title": "출발 전 지원등록",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/prepare",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "prepare-1080.webp",
+      "actualPath": "/prepare",
+      "title": "출발 전 지원등록",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/register",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "register-390.webp",
+      "actualPath": "/register",
+      "title": "어떤 점이 불편하세요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/register",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "register-1280.webp",
+      "actualPath": "/register",
+      "title": "어떤 점이 불편하세요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 930
+    },
+    {
+      "route": "/register",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "register-1080.webp",
+      "actualPath": "/register",
+      "title": "어떤 점이 불편하세요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/requests",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "requests-390.webp",
+      "actualPath": "/requests",
+      "title": "내 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 885
+    },
+    {
+      "route": "/requests",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "requests-1280.webp",
+      "actualPath": "/requests",
+      "title": "내 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 869
+    },
+    {
+      "route": "/requests",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "requests-1080.webp",
+      "actualPath": "/requests",
+      "title": "내 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/services",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "services-390.webp",
+      "actualPath": "/services",
+      "title": "서비스 찾기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1726
+    },
+    {
+      "route": "/services",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "services-1280.webp",
+      "actualPath": "/services",
+      "title": "서비스 찾기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1429
+    },
+    {
+      "route": "/services",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "services-1080.webp",
+      "actualPath": "/services",
+      "title": "서비스 찾기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/staff",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-390.webp",
+      "actualPath": "/staff/requests",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1006
+    },
+    {
+      "route": "/staff",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-1280.webp",
+      "actualPath": "/staff/requests",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 995
+    },
+    {
+      "route": "/stamp",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "stamp-390.webp",
+      "actualPath": "/stamp",
+      "title": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/stamp",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "stamp-1280.webp",
+      "actualPath": "/stamp",
+      "title": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/stamp",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "stamp-1080.webp",
+      "actualPath": "/stamp",
+      "title": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/visits",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "visits-390.webp",
+      "actualPath": "/visits",
+      "title": "로봇·이동지원 예약",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1596
+    },
+    {
+      "route": "/visits",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "visits-1280.webp",
+      "actualPath": "/visits",
+      "title": "로봇·이동지원 예약",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1108
+    },
+    {
+      "route": "/visits",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "visits-1080.webp",
+      "actualPath": "/visits",
+      "title": "로봇·이동지원 예약",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/demo/boarding",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "demo-boarding-390.webp",
+      "actualPath": "/demo/boarding",
+      "title": "모의 탑승권 만들기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/demo/boarding",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "demo-boarding-1280.webp",
+      "actualPath": "/demo/boarding",
+      "title": "모의 탑승권 만들기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/demo/boarding",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "demo-boarding-1080.webp",
+      "actualPath": "/demo/boarding",
+      "title": "모의 탑승권 만들기",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/demo/booking",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "demo-booking-390.webp",
+      "actualPath": "/demo/booking",
+      "title": "공항에서 필요한 도움이 있으신가요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 983
+    },
+    {
+      "route": "/demo/booking",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "demo-booking-1280.webp",
+      "actualPath": "/demo/booking",
+      "title": "공항에서 필요한 도움이 있으신가요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 854
+    },
+    {
+      "route": "/demo/booking",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "demo-booking-1080.webp",
+      "actualPath": "/demo/booking",
+      "title": "공항에서 필요한 도움이 있으신가요?",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/kiosk/entry",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "kiosk-entry-390.webp",
+      "actualPath": "/kiosk/entry",
+      "title": "필요한 서비스를 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1755
+    },
+    {
+      "route": "/kiosk/entry",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "kiosk-entry-1280.webp",
+      "actualPath": "/kiosk/entry",
+      "title": "필요한 서비스를 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 921
+    },
+    {
+      "route": "/kiosk/entry",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "kiosk-entry-1080.webp",
+      "actualPath": "/kiosk/entry",
+      "title": "필요한 서비스를 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/kiosk/guide",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "kiosk-guide-390.webp",
+      "actualPath": "/kiosk/guide",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 2054
+    },
+    {
+      "route": "/kiosk/guide",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "kiosk-guide-1280.webp",
+      "actualPath": "/kiosk/guide",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 863
+    },
+    {
+      "route": "/kiosk/guide",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "kiosk-guide-1080.webp",
+      "actualPath": "/kiosk/guide",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/kiosk/register",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "kiosk-register-390.webp",
+      "actualPath": "/kiosk/entry",
+      "title": "필요한 서비스를 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1754
+    },
+    {
+      "route": "/kiosk/register",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "kiosk-register-1280.webp",
+      "actualPath": "/kiosk/entry",
+      "title": "필요한 서비스를 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 921
+    },
+    {
+      "route": "/kiosk/register",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "kiosk-register-1080.webp",
+      "actualPath": "/kiosk/entry",
+      "title": "필요한 서비스를 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/kiosk/visits",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "kiosk-visits-390.webp",
+      "actualPath": "/kiosk/visits",
+      "title": "예약 확인번호 입력",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1246
+    },
+    {
+      "route": "/kiosk/visits",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "kiosk-visits-1280.webp",
+      "actualPath": "/kiosk/visits",
+      "title": "예약 확인번호 입력",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 833
+    },
+    {
+      "route": "/kiosk/visits",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "kiosk-visits-1080.webp",
+      "actualPath": "/kiosk/visits",
+      "title": "예약 확인번호 입력",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/points/print",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "points-print-390.webp",
+      "actualPath": "/points/print",
+      "title": "만남 장소 · 체크포인트 QR",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 2620
+    },
+    {
+      "route": "/points/print",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "points-print-1280.webp",
+      "actualPath": "/points/print",
+      "title": "만남 장소 · 체크포인트 QR",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1384
+    },
+    {
+      "route": "/points/print",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "points-print-1080.webp",
+      "actualPath": "/points/print",
+      "title": "만남 장소 · 체크포인트 QR",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/prepare/booking",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "prepare-booking-390.webp",
+      "actualPath": "/prepare/booking",
+      "title": "예약정보 불러오기",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1109
+    },
+    {
+      "route": "/prepare/booking",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "prepare-booking-1280.webp",
+      "actualPath": "/prepare/booking",
+      "title": "예약정보 불러오기",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 927
+    },
+    {
+      "route": "/prepare/booking",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "prepare-booking-1080.webp",
+      "actualPath": "/prepare/booking",
+      "title": "예약정보 불러오기",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/services/desks",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "services-desks-390.webp",
+      "actualPath": "/services/desks",
+      "title": "안내데스크 위치",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1064
+    },
+    {
+      "route": "/services/desks",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "services-desks-1280.webp",
+      "actualPath": "/services/desks",
+      "title": "안내데스크 위치",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1092
+    },
+    {
+      "route": "/services/desks",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "services-desks-1080.webp",
+      "actualPath": "/services/desks",
+      "title": "안내데스크 위치",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/services/lost-property",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "services-lost-property-390.webp",
+      "actualPath": "/services/lost-property",
+      "title": "분실물 안내",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/services/lost-property",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "services-lost-property-1280.webp",
+      "actualPath": "/services/lost-property",
+      "title": "분실물 안내",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/services/lost-property",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "services-lost-property-1080.webp",
+      "actualPath": "/services/lost-property",
+      "title": "분실물 안내",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/staff/alerts",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-alerts-390.webp",
+      "actualPath": "/staff/alerts",
+      "title": "알림 운영 현황",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/alerts",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-alerts-1280.webp",
+      "actualPath": "/staff/alerts",
+      "title": "알림 운영 현황",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/assist",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-assist-390.webp",
+      "actualPath": "/staff/assist",
+      "title": "이동지원 요청",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/assist",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-assist-1280.webp",
+      "actualPath": "/staff/assist",
+      "title": "이동지원 요청",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/demo",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-demo-390.webp",
+      "actualPath": "/staff/demo",
+      "title": "전체 흐름 시연 준비",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1608
+    },
+    {
+      "route": "/staff/demo",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-demo-1280.webp",
+      "actualPath": "/staff/demo",
+      "title": "전체 흐름 시연 준비",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1097
+    },
+    {
+      "route": "/staff/design",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-design-390.webp",
+      "actualPath": "/staff/design",
+      "title": "화면 부품 미리보기",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1771
+    },
+    {
+      "route": "/staff/design",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-design-1280.webp",
+      "actualPath": "/staff/design",
+      "title": "화면 부품 미리보기",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1029
+    },
+    {
+      "route": "/staff/desk",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-desk-390.webp",
+      "actualPath": "/staff/desk",
+      "title": "안내데스크",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1212
+    },
+    {
+      "route": "/staff/desk",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-desk-1280.webp",
+      "actualPath": "/staff/desk",
+      "title": "안내데스크",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1218
+    },
+    {
+      "route": "/staff/exit",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-exit-390.webp",
+      "actualPath": "/staff/exit",
+      "title": "교통약자 우대출구",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/exit",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-exit-1280.webp",
+      "actualPath": "/staff/exit",
+      "title": "교통약자 우대출구",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/experience",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-experience-390.webp",
+      "actualPath": "/staff/experience",
+      "title": "운영 효과·체험 집계",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 2098
+    },
+    {
+      "route": "/staff/experience",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-experience-1280.webp",
+      "actualPath": "/staff/experience",
+      "title": "운영 효과·체험 집계",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1505
+    },
+    {
+      "route": "/staff/integrations",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-integrations-390.webp",
+      "actualPath": "/staff/integrations",
+      "title": "외부 연동",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1926
+    },
+    {
+      "route": "/staff/integrations",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-integrations-1280.webp",
+      "actualPath": "/staff/integrations",
+      "title": "외부 연동",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 998
+    },
+    {
+      "route": "/staff/legacy",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-legacy-390.webp",
+      "actualPath": "/staff/legacy",
+      "title": "이전 요청 확인",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/legacy",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-legacy-1280.webp",
+      "actualPath": "/staff/legacy",
+      "title": "이전 요청 확인",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/operations",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-operations-390.webp",
+      "actualPath": "/staff/operations",
+      "title": "운영 기준·담당 업무",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 5500
+    },
+    {
+      "route": "/staff/operations",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-operations-1280.webp",
+      "actualPath": "/staff/operations",
+      "title": "운영 기준·담당 업무",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 4106
+    },
+    {
+      "route": "/staff/overview",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-overview-390.webp",
+      "actualPath": "/staff/overview",
+      "title": "통합 운영 현황",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 4903
+    },
+    {
+      "route": "/staff/overview",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-overview-1280.webp",
+      "actualPath": "/staff/overview",
+      "title": "통합 운영 현황",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 2260
+    },
+    {
+      "route": "/staff/requests",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-requests-390.webp",
+      "actualPath": "/staff/requests",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1153
+    },
+    {
+      "route": "/staff/requests",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-requests-1280.webp",
+      "actualPath": "/staff/requests",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1005
+    },
+    {
+      "route": "/staff/resources",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-resources-390.webp",
+      "actualPath": "/staff/resources",
+      "title": "장비 현황·배차",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/resources",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-resources-1280.webp",
+      "actualPath": "/staff/resources",
+      "title": "장비 현황·배차",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/visits",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-visits-390.webp",
+      "actualPath": "/staff/visits",
+      "title": "거점 예약·현장 응대",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1238
+    },
+    {
+      "route": "/staff/visits",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-visits-1280.webp",
+      "actualPath": "/staff/visits",
+      "title": "거점 예약·현장 응대",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1008
+    },
+    {
+      "route": "/stamp/print",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "stamp-print-390.webp",
+      "actualPath": "/stamp/print",
+      "title": "스탬프북 체크포인트 QR",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 29175
+    },
+    {
+      "route": "/stamp/print",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "stamp-print-1280.webp",
+      "actualPath": "/stamp/print",
+      "title": "스탬프북 체크포인트 QR",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 10158
+    },
+    {
+      "route": "/stamp/print",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "stamp-print-1080.webp",
+      "actualPath": "/stamp/print",
+      "title": "스탬프북 체크포인트 QR",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 10158
+    },
+    {
+      "route": "/staff/desk/register",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-desk-register-390.webp",
+      "actualPath": "/staff/desk/register",
+      "title": "지원정보 대신 등록",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/desk/register",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-desk-register-1280.webp",
+      "actualPath": "/staff/desk/register",
+      "title": "지원정보 대신 등록",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/desk/stats",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-desk-stats-390.webp",
+      "actualPath": "/staff/desk/stats",
+      "title": "오늘 현황 10월 29일",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 3295
+    },
+    {
+      "route": "/staff/desk/stats",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-desk-stats-1280.webp",
+      "actualPath": "/staff/desk/stats",
+      "title": "오늘 현황 10월 29일",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 2637
+    },
+    {
+      "route": "/staff/legacy/calls",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-legacy-calls-390.webp",
+      "actualPath": "/staff/legacy/calls",
+      "title": "이전 직원 호출",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/legacy/calls",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-legacy-calls-1280.webp",
+      "actualPath": "/staff/legacy/calls",
+      "title": "이전 직원 호출",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/requests/new",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-requests-new-390.webp",
+      "actualPath": "/staff/requests/new",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1119
+    },
+    {
+      "route": "/staff/requests/new",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-requests-new-1280.webp",
+      "actualPath": "/staff/requests/new",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1590
+    },
+    {
+      "route": "/p/[token]",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "p-fixture-token-390.webp",
+      "actualPath": "/p/[token]",
+      "title": "내 등록",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1613
+    },
+    {
+      "route": "/p/[token]",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "p-fixture-token-1280.webp",
+      "actualPath": "/p/[token]",
+      "title": "내 등록",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1484
+    },
+    {
+      "route": "/p/[token]",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "p-fixture-token-1080.webp",
+      "actualPath": "/p/[token]",
+      "title": "내 등록",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/p/[token]/help",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "p-fixture-token-help-390.webp",
+      "actualPath": "/p/[token]/help",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1295
+    },
+    {
+      "route": "/p/[token]/help",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "p-fixture-token-help-1280.webp",
+      "actualPath": "/p/[token]/help",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1782
+    },
+    {
+      "route": "/p/[token]/help",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "p-fixture-token-help-1080.webp",
+      "actualPath": "/p/[token]/help",
+      "title": "어떤 도움이 필요하세요?",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/visits/[receipt]",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "visits-fixture-receipt-390.webp",
+      "actualPath": "/visits/[receipt]",
+      "title": "예약 확정",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1616
+    },
+    {
+      "route": "/visits/[receipt]",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "visits-fixture-receipt-1280.webp",
+      "actualPath": "/visits/[receipt]",
+      "title": "예약 확정",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1114
+    },
+    {
+      "route": "/visits/[receipt]",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "visits-fixture-receipt-1080.webp",
+      "actualPath": "/visits/[receipt]",
+      "title": "예약 확정",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/points/concourse",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "points-concourse-390.webp",
+      "actualPath": "/points/concourse",
+      "title": "탑승동 중앙",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1415
+    },
+    {
+      "route": "/points/concourse",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "points-concourse-1280.webp",
+      "actualPath": "/points/concourse",
+      "title": "탑승동 중앙",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1029
+    },
+    {
+      "route": "/points/concourse",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "points-concourse-1080.webp",
+      "actualPath": "/points/concourse",
+      "title": "탑승동 중앙",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/devices/kiosk",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "devices-kiosk-390.webp",
+      "actualPath": "/devices/kiosk",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 947
+    },
+    {
+      "route": "/devices/kiosk",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "devices-kiosk-1280.webp",
+      "actualPath": "/devices/kiosk",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 813
+    },
+    {
+      "route": "/devices/kiosk",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "devices-kiosk-1080.webp",
+      "actualPath": "/devices/kiosk",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/devices/robot",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "devices-robot-390.webp",
+      "actualPath": "/devices/robot",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/devices/robot",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "devices-robot-1280.webp",
+      "actualPath": "/devices/robot",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 898
+    },
+    {
+      "route": "/devices/robot",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "devices-robot-1080.webp",
+      "actualPath": "/devices/robot",
+      "title": "어떤 서비스를 이용하시겠어요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/stamp/c/A01",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "stamp-c-A01-390.webp",
+      "actualPath": "/stamp",
+      "title": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/stamp/c/A01",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "stamp-c-A01-1280.webp",
+      "actualPath": "/stamp",
+      "title": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/stamp/c/A01",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "stamp-c-A01-1080.webp",
+      "actualPath": "/stamp",
+      "title": "어떤 수첩으로공항을 여행할까요?",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/missing-design-route",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 404,
+      "file": "missing-design-route-390.webp",
+      "actualPath": "/missing-design-route",
+      "title": "찾는 화면이 없습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/missing-design-route",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 404,
+      "file": "missing-design-route-1280.webp",
+      "actualPath": "/missing-design-route",
+      "title": "찾는 화면이 없습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/missing-design-route",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 404,
+      "file": "missing-design-route-1080.webp",
+      "actualPath": "/missing-design-route",
+      "title": "찾는 화면이 없습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/p/0000000000000000",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "p-0000000000000000-390.webp",
+      "actualPath": "/p/0000000000000000",
+      "title": "등록된 패스가 아닙니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/p/0000000000000000",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "p-0000000000000000-1280.webp",
+      "actualPath": "/p/0000000000000000",
+      "title": "등록된 패스가 아닙니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/p/0000000000000000",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "p-0000000000000000-1080.webp",
+      "actualPath": "/p/0000000000000000",
+      "title": "등록된 패스가 아닙니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/help?topic=facility",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-topic-facility-390.webp",
+      "actualPath": "/help",
+      "title": "시설 이용 불편",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1258
+    },
+    {
+      "route": "/help?topic=facility",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-topic-facility-1280.webp",
+      "actualPath": "/help",
+      "title": "시설 이용 불편",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1756
+    },
+    {
+      "route": "/help?topic=facility",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-topic-facility-1080.webp",
+      "actualPath": "/help",
+      "title": "시설 이용 불편",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/help?topic=mobility",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-topic-mobility-390.webp",
+      "actualPath": "/help",
+      "title": "이동 지원",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 941
+    },
+    {
+      "route": "/help?topic=mobility",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-topic-mobility-1280.webp",
+      "actualPath": "/help",
+      "title": "이동 지원",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1456
+    },
+    {
+      "route": "/help?topic=mobility",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-topic-mobility-1080.webp",
+      "actualPath": "/help",
+      "title": "이동 지원",
+      "overflow": false,
+      "primaryButtons": 2,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/help?topic=traffic",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-topic-traffic-390.webp",
+      "actualPath": "/help",
+      "title": "교통·주차 지원",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/help?topic=traffic",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-topic-traffic-1280.webp",
+      "actualPath": "/help",
+      "title": "교통·주차 지원",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/help?topic=traffic",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-topic-traffic-1080.webp",
+      "actualPath": "/help",
+      "title": "교통·주차 지원",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/help?topic=other",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-topic-other-390.webp",
+      "actualPath": "/help",
+      "title": "기타 업무 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1136
+    },
+    {
+      "route": "/help?topic=other",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-topic-other-1280.webp",
+      "actualPath": "/help",
+      "title": "기타 업무 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1003
+    },
+    {
+      "route": "/help?topic=other",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-topic-other-1080.webp",
+      "actualPath": "/help",
+      "title": "기타 업무 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/help/receipt/[receipt]",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-receipt-fixture-receipt-390.webp",
+      "actualPath": "/help/receipt/[receipt]",
+      "source": "redesigned-source",
+      "title": "길·시설 안내",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1425
+    },
+    {
+      "route": "/help/receipt/[receipt]",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-receipt-fixture-receipt-1280.webp",
+      "actualPath": "/help/receipt/[receipt]",
+      "source": "redesigned-source",
+      "title": "길·시설 안내",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 933
+    },
+    {
+      "route": "/help/receipt/[receipt]",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-receipt-fixture-receipt-1080.webp",
+      "actualPath": "/help/receipt/[receipt]",
+      "source": "redesigned-source",
+      "title": "길·시설 안내",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/staff/requests (접수 상세)",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-requests-received-detail-390.webp",
+      "actualPath": "/staff/requests",
+      "source": "redesigned-source",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 3,
+      "bodyHeight": 892
+    },
+    {
+      "route": "/staff/requests (접수 상세)",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-requests-received-detail-1280.webp",
+      "actualPath": "/staff/requests",
+      "source": "redesigned-source",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 3,
+      "bodyHeight": 1167
+    },
+    {
+      "route": "/staff/login",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-login-390.webp",
+      "actualPath": "/staff/login",
+      "source": "redesigned-source",
+      "title": "직원 로그인",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/login",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-login-1280.webp",
+      "actualPath": "/staff/login",
+      "source": "redesigned-source",
+      "title": "직원 로그인",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/zone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-zone-390.webp",
+      "actualPath": "/staff/zone",
+      "source": "redesigned-source",
+      "title": "오늘 근무하는 구역을 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1337
+    },
+    {
+      "route": "/staff/zone",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-zone-1280.webp",
+      "actualPath": "/staff/zone",
+      "source": "redesigned-source",
+      "title": "오늘 근무하는 구역을 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1300
+    },
+    {
+      "route": "/error.tsx (오류 표시)",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "global-error-component-390.webp",
+      "actualPath": "component-preview",
+      "source": "redesigned-source",
+      "method": "Original error component, router link markup shim, app stylesheet and font resources",
+      "title": "화면을 불러오지 못했습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/error.tsx (오류 표시)",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "global-error-component-1280.webp",
+      "actualPath": "component-preview",
+      "source": "redesigned-source",
+      "method": "Original error component, router link markup shim, app stylesheet and font resources",
+      "title": "화면을 불러오지 못했습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/error.tsx (오류 표시)",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "global-error-component-1080.webp",
+      "actualPath": "component-preview",
+      "source": "redesigned-source",
+      "method": "Original error component, router link markup shim, app stylesheet and font resources",
+      "title": "화면을 불러오지 못했습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    }
+  ],
+  "errors": []
+}

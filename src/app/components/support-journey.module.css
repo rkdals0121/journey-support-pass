@@ -54,7 +54,7 @@
 .toolbar input,
 .toolbar select {
   width: 100%;
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   padding: 0.75rem 0.75rem;
   border: 1px solid var(--color-control-line);
   border-radius: var(--radius-small);
@@ -87,7 +87,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   padding: 0.75rem 1rem;
   border: 1px solid var(--color-primary-hover);
   border-radius: var(--radius-small);
@@ -301,7 +301,7 @@
   color: var(--color-primary-hover);
   text-underline-offset: 0.2em;
   display: inline-flex;
-  min-height: 2.75rem;
+  min-height: max(2.75rem,var(--target-floor));
   align-items: center;
 }
 .list {
@@ -396,19 +396,6 @@
     width: 100%;
   }
 }
-@media print {
-  .actions,
-  .demo {
-    display: none;
-  }
-  .page {
-    width: 100%;
-    margin: 0;
-  }
-  .printGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 
 .grid > label {
   display: grid;
@@ -418,7 +405,7 @@
 .grid input,
 .grid select {
   width: 100%;
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   padding: 0.5rem;
   border: 1px solid var(--color-control-line);
   border-radius: var(--radius-small);
@@ -498,7 +485,7 @@
   flex-wrap: wrap;
 }
 .queueTabs button {
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   padding: 0.75rem 1rem;
   border: 1px solid var(--color-control-line);
   background: var(--color-surface);
@@ -561,7 +548,7 @@
 }
 .draftSteps button {
   flex: 1;
-  min-height: 3rem;
+  min-height: max(3rem,var(--target-floor));
   border: 0;
   border-bottom: 3px solid var(--color-primary-soft);
   background: var(--color-surface);
@@ -588,4 +575,23 @@
   .devicePage > .panel {
     margin-block: 1.5rem;
   }
+}
+
+@media print {
+  .actions,
+  .demo {
+    display: none;
+  }
+  .page {
+    width: 100%;
+    margin: 0;
+  }
+  .printGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+ .printGrid { gap:4mm; }
+ .printGrid article { padding:5mm; }
+ .printGrid img { width:40mm;height:40mm; }
+ .printGrid article h2 { margin:0 0 2mm;font-size:var(--text-heading);line-height:1.2; }
+ .printGrid article p { margin:2mm 0 0;font-size:var(--text-small);line-height:1.3; }
 }

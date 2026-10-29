@@ -1,0 +1,66 @@
+{
+  "retainedMainFontExceptions": [
+    {
+      "file": "src/app/styles/components.css",
+      "selector": ".brand > span > small",
+      "value": "0.55em"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": ".kiosk-appointment-page h1",
+      "value": "clamp(1.75rem, 3vw, 2.5rem)"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": ".task-device-preview.robot-preview .task-action-link strong",
+      "value": "clamp(1rem, 3cqw, 1.875rem)"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": ".task-device-preview.robot-preview .task-action-link small",
+      "value": "clamp(0.75rem, 2cqw, 1.125rem)"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": ".task-device-preview.robot-preview .kiosk-task-heading h1",
+      "value": "clamp(1.625rem, 4.5cqw, 2.5rem)"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": "html:not([data-kiosk]) .bar-btn",
+      "value": "min(0.9375rem, 4.3vw)"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": "html:not([data-kiosk]) .flow-body h1",
+      "value": "min(1.625rem, 7.6vw)"
+    },
+    {
+      "file": "src/app/styles/devices.css",
+      "selector": "html:not([data-kiosk]) .flow-body .lead",
+      "value": "min(1.0625rem, 5.6vw)"
+    },
+    {
+      "file": "src/app/styles/passenger.css",
+      "selector": ".booking-lookup h1",
+      "value": "clamp(1.8rem,4vw,2.6rem)"
+    }
+  ],
+  "externalLayoutFiles": [
+    "kiosk-layout.css",
+    "passenger-layout.css",
+    "staff-layout.css"
+  ],
+  "styleFiles": [
+    "src/app/styles/components.css",
+    "src/app/styles/devices.css",
+    "src/app/styles/passenger.css",
+    "src/app/styles/staff.css",
+    "src/app/styles/tokens.css",
+    "src/app/stamp/stamp.css",
+    "src/app/components/support-journey.module.css"
+  ],
+  "crossFileDuplicates": [],
+  "literalColors": [],
+  "fontExceptions": []
+}
