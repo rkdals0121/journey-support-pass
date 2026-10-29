@@ -1,0 +1,220 @@
+/*
+  사이트 전체의 위쪽 바를 하나의 모양으로 맞춘다. 기준은 메인 화면의 둥근 바(해바라기 노랑이 옅게 번지는 흰 띠).
+  여객 공용 머리(PublicShell), 여행 전 등록 첫 화면(/prepare), 키오스크의 서비스 화면(FieldTaskShell)이 같은 모양을 쓴다.
+  키오스크의 FlowShell도 같은 바 크기를 쓴다.
+  이 파일은 맨 마지막에 읽힌다.
+*/
+
+/* ── 둥근 바 모양 ── */
+.public-site .public-header,
+.pretrip-site .pretrip-header,
+.field-task-shell .field-task-header,
+.flow-pretrip .flow-bar {
+  box-sizing: border-box;
+  width: calc(100% - 2.5rem);
+  max-width: 84rem;
+  min-height: 4rem;
+  margin: var(--space-3) auto 0;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
+  border: 0.0625rem solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 45%);
+  box-shadow: var(--shadow-1);
+}
+.public-site .public-header { position: relative; top: auto; z-index: 30; }
+.pretrip-site .pretrip-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.field-task-shell .field-task-header { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
+.field-task-shell .field-task-header > span { margin-left: auto; font-size: var(--text-small); }
+
+/* 바 안의 로고: 같은 크기 */
+:is(.public-header, .pretrip-header, .field-task-header) .public-logo,
+.field-task-header .brand { gap: var(--space-2); font-size: var(--text-body); }
+:is(.public-header, .pretrip-header) .public-logo small { font-size: var(--text-caption); }
+:is(.public-header, .pretrip-header, .field-task-header) .sunflower { width: 2rem; height: 2rem; }
+
+/* 바 오른쪽 도구: 글자 크기 → 언어 → (소리·메뉴) 순서, 같은 높이 */
+.public-site .public-tools,
+.pretrip-site .prepare-tools,
+.field-task-shell .field-task-tools,
+.flow-pretrip .flow-bar-right { display: flex; align-items: center; gap: var(--space-2); }
+.public-site .public-tools { flex-direction: row-reverse; justify-content: flex-start; }
+.public-site .public-tools .public-menu-toggle { order: -1; }
+.public-site .public-tools > a,
+.pretrip-site .prepare-tools > a,
+.field-task-shell .field-task-tools > :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border: 0.0625rem solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-primary-hover);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  text-decoration: none;
+}
+.text-size-control { flex: none; }
+.text-size-control button { width: 2.5rem; min-height: 2.5rem; }
+.field-task-shell .field-task-tools > button[aria-pressed="true"] { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
+
+/* 바 아래 본문과의 거리 */
+.public-site .public-header + *,
+.pretrip-site .pretrip-header ~ main { margin-top: var(--space-4); }
+
+@media (max-width: 40rem) {
+  .public-site .public-header,
+  .pretrip-site .pretrip-header,
+  .field-task-shell .field-task-header,
+  .flow-pretrip .flow-bar {
+    width: calc(100% - 1.5rem);
+    border-radius: var(--radius-medium);
+    padding-left: var(--space-3);
+  }
+  .field-task-shell .field-task-header { flex-wrap: wrap; }
+  .field-task-shell .field-task-header > span { order: 3; width: 100%; margin: 0; }
+  :is(.public-header, .pretrip-header) .public-logo small { display: none; }
+}
+
+/* ── 사전등록: 가운데 상자 안쪽만 따로 스크롤되던 것을 없앤다 ──
+   한 화면에 맞추려고 상자 안을 스크롤하게 하고 스크롤 막대까지 숨겨서, 아래에 내용이 더 있는 줄 몰랐다.
+   이제 페이지 전체가 내려가고, 「다음」 버튼 줄만 화면 아래에 붙어 있다. */
+html:has(.flow-pretrip),
+body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; overscroll-behavior: auto; }
+.flow.flow-pretrip { height: auto; min-height: 100dvh; overflow: visible; }
+.flow-pretrip .flow-workspace,
+.flow-pretrip .flow-form-area { flex: 1 0 auto; min-height: 0; overflow: visible; }
+.flow-pretrip .flow-body { flex: 1 0 auto; min-height: 0; overflow: visible; scrollbar-width: auto; }
+.flow-pretrip .flow-cta { position: sticky; bottom: 0; z-index: 15; background: linear-gradient(to bottom, transparent, var(--color-canvas) 1rem); }
+.flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { position: sticky; top: var(--space-4); align-self: flex-start; max-height: none; overflow: visible; }
+
+/* ── 사전등록: 전부 커 보이던 크기를 한 단계 줄인다 ── */
+.flow-pretrip .flow-body h1,
+.flow-pretrip[data-screen="trouble"] .flow-body h1 { font-size: var(--text-title); line-height: 1.3; }
+.flow-pretrip[data-screen="trouble"] .choice,
+.flow-pretrip .choice { min-height: 3.5rem; padding: var(--space-3) var(--space-4); }
+.flow-pretrip[data-screen="trouble"] .choice-icon { width: 2rem; height: 2rem; }
+.flow-pretrip[data-screen="trouble"] .choice-icon svg { width: 1.625rem; height: 1.625rem; }
+.flow-pretrip .multi-select-note { font-size: var(--text-small); }
+.flow-pretrip .flow-cta .btn { min-height: 3.5rem; font-size: var(--text-body); }
+@media (min-width: 60rem) {
+  .flow-pretrip .flow-body { padding: var(--space-6); }
+}
+
+/* 좁은 화면: 바를 두 줄로. 윗줄 이전·처음으로·설정, 아랫줄 글자 크기·언어·소리 */
+@media (max-width: 40rem) {
+  html:not([data-kiosk]) .flow-pretrip .flow-bar { flex-wrap: wrap; row-gap: var(--space-2); padding: var(--space-2); }
+  html:not([data-kiosk]) .flow-pretrip .flow-bar-side { flex: 1 1 100%; flex-wrap: nowrap; }
+  .flow-pretrip .flow-bar-right { flex: 1 1 100%; flex-wrap: nowrap; justify-content: space-between; padding-top: var(--space-2); border-top: 0.0625rem solid var(--color-line); }
+  .flow-pretrip .registration-language select { min-width: 6rem; }
+  .flow-pretrip .text-size-control button { width: 2.25rem; min-height: 2.25rem; }
+  /* 소리 안내는 그림만 보인다(이름은 aria-label 에 있다). 아랫줄이 화면 폭을 넘지 않게. */
+  .flow-pretrip .bar-listen > span { display: none; }
+  .flow-pretrip .flow-bar-right { flex-wrap: wrap; min-width: 0; }
+}
+
+/* Main-page dimensions are shared by every passenger and kiosk header. */
+:root {
+  --site-bar-width: 1344px;
+  --site-bar-height: 98px;
+  --site-bar-gutter: 20px;
+}
+.public-site .public-header,
+.pretrip-site .pretrip-header,
+.field-task-shell .field-task-header,
+.flow .flow-bar,
+html[data-kiosk] .flow .flow-bar {
+  box-sizing: border-box;
+  width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  max-width: var(--site-bar-width);
+  min-height: var(--site-bar-height);
+  margin: 12px auto 0;
+  padding: 8px 12px 8px 24px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 45%);
+  box-shadow: var(--shadow-1);
+  clip-path: none;
+  align-self: center;
+}
+@media (min-width: 60rem) {
+  .public-site .public-header,
+  .pretrip-site .pretrip-header,
+  .field-task-shell .field-task-header,
+  .flow .flow-bar,
+  html[data-kiosk] .flow .flow-bar { height: var(--site-bar-height); flex-shrink: 0; }
+}
+@media (max-width: 40rem) {
+  :root { --site-bar-gutter: 12px; --site-bar-height: 128px; }
+  .public-site .public-header,
+  .pretrip-site .pretrip-header,
+  .field-task-shell .field-task-header,
+  .flow .flow-bar,
+  html[data-kiosk] .flow .flow-bar {
+    height: auto; border-radius: var(--radius-medium); padding: var(--space-2) var(--space-3);
+  }
+}
+
+/* 키오스크: 둥근 바 안에서 「도움 요청하기」 자리만큼 오른쪽을 비운다(바의 소리 단추와 겹치던 것). */
+html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: calc(var(--call-w, 14rem) + 3rem); }
+/* 하늘이 첫 화면: 카메라를 쓸 수 없을 때의 안내가 좁은 칸에 갇혀 한 글자씩 줄바꿈되던 것을 위아래로 놓는다. */
+.haneuli-camera .scan { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); }
+.haneuli-camera .scan > .banner { width: 100%; }
+
+/* Shared header typography and alignment, including standalone preparation. */
+html { scrollbar-gutter: stable; }
+.public-site .public-header,
+.pretrip-site .pretrip-header,
+.field-task-shell .field-task-header,
+.flow .flow-bar,
+html[data-kiosk] .flow .flow-bar {
+  font-family: var(--font-body); font-size: calc(14px * var(--scale, 1));
+  line-height: 1.5; letter-spacing: 0;
+}
+:is(.public-header, .pretrip-header, .field-task-header) :is(.public-logo, .brand) {
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  font-size: calc(16px * var(--scale, 1)); font-weight: 700;
+  line-height: 1.5; letter-spacing: 0;
+}
+:is(.public-header, .pretrip-header, .field-task-header) :is(.public-logo, .brand) small {
+  display: block; margin: 4px 0 0; max-width: none;
+  font-size: calc(12px * var(--scale, 1)); font-weight: 400;
+  line-height: 1.5; letter-spacing: .01em;
+}
+:is(.public-header, .pretrip-header, .field-task-header) .sunflower { width: 32px; height: 32px; flex: none; }
+:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) :is(.public-tools, .prepare-tools, .field-task-tools, .flow-bar-right) {
+  align-items: center; gap: 8px; margin: 0;
+}
+:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) :is(button, select, .prepare-tools > a, .public-tools > a, .field-task-tools > a) {
+  font-family: inherit; font-size: calc(14px * var(--scale, 1));
+  font-weight: 600; line-height: 1.5; letter-spacing: 0;
+}
+:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) .text-size-control {
+  padding: 4px; gap: 2px; height: 50px; box-sizing: border-box;
+}
+:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) .text-size-control button {
+  width: 40px; height: 40px; min-height: 40px; padding: 0;
+}
+:is(.public-header, .pretrip-header) :is(.prepare-tools > a, .public-tools > a) {
+  min-width: 52px; height: 44px; box-sizing: border-box; padding: 0 16px;
+  justify-content: center;
+}
+.flow .flow-bar :is(.bar-btn, .registration-language select) {
+  min-height: 44px; margin: 0; padding-block: 8px;
+}
+.flow .flow-bar .registration-language { font-size: calc(14px * var(--scale, 1)); line-height: 1.5; }
+@media (min-width: 60rem) {
+  .airport-site .public-header { column-gap: 24px; }
+  .airport-site .public-nav { align-items: center; }
+  .airport-site .public-nav > a {
+    display: inline-flex; align-items: center; min-height: 44px;
+    font-size: calc(14px * var(--scale, 1)); line-height: 1.5;
+    padding-block: 8px;
+  }
+}
+
+.public-site .public-header .public-logo .sunflower,
+.pretrip-site .pretrip-header .public-logo .sunflower,
+.field-task-shell .field-task-header .brand .sunflower {
+  width: 32px; height: 32px; flex: 0 0 32px;
+}

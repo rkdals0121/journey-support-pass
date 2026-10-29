@@ -10,8 +10,8 @@ const seeded = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2
 
 describe("real gates and walking distance", () => {
   it("knows which gates exist", () => {
-    for (const g of [1, 50, 101, 110, 132, 208, 225, 291]) expect(isGate(g), String(g)).toBe(true);
-    for (const g of [0, 4, 5, 13, 29, 44, 116, 120, 244, 271, 999]) expect(isGate(g), String(g)).toBe(false);
+    for (const g of [1, 5, 50, 101, 110, 132, 208, 225, 227, 273, 291]) expect(isGate(g), String(g)).toBe(true);
+    for (const g of [0, 4, 13, 44, 116, 120, 228, 244, 271, 999]) expect(isGate(g), String(g)).toBe(false);
   });
   it("walks along the building instead of across the apron", () => {
     const [a, b] = [GATE_XY[247], GATE_XY[285]];
@@ -37,8 +37,8 @@ describe("airside stamp checkpoints", () => {
 });
 
 describe("departure exits and gate input", () => {
-  it("lists every immigration exit (T1 1-6, T2 1-2) and none in the concourse", () => {
-    expect(EXITS.map((e) => e.id)).toEqual(["t1-1", "t1-2", "t1-3", "t1-4", "t1-5", "t1-6", "t2-1", "t2-2"]);
+  it("lists every immigration exit (T1 1-5, T2 1-2) and none in the concourse", () => {
+    expect(EXITS.map((e) => e.id)).toEqual(["t1-1", "t1-2", "t1-3", "t1-4", "t1-5", "t2-1", "t2-2"]);
   });
   it("rejects empty and non-existent gates", () => {
     expect(gateProblem("")).toMatch(/입력/);
@@ -49,7 +49,7 @@ describe("departure exits and gate input", () => {
 
 describe("route mode: current location to the gate", () => {
   it("visits 5-6 checkpoints and ends at the checkpoint nearest the gate", () => {
-    for (const [gate, from] of [["46", "t1-1"], ["2", "t1-6"], ["285", "t2-1"], ["210", "t2-2"]]) {
+    for (const [gate, from] of [["46", "t1-1"], ["2", "t1-5"], ["285", "t2-1"], ["210", "t2-2"]]) {
       const r = stampRoute(gate, from);
       expect(r.indices.length).toBeGreaterThanOrEqual(5);
       expect(r.indices.length).toBeLessThanOrEqual(GOAL);
@@ -65,7 +65,7 @@ describe("route mode: current location to the gate", () => {
     }
   });
   it("goes through both shuttle train escalators for a concourse gate", () => {
-    for (const [gate, from] of [["125", "t1-1"], ["103", "t1-6"]]) {
+    for (const [gate, from] of [["125", "t1-1"], ["103", "t1-5"]]) {
       const route = codes(gate, from);
       const t1Train = route.indexOf("A12");
       expect(t1Train).toBeGreaterThanOrEqual(0);

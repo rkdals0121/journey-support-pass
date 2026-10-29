@@ -1,0 +1,104 @@
+/* Viewport-driven passenger layouts. Text remains readable at browser zoom;
+   secondary columns yield space before the form is squeezed. */
+:root {
+  --page-gap: clamp(12px, 1.8vw, 32px);
+  --form-inset: clamp(16px, 2vw, 32px);
+  --site-bar-height: clamp(76px, 10vh, 98px);
+}
+.airport-site .airport-portal { padding-inline: clamp(20px, 4vw, 64px); }
+.pretrip-site .prepare-layout { width: calc(100% - 2 * var(--site-bar-gutter)); box-sizing: border-box; }
+.flow.flow-pretrip { width: 100%; max-width: 96rem; margin-inline: auto; }
+.flow-pretrip .flow-workspace { gap: var(--page-gap); padding: var(--page-gap); }
+.flow-pretrip .flow-body,
+.flow-pretrip[data-screen] .flow-body { padding: var(--form-inset); min-width: 0; }
+.flow-pretrip .registration-page-heading { min-height: 5.5rem; margin-bottom: .75rem; gap: .5rem; }
+.flow-pretrip .registration-question-heading { gap: .5rem 1rem; }
+.flow-pretrip[data-screen] .registration-question-heading h1 {
+  font-size: clamp(1.5rem, 2.1vw, 2rem); text-wrap: balance;
+}
+.flow-pretrip .multi-select-note { flex-shrink: 0; }
+.flow-pretrip .choice,
+.flow-pretrip[data-screen="trouble"] .choice {
+  min-height: clamp(56px, 7.5vh, 80px); padding: .75rem 1rem;
+}
+.flow-pretrip .flow-body > .choices { margin: 0; }
+.flow-pretrip .steppers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.flow-pretrip .stepper { min-width: 0; }
+.flow-pretrip[data-screen="review"] .registration-review-group { min-width: 0; }
+.flow-pretrip[data-screen="note"] #reg-note { min-height: 12rem; }
+.flow-pretrip .flow-desktop-steps ol { gap: .25rem; }
+.flow-pretrip .flow-desktop-steps li { min-height: 44px; }
+
+/* Short/narrow viewports use normal document flow with an accessible sticky
+   action; there is never a scaled-down screenshot or clipped form. */
+@media (max-width: 959px), (max-height: 599px) {
+  .flow-pretrip .flow-workspace { display: flex; flex-direction: column; }
+  .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
+  .flow-pretrip .flow-body { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-medium); }
+  .flow-pretrip .flow-bar { height: auto; flex-wrap: wrap; gap: .5rem; }
+  .flow-pretrip .flow-bar-right { flex-wrap: wrap; }
+  .flow-pretrip[data-screen="consent"] .flow-body > .panel { display: block; }
+  .flow-pretrip .registration-language > span { display: none; }
+}
+
+/* A PC workspace fits the visible browser height, including OS/browser zoom. */
+@media (min-width: 960px) and (min-height: 600px) {
+  html:has(.flow-pretrip), body:has(.flow-pretrip) {
+    height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none;
+  }
+  .flow.flow-pretrip { height: 100dvh; min-height: 0; overflow: hidden; flex: 0 0 auto; }
+  .flow-pretrip .flow-bar { flex: 0 0 auto; height: auto; min-height: var(--site-bar-height); }
+  .flow-pretrip .flow-progress { flex: 0 0 auto; padding-block: .625rem 0; }
+  .flow-pretrip .flow-workspace {
+    display: grid; grid-template-columns: minmax(11rem, 16fr) minmax(0, 64fr) minmax(13rem, 20fr);
+    flex: 1 1 0; min-height: 0; overflow: hidden;
+  }
+  .flow-pretrip .flow-form-area { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: hidden; }
+  .flow-pretrip .flow-body {
+    /* 넘칠 때만 스크롤 막대가 생긴다. 「스크롤 필요 없음」으로 잘라 두면(clip) 큰 글자로 바꾼 뒤 아랫부분이 잘려 닿을 수 없었다. */
+    flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: none;
+    scrollbar-width: thin; background: var(--surface); border: 1px solid var(--line);
+  }
+  .flow-pretrip .flow-body::-webkit-scrollbar { display: block; width: 6px; }
+  .flow-pretrip .flow-cta { position: relative; flex: 0 0 auto; padding: .75rem 0 0; background: transparent; }
+  .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) {
+    display: block; position: static; min-height: 0; max-height: 100%; overflow-y: auto;
+    overscroll-behavior: none; align-self: stretch;
+  }
+  .flow-pretrip .flow-desktop-steps { scrollbar-width: thin; }
+  .flow-pretrip[data-screen="stops"] .flow-body > .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: 3rem; }
+  .flow-pretrip[data-screen="consent"] .flow-body > .panel { flex: 1 0 auto; }
+  .flow-pretrip[data-screen="note"] .note-field { flex: 1; }
+}
+
+@media (min-width: 960px) and (max-width: 1359px) and (min-height: 600px) {
+  .flow-pretrip .flow-workspace { grid-template-columns: minmax(11rem, 22fr) minmax(0, 78fr); }
+  .flow-pretrip .flow-desktop-summary { display: none; }
+}
+@media (min-width: 960px) and (max-height: 800px) and (min-height: 600px) {
+  .flow-pretrip .registration-page-heading { min-height: 4.75rem; }
+  .flow-pretrip .flow-desktop-steps > p { margin-top: 0; }
+  .flow-pretrip .flow-desktop-steps h2 { margin-block: .75rem; }
+  .flow-pretrip .flow-desktop-steps ol { gap: 0; }
+  .flow-pretrip .choice,
+  .flow-pretrip[data-screen="trouble"] .choice { min-height: 56px; padding-block: .5rem; }
+  .flow-pretrip[data-screen="consent"] .flow-body > .panel {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem;
+    padding: .75rem; align-content: center;
+  }
+  .flow-pretrip[data-screen="consent"] .info-row { border: 0; padding-block: .5rem; }
+}
+@media (max-width: 640px) {
+  .flow-pretrip .steppers { grid-template-columns: 1fr; }
+  .flow-pretrip .registration-page-heading { min-height: 0; margin-bottom: 1rem; }
+  .flow-pretrip .registration-question-heading { align-items: flex-start; }
+  .flow-pretrip .registration-question-heading .multi-select-note { font-size: .875rem; }
+}
+
+@media (min-width: 960px) and (max-width: 1199px) and (min-height: 600px) and (max-height: 699px) {
+  .flow-pretrip .flow-workspace { grid-template-columns: minmax(0, 1fr); }
+  .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
+  .flow-pretrip .flow-body, .flow-pretrip[data-screen] .flow-body { padding: 16px; }
+  .flow-pretrip .registration-page-heading { min-height: 4.25rem; }
+}
