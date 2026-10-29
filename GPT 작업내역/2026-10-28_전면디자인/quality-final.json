@@ -1,0 +1,355 @@
+[
+  {
+    "route": "/",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/services",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/services",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/prepare",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/prepare",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/prepare/booking",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/prepare/booking",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/register",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": [
+      {
+        "label": "한국어",
+        "height": 40
+      },
+      {
+        "label": "English",
+        "height": 40
+      }
+    ]
+  },
+  {
+    "route": "/register",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": [
+      {
+        "label": "한국어",
+        "height": 40
+      },
+      {
+        "label": "English",
+        "height": 40
+      }
+    ]
+  },
+  {
+    "route": "/navigate",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/navigate",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/help?topic=facility",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/help?topic=facility",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/help?topic=mobility",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/help?topic=mobility",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/requests",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/requests",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/visits",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/visits",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/points/concourse",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/points/concourse",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/stamp",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/stamp",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/missing-design-route",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/missing-design-route",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/devices/kiosk",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/devices/kiosk",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/devices/robot",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/devices/robot",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/requests",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/requests",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/overview",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/overview",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/resources",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/resources",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/visits",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/visits",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/integrations",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/integrations",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/design",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/design",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/legacy/calls",
+    "width": 390,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "route": "/staff/legacy/calls",
+    "width": 1280,
+    "violations": [],
+    "overflow": false,
+    "smallButtons": []
+  },
+  {
+    "test": "small-type",
+    "fontSize": "14.4px",
+    "smallTargets": [
+      "",
+      "한국어",
+      "English"
+    ]
+  },
+  {
+    "test": "large-type",
+    "fontSize": "24px",
+    "overflow": false
+  },
+  {
+    "test": "reduced-motion",
+    "running": 0
+  },
+  {
+    "test": "forced-colors",
+    "uncheckedVisibleMarks": 0,
+    "active": true,
+    "overflow": false,
+    "color": "rgb(255, 255, 255)",
+    "background": "rgb(0, 0, 0)",
+    "lowContrast": []
+  }
+]

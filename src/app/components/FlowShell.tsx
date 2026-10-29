@@ -89,6 +89,17 @@ export function FlowShell({
   const { supported, speaking, speak, stop } = useSpeech(lang, prefs.slow);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Presentation only: focus, speech, history and double-submit protection keep their existing contracts.
+  useEffect(() => {
+    const node = bodyRef.current, reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!node || reduce.matches || !node.animate) return;
+    const tokens = getComputedStyle(document.documentElement);
+    const animation = node.animate([{opacity:.2,transform:"translateY(.25rem)"},{opacity:1,transform:"none"}],{duration:parseFloat(tokens.getPropertyValue("--motion-normal")) || 180,easing:tokens.getPropertyValue("--ease-out").trim() || "ease-out"});
+    const stop = () => { if (reduce.matches) animation.cancel(); };
+    reduce.addEventListener("change",stop);
+    return () => { animation.cancel();reduce.removeEventListener("change",stop); };
+  },[screenKey]);
+
   // 화면이 바뀌면 설정 창을 닫는다. 앞사람이 열어 둔 채 떠나 처음 화면으로 돌아가도 다음 사람에게 남지 않게 한다.
   useEffect(() => setSettingsOpen(false), [screenKey]);
   // 화면이 바뀐 직후 잠깐은 누름을 받지 않는다. 손이 떨려 같은 자리를 두 번 누르면 두 번째 누름이

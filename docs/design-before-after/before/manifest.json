@@ -1220,34 +1220,6 @@
       "bodyHeight": 800
     },
     {
-      "route": "/staff/login",
-      "viewport": {
-        "width": 390,
-        "height": 844
-      },
-      "status": 200,
-      "file": "staff-login-390.webp",
-      "actualPath": "/staff/login",
-      "title": "직원 로그인",
-      "overflow": false,
-      "primaryButtons": 1,
-      "bodyHeight": 844
-    },
-    {
-      "route": "/staff/login",
-      "viewport": {
-        "width": 1280,
-        "height": 800
-      },
-      "status": 200,
-      "file": "staff-login-1280.webp",
-      "actualPath": "/staff/login",
-      "title": "직원 로그인",
-      "overflow": false,
-      "primaryButtons": 1,
-      "bodyHeight": 800
-    },
-    {
       "route": "/staff/operations",
       "viewport": {
         "width": 390,
@@ -1386,34 +1358,6 @@
       "overflow": false,
       "primaryButtons": 0,
       "bodyHeight": 1020
-    },
-    {
-      "route": "/staff/zone",
-      "viewport": {
-        "width": 390,
-        "height": 844
-      },
-      "status": 200,
-      "file": "staff-zone-390.webp",
-      "actualPath": "/staff/requests",
-      "title": "접수·배정",
-      "overflow": false,
-      "primaryButtons": 2,
-      "bodyHeight": 863
-    },
-    {
-      "route": "/staff/zone",
-      "viewport": {
-        "width": 1280,
-        "height": 800
-      },
-      "status": 200,
-      "file": "staff-zone-1280.webp",
-      "actualPath": "/staff/requests",
-      "title": "접수·배정",
-      "overflow": false,
-      "primaryButtons": 2,
-      "bodyHeight": 888
     },
     {
       "route": "/stamp/print",
@@ -2108,6 +2052,189 @@
       "file": "help-topic-other-1080.webp",
       "actualPath": "/help",
       "title": "기타 업무 요청",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/staff/login",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-login-390.webp",
+      "actualPath": "/staff/login",
+      "source": "original-source-5e7f5d6",
+      "title": "직원 로그인",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/login",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-login-1280.webp",
+      "actualPath": "/staff/login",
+      "source": "original-source-5e7f5d6",
+      "title": "직원 로그인",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/staff/zone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-zone-390.webp",
+      "actualPath": "/staff/zone",
+      "source": "original-source-5e7f5d6",
+      "title": "오늘 근무하는 구역을 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1324
+    },
+    {
+      "route": "/staff/zone",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-zone-1280.webp",
+      "actualPath": "/staff/zone",
+      "source": "original-source-5e7f5d6",
+      "title": "오늘 근무하는 구역을 골라 주세요",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1324
+    },
+    {
+      "route": "/help/receipt/[receipt]",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "help-receipt-fixture-receipt-390.webp",
+      "actualPath": "/help/receipt/[receipt]",
+      "source": "original-source-5e7f5d6",
+      "title": "길·시설 안내",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1439
+    },
+    {
+      "route": "/help/receipt/[receipt]",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "help-receipt-fixture-receipt-1280.webp",
+      "actualPath": "/help/receipt/[receipt]",
+      "source": "original-source-5e7f5d6",
+      "title": "길·시설 안내",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 972
+    },
+    {
+      "route": "/help/receipt/[receipt]",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "help-receipt-fixture-receipt-1080.webp",
+      "actualPath": "/help/receipt/[receipt]",
+      "source": "original-source-5e7f5d6",
+      "title": "길·시설 안내",
+      "overflow": false,
+      "primaryButtons": 0,
+      "bodyHeight": 1920
+    },
+    {
+      "route": "/staff/requests (접수 상세)",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "staff-requests-received-detail-390.webp",
+      "actualPath": "/staff/requests",
+      "source": "original-source-5e7f5d6",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 3,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/staff/requests (접수 상세)",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "staff-requests-received-detail-1280.webp",
+      "actualPath": "/staff/requests",
+      "source": "original-source-5e7f5d6",
+      "title": "접수·배정",
+      "overflow": false,
+      "primaryButtons": 3,
+      "bodyHeight": 1081
+    },
+    {
+      "route": "/error.tsx (오류 표시)",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "file": "global-error-component-390.webp",
+      "actualPath": "component-preview",
+      "source": "original-source-5e7f5d6",
+      "method": "Original error component, router link markup shim, app stylesheet and font resources",
+      "title": "화면을 불러오지 못했습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 844
+    },
+    {
+      "route": "/error.tsx (오류 표시)",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "file": "global-error-component-1280.webp",
+      "actualPath": "component-preview",
+      "source": "original-source-5e7f5d6",
+      "method": "Original error component, router link markup shim, app stylesheet and font resources",
+      "title": "화면을 불러오지 못했습니다",
+      "overflow": false,
+      "primaryButtons": 1,
+      "bodyHeight": 800
+    },
+    {
+      "route": "/error.tsx (오류 표시)",
+      "viewport": {
+        "width": 1080,
+        "height": 1920
+      },
+      "status": 200,
+      "file": "global-error-component-1080.webp",
+      "actualPath": "component-preview",
+      "source": "original-source-5e7f5d6",
+      "method": "Original error component, router link markup shim, app stylesheet and font resources",
+      "title": "화면을 불러오지 못했습니다",
       "overflow": false,
       "primaryButtons": 1,
       "bodyHeight": 1920

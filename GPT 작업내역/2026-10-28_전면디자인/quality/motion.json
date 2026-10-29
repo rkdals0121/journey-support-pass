@@ -1,0 +1,11 @@
+{
+  "normalStepAnimations": [
+    180,
+    180
+  ],
+  "breathingDurations": [
+    4000
+  ],
+  "stoppedAfterPreferenceChange": 0,
+  "reducedStepAnimations": 0
+}
