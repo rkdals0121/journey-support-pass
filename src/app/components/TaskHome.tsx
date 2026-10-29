@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CalendarClock, Plane, Search } from "lucide-react";
+import { ArrowRight, CalendarClock, Plane, Search, Stamp } from "lucide-react";
 import { TaskLauncher } from "./TaskLauncher";
 import { MyRequestPanel } from "./MyRequestPanel";
 
@@ -91,7 +91,20 @@ export function TaskHome({ en = false }: { en?: boolean }) {
             </button>
           </div>
         </form>
-        <TaskLauncher en={en} />
+        {/* 서비스 칸과 스탬프북을 한 묶음(2열 × 3줄)으로 둔다. 스탬프북은 한국어 화면만 있다. */}
+        <div className="ph-list">
+          <TaskLauncher en={en} />
+          <article className="task-action task-action-stamp">
+            <Stamp aria-hidden="true" className="task-action-icon" strokeWidth={1.7} />
+            <Link href="/stamp" className="task-action-link">
+              <span>
+                <strong>{en ? "Airport stamp book (Korean)" : "공항 스탬프북"}</strong>
+                <small>{en ? "Collect stamps with your child" : "아이와 도장 모으기"}</small>
+              </span>
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </article>
+        </div>
       </section>
     </div>
   );
