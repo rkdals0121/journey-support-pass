@@ -55,7 +55,7 @@ export default async function PreparePage({
           }
           hrefLang={en ? "ko" : "en"}
         >
-          {en ? "한국어" : "English"}
+          {en ? "한국어" : "EN"}
         </Link>
         </div>
       </header>
