@@ -1,7 +1,7 @@
 # 화면 디자인 시스템
 
 ## 기준
-딥그린 `#2F5D46`, 노랑 `#E9C46A`, 따뜻한 미색 `#F7F6F1`. 색 정의의 원본은 `src/app/styles/tokens.css`다. 컴포넌트·SVG·화면 CSS는 `var(--color-*)`만 사용한다. QR 등 기계 판독 부호는 전용 machine-ink/machine-paper 토큰으로 원본 대비를 보존한다.
+딥그린 `#2F5D46`, 해바라기 노랑 `#F9C80E`(버튼·번호판·표시처럼 작은 곳에만, 넓은 면은 옅은 `#FFF3C4`), 따뜻한 미색 `#F7F6F1`. 색 정의의 원본은 `src/app/styles/tokens.css`다. 컴포넌트·SVG·화면 CSS는 `var(--color-*)`만 사용한다. QR 등 기계 판독 부호는 전용 machine-ink/machine-paper 토큰으로 원본 대비를 보존한다.
 
 ## 글자와 간격
 - 글자 7단계: caption .75rem / small .875rem / body 1rem / heading 1.25rem / title 1.75rem / large 2.5rem / display 3.5rem.
