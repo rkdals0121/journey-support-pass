@@ -19,15 +19,32 @@ const TEAL = "#3cc4d6";
 export const HANEUL_SRC = "/stamp/haneul.webp";
 
 /**
- * 옷 사진과 그 안의 얼굴 자리(타원). 사진은 600×1200(아래는 몸통 끝 줄을 늘여 둔 것)이고 얼굴 자리는 투명하다.
- * 사진 필터와 완성 화면 그림이 이 값으로 얼굴을 맞춘다.
+ * 옷 사진(512×1024, 팀 시안 한 장에 나란히 있던 세 벌을 나눠 체크무늬 배경과 얼굴 자리만 투명하게 한 것)과
+ * 그 안의 얼굴 자리: 가운데 x(midX), 턱(chin), 가장 넓은 폭(holeW).
  */
-export const COSTUME_PHOTO: Record<string, { src: string; cx: number; cy: number; rx: number; ry: number }> = {
-  captain: { src: "/stamp/costume-captain.webp", cx: 282, cy: 353, rx: 81, ry: 98 },
-  crew: { src: "/stamp/costume-crew.webp", cx: 295, cy: 343, rx: 81, ry: 88 },
-  explorer: { src: "/stamp/costume-explorer.webp", cx: 300, cy: 352, rx: 80, ry: 97 },
+export const COSTUME_PHOTO: Record<string, { src: string; midX: number; chin: number; holeW: number }> = {
+  captain: { src: "/stamp/costume-captain.webp", midX: 254, chin: 501, holeW: 258 },
+  crew: { src: "/stamp/costume-crew.webp", midX: 256, chin: 503, holeW: 240 },
+  explorer: { src: "/stamp/costume-explorer.webp", midX: 254, chin: 510, holeW: 232 },
 };
-export const COSTUME_SIZE = { w: 600, h: 1200 };
+export const COSTUME_SIZE = { w: 512, h: 1024 };
+
+/** 인증 사진(600×800)에서 두 눈 사이 가운데가 놓이는 자리. 옷은 늘 여기에 맞춰 가운데 그리고, 사진 속 얼굴을 이 자리로 옮긴다. */
+export const SLOT = { x: 300, y: 360 };
+/** 눈은 턱에서 얼굴 자리 폭의 이만큼 위에 있다고 본다(사람 얼굴 비율). */
+const EYE_FROM_CHIN = 0.75;
+
+/** 인증 사진(600×800) 위에 옷을 그릴 자리: 옷 좌표를 scale 배 해 (x, y) 에 놓는다. faceW 는 사진에서 얼굴 자리 폭. */
+export function costumeLayout(role: string) {
+  const p = COSTUME_PHOTO[role];
+  if (p) {
+    const scale = 600 / COSTUME_SIZE.w;
+    return { scale, x: SLOT.x - p.midX * scale, y: SLOT.y - (p.chin - p.holeW * EYE_FROM_CHIN) * scale, faceW: p.holeW * scale };
+  }
+  // 하늘이 친구 옷 SVG 는 두 눈 사이 가운데 (150,190), 얼굴 폭 150 으로 그렸다.
+  const scale = 1.9;
+  return { scale, x: SLOT.x - 150 * scale, y: SLOT.y - 190 * scale, faceW: 150 * scale };
+}
 
 /** 하늘이 친구 필터에서 어깨 위에 앉는 하늘이 자리(Costume 좌표). */
 export const BUDDY = { x: 190, y: 262, size: 112 };
@@ -80,35 +97,23 @@ export function StampMark({ theme, size = 56 }: { theme: ThemeId; size?: number 
   );
 }
 
-/** 사진을 찍기 전 완성 화면에 보여 줄 그림. 고른 필터의 옷을 입은 아이. */
+/** 사진을 찍기 전 완성 화면에 보여 줄 그림: 고른 필터의 옷만, 얼굴 자리는 비워 둔다. 인증 사진과 같은 배치다. */
 export function Portrait({ role }: { role: string }) {
   const photo = COSTUME_PHOTO[role];
-  // 옷 사진은 얼굴 자리 폭이 150 이 되게 줄여 (150,fy) 에 맞춘다. 모자 꼭대기가 잘리지 않게 조금 내린다.
-  const k = photo ? 75 / photo.rx : 1;
-  const fy = photo ? 212 : 190;
+  const l = costumeLayout(role);
   return (
     <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" className="sb-art" aria-hidden="true">
       <Backdrop role={role} />
-      <ellipse cx="150" cy={fy} rx={photo ? 77 : 72} ry={photo ? photo.ry * k + 2 : 72} fill="var(--color-art-skin)" />
-      {!photo && <path d="M78 196q-4-84 72-86t72 86q-16-44-72-48-56 4-72 48z" fill="var(--color-art-hair)" />}
-      <circle cx="124" cy={fy - 4} r="7" fill="var(--color-art-outline)" />
-      <circle cx="176" cy={fy - 4} r="7" fill="var(--color-art-outline)" />
-      <path d={`M128 ${fy + 28}q22 18 44 0`} fill="none" stroke="var(--color-art-outline)" strokeWidth="6" strokeLinecap="round" />
-      {photo ? (
-        <image
-          href={photo.src}
-          x={150 - photo.cx * k}
-          y={fy - photo.cy * k}
-          width={COSTUME_SIZE.w * k}
-          height={COSTUME_SIZE.h * k}
-        />
-      ) : (
-        <>
-          <rect x="132" y="250" width="36" height="50" fill="var(--color-art-skin)" />
-          <Costume role={role} />
-          <image href={HANEUL_SRC} x={BUDDY.x} y={BUDDY.y} width={BUDDY.size} height={BUDDY.size} />
-        </>
-      )}
+      <g transform={`scale(.5) translate(${l.x} ${l.y}) scale(${l.scale})`}>
+        {photo ? (
+          <image href={photo.src} width={COSTUME_SIZE.w} height={COSTUME_SIZE.h} />
+        ) : (
+          <>
+            <Costume role={role} />
+            <image href={HANEUL_SRC} x={BUDDY.x} y={BUDDY.y} width={BUDDY.size} height={BUDDY.size} />
+          </>
+        )}
+      </g>
     </svg>
   );
 }
