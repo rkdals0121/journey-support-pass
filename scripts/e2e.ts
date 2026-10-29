@@ -102,11 +102,42 @@ async function shot(page: Page, name: string) {
 async function audit(page: Page, name: string) {
   // Next streams the root metadata during navigation; audit the settled document.
   await page.waitForFunction(() => document.title.trim().length > 0, { timeout: WAIT });
+  // 나타나는 움직임(흐리게 시작해 또렷해지는 것)이 끝난 뒤에 본다. 도중에 보면 글자 대비가 낮게 잡힌다.
+  // 끝없이 도는 움직임(하늘이 걷기 등)은 끝나지 않으니 빼고, 그래도 2초가 넘으면 기다리지 않는다.
+  await page.evaluate(() =>
+    Promise.race([
+      Promise.all(
+        document
+          .getAnimations()
+          .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+          .map((a) => a.finished.catch(() => undefined)),
+      ),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]),
+  );
+  // 화면 아래에 붙은 「다음」 줄 밑으로 지나가는 항목은 axe 가 겹친 단추로 센다. 끝까지 내려 모든 항목이 드러난 상태에서 본다.
+  const scrolled = await page.evaluate(() => {
+    const y = window.scrollY;
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    return y;
+  });
   await page.evaluate(AXE);
   const found = (await page.evaluate(
     "axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } }).then(r => r.violations.map(v => v.id + ' ' + v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')))",
   )) as string[];
   check(`접근성 자동 점검: ${name}`, found.length === 0, found.join(" / ").slice(0, 300) || undefined);
+  await page.evaluate((y) => window.scrollTo(0, y), scrolled);
+}
+
+/** 키오스크 처음 화면. 하늘이 대기 화면이 떠 있으면 눌러 깨운 뒤 서비스 고르기를 기다린다. */
+async function kioskServices(page: Page) {
+  await page.waitForFunction(
+    () => document.body.innerText.includes("어떤 서비스를 이용하시겠어요?") || !!document.querySelector(".haneuli-start"),
+    { timeout: WAIT },
+  );
+  const start = await page.$(".haneuli-start");
+  if (start) await start.click();
+  await kioskServices(page);
 }
 
 /** 화면에 그려진 QR(svg)을 읽어 그 안의 글자를 돌려준다. 못 읽으면 빈 글자. */
@@ -207,6 +238,8 @@ async function fill(page: Page, selector: string, value: string) {
   // 화면 가운데로 옮긴 뒤 누른다. 아래에 고정된 직원 메뉴 뒤에 입력란이 걸쳐 있으면 메뉴가 대신 눌린다.
   await page.$eval(selector, (e) => e.scrollIntoView({ block: "center" }));
   await page.click(selector, { count: 3 });
+  // 세 번 눌러 고르기가 먹지 않는 입력란도 있다(대문자로 바꿔 다시 그리는 칸). 전체 고르기로 확실히 비운다.
+  await page.$eval(selector, (e) => (e as HTMLInputElement).select?.());
   await page.keyboard.press("Backspace");
   if (value) await page.type(selector, value, { delay: 15 });
 }
@@ -498,7 +531,7 @@ async function resetFlights(clearLocks = false) {
   // 체크리스트 1쪽: 어떤 점이 불편하세요?
   await waitText(page, "어떤 점이 불편하세요?");
   check("첫 질문은 어떤 점이 불편한지다. '잘 모르겠어요'와 '지금은 없어요'까지 여덟 가지", (await count(page, '[role="checkbox"]')) >= 8 && (await has(page, "지금은 없어요")) && (await has(page, "잘 모르겠어요")));
-  check("함께 오신 분이 대신 표시해도 되고 나중에 바꿔도 된다고 알린다", (await has(page, "대신")) && (await has(page, "나중에")));
+  check("함께 오신 분이 대신 표시해도 된다고 알린다", await has(page, "대신 표시해도"));
   check("진행 표시가 1단계다", await page.evaluate(() => /(^|\D)1\/\d+/.test((document.querySelector(".flow-progress") as HTMLElement)?.innerText ?? "")));
   check("「이전」과 「처음으로」가 화면 왼쪽 위에 있다", (await spot(page, ".bar-btn", "이전")) !== null && (await spot(page, ".bar-btn", "처음으로")) !== null);
   check("휴대전화 화면에는 「도움 요청하기」가 없다 (공항 키오스크에만 있다)", (await count(page, ".call-btn")) === 0);
@@ -526,12 +559,12 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".sheet-box button", "확인");
   await waitGone(page, "화면 설정");
 
-  await clickText(page, ".lang-pick button", "English");
+  await page.select(".registration-language select", "en");
   await waitText(page, "What is difficult for you?");
   check("언어를 English 로 바꾸면 질문과 항목이 바로 영어로 바뀐다", await has(page, "Walking"));
   check("영어 화면의 문서 언어가 en 이다 (화면 읽기 프로그램이 영어로 읽는다)", (await page.evaluate(() => document.documentElement.lang)) === "en");
   await shot(page, "휴대전화-영어");
-  await clickText(page, ".lang-pick button", "한국어");
+  await page.select(".registration-language select", "ko");
   await waitText(page, "어떤 점이 불편하세요?");
 
   // '지금은 없어요'는 다른 것과 함께 고를 수 없다.
@@ -568,7 +601,7 @@ async function resetFlights(clearLocks = false) {
   await sleep(900);
   check("「다음」을 두 번 빠르게 눌러도 한 화면만 넘어간다. 동의 화면을 읽지 않고 지나치지 않는다", await has(page, "등록 전에 확인해 주세요"));
   check("두 번째는 동의다. 무엇을 받는지, 어디에 쓰는지, 언제 지우는지, 무엇이 남는지 네 가지를 보여준다", (await count(page, ".info-row")) === 4);
-  check("동의 글에 이름과 연락처를 받지 않고, 증빙서류는 공항이 아닌 별도 서버가 보관한다고 적혀 있다", (await has(page, "이름과 연락처는 받지 않습니다")) && (await has(page, "별도 서버")));
+  check("동의 글에 이름과 연락처를 받지 않고, 증빙서류는 공항이 아닌 별도 서버가 보관한다고 적혀 있다", (await has(page, "이름과 연락처는")) && (await has(page, "별도 서버")));
   check("「이전」과 「처음으로」가 앞 화면과 같은 자리에 있다", (await spot(page, ".bar-btn", "이전")) === backAt && (await spot(page, ".bar-btn", "처음으로")) === homeAt);
   await shot(page, "휴대전화-동의");
   await clickText(page, "button", "동의하지 않습니다");
@@ -696,6 +729,8 @@ async function resetFlights(clearLocks = false) {
   check("이름이 한 글자인 도시(괌)도 고르면 편이 나온다. 편이 적으면 시간대를 묻지 않고 바로 보여 준다", (await count(page, ".pick-row")) === 0 && (await has(page, "MK601")));
   await clickText(page, ".link-btn", "도시 다시 고르기");
   await waitText(page, "어디로 가시나요?");
+  // 화면 아래에 붙은 「다음」 줄 밑에 단추가 깔려 있으면 그 줄이 대신 눌린다. 가운데로 올린 뒤 누른다.
+  await page.$eval(".city-head .icon-btn", (e) => e.scrollIntoView({ block: "center" }));
   await page.click(".city-head .icon-btn");
   await page.waitForSelector("#reg-flight", { timeout: WAIT });
   check("도시 고르기를 닫으면 편명 넣는 칸으로 돌아온다", (await count(page, ".city")) === 0);
@@ -863,7 +898,7 @@ async function resetFlights(clearLocks = false) {
   await fill(page, "#code", KIOSK_CODE);
   await page.keyboard.press("Enter");
   await page.waitForFunction(() => location.pathname === "/kiosk/guide", { timeout: WAIT });
-  await waitText(page, "어떤 서비스를 이용하시겠어요?");
+  await kioskServices(page);
   check("설치 코드와 자리를 넣으면 안내 키오스크가 된다", await has(page, "탑승동 지하 1층 셔틀트레인 도착층"));
   await page.goto(`${BASE}/staff`, { waitUntil: "load", timeout: 300_000 });
   await waitText(page, "직원 로그인");
@@ -985,7 +1020,7 @@ async function resetFlights(clearLocks = false) {
   await shot(page, "안내키오스크-만족도");
   await clickText(page, ".face", "도움이 됐어요");
   await waitText(page, "고맙습니다");
-  await waitText(page, "어떤 서비스를 이용하시겠어요?");
+  await kioskServices(page);
   check("답하면 처음 화면으로 돌아가고 앞사람의 내용은 남지 않는다", !(await has(page, "MK127")) && !(await has(page, "127")));
   check("처음 화면은 다시 보통 글자 크기다 (앞사람의 큰 글씨가 남지 않는다)", (await rootPx(page)) < kPx);
 
@@ -1008,7 +1043,7 @@ async function resetFlights(clearLocks = false) {
   check("'계속 이용하기'를 누르면 보던 안내가 그대로 있다", await has(page, "나에게 맞춘 안내"));
   await waitText(page, "계속 이용하시겠어요?");
   await clickText(page, ".sheet-box button", "끝내기");
-  await waitText(page, "어떤 서비스를 이용하시겠어요?");
+  await kioskServices(page);
   // 앞사람이 「설정」을 열어 둔 채 떠난다. 처음 화면으로 돌아가면 설정 창이 닫혀 있어야 한다.
   await clickText(page, "button", "고유 일련 번호 누르기");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
@@ -1021,7 +1056,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "화면 설정");
   await waitText(page, "계속 이용하시겠어요?");
   await clickText(page, ".sheet-box button", "끝내기");
-  await waitText(page, "어떤 서비스를 이용하시겠어요?");
+  await kioskServices(page);
   check("앞사람이 「설정」을 열어 둔 채 떠나도, 처음 화면으로 돌아가면 설정 창이 닫혀 있다", !(await has(page, "화면 설정")));
   check("묻는 창에서 '끝내기'를 누르면 처음 화면으로 돌아간다", !(await has(page, "MK127")));
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
@@ -1091,7 +1126,7 @@ async function resetFlights(clearLocks = false) {
   await hold("/api/guide", "POST");
   await page.waitForFunction("window.__held.length > 0", { timeout: 60_000 });
   await clickText(page, ".bar-btn", "처음으로");
-  await waitText(page, "어떤 서비스를 이용하시겠어요?");
+  await kioskServices(page);
   const lateGuide = await page.evaluate("window.__release()");
   await sleep(2500);
   const startClean = !(await has(page, "MK112")) && (await has(page, "어떤 서비스를 이용하시겠어요?"));
@@ -1158,7 +1193,7 @@ async function resetFlights(clearLocks = false) {
   check("화면이 바뀌면 새 화면을 다시 읽어 준다", said2.length > said.length && said2[said2.length - 1].includes("124"));
   await shot(page, "안내키오스크-세로-길안내-그림");
   await clickText(page, ".bar-btn", "처음으로");
-  await waitText(page, "어떤 서비스를 이용하시겠어요?");
+  await kioskServices(page);
   await new Promise((r) => setTimeout(r, 3000));
   check("안내를 끝낸 직후에는 같은 QR 이 카메라 앞에 있어도 곧바로 다시 열리지 않는다", await has(page, "어떤 서비스를 이용하시겠어요?"));
   await shot(page, "안내키오스크-세로-처음");

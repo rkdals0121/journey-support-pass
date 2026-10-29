@@ -37,6 +37,7 @@ import { AlnumPad, Choice } from "./Inputs";
 import type { Target } from "@/lib/docscan";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { REGISTRATION_DRAFT, readRegistrationDraft, normalizeFlightQuery } from "@/lib/registration-draft";
+import { TextSizeControl } from "./TextSizeControl";
 
 export interface FlightOption {
   airline: string;
@@ -714,6 +715,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       onBack={back}
       onHome={() => onExit(lang)}
       headerRightTools={
+        <>
+        {mode === "web" && <TextSizeControl en={lang === "en"} />}
         <label className="registration-language">
           <span>Language</span>
           <select aria-label={lang === "en" ? "Language" : "언어 설정"} value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
@@ -721,6 +724,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
             <option value="en">English</option>
           </select>
         </label>
+        </>
       }
       progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
       onStepSelect={index => { if (index < step) goTo(index, true); }}

@@ -45,7 +45,8 @@ export default async function HelpPage({
       returnTo={session?.isKiosk ? kioskReturn(q.returnTo) : undefined}
       freshShared={session?.isKiosk === true && q.fresh === "1"}
       checkExisting={q.resume === "1"}
-      embedded={!session?.isKiosk}
+      // 키오스크(FieldTaskShell)와 공용 화면(PublicShell) 모두 머리에 처음으로·언어·글자 크기가 있다. 본문에 같은 줄을 또 두지 않는다.
+      embedded
     />
   );
   if (session?.isKiosk) {
