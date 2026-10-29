@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Costume, FilterDeco } from "./art";
+import { BUDDY, COSTUME_PHOTO, COSTUME_SIZE, Costume, FilterDeco, HANEUL_SRC } from "./art";
 
 interface Props {
   role: string;
@@ -16,20 +16,27 @@ const H = 800;
 // 얼굴 인식(MediaPipe Face Detector). 라이브러리는 npm 판과 같은 판의 wasm 을, 모델은 공식 저장소에서 받는다.
 const WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm";
 const MODEL = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite";
-// 옷 그림(art.tsx 의 Costume)은 두 눈 사이 가운데가 (150,190), 얼굴 폭이 150 이라고 보고 그렸다.
-// ponytail: 맞춤 값. 실제 아이 얼굴로 찍어 보고 모자가 뜨거나 묻히면 이 셋만 고친다.
-const FIT = { eyeX: 150, eyeY: 190, faceW: 150 };
-// 옷 그림을 그릴 범위(Costume 좌표). 모자 꼭대기와 길게 내린 몸통이 다 들어가게 넉넉히 잡는다.
+// 옷을 얼굴에 맞추는 기준: 옷 그림 안에서 두 눈 사이 가운데(eyeX, eyeY)와 얼굴 폭(faceW).
+// 하늘이 친구 옷(art.tsx 의 Costume SVG)은 (150,190)·150 으로 그렸고, 옷 사진은 얼굴 자리 타원에서 구한다.
+// ponytail: 맞춤 값. 실제 아이 얼굴로 찍어 보고 모자가 뜨거나 얼굴 둘레가 비면 EYE_UP·FACE_FILL 만 고친다.
+interface Fit { eyeX: number; eyeY: number; faceW: number }
+const SVG_FIT: Fit = { eyeX: 150, eyeY: 190, faceW: 150 };
+/** 눈은 얼굴 자리 타원 가운데보다 세로 반지름의 이만큼 위에 있다. */
+const EYE_UP = 0.12;
+/** 인식된 얼굴 폭이 얼굴 자리 폭의 이만큼이 되게 맞춘다(1 보다 크면 얼굴 둘레가 옷에 조금 덮인다). */
+const FACE_FILL = 1.02;
+// 하늘이 친구 옷 SVG 를 그릴 범위(Costume 좌표). 모자 꼭대기와 길게 내린 몸통이 다 들어가게 넉넉히 잡는다.
 const BOX = { x: -150, y: -150, w: 600, h: 1200 };
 // 얼굴을 놓친 뒤에도 이만큼은 마지막 자리에 옷을 둔다. 고개를 잠깐 돌려도 옷이 깜빡이지 않는다.
 const HOLD_MS = 600;
 
-interface Pose { x: number; y: number; s: number; a: number }
+/** 찾은 얼굴: 두 눈 사이 가운데, 얼굴 폭(w), 기울기(a). 모두 캔버스 좌표. */
+interface Pose { x: number; y: number; w: number; a: number }
 type Detector = { detectForVideo(src: CanvasImageSource, ts: number): { detections: { boundingBox?: { width: number }; keypoints: { x: number; y: number }[] }[] }; close(): void };
-type Art = { costume: HTMLImageElement; deco: HTMLImageElement };
+type Art = { costume: HTMLImageElement; box: typeof BOX; fit: Fit; buddy?: HTMLImageElement; deco: HTMLImageElement };
 
 /** 얼굴을 찾지 못할 때 쓰는 자리: 화면 가운데 점선 동그라미. 예전 고정 틀과 같은 위치·크기다. */
-const GUIDE: Pose = { x: W / 2, y: (H * 190) / 400, s: W / 300, a: 0 };
+const GUIDE: Pose = { x: W / 2, y: (H * 190) / 400, w: 264, a: 0 };
 
 // 앞 카메라 영상에서 얼굴을 찾아, 얼굴 위치·크기·기울기에 맞춰 모자와 옷을 입혀 그린다.
 // 얼굴 인식을 못 불러오면(인터넷이 약하거나 기기가 못 돌리면) 점선 동그라미에 얼굴을 맞추는 고정 틀로 돈다.
@@ -48,11 +55,26 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
   const [count, setCount] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  // 옷과 장식 SVG 를 그림으로 바꿔 둔다. 캔버스에 매 장면 그려 넣는다.
+  // 옷(사진이나 SVG)과 장식을 그림으로 준비해 둔다. 캔버스에 매 장면 그려 넣는다.
   useEffect(() => {
     let alive = true;
-    Promise.all([toImage(costumeRef.current!), toImage(decoRef.current!)]).then(([costume, deco]) => {
-      if (alive) imgs.current = { costume, deco };
+    const photo = COSTUME_PHOTO[role];
+    const art: Promise<Art> = photo
+      ? Promise.all([load(photo.src), toImage(decoRef.current!)]).then(([costume, deco]) => ({
+          costume,
+          deco,
+          box: { x: 0, y: 0, ...COSTUME_SIZE },
+          fit: { eyeX: photo.cx, eyeY: photo.cy - photo.ry * EYE_UP, faceW: (photo.rx * 2) / FACE_FILL },
+        }))
+      : Promise.all([toImage(costumeRef.current!), toImage(decoRef.current!), load(HANEUL_SRC)]).then(([costume, deco, buddy]) => ({
+          costume,
+          deco,
+          buddy,
+          box: BOX,
+          fit: SVG_FIT,
+        }));
+    art.then((a) => {
+      if (alive) imgs.current = a;
     });
     return () => {
       alive = false;
@@ -256,12 +278,12 @@ function findFace(d: Detector, src: CanvasImageSource, sw: number, sh: number, m
   return {
     x: (e1.x + e2.x) / 2,
     y: (e1.y + e2.y) / 2,
-    s: (best.boundingBox!.width * k) / FIT.faceW,
+    w: best.boundingBox!.width * k,
     a: Math.atan2(e2.y - e1.y, e2.x - e1.x),
   };
 }
 
-const mix = (a: Pose, b: Pose, t: number): Pose => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: a.s + (b.s - a.s) * t, a: a.a + (b.a - a.a) * t });
+const mix = (a: Pose, b: Pose, t: number): Pose => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, w: a.w + (b.w - a.w) * t, a: a.a + (b.a - a.a) * t });
 
 /** 사진 + (찾은 얼굴에 맞춘) 옷 + 장식을 그린다. pose 가 없으면 옷 없이 사진과 장식만. */
 function draw(ctx: CanvasRenderingContext2D, src: CanvasImageSource, sw: number, sh: number, mirror: boolean, pose: Pose | null, art: Art | null) {
@@ -275,12 +297,14 @@ function draw(ctx: CanvasRenderingContext2D, src: CanvasImageSource, sw: number,
   ctx.restore();
   if (!art) return;
   if (pose) {
+    const { fit, box } = art;
     ctx.save();
     ctx.translate(pose.x, pose.y);
     ctx.rotate(pose.a);
-    ctx.scale(pose.s, pose.s);
-    ctx.translate(-FIT.eyeX, -FIT.eyeY);
-    ctx.drawImage(art.costume, BOX.x, BOX.y, BOX.w, BOX.h);
+    ctx.scale(pose.w / fit.faceW, pose.w / fit.faceW);
+    ctx.translate(-fit.eyeX, -fit.eyeY);
+    ctx.drawImage(art.costume, box.x, box.y, box.w, box.h);
+    if (art.buddy) ctx.drawImage(art.buddy, BUDDY.x, BUDDY.y, BUDDY.size, BUDDY.size);
     ctx.restore();
   }
   ctx.drawImage(art.deco, 0, 0, W, H);
@@ -305,6 +329,11 @@ function withCaption(src: HTMLCanvasElement, caption: string) {
 
 function cssColor(token: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+}
+function load(src: string): Promise<HTMLImageElement> {
+  const img = new Image();
+  img.src = src;
+  return img.decode().then(() => img);
 }
 function toImage(svg: SVGSVGElement): Promise<HTMLImageElement> {
   const clone = svg.cloneNode(true) as SVGSVGElement;
