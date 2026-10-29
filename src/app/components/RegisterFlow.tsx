@@ -77,6 +77,8 @@ interface Props {
   onPrefs?: (lang: Lang, prefs: Prefs) => void;
   /** 들어온 접점. booking 이면 항공권 예매 완료 창의 링크로 들어왔다. 건수를 따로 세는 데만 쓴다. */
   via?: "booking" | "";
+  /** 키오스크에서도 휴대전화 사전등록처럼 옆에 단계 목록과 작성 내용 요약을 보여 준다. 주지 않으면 휴대전화(web)에서만 보인다. */
+  sideSteps?: boolean;
   /** edit: 고칠 등록. 키오스크가 탑승권으로 연 등록의 값과 지금 고른 것. */
   edit?: { token: string; choices: string[]; extra: Extra; onSaved: (guide: GuideDto) => void };
 }
@@ -155,7 +157,7 @@ function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
 }
 
 /** 등록 질문. 휴대전화, 키오스크, 안내데스크가 같은 질문을 같은 순서로 쓴다. 안내 키오스크는 같은 질문으로 등록을 고친다. */
-export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", edit, booking }: Props) {
+export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onPrefs, via = "", sideSteps = false, edit, booking }: Props) {
   const kiosk = mode !== "web";
   // 편명을 화면 글자판으로 넣는지. 키오스크는 늘 쓰고, 안내데스크는 태블릿처럼 넓은 기기에서만 쓴다.
   // 좁은 휴대전화에 10칸 글자판을 띄우면 칸이 너무 좁아 잘못 누르기 쉬우므로 기기의 자판을 쓰게 한다.
@@ -766,7 +768,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
       onStepSelect={index => { if (index < step) goTo(index, true); }}
       desktopSteps={
-        mode === "web"
+        mode === "web" || sideSteps
           ? ORDER.map((k, i) => ({
               label: stepName(k),
               current: i === step,
@@ -774,8 +776,9 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
             }))
           : undefined
       }
+      stepsHeading={mode !== "web" ? (lang === "en" ? { kicker: "ON-SITE REGISTRATION", title: "Register the help you need" } : { kicker: "현장 등록", title: "필요한 도움 등록" }) : undefined}
       desktopSummary={
-        mode === "web" ? (
+        mode === "web" || sideSteps ? (
           <>
             <span className="public-eyebrow">
               {lang === "en" ? "YOUR SAVED NEEDS" : "지금까지 선택한 내용"}

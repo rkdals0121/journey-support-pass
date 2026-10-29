@@ -4,11 +4,18 @@ import Image from "next/image";
 import { ArrowRight, ClipboardCheck, FilePenLine, Keyboard, MapPin, ScanLine } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+/** 새 하늘이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
+const POSES = {
+  front: "/stamp/haneul.webp",
+  left: "/stamp/haneul-left.webp",
+  right: "/stamp/haneul-right.webp",
+} as const;
+
 /** 하늘이가 한마디 한다. 안내 키오스크의 여러 화면에서 같은 모습으로 쓴다. */
-export function HaneuliSays({ text, size = "md" }: { text: string; size?: "sm" | "md" | "lg" }) {
+export function HaneuliSays({ text, size = "md", pose = "front" }: { text: string; size?: "sm" | "md" | "lg"; pose?: keyof typeof POSES }) {
   return (
     <div className={`haneuli-says haneuli-says-${size}`}>
-      <Image className="haneuli-says-face" src="/images/haneuli/friend.webp" alt="" width={320} height={320} />
+      <Image className="haneuli-says-face" src={POSES[pose]} alt="" width={320} height={320} />
       <p className="haneuli-says-bubble">{text}</p>
     </div>
   );
@@ -45,8 +52,10 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
         <div className="haneuli-hero" aria-hidden="true">
           <p className="haneuli-bubble">{bubble}</p>
           <div className="haneuli-character">
-            <Image className="haneuli-happy" src="/images/haneuli/hello.png" alt="" width={640} height={640} priority />
-            <Image className="haneuli-sleep" src="/images/haneuli/sleep.png" alt="" width={640} height={640} />
+            <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
+            {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
+            <span className="haneuli-lid haneuli-lid-l" />
+            <span className="haneuli-lid haneuli-lid-r" />
             <span className="haneuli-zzz">z Z Z</span>
           </div>
         </div>
