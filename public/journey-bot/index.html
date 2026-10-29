@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>저니봇 · 쉬운 공항 안내</title>
+    <meta
+      name="description"
+      content="공식 공항 지도에서 확보한 3층 도면과 시설 좌표를 사용하는 로봇 동행 시제품"
+    />
+    <link rel="stylesheet" href="src/app.css" />
+    <link rel="stylesheet" href="src/easy.css" />
+    <link rel="stylesheet" href="src/mobile.css" />
+  </head>
+  <body>
+    <a class="skip-easy" href="#easyContent">본문 바로가기</a>
+    <div id="easyRoot"></div>
+    <div class="app" id="advancedMap" hidden>
+      <aside class="sidebar">
+        <header>
+          <div class="brand">
+            <img src="assets/9976d5624d08b288.png" alt="Incheon Airport" /><span
+              >동행 지도 시제품</span
+            >
+          </div>
+          <span class="lang">🇰🇷 한국어⌄</span>
+        </header>
+        <nav class="tabs" aria-label="지도 기능">
+          <button data-tab="search" class="active">검색</button
+          ><button data-tab="route">길찾기 ↱</button
+          ><button data-tab="robot">로봇 동행</button>
+        </nav>
+        <div class="searchbox">
+          <span>⌕</span
+          ><input
+            id="search"
+            placeholder="검색어를 입력해주세요"
+            aria-label="시설 검색"
+          /><button id="clear" aria-label="검색어 지우기">×</button>
+        </div>
+        <div class="scroll">
+          <section id="searchPanel">
+            <div class="category-title">
+              시설 분류 <button id="allCats">전체 보기</button>
+            </div>
+            <div class="categories" id="categories"></div>
+            <div class="results-title">
+              <b id="resultsTitle">제1여객터미널 · 3층</b
+              ><span id="resultCount"></span>
+            </div>
+            <div class="results" id="results"></div>
+          </section>
+          <section id="routePanel" class="panel" hidden>
+            <h2>출발지와 도착지</h2>
+            <p class="intro">시설을 검색하거나 지도에서 선택하세요.</p>
+            <div id="routeRows"></div>
+            <label class="accessible"
+              ><input type="checkbox" id="accessible" checked />
+              계단·에스컬레이터 제외</label
+            ><button class="primary" id="findRoute">경로 확인</button>
+            <div class="route-result" id="routeResult" role="status"></div>
+            <p class="smallnote">
+              같은 터미널 3층 내 경로만 표시합니다.<br />운영 중인 출입 제한과
+              로봇 주행 가능 여부는 별도 확인이 필요합니다.
+            </p>
+          </section>
+          <section id="robotPanel" class="panel" hidden>
+            <div class="sectionhead">
+              <h2>로봇과 만날 곳 정하기</h2>
+              <span class="demo">이동 시연</span>
+            </div>
+            <p class="intro">
+              파란색은 내 위치, 초록색은 로봇,<br />주황색은 만날
+              체크포인트입니다.
+            </p>
+            <div id="robotRows"></div>
+            <button class="primary" id="callRobot">
+              체크포인트로 로봇 호출</button
+            ><button class="secondary" id="resetPositions">위치 초기화</button>
+            <div class="route-result" id="robotResult" role="status"></div>
+            <p class="smallnote">
+              지도와 시설은 실제 자료입니다. 이용자·로봇 위치는 시연 설정이며
+              실제 로봇에 연결되지 않습니다.
+            </p>
+          </section>
+        </div>
+        <footer>
+          <span class="source-dot"></span>실제 도면·시설 좌표
+          <span>·</span> 2026.10.28 자료<br /><small
+            >현재 제1·제2터미널, 탑승동의 3층 지원</small
+          >
+        </footer>
+      </aside>
+      <main class="map-panel">
+        <div id="map" aria-label="인천공항 실제 3층 실내지도"></div>
+        <div class="top-controls" hidden>
+          <select id="building" aria-label="터미널 선택">
+            <option value="1">제1여객터미널</option>
+            <option value="2">제2여객터미널</option>
+            <option value="3">탑승동</option></select
+          ><select id="floor" aria-label="층 선택">
+            <option value="3F">3F</option></select
+          ><span class="source-badge">원본 도면 · 3층</span>
+        </div>
+        <button class="robot-toggle" id="robotToggle">◉ 로봇 동행</button>
+        <div class="controls">
+          <button id="zoomIn" aria-label="지도 확대">＋</button
+          ><button id="zoomOut" aria-label="지도 축소">−</button
+          ><button id="fit" aria-label="기본 지도 보기">⛶</button
+          ><button id="rotate" aria-label="원본 지도 방향">↻</button>
+        </div>
+        <div class="bottom-controls">
+          <button data-area="AIR">탑승구역</button
+          ><button data-area="LAND">일반구역</button
+          ><button data-area="ALL" class="active">전체</button
+          ><span id="scale"></span>
+        </div>
+        <div class="map-credit">공항 공식 지도 자료 기반 · 공모전 시제품</div>
+        <div class="legend" id="legend" hidden>
+          <span><i style="background: #187fe7"></i>내 위치</span
+          ><span><i style="background: #15966d"></i>저니봇</span
+          ><span><i style="background: #ec8b25"></i>체크포인트</span>
+        </div>
+        <section id="detail" class="detail" hidden></section>
+        <div id="placeBanner" class="place-banner" hidden>
+          <span id="placeText"></span><button id="cancelPlace">취소</button>
+        </div>
+        <div id="journey" class="journey" hidden>
+          <div>
+            <b id="journeyTitle">로봇이 이동 중입니다</b
+            ><button id="stopRobot">시연 종료</button>
+          </div>
+          <p id="journeyText"></p>
+          <div class="progress"><i id="progress"></i></div>
+          <small id="journeyProgress"></small>
+        </div>
+        <div id="loading" class="loading">
+          <span class="spinner"></span><b>공항 실내지도를 불러오는 중</b
+          ><span>원본 도면과 시설 좌표를 준비하고 있습니다.</span>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="assets/react.production.min.js"></script>
+    <script src="assets/react-dom.production.min.js"></script>
+    <script src="assets/airport-engine.js"></script>
+    <script src="src/graph.js"></script>
+    <script src="src/app.js"></script>
+    <script src="src/easy.js"></script>
+  </body>
+</html>
