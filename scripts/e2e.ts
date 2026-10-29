@@ -103,7 +103,18 @@ async function audit(page: Page, name: string) {
   // Next streams the root metadata during navigation; audit the settled document.
   await page.waitForFunction(() => document.title.trim().length > 0, { timeout: WAIT });
   // 나타나는 움직임(흐리게 시작해 또렷해지는 것)이 끝난 뒤에 본다. 도중에 보면 글자 대비가 낮게 잡힌다.
-  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+  // 끝없이 도는 움직임(하늘이 걷기 등)은 끝나지 않으니 빼고, 그래도 2초가 넘으면 기다리지 않는다.
+  await page.evaluate(() =>
+    Promise.race([
+      Promise.all(
+        document
+          .getAnimations()
+          .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+          .map((a) => a.finished.catch(() => undefined)),
+      ),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]),
+  );
   // 화면 아래에 붙은 「다음」 줄 밑으로 지나가는 항목은 axe 가 겹친 단추로 센다. 끝까지 내려 모든 항목이 드러난 상태에서 본다.
   const scrolled = await page.evaluate(() => {
     const y = window.scrollY;
