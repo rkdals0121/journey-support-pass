@@ -8,6 +8,7 @@ import {
   Sun,
 } from "lucide-react";
 import { Sunflower } from "../components/Sunflower";
+import { TextSizeControl } from "../components/TextSizeControl";
 import { ViewScale } from "../components/ViewScale";
 export default async function PreparePage({
   searchParams,
@@ -45,6 +46,8 @@ export default async function PreparePage({
             </small>
           </span>
         </Link>
+        <div className="prepare-tools">
+        <TextSizeControl en={en} />
         <Link
           href={
             "/prepare" +
@@ -54,6 +57,7 @@ export default async function PreparePage({
         >
           {en ? "한국어" : "English"}
         </Link>
+        </div>
       </header>
       <main id="prepare-main" className="prepare-layout">
         <section className="prepare-intro">
@@ -68,26 +72,22 @@ export default async function PreparePage({
               </>
             ) : (
               <>
-                출발 전 지원등록
+                출발 전,
+                더 편안하게.
               </>
             )}
           </h1>
           <p>
             {en
-              ? "Tell us what helps you travel comfortably. Your saved needs can be used when you request assistance at the airport."
-              : "필요한 도움을 한 번 알려 두세요. 공항에서 도움을 요청할 때 같은 설명을 반복하는 부담을 줄일 수 있어요."}
+              ? "Save your support needs before you fly."
+              : "나에게 필요한 공항 도움을 미리 등록하세요."}
           </p>
           <Link className="public-button" href={registrationHref}>
             {en ? "Register my needs" : "필요한 도움 등록하기"}
             <ArrowRight size={20} aria-hidden="true" />
           </Link>
-          <p className="public-caption">
-            {en
-              ? "This saves your needs. It does not confirm a service booking."
-              : "필요 정보를 미리 저장하는 절차이며 서비스 예약 확정은 아니에요."}
-          </p>
           <Link className="prepare-lookup-link" href={"/prepare/booking" + (en ? "?lang=en" : "")}>
-            {en ? "Find flight by booking reference (demo)" : "예약번호로 항공편 불러오기 (시연)"}
+            {en ? "Find my flight" : "예약번호로 항공편 찾기"}
           </Link>
         </section>
         <aside className="prepare-steps">
@@ -95,7 +95,7 @@ export default async function PreparePage({
             <ClipboardCheck aria-hidden="true" />
             <div>
               <h2>
-                {en ? "Tell us what you need" : "필요한 도움을 알려주세요"}
+                {en ? "Tell us what you need" : "필요한 도움 선택"}
               </h2>
               <p>
                 {en
@@ -107,7 +107,7 @@ export default async function PreparePage({
           <div className="prepare-step">
             <MapPin aria-hidden="true" />
             <div>
-              <h2>{en ? "Review your journey" : "이용 정보를 확인해요"}</h2>
+              <h2>{en ? "Review your journey" : "항공편·등록 내용 확인"}</h2>
               <p>
                 {en
                   ? "Review your flight and the details you entered."
@@ -119,7 +119,7 @@ export default async function PreparePage({
             <Sun aria-hidden="true" />
             <div>
               <h2>
-                {en ? "Continue at the airport" : "현장 요청으로 이어가요"}
+                {en ? "Continue at the airport" : "공항에서 도움 요청"}
               </h2>
               <p>
                 {en
