@@ -27,3 +27,13 @@ Edit this mascot asset. Critical correction: the character is wearing YELLOW HEA
 
 ### Final prompt — sleep
 Create sleeping pose variant of this exact mascot web asset. Keep exact character identity, same full body size and centered framing, blue helmet and airplane fin, CONTINUOUS YELLOW HEADPHONE HEADBAND from top down both sides to white circular ear cups with cyan center, yellow wrist cuffs. Change expression to both eyes peacefully closed curved lines, mouth tiny contented smile; lower waving hand to gently rest on dark tablet held in lap, head slightly tilted asleep. Same soft plush 3D rendering. Transparent background. No letters, no Z symbols, no background, no extra objects.
+
+## 가로 화면 높이 수정 (2026-10-29)
+가로 화면(너비 900px 이상)은 전체 높이를 `100dvh`로 배분합니다. 76px 헤더와 하단 스캐너 영역을 확보하고 남은 높이에 캐릭터와 서비스 카드 3개 행을 맞춥니다. 스크롤/클리핑으로 요소를 감추지 않습니다. 오른쪽 중복 시작 안내 버튼은 삭제했고, 메뉴 영역 터치로 깨우는 동작은 유지합니다.
+
+회귀 검증: 로컬 서버를 실행한 뒤 `node scripts/haneuli-viewport-check.mjs`.
+- 1366×768, 1280×720, 1280×600, 1440×900, 1920×1080, 1024×600, 1440×650
+- 각 해상도 한국어/영어 × 대기/안내 = 28개 조합 통과
+- 문서 가로·세로 스크롤 높이, 주요 영역 내부 넘침, 시작·번호 입력·이미지 스캔 버튼의 화면 내 위치 확인
+- 중복 문구 없음, 브라우저 pageerror 없음
+- 캡처와 검증 JSON은 `work/haneuli-viewport`에 저장. `CHROME_PATH`, `HANEULI_CHECK_URL`, `HANEULI_CAPTURE_DIR`로 로컬 환경 설정 가능

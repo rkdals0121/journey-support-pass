@@ -43,7 +43,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
           <p className="haneuli-bubble">{busy ? (en ? "I’m finding your registration!" : "등록하신 내용을 찾고 있어요!") : awake ? (en ? "Hello! I’m Haneuli." : "안녕하세요! 저는 하늘이예요.") : sleeping ? (en ? "Taking a little nap…" : "잠깐 꿈나라 여행 중…") : (en ? "Shall we travel together?" : "우리, 함께 떠나볼까요?")}</p>
         </div>
         {!awake && <button className="haneuli-start" onClick={onWake} disabled={busy}>{en ? "Touch to start" : "화면을 눌러 시작하기"}<ArrowRight aria-hidden="true" /></button>}
-        {awake && <>{listen}<button className="haneuli-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button></>}
+        {awake && <div className="haneuli-actions">{listen}<button className="haneuli-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button></div>}
       </section>
 
       <section className="haneuli-menu" aria-label={en ? "Airport services" : "공항 이용 서비스"}>
@@ -52,7 +52,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
           <TaskLauncher en={en} returnTo="/kiosk/guide" field />
           <article className="task-action haneuli-appointment"><CalendarCheck className="task-action-icon" aria-hidden="true" /><Link className="task-action-link" href={"/kiosk/visits" + (en ? "?lang=en" : "")}><span><strong>{en ? "Meeting appointment" : "만남 예약 확인"}</strong><small>{en ? "Find your appointment" : "예약한 만남을 확인해요"}</small></span><ArrowRight aria-hidden="true" /></Link></article>
         </div>
-        {!awake && <button className="haneuli-menu-cover" onClick={onWake} disabled={busy} aria-label={en ? "Wake Haneuli and open services" : "하늘이를 깨우고 서비스 안내 열기"}><span>{en ? "Touch to explore services" : "화면을 누르면 안내가 시작돼요"}<ArrowRight aria-hidden="true" /></span></button>}
+
       </section>
 
       <section className="haneuli-scan" aria-label={en ? "Boarding pass scanner" : "탑승권 스캔"}>

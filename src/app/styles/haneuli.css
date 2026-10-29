@@ -36,8 +36,6 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
 .haneuli-service-grid .task-action-guidance { background:#dde9d3; border-color:#ccdabc; }
 .haneuli-service-grid .task-action:hover { box-shadow:0 8px 24px #526a3920; }
 .is-idle .haneuli-service-grid { transform:scale(.91); opacity:.65; }
-.haneuli-menu-cover { position:absolute; inset:90px 0 0; width:100%; border:0; background:transparent; cursor:pointer; display:flex; align-items:flex-end; justify-content:center; padding:22px; }
-.haneuli-menu-cover span { display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:30px; background:var(--h-green); color:white; font:inherit; font-size:17px; box-shadow:0 5px 18px #344d3225; }
 .is-awake .haneuli-menu { background:#e8eedf; box-shadow:0 14px 40px #43603912; }
 .is-awake .haneuli-wander { animation:haneuli-wake .75s ease-out both; }
 .is-awake .haneuli-character { animation:haneuli-bob 3s ease-in-out infinite; }
@@ -73,18 +71,6 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
 .haneuli-camera .scanner { aspect-ratio:16/9; height:110px; max-width:none; width:100%; }
 .haneuli-camera .scan-hint { font-size:12px; margin:5px 0; }
 .haneuli-camera .scan > .btn { min-height:36px; font-size:12px; padding:6px 10px; }
-@media(min-width:1000px) and (max-height:1100px) {
- .haneuli-welcome { gap:18px; padding:12px 0; }
- .haneuli-intro,.haneuli-menu { padding:22px; }
- .haneuli-location { margin-bottom:14px; }
- html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:38px; margin:12px 0; }
- .haneuli-garden { height:205px; }
- .haneuli-wander { width:205px; height:205px; left:calc(50% - 102px); bottom:5px; }
- .haneuli-orbit { width:190px; height:190px; left:calc(50% - 95px); }
- .haneuli-service-grid .task-action { min-height:135px; padding:16px; gap:14px; }
- .haneuli-menu-heading h2 { margin-bottom:18px; }
- .haneuli-scan { padding:16px 22px; }
-}
 .haneuli-rest { margin-top:10px; padding:8px 12px; border:0; background:transparent; color:#375f47; font:inherit; font-size:15px; text-decoration:underline; cursor:pointer; }
 @media(max-width:600px) {
  body:has(.haneuli-welcome) .flow-bar { display:flex; flex-wrap:wrap; padding-right:0; gap:8px; min-height:130px; }
@@ -93,4 +79,60 @@ html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px)
  body:has(.haneuli-welcome) .call-dock { top:0; }
  body:has(.haneuli-welcome) .call-dock-inner { height:70px; }
  body:has(.haneuli-welcome) .call-btn { font-size:14px; padding:10px 14px; }
+}/* Landscape kiosks use the available viewport, including laptop-height screens.
+   The garden and service rows absorb the height difference, rather than pushing
+   the scanner below the fold. No overflow clipping is used to conceal controls. */
+@media (min-width: 900px) and (orientation: landscape) {
+  body:has(.haneuli-welcome) { --call-w: 220px; }
+  .flow:has(.haneuli-welcome) { height:100dvh; min-height:0; flex:none; display:grid; grid-template-rows:76px minmax(0,1fr); }
+  html[data-kiosk] body:has(.haneuli-welcome) .flow-bar { height:76px; min-height:0; padding:8px 244px 8px 24px; flex-wrap:nowrap; gap:12px; }
+  body:has(.haneuli-welcome) .brand { font-size:22px; gap:10px; flex-shrink:0; }
+  body:has(.haneuli-welcome) .brand small { font-size:12px; }
+  body:has(.haneuli-welcome) .brand .sunflower { width:40px; height:40px; }
+  body:has(.haneuli-welcome) .flow-bar .bar-btn { font-size:18px; min-height:44px; padding:8px 12px; }
+  body:has(.haneuli-welcome) .call-dock-inner { height:76px; padding:8px 20px; }
+  body:has(.haneuli-welcome) .call-btn { font-size:18px; min-height:48px; padding:10px 20px; }
+  .flow:has(.haneuli-welcome) .flow-workspace,
+  .flow:has(.haneuli-welcome) .flow-form-area { min-height:0; height:100%; }
+  html[data-kiosk] .flow:has(.haneuli-welcome) .flow-body { min-height:0; height:100%; flex:1 1 0; padding:12px 24px; }
+  .haneuli-welcome { height:100%; min-height:0; padding:0; gap:14px; grid-template-rows:minmax(0,1fr) clamp(132px,20dvh,180px); }
+  .haneuli-intro { min-height:0; display:flex; flex-direction:column; padding:clamp(14px,2.2dvh,24px); }
+  .haneuli-location { margin:0 0 8px; font-size:13px; line-height:1.3; }
+  .haneuli-eyebrow { margin:0; font-size:13px; line-height:1.4; }
+  html[data-kiosk] .flow-body .haneuli-intro h1 { margin:10px 0; font-size:clamp(26px,4.5dvh,46px); line-height:1.18; }
+  .haneuli-description { font-size:clamp(14px,1.9dvh,18px); line-height:1.45; }
+  .haneuli-garden { flex:1 1 0; min-height:65px; height:auto; margin:6px 0; }
+  .haneuli-wander { width:min(100%,clamp(100px,26dvh,310px)); height:100%; max-height:310px; left:50%; bottom:0; margin-left:calc(clamp(100px,26dvh,310px) / -2); }
+  .haneuli-character img { object-fit:contain; }
+  .haneuli-orbit { width:auto; height:90%; max-height:290px; aspect-ratio:1; top:5%; left:50%; translate:-50% 0; }
+  .haneuli-ground { bottom:0; height:16px; }
+  .haneuli-bubble { top:0; right:0; padding:7px 10px; font-size:12px; margin:0; }
+  .haneuli-start { flex:none; min-height:48px; padding:10px 16px; font-size:18px; }
+  .haneuli-actions { display:flex; align-items:center; gap:8px; flex:none; }
+  .haneuli-actions > * { min-width:0; }
+  .haneuli-actions .listen-start { flex:1; }
+  .haneuli-actions .btn { min-height:48px; margin:0; padding:8px 12px; font-size:17px; }
+  .haneuli-rest { margin:0; font-size:13px; padding:8px; flex-shrink:0; }
+  .haneuli-menu { min-height:0; display:flex; flex-direction:column; padding:clamp(14px,2.2dvh,24px); }
+  .haneuli-menu-heading > span { font-size:12px; }
+  .haneuli-menu-heading h2 { margin:6px 0 12px; font-size:clamp(18px,2.6dvh,26px); line-height:1.3; }
+  .haneuli-service-grid { flex:1; min-height:0; grid-template-rows:repeat(3,minmax(0,1fr)); gap:10px; }
+  .haneuli-service-grid .task-action { min-height:0; padding:clamp(10px,1.5dvh,18px); gap:6px; }
+  .haneuli-service-grid .task-action-icon { width:clamp(20px,3dvh,30px); height:clamp(20px,3dvh,30px); flex-shrink:0; }
+  .haneuli-service-grid .task-action-link strong { font-size:clamp(16px,2.35dvh,23px); line-height:1.25; }
+  .haneuli-service-grid .task-action-link small { font-size:clamp(12px,1.6dvh,15px); margin-top:4px; line-height:1.3; }
+  .haneuli-scan { min-height:0; padding:12px 20px; gap:8px 18px; grid-template-columns:minmax(0,1fr) minmax(260px,360px) 140px; }
+  .haneuli-scan-copy { gap:12px; }
+  .haneuli-scan-copy h2 { margin:0 0 6px; font-size:19px; }
+  .haneuli-scan-copy p { font-size:14px; line-height:1.4; }
+  .haneuli-scan-icon { padding:12px; }
+  .haneuli-camera { max-height:none; overflow:visible; }
+  .haneuli-camera .scan { display:grid; grid-template-columns:140px minmax(0,1fr); gap:6px 10px; align-items:center; }
+  .haneuli-camera .scanner { grid-row:1/3; height:80px; align-self:center; }
+  .haneuli-camera video { height:100%; max-height:80px; }
+  .haneuli-camera .scan-hint { font-size:11px; line-height:1.4; margin:0; }
+  .haneuli-camera .scan > .btn { grid-column:2; min-height:36px; padding:6px; font-size:11px; margin:0; }
+  .haneuli-number { font-size:15px; min-height:48px; padding:8px; }
+  .haneuli-status { font-size:13px; line-height:1.3; }
+  .haneuli-status p { margin:0; }
 }
