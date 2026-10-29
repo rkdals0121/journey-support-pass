@@ -1027,3 +1027,248 @@
  .sb-print-no { font-size:var(--text-title);line-height:1.1; }
  .sb-print-card small,.sb-print-meet { font-size:var(--text-caption);line-height:1.2; }
 }
+
+/* 경로형: 지도에서 지금 있는 곳 고르기 */
+.sb-map {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.sb-map-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.sb-map-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+.sb-map-tools > div {
+  display: flex;
+  gap: 0.25rem;
+}
+.sb-map-tools button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.6rem;
+  border: 2px solid var(--soft);
+  border-radius: 0.7rem;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 800;
+}
+.sb-map-tools button[aria-pressed="true"] {
+  border-color: var(--main);
+  background: var(--main);
+  color: var(--main-ink);
+}
+.sb-map-tools button:disabled {
+  opacity: 0.4;
+}
+.sb-map-tools svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  vertical-align: middle;
+}
+.sb-map-view {
+  max-height: 60vh;
+  overflow: auto;
+  border: 2px solid var(--soft);
+  border-radius: var(--radius);
+  background: var(--card);
+  touch-action: pan-x pan-y pinch-zoom;
+}
+.sb-map-view > svg {
+  display: block;
+  height: auto;
+}
+.sb-map-building {
+  fill: var(--soft);
+  stroke: var(--muted);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.sb-map-north,
+.sb-map-gate,
+.sb-map-spot text {
+  font-family: inherit;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+.sb-map-north {
+  fill: var(--muted);
+  text-anchor: start;
+}
+.sb-map-gate {
+  fill: var(--muted);
+  opacity: 0.75;
+}
+.sb-map-spot {
+  cursor: pointer;
+  outline: none;
+}
+.sb-map-hit {
+  fill: transparent;
+}
+.sb-map-cp > circle:not(.sb-map-hit) {
+  fill: var(--main);
+  stroke: var(--card);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.sb-map-exit > rect {
+  fill: var(--accent);
+  stroke: var(--ink);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.sb-map-spot text {
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+}
+.sb-map-spot.on > circle:not(.sb-map-hit),
+.sb-map-spot.on > rect {
+  fill: var(--cta);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+.sb-map-spot:focus-visible > .sb-map-hit {
+  stroke: var(--ink);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.sb-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.sb-map-legend .dot,
+.sb-map-legend .diamond {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--main);
+}
+.sb-map-legend .diamond {
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+.sb-map-confirm {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.8rem 0.9rem;
+  border: 2px solid var(--main);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.sb-map-confirm p,
+.sb-map-now {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.sb-map-confirm > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.sb-map-confirm .sb-btn {
+  flex: 1;
+}
+.sb-map-list summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+/* 하늘이 그림(시안 이미지) */
+.sb-haneul {
+  display: block;
+  height: auto;
+}
+
+/* 휴대전화에서 입력칸이 옆으로 삐져나오지 않게. iOS Safari 는 날짜·시간 칸에 자기 최소 폭을 줘서 화면 밖으로 밀어낸다. */
+.sb-page,
+.sb-fields,
+.sb-fields label {
+  min-width: 0;
+}
+.sb input,
+.sb select {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.sb input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  text-align: left;
+}
+.sb input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+.sb-fields p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* 첫 도장 뒤 수첩 홈: 탑승 정보 */
+.sb-trip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0;
+}
+.sb-trip > div {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--card);
+}
+.sb-trip dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.sb-trip dd {
+  display: grid;
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+.sb-trip small {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.sb-trip-edit summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}

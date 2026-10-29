@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { GOAL, THEMES, THEME_IDS, checkpointOf, checkpointUrl, makeCertId } from "@/lib/stamp-book";
+import { CHECKPOINTS, GOAL, THEMES, THEME_IDS, checkpointOf, checkpointUrl, makeCertId } from "@/lib/stamp-book";
 
 describe("스탬프북", () => {
-  it("QR 주소와 손으로 누른 번호에서 체크포인트를 찾는다", () => {
+  it("QR 주소와 손으로 누른 고유번호에서 체크포인트를 찾는다", () => {
     expect(checkpointOf(checkpointUrl("https://x.app", 2))).toBe(2);
-    expect(checkpointOf(" a01 ")).toBe(0);
+    const serial = CHECKPOINTS[0].serial;
+    expect(checkpointOf(` ${serial.slice(0, 3).toLowerCase()}-${serial.slice(3)} `)).toBe(0);
+    // 체크포인트 이름(A01)만으로는 도장을 받을 수 없다
+    expect(checkpointOf("A01")).toBe(-1);
+    expect(checkpointOf("https://x.app/stamp/c/A01")).toBe(-1);
+    expect(new Set(CHECKPOINTS.map((c) => c.serial)).size).toBe(CHECKPOINTS.length);
     expect(checkpointOf("https://x.app/p/ABC")).toBe(-1);
     expect(checkpointOf("")).toBe(-1);
   });

@@ -14,13 +14,32 @@ export interface Checkpoint {
   place: string;
   /** 셔틀트레인 승강장 에스컬레이터. 탑승동으로 가는 경로형은 꼭 들른다. */
   train?: boolean;
+  /**
+   * 고유번호: QR 주소에 들어가고, 카메라가 안 될 때 손으로 누르는 번호. 현장 QR 포스터에만 적혀 있어
+   * 체크포인트에 가야 알 수 있다(A07 같은 체크포인트 이름으로는 도장을 받을 수 없다).
+   */
+  serial: string;
 }
 
 // 체크포인트는 모두 에어사이드(출국심사를 마친 뒤 면세구역~탑승구)에만 둔다. 안내로봇 미팅포인트를 겸한다.
-// 자리는 실제 탑승구 좌표를 따른다(동·서는 지리 방위 기준: 제1여객터미널·탑승동은 번호가 작은 쪽이 동편, 제2여객터미널은 서편).
+// 자리는 실제 탑승구 좌표(인천국제공항 공식 지도)를 따른다. 셔틀트레인 지점은 공식 지도의 승강장에서 가장 가까운 탑승구에 둔다.
+// 동·서는 지리 방위 기준(제1여객터미널·탑승동은 번호가 작은 쪽이 동편, 제2여객터미널은 서편).
 // ponytail: 매장·놀이공간 이름은 시연용 모의 배치다. 실제 도입 때는 공항 실내 지도의 매장·시설 위치로 바꾼다.
-const cp = (area: Area, prefix: string, rows: [number, string, boolean?][]): Checkpoint[] =>
+const cp = (area: Area, prefix: string, rows: [number, string, boolean?][]): Omit<Checkpoint, "serial">[] =>
   rows.map(([near, place, train], i) => ({ code: prefix + String(i + 1).padStart(2, "0"), area, near, place, ...(train ? { train } : {}) }));
+
+// 체크포인트 순서대로의 고유번호(헷갈리는 글자 0·O·1·I·L·2·Z·5·S·8·B 를 뺀 6자리, 무작위로 한 번 만든 값).
+// ponytail: 화면 코드에 들어 있으니 마음먹고 뜯어보면 보인다. 아이 놀이로는 충분하고, 막아야 하면 서버에서 확인한다.
+const SERIALS = [
+  "NNECHJ", "KFAPMT", "HRHQTA", "D3J6KC", "FJA3J6", "GQJJND", "44KWHV", "AU3VWR", "NP46U3", "3YWG4A",
+  "K4D4G9", "FMMW4W", "G6P3VA", "HU7JEW", "UTW9MU", "KDE6CW", "GANUMX", "HMNH74", "GU6UFD", "HAWRT9",
+  "3F3WJ7", "YW9DMY", "XV6E93", "DFVRDM", "KHR9GD", "N6G6JT", "AQQMHR", "VFTMA4", "F7HXFC", "6DMXKQ",
+  "NVVE3K", "7YMFCK", "QQ69NF", "6DVJGC", "FTP3AE", "FKUAVG", "WGF9MP", "WNNFU4", "XHVCUD", "YC6PRH",
+  "KRAJPP", "WTKYD3", "AQUHYV", "TR6K6H", "XUVWQF", "TUDU4F", "MUEGJM", "34QTKM", "PUVWG3", "NDHUYJ",
+  "NPH9QJ", "FDVVUW", "6F7MWP", "TUNUKW", "RKJEXE", "VEQYUE", "KWXHGR", "9K79QN", "AJFRFD", "VN6MGM",
+  "CRDKYC", "RCNYDT", "WPWKTE", "436TYJ", "RVCY6J", "H34PAG", "ARU4V3", "R6GREY", "HDQAN6", "66TEK9",
+  "HFANKV", "9NT6HJ", "3YVVVU",
+];
 
 export const CHECKPOINTS: Checkpoint[] = [
   ...cp("T1", "A", [
@@ -35,9 +54,9 @@ export const CHECKPOINTS: Checkpoint[] = [
     [20, "전통문화 체험관 앞"],
     [22, "22번 탑승구 앞"],
     [24, "중앙 면세거리 큰 시계 앞"],
-    [26, "탑승동 셔틀트레인 승강장 내려가는 에스컬레이터 앞", true],
+    [28, "탑승동 셔틀트레인 승강장 내려가는 에스컬레이터 앞", true],
     [27, "중앙 실내 정원 앞"],
-    [28, "28번 탑승구 앞"],
+    [29, "29번 탑승구 앞"],
     [30, "30번 탑승구 앞"],
     [32, "서편 패션 면세점 앞"],
     [33, "33번 탑승구 앞"],
@@ -61,9 +80,9 @@ export const CHECKPOINTS: Checkpoint[] = [
     [111, "동편 푸드코트 입구"],
     [112, "112번 탑승구 앞"],
     [114, "114번 탑승구 앞"],
-    [115, "셔틀트레인 도착층에서 올라오는 에스컬레이터 앞", true],
-    [117, "중앙 면세거리 앞"],
-    [118, "118번 탑승구 앞"],
+    [118, "셔틀트레인 도착층에서 올라오는 에스컬레이터 앞", true],
+    [115, "중앙 면세거리 앞"],
+    [117, "117번 탑승구 앞"],
     [119, "119번 탑승구 앞"],
     [121, "서편 휴게 라운지 앞"],
     [122, "122번 탑승구 앞"],
@@ -102,7 +121,7 @@ export const CHECKPOINTS: Checkpoint[] = [
     [287, "287번 탑승구 앞"],
     [290, "290번 탑승구 앞 · 동편 끝 활주로 창가"],
   ]),
-];
+].map((c, i) => ({ ...c, serial: SERIALS[i] }));
 
 export const AREA_LABEL: Record<Area, string> = { T1: "제1여객터미널", CONCOURSE: "탑승동", T2: "제2여객터미널" };
 
@@ -264,19 +283,17 @@ export const THEMES: Record<ThemeId, Theme> = {
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
 /**
- * QR 에서 읽은 글자에서 체크포인트 순번을 찾는다. 없으면 -1.
- * 인쇄물 QR 은 `…/stamp/c/K7Q` 주소라 휴대전화 기본 카메라로 찍어도 스탬프북이 열린다. 손으로 누른 번호(k7q)도 받는다.
+ * QR 에서 읽은 글자나 손으로 누른 고유번호에서 체크포인트 순번을 찾는다. 없으면 -1.
+ * 인쇄물 QR 은 `…/stamp/c/{고유번호}` 주소라 휴대전화 기본 카메라로 찍어도 스탬프북이 열린다.
+ * 손으로 누를 때 띄어쓰기·붙임표·소문자는 봐준다. 체크포인트 이름(A07)으로는 찾지 않는다.
  */
 export function checkpointOf(text: string): number {
   const raw = text.trim();
-  const code = (
-    raw.match(/\/stamp\/c\/([A-Za-z0-9]+)/)?.[1] ?? raw
-  ).toUpperCase();
-  return CHECKPOINTS.findIndex((c) => c.code === code);
+  const serial = (raw.match(/\/stamp\/c\/([A-Za-z0-9-]+)/)?.[1] ?? raw).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return serial ? CHECKPOINTS.findIndex((c) => c.serial === serial) : -1;
 }
 
-export const checkpointUrl = (origin: string, i: number) =>
-  `${origin}/stamp/c/${CHECKPOINTS[i].code}`;
+export const checkpointUrl = (origin: string, i: number) => `${origin}/stamp/c/${CHECKPOINTS[i].serial}`;
 
 export interface BookState {
   checkpointVersion?: number;

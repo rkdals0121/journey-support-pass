@@ -52,6 +52,21 @@ export function KioskSetup({
     if (!shown.some((p) => p.id === placeId)) setPlaceId("");
   }, [use]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 키오스크 설치를 풀면 이 브라우저는 다시 일반 여객 화면이 된다(예약 등이 키오스크 화면으로 넘어가지 않는다).
+  async function unpair() {
+    if (!window.confirm("이 기기의 키오스크 설치를 풀까요? 다시 쓰려면 설치 코드를 넣어야 합니다.")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/kiosk/logout", { method: "POST" });
+      if (!res.ok) throw new Error();
+      window.location.replace("/kiosk");
+    } catch {
+      setError("키오스크 설치를 풀지 못했습니다. 다시 시도해 주세요.");
+      setBusy(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -94,6 +109,14 @@ export function KioskSetup({
           >
             {currentPlace.landside ? "입구 안내로봇 열기" : "안내 화면 열기"}
           </Link>
+          <button
+            type="button"
+            className="btn btn-inline btn-ghost"
+            disabled={busy}
+            onClick={() => void unpair()}
+          >
+            이 기기 키오스크 해제
+          </button>
         </div>
       )}
 

@@ -28,6 +28,7 @@ import {
 import { EXITS, courseFits, gateProblem, makeCourse, stampEligibility } from "@/lib/stamp-routing";
 import { Emblem, Haneul, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
+import { StartMap } from "./StartMap";
 import "./stamp.css";
 
 type View = "themes" | "cover" | "home" | "scan" | "got" | "done" | "camera";
@@ -91,7 +92,10 @@ export function StampBook({ scanned }: { scanned?: string }) {
   // 처음 열 때 저장된 수첩을 읽는다. QR 주소로 들어왔으면 도장부터 찍는다.
   useEffect(() => {
     let st = load();
-    let first: View = !st.theme ? "themes" : !st.name ? "cover" : "home";
+    // 테마만 고르고 시작하기를 누르지 않았으면(이름이 없으면) 다시 테마 고르기부터 연다.
+    // QR로 들어왔을 때만 고른 테마의 표지로 바로 가서 수첩을 마저 준비하게 한다.
+    let first: View =
+      !st.theme || (!st.name && !scanned) ? "themes" : !st.name ? "cover" : "home";
     if (scanned) {
       const i = checkpointOf(scanned);
       const eligible = stampEligibility(st);
@@ -212,6 +216,92 @@ export function StampBook({ scanned }: { scanned?: string }) {
   const goal = itinerary.indices.length;
   const n = itinerary.indices.filter((i) => i in s.stamps).length;
   const complete = goal > 0 && n >= goal;
+  // 첫 도장을 받으면 설정(탑승구·지금 있는 곳·지도·탑승 시각)은 접고, 진행도·탑승 정보·체크포인트만 보여 준다.
+  const started = n > 0;
+  // 탑승구·지금 있는 곳(경로형)·탑승 시각 설정. 첫 도장 전에는 펼쳐 두고, 뒤에는 "탑승 정보 바꾸기" 안에 접는다.
+  const setup = (
+    <section className="sb-fields" aria-label="경로 설정">
+      <label>
+        탑승구 번호
+        <input
+          value={s.gate}
+          inputMode="numeric"
+          maxLength={4}
+          required
+          onChange={(e) =>
+            update({ gate: e.target.value.replace(/\D/g, "") })
+          }
+        />
+      </label>
+      {s.mode === "route" && (
+        <>
+          <StartMap
+            gate={s.gate}
+            value={s.startHub}
+            onPick={(id) => update({ startHub: id, course: [] })}
+          />
+          {/* 지도가 불편하거나 화면 읽기 프로그램을 쓰면 목록으로 고른다. */}
+          <details className="sb-map-list">
+            <summary>목록으로 고르기</summary>
+            <label>
+              지금 있는 곳 · 출국심사를 마친 뒤
+              <select
+                value={s.startHub || ""}
+                onChange={(e) => update({ startHub: e.target.value, course: [] })}
+              >
+                <option value="" disabled>
+                  지금 있는 곳 고르기
+                </option>
+                <optgroup label="출국심사를 막 마쳤어요">
+                  {EXITS.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.label}
+                    </option>
+                  ))}
+                </optgroup>
+                {(["T1", "CONCOURSE", "T2"] as const).map((a) => (
+                  <optgroup key={a} label={`이 체크포인트 근처예요 · ${AREA_LABEL[a]}`}>
+                    {CHECKPOINTS.filter((c) => c.area === a).map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.code} · {c.place}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+          </details>
+        </>
+      )}
+      <label>
+        탑승 시각 · 한국시간 · 선택
+        <input
+          type="datetime-local"
+          value={s.boardingAt || ""}
+          onChange={(e) => update({ boardingAt: e.target.value })}
+        />
+      </label>
+      {itinerary.reason ? (
+        <p role="status">{itinerary.reason}</p>
+      ) : (
+        <p>
+          {s.mode === "play" ? "코스 6곳을 도는 데" : "도장을 모으며 탑승구까지"} 약{" "}
+          {itinerary.minutes}분 · 걸음이 느린 가족 기준 추정이에요.
+          {s.mode === "route" && " 탑승 전 여유 15분은 따로 두세요."}
+          {s.mode === "play" && " 너무 길다 싶으면 다른 코스로 바꿔 보세요."}
+        </p>
+      )}
+      {s.mode === "play" && !gateProblem(s.gate) && (
+        <button
+          type="button"
+          className="sb-link"
+          onClick={() => update({ course: makeCourse(s.gate) })}
+        >
+          <Shuffle aria-hidden="true" /> 다른 코스로 바꾸기
+        </button>
+      )}
+    </section>
+  );
   const role = t.roles.find((r) => r.id === s.role) ?? t.roles[0];
 
   function award(i: number) {
@@ -349,6 +439,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
               <Palette aria-hidden="true" /> 테마 바꾸기
             </button>
           </nav>
+          {!started && (
           <div className="sb-tabs" role="tablist" aria-label="사용 방식">
             {(["play", "route"] as const).map((m) => (
               <button
@@ -362,84 +453,24 @@ export function StampBook({ scanned }: { scanned?: string }) {
               </button>
             ))}
           </div>
+          )}
           {scanErr && (
             <p className="sb-error" role="alert">
               {scanErr}
             </p>
           )}
           <Progress theme={theme} n={n} goal={goal} />
-          {
-            <section className="sb-fields" aria-label="경로 설정">
-              <label>
-                탑승구 번호
-                <input
-                  value={s.gate}
-                  inputMode="numeric"
-                  maxLength={4}
-                  required
-                  onChange={(e) =>
-                    update({ gate: e.target.value.replace(/\D/g, "") })
-                  }
-                />
-              </label>
-              {s.mode === "route" && (
-                <label>
-                  지금 있는 곳 · 출국심사를 마친 뒤
-                  <select
-                    value={s.startHub || ""}
-                    onChange={(e) => update({ startHub: e.target.value, course: [] })}
-                  >
-                    <option value="" disabled>
-                      지금 있는 곳 고르기
-                    </option>
-                    <optgroup label="출국심사를 막 마쳤어요">
-                      {EXITS.map((e) => (
-                        <option key={e.id} value={e.id}>
-                          {e.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                    {(["T1", "CONCOURSE", "T2"] as const).map((a) => (
-                      <optgroup key={a} label={`이 체크포인트 근처예요 · ${AREA_LABEL[a]}`}>
-                        {CHECKPOINTS.filter((c) => c.area === a).map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.code} · {c.place}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <label>
-                탑승 시각 · 한국시간 · 선택
-                <input
-                  type="datetime-local"
-                  value={s.boardingAt || ""}
-                  onChange={(e) => update({ boardingAt: e.target.value })}
-                />
-              </label>
-              {itinerary.reason ? (
-                <p role="status">{itinerary.reason}</p>
-              ) : (
-                <p>
-                  {s.mode === "play" ? "코스 6곳을 도는 데" : "도장을 모으며 탑승구까지"} 약{" "}
-                  {itinerary.minutes}분 · 걸음이 느린 가족 기준 추정이에요.
-                  {s.mode === "route" && " 탑승 전 여유 15분은 따로 두세요."}
-                  {s.mode === "play" && " 너무 길다 싶으면 다른 코스로 바꿔 보세요."}
-                </p>
-              )}
-              {s.mode === "play" && !gateProblem(s.gate) && (
-                <button
-                  type="button"
-                  className="sb-link"
-                  onClick={() => update({ course: makeCourse(s.gate) })}
-                >
-                  <Shuffle aria-hidden="true" /> 다른 코스로 바꾸기
-                </button>
-              )}
-            </section>
-          }
+          {started ? (
+            <>
+              <TripInfo gate={s.gate} boardingAt={s.boardingAt} now={clock || Date.now()} />
+              <details className="sb-trip-edit">
+                <summary>탑승 정보 바꾸기</summary>
+                {setup}
+              </details>
+            </>
+          ) : (
+            setup
+          )}
           {s.mode === "play" ? <PlayList s={s} /> : <RouteMap s={s} />}
           <div className="sb-actions sb-sticky">
             {complete ? (
@@ -474,7 +505,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
               starting: "카메라를 켜는 중이에요…",
               ready: "현재 구역의 체크포인트 QR을 비춰 주세요",
               read: "읽었어요!",
-              none: "카메라를 쓸 수 없어요. 아래에 체크포인트 번호를 눌러 주세요.",
+              none: "카메라를 쓸 수 없어요. 아래에 QR 포스터의 고유번호를 눌러 주세요.",
               switchCamera: "카메라 바꾸기",
             }}
           />
@@ -491,22 +522,22 @@ export function StampBook({ scanned }: { scanned?: string }) {
             }}
           >
             <label htmlFor="sb-code">
-              QR이 안 찍히면 체크포인트에 적힌 번호(세 글자)를 눌러요
+              QR이 안 찍히면 QR 포스터 아래 고유번호(6자리)를 눌러요
             </label>
             <div>
               <input
                 id="sb-code"
                 value={typed}
-                maxLength={3}
+                maxLength={7}
                 autoCapitalize="characters"
                 autoComplete="off"
-                placeholder="예: A07"
-                onChange={(e) => setTyped(e.target.value.toUpperCase())}
+                placeholder="예: 7KQ4MD"
+                onChange={(e) => setTyped(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
               />
               <button
                 type="submit"
                 className="sb-btn sb-btn-cta"
-                disabled={typed.length < 3}
+                disabled={typed.length < 6}
               >
                 찍기
               </button>
@@ -530,7 +561,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
           <section className="sb-sheet">
             <div className="sb-stamp-pop">
               {theme === "friend" ? (
-                <Haneul size={170} mood="joy" hands />
+                <Haneul size={170} />
               ) : (
                 <StampMark theme={theme} size={140} />
               )}
@@ -821,6 +852,36 @@ function Stars({ n, goal }: { n: number; goal: number }) {
   );
 }
 
+/** 첫 도장 뒤 수첩 홈에 보이는 탑승 정보: 탑승구와 탑승 시각(몇 분 남았는지). */
+function TripInfo({ gate, boardingAt, now }: { gate: string; boardingAt?: string; now: number }) {
+  const at = boardingAt ? new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(boardingAt) ? boardingAt + "+09:00" : boardingAt).getTime() : NaN;
+  const left = Math.round((at - now) / 60000);
+  const time = Number.isFinite(at)
+    ? new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false }).format(at)
+    : "";
+  return (
+    <dl className="sb-trip">
+      <div>
+        <dt>탑승구</dt>
+        <dd>{gate}번</dd>
+      </div>
+      <div>
+        <dt>탑승 시각</dt>
+        <dd>
+          {time ? (
+            <>
+              {time}
+              <small>{left > 0 ? `${left >= 60 ? `${Math.floor(left / 60)}시간 ` : ""}${left % 60}분 남았어요` : "탑승 시각이에요"}</small>
+            </>
+          ) : (
+            <small>입력하지 않았어요</small>
+          )}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 /** 놀이형: 구역 곳곳에 흩어진 6곳 코스. 순서 없이 찍어도 되고, 마지막 도장은 탑승구 근처다. */
 function PlayList({ s }: { s: BookState }) {
   const plan = stampEligibility(s);
@@ -878,7 +939,7 @@ function Stops({ s, indices, gate }: { s: BookState; indices: number[]; gate?: s
           );
         })}
       </ol>
-      <p className="sb-hint">탑승구 위치 © OpenStreetMap contributors</p>
+      <p className="sb-hint">탑승구 위치: 인천국제공항 공식 지도</p>
     </>
   );
 }
