@@ -11,7 +11,7 @@ export default function NotFound() {
         <span className="bubble">
           <Compass size={26} aria-hidden="true" />
         </span>
-        <strong>찾는 화면이 없습니다</strong>
+        <h1>찾는 화면이 없습니다</h1>
         <p lang="en" className="muted">
           This page could not be found.
         </p>

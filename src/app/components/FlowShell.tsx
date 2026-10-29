@@ -181,6 +181,7 @@ export function FlowShell({
         heading.setAttribute("tabindex", "-1");
         heading.focus({ preventScroll: true });
       }
+      if (bodyRef.current) { bodyRef.current.scrollTop = 0; if (bodyRef.current.parentElement) bodyRef.current.parentElement.scrollTop = 0; }
       window.scrollTo(0, 0);
     }
   }, [screenKey]);
@@ -216,7 +217,8 @@ export function FlowShell({
     <div
       className={
         (desktopSteps ? "flow flow-pretrip" : "flow") +
-        (serviceHome ? " flow-service-home" : "")
+        (serviceHome ? " flow-service-home" : "") +
+        (ctaAfterContent ? " flow-reading" : "")
       }
       data-screen={screenKey}
       lang={lang}

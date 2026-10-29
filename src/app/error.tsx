@@ -14,7 +14,7 @@ export default function ErrorPage() {
         <span className="bubble bubble-sun">
           <CircleAlert size={26} aria-hidden="true" />
         </span>
-        <strong>화면을 불러오지 못했습니다</strong>
+        <h1>화면을 불러오지 못했습니다</h1>
         <p lang="en" className="muted">
           This screen could not be loaded.
         </p>

@@ -4,26 +4,26 @@
   color: var(--color-dark);
 }
 .page h1 {
-  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  font-size: var(--text-large);
   letter-spacing: -0.04em;
   line-height: 1.3;
   margin: 0.5rem 0 1rem;
 }
 .page h2 {
-  font-size: 1.25rem;
+  font-size: var(--text-heading);
   margin: 0 0 1rem;
 }
 .page p {
   line-height: 1.7;
 }
 .eyebrow {
-  font-size: 0.8rem;
+  font-size: var(--text-caption);
   color: var(--color-primary);
   margin: 0;
 }
 .muted {
   color: var(--color-muted);
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .layout {
   display: grid;
@@ -35,7 +35,7 @@
   padding: 1.5rem;
   border: 1px solid var(--color-primary-soft);
   background: var(--color-surface);
-  border-radius: 5px;
+  border-radius: var(--radius-small);
   margin: 1rem 0;
 }
 .field {
@@ -45,8 +45,8 @@
 }
 .field > label,
 .field > legend {
-  font-weight: 650;
-  font-size: 0.9375rem;
+  font-weight: var(--weight-label);
+  font-size: var(--text-small);
 }
 .field input,
 .field select,
@@ -54,10 +54,10 @@
 .toolbar input,
 .toolbar select {
   width: 100%;
-  min-height: 48px;
-  padding: 0.65rem 0.8rem;
+  min-height: 3rem;
+  padding: 0.75rem 0.75rem;
   border: 1px solid var(--color-control-line);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: var(--color-dark);
   background: var(--color-surface);
   font: inherit;
@@ -86,13 +86,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  min-height: 48px;
-  padding: 0.7rem 1rem;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--color-primary-hover);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   font: inherit;
-  font-weight: 650;
+  font-weight: var(--weight-label);
   line-height: 1.4;
   text-decoration: none;
   cursor: pointer;
@@ -124,7 +124,7 @@
   min-width: 0;
 }
 .slots legend {
-  font-weight: 650;
+  font-weight: var(--weight-label);
   margin-bottom: 0.75rem;
 }
 .slot {
@@ -134,28 +134,28 @@
 .slot input {
   position: absolute;
   opacity: 0;
-  width: 1px;
-  height: 1px;
+  width: 0.0625rem;
+  height: 0.0625rem;
 }
 .slot span {
   display: grid;
-  gap: 0.2rem;
-  min-height: 68px;
+  gap: 0.25rem;
+  min-height: 4.25rem;
   align-content: center;
-  padding: 0.6rem;
+  padding: 0.5rem;
   border: 1px solid var(--color-control-line);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   text-align: center;
   cursor: pointer;
 }
 .slot small {
-  font-size: 0.72rem;
+  font-size: var(--text-caption);
   line-height: 1.4;
 }
 .slot input:checked + span {
   background: var(--color-primary-soft);
   border: 2px solid var(--color-primary-hover);
-  padding: calc(0.6rem - 1px);
+  padding: calc(0.5rem - 0);
 }
 .slot input:disabled + span {
   background: var(--color-canvas);
@@ -165,30 +165,30 @@
 .warning {
   background: var(--color-accent-soft);
   border-left: 3px solid var(--color-accent-ink);
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1rem;
   color: var(--color-accent-ink);
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .error {
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1rem;
   background: var(--color-error-soft);
   border-left: 3px solid var(--color-error);
   color: var(--color-error);
 }
 .badge {
   display: inline-block;
-  padding: 0.35rem 0.65rem;
-  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-small);
   background: var(--color-primary-soft);
   color: var(--color-primary-hover);
-  font-size: 0.8125rem;
-  font-weight: 650;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-label);
 }
 .summary {
   display: grid;
   grid-template-columns: 7rem minmax(0, 1fr);
-  gap: 0.6rem 0.75rem;
-  font-size: 0.9375rem;
+  gap: 0.5rem 0.75rem;
+  font-size: var(--text-small);
 }
 .summary dt {
   color: var(--color-muted);
@@ -202,18 +202,18 @@
   height: auto;
   background: var(--color-primary-faint);
   border: 1px solid var(--color-control-line);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
 }
 .mapLegend {
   list-style: none;
   padding: 0;
   display: grid;
   gap: 0.5rem;
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .mapLegend li {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.5rem;
   align-items: flex-start;
 }
 .mapLegend b {
@@ -221,22 +221,22 @@
   place-items: center;
   min-width: 1.5rem;
   height: 1.5rem;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--color-primary-hover);
   color: var(--color-surface);
 }
 .photo {
   width: 100%;
   height: auto;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
 }
 .timeline {
   padding-left: 1.25rem;
-  font-size: 0.875rem;
+  font-size: var(--text-small);
   color: var(--color-muted);
 }
 .timeline li {
-  padding: 0.35rem 0;
+  padding: 0.25rem 0;
 }
 .timeline time {
   margin-right: 0.5rem;
@@ -249,22 +249,22 @@
 }
 .toolbar label {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.5rem;
   flex: 1 1 9rem;
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .check {
   display: flex;
   align-items: flex-start;
-  gap: 0.6rem;
-  font-size: 0.875rem;
+  gap: 0.5rem;
+  font-size: var(--text-small);
   line-height: 1.6;
 }
 .check input {
-  width: 20px;
-  height: 20px;
+  width: 1.25rem;
+  height: 1.25rem;
   flex: none;
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
 }
 .grid {
   display: grid;
@@ -287,21 +287,21 @@
 }
 .stats strong {
   display: block;
-  font-size: 1.7rem;
+  font-size: var(--text-title);
   font-variant-numeric: tabular-nums;
 }
 .stats span {
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .status {
   min-height: 1.5rem;
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .link {
   color: var(--color-primary-hover);
   text-underline-offset: 0.2em;
   display: inline-flex;
-  min-height: 44px;
+  min-height: 2.75rem;
   align-items: center;
 }
 .list {
@@ -313,17 +313,17 @@
   padding: 1rem 0;
 }
 .list h3 {
-  font-size: 1rem;
+  font-size: var(--text-body);
   margin: 0 0 0.5rem;
 }
 .demo {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--color-muted);
   margin: 0 0 1rem;
 }
 .inlineNotice {
   border-left: 3px solid var(--color-primary-hover);
-  padding: 0.7rem 1rem;
+  padding: 0.75rem 1rem;
   background: var(--color-primary-faint);
 }
 .printGrid {
@@ -338,15 +338,15 @@
   break-inside: avoid;
 }
 .printGrid img {
-  width: 180px;
-  height: 180px;
+  width: 11.25rem;
+  height: 11.25rem;
 }
 .printGrid p {
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .progress {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   list-style: none;
   margin: 1rem 0;
   padding: 0;
@@ -354,13 +354,13 @@
 .progress li {
   flex: 1;
   border-top: 3px solid var(--color-control-line);
-  font-size: 0.75rem;
-  padding-top: 0.4rem;
+  font-size: var(--text-caption);
+  padding-top: 0.5rem;
 }
 .progress [aria-current] {
   border-color: var(--color-primary-hover);
   color: var(--color-primary-hover);
-  font-weight: 650;
+  font-weight: var(--weight-label);
 }
 @media (max-width: 760px) {
   .page {
@@ -418,10 +418,10 @@
 .grid input,
 .grid select {
   width: 100%;
-  min-height: 48px;
-  padding: 0.6rem;
+  min-height: 3rem;
+  padding: 0.5rem;
   border: 1px solid var(--color-control-line);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   background: var(--color-surface);
   color: var(--color-dark);
   font: inherit;
@@ -429,11 +429,11 @@
 .panel table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 0.875rem;
+  font-size: var(--text-small);
 }
 .panel th,
 .panel td {
-  padding: 0.7rem;
+  padding: 0.75rem;
   border-bottom: 1px solid var(--color-control-line);
   text-align: left;
   white-space: nowrap;
@@ -450,7 +450,7 @@
 .devicePage {
   width: min(calc(100% - 3rem), 54rem);
   margin: 2rem auto;
-  font-size: 1.125rem;
+  font-size: var(--text-body);
 }
 .hexKeys {
   display: grid;
@@ -458,11 +458,11 @@
   gap: 0.5rem;
 }
 .hexKeys button {
-  min-height: 60px;
+  min-height: 3.75rem;
   font: inherit;
-  font-size: 1.4rem;
+  font-size: var(--text-heading);
   border: 1px solid var(--color-control-line);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: var(--color-dark);
   background: var(--color-primary-faint);
 }
@@ -472,16 +472,16 @@
 }
 @media (min-width: 900px) and (min-height: 1300px) {
   .devicePage {
-    font-size: 1.5rem;
+    font-size: var(--text-heading);
   }
   .devicePage h1 {
-    font-size: 2.5rem;
+    font-size: var(--text-large);
   }
   .devicePage button,
   .devicePage input,
   .devicePage select {
-    font-size: 1.5rem;
-    min-height: 72px;
+    font-size: var(--text-heading);
+    min-height: 4.5rem;
   }
 }
 
@@ -498,8 +498,8 @@
   flex-wrap: wrap;
 }
 .queueTabs button {
-  min-height: 48px;
-  padding: 0.7rem 1rem;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--color-control-line);
   background: var(--color-surface);
   color: var(--color-primary-hover);
@@ -552,7 +552,7 @@
   margin: 1.5rem 0;
 }
 .slot small {
-  font-size: 1rem;
+  font-size: var(--text-body);
 }
 .draftSteps {
   display: flex;
@@ -561,7 +561,7 @@
 }
 .draftSteps button {
   flex: 1;
-  min-height: 48px;
+  min-height: 3rem;
   border: 0;
   border-bottom: 3px solid var(--color-primary-soft);
   background: var(--color-surface);
@@ -571,7 +571,7 @@
 .draftSteps [aria-current="step"] {
   color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
-  font-weight: 700;
+  font-weight: var(--weight-heading);
 }
 
 @media (min-width: 900px) and (min-height: 1300px) {
