@@ -55,10 +55,10 @@
   }
   .flow-pretrip .flow-form-area { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: hidden; }
   .flow-pretrip .flow-body {
+    /* 넘칠 때만 스크롤 막대가 생긴다. 「스크롤 필요 없음」으로 잘라 두면(clip) 큰 글자로 바꾼 뒤 아랫부분이 잘려 닿을 수 없었다. */
     flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: none;
     scrollbar-width: thin; background: var(--surface); border: 1px solid var(--line);
   }
-  .flow-pretrip .flow-body[data-scroll-needed="false"] { overflow-y: clip; }
   .flow-pretrip .flow-body::-webkit-scrollbar { display: block; width: 6px; }
   .flow-pretrip .flow-cta { position: relative; flex: 0 0 auto; padding: .75rem 0 0; background: transparent; }
   .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) {
