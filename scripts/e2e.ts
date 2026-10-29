@@ -208,11 +208,12 @@ async function clickText(page: Page, selector: string, s: string) {
  * 그 화면이 나오면 「이대로 안내 받기」를 누르고 안내 첫 화면을 기다린다.
  */
 async function openGuide(page: Page, keep = "이대로 안내 받기", hello = "나에게 맞춘 안내") {
-  await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
-  if (await has(page, keep)) {
-    await clickText(page, "button", keep);
-    await page.waitForFunction((a, b) => !document.body.innerText.includes(a) && document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
-  }
+  // Registration confirmation now opens a service menu before personalised directions.
+  await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, keep, hello);
+  if (await has(page, keep)) await clickText(page, "button", keep);
+  await page.waitForFunction((b) => document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, hello);
+  if (await page.$(".svc-card.is-main")) await page.click(".svc-card.is-main");
+  await waitText(page, hello);
 }
 
 async function fill(page: Page, selector: string, value: string) {
