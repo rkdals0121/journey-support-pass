@@ -129,10 +129,10 @@ async function audit(page: Page, name: string) {
   await page.evaluate((y) => window.scrollTo(0, y), scrolled);
 }
 
-/** 키오스크 처음 화면(하늘이). 대기 중이면 「화면을 눌러 시작하기」로 깨워 서비스 고르기를 연다. */
+/** 키오스크 처음 화면(하늘이). 대기 중이면 「도움받아 시작」으로 깨워 필요한 도움 확인을 연다. */
 async function kioskServices(page: Page) {
   await page.waitForSelector(".haneuli-welcome", { timeout: WAIT });
-  if (!(await page.$(".haneuli-welcome.is-awake"))) await clickText(page, ".haneuli-start", "화면을 눌러 시작하기");
+  if (!(await page.$(".haneuli-welcome.is-awake"))) await clickText(page, ".haneuli-start", "도움받아 시작");
   await page.waitForSelector(".haneuli-welcome.is-awake", { timeout: WAIT });
 }
 const isKioskHome = async (page: Page) => !!(await page.$(".haneuli-welcome"));

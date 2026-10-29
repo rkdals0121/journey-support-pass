@@ -66,14 +66,11 @@ export function TaskLauncher({
   returnTo,
   field = false,
   topics,
-  labels,
 }: {
   en?: boolean;
   returnTo?: KioskReturn;
   field?: boolean;
   topics?: readonly string[];
-  /** 호출한 화면이 칸 이름만 바꿔 쓸 때. 주지 않으면 위의 기본 문구를 쓴다. */
-  labels?: Partial<Record<(typeof actions)[number]["id"], { ko?: string; en?: string }>>;
 }) {
   return (
     <div className={"task-launcher" + (field ? " task-launcher-field" : "")}>
@@ -102,7 +99,7 @@ export function TaskLauncher({
                 className="task-action-link"
               >
                 <span>
-                  <strong>{en ? (labels?.[id]?.en ?? english) : (labels?.[id]?.ko ?? ko)}</strong>
+                  <strong>{en ? english : ko}</strong>
                   <small>{en ? detailEn : detail}</small>
                 </span>
                 <ArrowRight aria-hidden="true" />
