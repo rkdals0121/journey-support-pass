@@ -333,7 +333,13 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
         <ReadyRow
           done={guide.checkedIn}
           title={guide.checkedIn ? t.readyCheckinDone : t.readyCheckinWait}
-          body={guide.checkedIn ? undefined : t.readyCheckinWaitBody}
+          body={
+            guide.checkedIn
+              ? lang === "en"
+                ? "Support information is linked to your existing boarding pass. Show its QR or barcode at the kiosk."
+                : "기존 탑승권에 지원정보가 연결됐어요. 키오스크에서 그 탑승권의 QR 또는 바코드를 보여 주세요."
+              : t.readyCheckinWaitBody
+          }
         >
           {!guide.checkedIn && (
             <>
@@ -350,7 +356,6 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
 
       {guide.checkedIn && (
         <>
-          <p className="boarding-linked-note">{lang === "en" ? "Support information is linked to your existing boarding pass. Show its QR or barcode at the kiosk." : "기존 탑승권에 지원정보가 연결됐어요. 키오스크에서 그 탑승권의 QR 또는 바코드를 보여 주세요."}</p>
           {guide.proofVerified && (
             <div className="info-row quiet">
               <span className="bubble bubble-sun">
