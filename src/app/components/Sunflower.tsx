@@ -5,9 +5,9 @@ export function Sunflower() {
   return (
     <svg className="sunflower" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
       {Array.from({ length: PETALS }, (_, i) => (
-        <ellipse key={i} cx="24" cy="9" rx="4.2" ry="8" fill="#f7c63f" transform={`rotate(${(360 / PETALS) * i} 24 24)`} />
+        <ellipse key={i} cx="24" cy="9" rx="4.2" ry="8" fill="var(--color-accent)" transform={`rotate(${(360 / PETALS) * i} 24 24)`} />
       ))}
-      <circle cx="24" cy="24" r="8.5" fill="#1c6b49" />
+      <circle cx="24" cy="24" r="8.5" fill="var(--color-primary-hover)" />
     </svg>
   );
 }
@@ -48,10 +48,10 @@ export function PassArt({ label }: { label: string }) {
     <div className="pass-art" aria-hidden="true">
       <div className="pass-art-card">
         <svg className="qr" viewBox="0 0 13 13" shapeRendering="crispEdges">
-          <rect width="13" height="13" fill="#fff" />
+          <rect width="13" height="13" fill="var(--color-surface)" />
           {QR_ART.flatMap((row, y) =>
             [...row].map((c, x) =>
-              c === "1" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="#0f231b" /> : null,
+              c === "1" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="var(--color-dark)" /> : null,
             ),
           )}
         </svg>

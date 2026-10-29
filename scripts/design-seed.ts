@@ -1,0 +1,2 @@
+import {readSeedZones} from "../src/lib/zones";
+fetch("http://127.0.0.1:3000/api/admin/setup",{method:"POST",headers:{Authorization:"Bearer dx-local-check-only","Content-Type":"application/json"},body:JSON.stringify({codes:Object.fromEntries(readSeedZones().map(z=>[z.id,z.code])),mockFlights:true})}).then(async r=>{if(!r.ok)throw Error(await r.text());console.log("Local design fixture ready");}).catch(e=>{console.error(e);process.exitCode=1;});

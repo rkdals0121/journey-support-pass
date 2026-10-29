@@ -1,15 +1,9 @@
+import { designColor } from "@/lib/design-theme";
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed } from "next/font/google";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
-import "./globals.css";
-import "./redesign.css";
-import "./service-flow.css";
-import "./staff-console.css";
-import "./airport-design.css";
-import "./booking.css";
-import "./feedback-refinements.css";
-import "./interface.css";
-import "./task-experience.css";
+import "./styles/tokens.css";
+import "./styles/components.css";
 
 // 본문은 Pretendard, 숫자(탑승구·시각·편명·번호)는 공항 표지판처럼 굵고 좁은 Barlow Condensed.
 const num = Barlow_Condensed({
@@ -25,7 +19,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0f231b" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: designColor("primary") };
 
 export const dynamic = "force-dynamic";
 

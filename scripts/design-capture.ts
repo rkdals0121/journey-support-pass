@@ -1,0 +1,25 @@
+/** Isolated local UI inventory. Never point this at a deployed service. */
+import puppeteer, {type Page} from "puppeteer-core";
+import fs from "node:fs";import path from "node:path";import {readSeedZones} from "../src/lib/zones";
+const base=process.env.DESIGN_BASE??"http://127.0.0.1:3160",phase=process.env.DESIGN_PHASE??"before";
+if(new URL(base).hostname!=="127.0.0.1")throw Error("Local fixture server required");
+const root=path.resolve("docs/design-before-after"),out=path.join(root,phase);
+async function main(){fs.mkdirSync(out,{recursive:true});
+const setup=await fetch(base+"/api/admin/setup",{method:"POST",headers:{"Authorization":"Bearer dx-local-check-only","Content-Type":"application/json"},body:JSON.stringify({codes:Object.fromEntries(readSeedZones().map(z=>[z.id,z.code])),mockFlights:true}),signal:AbortSignal.timeout(30000)});if(!setup.ok)throw Error(await setup.text());
+const browser=await puppeteer.launch({executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe",headless:true});const rows:unknown[]=[],errors:string[]=[];
+try{const passenger=await browser.newPage(),staff=await(await browser.createBrowserContext()).newPage(),kiosk=await(await browser.createBrowserContext()).newPage();
+for(const p of [passenger,staff,kiosk]){if(process.env.DESIGN_FIXED_CLOCK==="1")await p.evaluateOnNewDocument(()=>{const NativeDate=Date,epoch=NativeDate.parse("2026-10-28T06:45:00Z"),started=performance.now();const now=()=>epoch+performance.now()-started;const replacement=new Proxy(NativeDate,{construct(target,args){return Reflect.construct(target,args.length?args:[now()]);},apply(){return new NativeDate(now()).toString();},get(target,key){return key==="now"?now:Reflect.get(target,key);}});window.Date=replacement;});await p.goto(base);p.on("pageerror",e=>errors.push(String(e)));p.setDefaultTimeout(15000);}
+async function post(p:Page,url:string,body:unknown){return p.evaluate(async(url,body)=>{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const b=await r.json();if(!r.ok)throw Error(JSON.stringify(b));return b;},url,body);}
+await post(staff,"/api/staff/login",{code:readSeedZones().find(z=>z.isDesk)!.code});await post(kiosk,"/api/kiosk/login",{code:readSeedZones().find(z=>z.isKiosk)!.code,placeId:"cc-center"});
+const flights=await passenger.evaluate(async()=> (await(await fetch("/api/flights/search?q=MK102")).json()).flights);const f=flights[0];if(!f)throw Error("Missing fixture flight");
+const pass=await post(passenger,"/api/registrations",{flightDate:f.flightDate,flightNo:f.flightNo,choices:["tr_walk","mov_no_stairs"],lang:"ko",consent:true,startedAt:"2026-10-28T15:40:00+09:00",editCount:0});
+const cap="d".repeat(64);await post(passenger,"/api/visits",{action:"book",receipt:cap,consent:true,hubId:"t1-departure",service:"robot",task:"directions",party:1,startAt:"2026-10-28T16:30:00+09:00"}).catch(()=>{});
+const files=fs.readdirSync("src/app",{recursive:true}).map(String).filter(f=>f.endsWith("page.tsx"));const routes=files.map(f=>"/"+path.dirname(f).replaceAll("\\","/")).map(r=>r==="/."?"/":r).filter(r=>!r.includes("["));
+routes.push("/p/"+pass.token,"/p/"+pass.token+"/help","/visits/"+cap,"/points/concourse","/devices/kiosk","/devices/robot","/stamp/c/A01","/missing-design-route","/p/0000000000000000","/help?topic=facility","/help?topic=mobility","/help?topic=traffic","/help?topic=other");
+const sizes=[{width:390,height:844},{width:1280,height:800},{width:1080,height:1920}];
+for(const route of routes){const p=route.startsWith("/staff")?staff:route.startsWith("/kiosk/")?kiosk:passenger;
+for(const size of sizes.filter(s=>!route.startsWith("/staff")||s.width!==1080)){await p.setViewport(size);const response=await p.goto(base+route,{waitUntil:"domcontentloaded"});await p.waitForSelector("h1,main").catch(()=>{});await p.waitForNetworkIdle({idleTime:250,timeout:1500}).catch(()=>{});const slug=route.replace(pass.token,"fixture-token").replace(cap,"fixture-receipt").replace(/[^a-z0-9-]+/gi,"-").replace(/^-|-$/g,"")||"home";const file=slug+"-"+size.width+".webp";await p.screenshot({path:path.join(out,file),type:"webp",quality:82,fullPage:true});const info=await p.evaluate(()=>({title:document.querySelector("h1")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,primaryButtons:document.querySelectorAll(".btn-primary,.public-button:not(.public-button-secondary)").length,bodyHeight:document.body.scrollHeight}));rows.push({route:route.replace(pass.token,"[token]").replace(cap,"[receipt]"),viewport:size,status:response?.status(),file,actualPath:new URL(p.url()).pathname.replace(pass.token,"[token]").replace(cap,"[receipt]"),...info});}
+console.log("Captured",route.replace(pass.token,"[token]").replace(cap,"[receipt]"));}
+fs.writeFileSync(path.join(out,"manifest.json"),JSON.stringify({phase,rows,errors},null,2));console.log(JSON.stringify({screens:rows.length,errors}));
+}finally{await browser.close();}}
+void main().catch(e=>{console.error(e);process.exitCode=1;});

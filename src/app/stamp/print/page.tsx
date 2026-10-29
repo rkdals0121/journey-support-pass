@@ -17,7 +17,7 @@ export default function PrintPage() {
       <div className="sb-print-hide">
         <h1>스탬프북 체크포인트 QR</h1>
         <p>거점마다 하나씩 붙입니다. 휴대전화 기본 카메라로 찍어도 스탬프북이 열려 도장이 찍힙니다. 아래 세 글자는 카메라가 안 될 때 손으로 누르는 번호입니다.</p>
-        <button type="button" className="sb-btn" style={{ background: "#1e2233", color: "#fff", marginBottom: "1rem" }} onClick={() => window.print()}>인쇄하기</button>
+        <button type="button" className="sb-btn" style={{ background: "var(--color-blue)", color: "var(--color-surface)", marginBottom: "1rem" }} onClick={() => window.print()}>인쇄하기</button>
       </div>
       <div className="sb-print-grid">
         {CHECKPOINTS.map((c, i) => (

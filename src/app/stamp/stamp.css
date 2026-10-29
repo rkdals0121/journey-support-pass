@@ -1,22 +1,22 @@
 /* 전자 스탬프북. 휴대전화 세로 화면 기준. 테마마다 색만 바꾼다. */
 .sb {
-  --bg: #f3f4f8;
-  --ink: #1e2233;
-  --muted: #5d6275;
-  --card: #fff;
-  --soft: #e4e7ef;
+  --bg: var(--color-blue-soft);
+  --ink: var(--color-blue);
+  --muted: var(--color-muted);
+  --card: var(--color-surface);
+  --soft: var(--color-blue-soft);
   --line: transparent;
-  --cover: #1e2233;
-  --cover-ink: #fff;
-  --kicker: #d9a441;
-  --main: #1e2233;
-  --main-ink: #fff;
-  --cta: #d9a441;
-  --cta-ink: #1e2233;
-  --accent: #d9a441;
-  --accent-ink: #1e2233;
-  --dark: #16223f;
-  --idcard: #fbf6ea;
+  --cover: var(--color-blue);
+  --cover-ink: var(--color-surface);
+  --kicker: var(--color-accent);
+  --main: var(--color-blue);
+  --main-ink: var(--color-surface);
+  --cta: var(--color-accent);
+  --cta-ink: var(--color-blue);
+  --accent: var(--color-accent);
+  --accent-ink: var(--color-blue);
+  --dark: var(--color-blue);
+  --idcard: var(--color-accent-soft);
   --radius: 1.25rem;
   flex: 1;
   display: flex;
@@ -27,60 +27,60 @@
 }
 .sb[data-theme="flight"],
 .sb-pick [data-theme="flight"] {
-  --bg: #eef3fa;
-  --ink: #1b2a52;
-  --muted: #505d7a;
-  --soft: #dfe6f1;
-  --cover: #1b2a52;
-  --cover-ink: #fff;
-  --kicker: #d9a441;
-  --main: #1b2a52;
-  --main-ink: #fff;
-  --cta: #d9a441;
-  --cta-ink: #1b2a52;
-  --accent: #d9a441;
-  --accent-ink: #1b2a52;
-  --dark: #16223f;
-  --idcard: #fbf6ea;
+  --bg: var(--color-blue-soft);
+  --ink: var(--color-blue);
+  --muted: var(--color-blue);
+  --soft: var(--color-blue-soft);
+  --cover: var(--color-blue);
+  --cover-ink: var(--color-surface);
+  --kicker: var(--color-accent);
+  --main: var(--color-blue);
+  --main-ink: var(--color-surface);
+  --cta: var(--color-accent);
+  --cta-ink: var(--color-blue);
+  --accent: var(--color-accent);
+  --accent-ink: var(--color-blue);
+  --dark: var(--color-blue);
+  --idcard: var(--color-accent-soft);
 }
 .sb[data-theme="explorer"],
 .sb-pick [data-theme="explorer"] {
-  --bg: #f6ead0;
-  --ink: #2f3a2a;
-  --muted: #50503d;
-  --card: #fdf6e6;
-  --soft: #ead7aa;
-  --cover: #3c5a3c;
-  --cover-ink: #f6ead0;
-  --kicker: #ead7aa;
-  --main: #3c5a3c;
-  --main-ink: #fff;
-  --cta: #ead7aa;
-  --cta-ink: #2f3a2a;
-  --accent: #8a3a2c;
-  --accent-ink: #fff;
-  --dark: #1f2a1d;
-  --idcard: #fdf6e6;
+  --bg: var(--color-accent-soft);
+  --ink: var(--color-dark);
+  --muted: var(--color-muted);
+  --card: var(--color-accent-soft);
+  --soft: var(--color-accent);
+  --cover: var(--color-primary-hover);
+  --cover-ink: var(--color-accent-soft);
+  --kicker: var(--color-accent);
+  --main: var(--color-primary-hover);
+  --main-ink: var(--color-surface);
+  --cta: var(--color-accent);
+  --cta-ink: var(--color-dark);
+  --accent: var(--color-error);
+  --accent-ink: var(--color-surface);
+  --dark: var(--color-dark);
+  --idcard: var(--color-accent-soft);
 }
 .sb[data-theme="friend"],
 .sb-pick [data-theme="friend"] {
   /* 하늘이 팔레트: Deep Blue · Yellow · White · Sky Blue */
-  --bg: #eaf6fd;
-  --ink: #23395f;
-  --muted: #4f6283;
-  --soft: #fff;
-  --line: #36588f;
-  --cover: #cfeefb;
-  --cover-ink: #23395f;
-  --kicker: #36588f;
-  --main: #f5cf3c;
-  --main-ink: #23395f;
-  --cta: #f5cf3c;
-  --cta-ink: #23395f;
-  --accent: #4cc3e8;
-  --accent-ink: #13304f;
-  --dark: #36588f;
-  --idcard: #fff;
+  --bg: var(--color-blue-soft);
+  --ink: var(--color-blue);
+  --muted: var(--color-blue);
+  --soft: var(--color-surface);
+  --line: var(--color-blue);
+  --cover: var(--color-blue-soft);
+  --cover-ink: var(--color-blue);
+  --kicker: var(--color-blue);
+  --main: var(--color-accent);
+  --main-ink: var(--color-blue);
+  --cta: var(--color-accent);
+  --cta-ink: var(--color-blue);
+  --accent: var(--color-on-dark-muted);
+  --accent-ink: var(--color-blue);
+  --dark: var(--color-blue);
+  --idcard: var(--color-surface);
   --radius: 1.5rem;
 }
 .sb svg.lucide {
@@ -97,7 +97,7 @@
   padding: 0 0.85rem;
   border: 2px solid var(--ink);
   border-radius: 0.6rem;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--ink);
   font: inherit;
   font-size: 1rem;
@@ -174,8 +174,8 @@
   border-color: var(--ink);
 }
 .sb-on-dark {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.7);
+  color: var(--color-surface);
+  border-color: var(--color-overlay);
 }
 .sb-link {
   display: inline-flex;
@@ -232,9 +232,9 @@
 }
 .sb[data-theme="explorer"] .sb-title {
   padding: 0.5rem 1rem;
-  border: 2px dashed #8a6b3c;
-  background: #ead7aa;
-  color: #2f3a2a;
+  border: 2px dashed var(--color-accent-ink);
+  background: var(--color-accent);
+  color: var(--color-dark);
 }
 .sb-sub {
   margin: 0 0 1rem;
@@ -277,16 +277,16 @@
   gap: 0.35rem;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  border: 2px dashed #a3802c;
+  border: 2px dashed var(--color-accent-ink);
   border-radius: 0.6rem;
-  color: #8a6b23;
+  color: var(--color-accent-ink);
   font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
 }
 .sb[data-theme="friend"] .sb-photo-slot {
-  border-color: #8aa3c7;
-  background: #fff6cf;
+  border-color: var(--color-on-dark-muted);
+  background: var(--color-accent-soft);
   color: var(--ink);
 }
 .sb-photo-slot img {
@@ -442,10 +442,10 @@
   color: var(--accent);
 }
 .sb[data-theme="flight"] .sb-progress strong {
-  color: #8a5d0b;
+  color: var(--color-accent-ink);
 }
 .sb[data-theme="friend"] .sb-progress strong {
-  color: #36588f;
+  color: var(--color-blue);
 }
 .sb-progress p {
   margin: 0.6rem 0 0;
@@ -459,7 +459,7 @@
   background: var(--soft);
 }
 .sb[data-theme="friend"] .sb-bar {
-  background: #e2e8f2;
+  background: var(--color-blue-soft);
 }
 .sb-bar i {
   display: block;
@@ -486,7 +486,7 @@
   color: var(--muted);
 }
 .sb[data-theme="friend"] .sb-node {
-  background: #e2e8f2;
+  background: var(--color-blue-soft);
 }
 .sb-node svg.lucide {
   width: 1.4rem;
@@ -535,7 +535,7 @@
   background: var(--soft);
 }
 .sb[data-theme="friend"] .sb-list::before {
-  background: #c9d3e3;
+  background: var(--color-blue-soft);
 }
 .sb-list li {
   position: relative;
@@ -629,13 +629,13 @@
   margin: 0 auto;
   padding: 1.5rem 1rem;
   background: var(--dark);
-  color: #fff;
+  color: var(--color-surface);
 }
 .sb-scan .scanner-frame {
   border-color: var(--cta);
 }
 .sb-scan .scan-hint {
-  color: #fff;
+  color: var(--color-surface);
   font-size: 1rem;
 }
 .sb-scan .scan .btn {
@@ -643,18 +643,18 @@
   margin: 0.75rem auto 0;
   min-height: 2.75rem;
   padding: 0 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--color-overlay);
   border-radius: 999px;
   background: none;
-  color: #fff;
+  color: var(--color-surface);
   font-weight: 700;
 }
 .sb-error {
   margin: 0;
   padding: 0.7rem 1rem;
   border-radius: 0.75rem;
-  background: #fde2e1;
-  color: #8c1d18;
+  background: var(--color-error-soft);
+  color: var(--color-error);
   font-weight: 700;
 }
 .sb-typed {
@@ -662,7 +662,7 @@
   gap: 0.5rem;
   padding: 1rem;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-shadow);
 }
 .sb-typed label {
   font-size: 0.85rem;
@@ -715,7 +715,7 @@
   text-align: center;
 }
 .sb[data-theme="friend"] .sb-sheet {
-  background: #fff6cf;
+  background: var(--color-accent-soft);
 }
 .sb-sheet h1 {
   margin: 0.5rem 0 0;
@@ -758,11 +758,11 @@
 }
 .sb-stars span {
   color: transparent;
-  -webkit-text-stroke: 2px #b5b7c9;
+  -webkit-text-stroke: 2px var(--color-on-dark-muted);
 }
 .sb-stars span.on {
-  color: #f5cf3c;
-  -webkit-text-stroke: 2px #36588f;
+  color: var(--color-accent-ink);
+  -webkit-text-stroke: 2px var(--color-blue);
 }
 
 /* 3. 완성 */
@@ -791,7 +791,7 @@
   padding: 0.2rem 0.7rem;
   border: 2px solid var(--ink);
   border-radius: 999px;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--ink);
   font-size: 0.8rem;
   font-weight: 800;
@@ -817,7 +817,7 @@
 /* 사진 필터 */
 .sb-dark {
   background: var(--dark);
-  color: #fff;
+  color: var(--color-surface);
 }
 .sb-camera-title {
   margin: 0;
@@ -837,7 +837,7 @@
   margin: 0 auto;
   width: min(100%, 46.5vh);
   border-radius: var(--radius);
-  background: #000;
+  background: var(--color-text);
 }
 .sb-camera-frame canvas {
   display: block;
@@ -875,17 +875,17 @@
   padding: 2rem;
   text-align: center;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-surface);
 }
 .sb-count {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--color-surface);
   font-size: 6rem;
   font-weight: 900;
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 4px 16px var(--color-overlay);
 }
 .sb-camera-hint {
   margin: 0;
@@ -894,8 +894,8 @@
   opacity: 0.9;
 }
 .sb-dark .sb-btn-line {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.7);
+  color: var(--color-surface);
+  border-color: var(--color-overlay);
 }
 
 /* 테마 고르기 */
@@ -964,8 +964,8 @@
   max-width: 60rem;
   margin: 0 auto;
   padding: 1.5rem;
-  background: #fff;
-  color: #1e2233;
+  background: var(--color-surface);
+  color: var(--color-blue);
 }
 .sb-print h1 {
   font-size: 1.5rem;
@@ -980,7 +980,7 @@
   justify-items: center;
   gap: 0.3rem;
   padding: 1.25rem;
-  border: 3px solid #1e2233;
+  border: 3px solid var(--color-blue);
   border-radius: 1.25rem;
   text-align: center;
   break-inside: avoid;
@@ -1002,7 +1002,7 @@
   margin-top: 0.4rem;
   padding: 0.35rem 0.8rem;
   border-radius: 999px;
-  background: #ffd84d;
+  background: var(--color-accent);
   font-size: 0.85rem;
   font-weight: 800;
 }

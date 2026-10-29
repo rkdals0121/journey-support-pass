@@ -190,7 +190,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
         {cam === "none" && <p className="sb-camera-none">카메라를 켤 수 없어요.<br />아래 「사진 고르기」로 찍어 주세요.</p>}
         {cam === "live" && ai === "off" && (
           <svg viewBox="0 0 300 400" className="sb-overlay" aria-hidden="true">
-            <ellipse cx="150" cy="195" rx="66" ry="84" fill="none" stroke="#fff" strokeWidth="2.5" strokeDasharray="8 8" opacity=".8" />
+            <ellipse cx="150" cy="195" rx="66" ry="84" fill="none" stroke="var(--color-surface)" strokeWidth="2.5" strokeDasharray="8 8" opacity=".8" />
           </svg>
         )}
         {count > 0 && <span className="sb-count" aria-live="assertive">{count}</span>}
@@ -293,9 +293,9 @@ function withCaption(src: HTMLCanvasElement, caption: string) {
   c.height = H;
   const ctx = c.getContext("2d")!;
   ctx.drawImage(src, 0, 0);
-  ctx.fillStyle = "rgba(0,0,0,.45)";
+  ctx.fillStyle = cssColor("--color-dark");
   ctx.fillRect(0, H - 56, W, 56);
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = cssColor("--color-surface");
   ctx.font = "700 24px 'Pretendard Variable', Pretendard, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -303,8 +303,16 @@ function withCaption(src: HTMLCanvasElement, caption: string) {
   return c.toDataURL("image/jpeg", 0.82);
 }
 
+function cssColor(token: string) {
+  return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+}
 function toImage(svg: SVGSVGElement): Promise<HTMLImageElement> {
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  const theme = getComputedStyle(document.documentElement);
+  for (const token of Array.from(theme).filter(k => k.startsWith("--color-"))) {
+    clone.style.setProperty(token, theme.getPropertyValue(token));
+  }
   const img = new Image();
-  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(clone));
   return img.decode().then(() => img);
 }

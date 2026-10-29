@@ -40,12 +40,12 @@ import { IdleGuard } from "../../components/IdleGuard";
 import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
 import { Scanner } from "../../components/Scanner";
+import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
 import { TaskLauncher } from "../../components/TaskLauncher";
 import Link from "next/link";
-import { kioskHelpHref } from "@/lib/help-entry";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import {
@@ -566,12 +566,6 @@ export function GuideKiosk({
           serviceHome
           headerTools={
             <>
-              <Link
-                className="bar-btn kiosk-header-help"
-                href={kioskHelpHref(null, lang, "guidance", "/kiosk/guide")}
-              >
-                {lang === "en" ? "Staff help" : "직원 도움"}
-              </Link>
               <button
                 className="bar-btn"
                 onClick={() => setStartLang((l) => (l === "en" ? "ko" : "en"))}
@@ -601,6 +595,7 @@ export function GuideKiosk({
                   : "어떤 서비스를 이용하시겠어요?"}
               </h1>
             </section>
+            <div className="kiosk-assist-toolbar"><ListenStart t={t} /></div>
             <TaskLauncher en={lang === "en"} returnTo="/kiosk/guide" field />
             <Link
               className="btn kiosk-appointment-link"
@@ -661,6 +656,7 @@ export function GuideKiosk({
             </details>
           </div>
         </FlowShell>
+        {call}
       </>
     );
   }
