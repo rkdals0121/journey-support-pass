@@ -326,10 +326,3 @@ html[data-kiosk] .svc-card:first-child :is(svg, strong, span) { color: var(--col
 @media (prefers-reduced-motion: reduce) {
   html[data-kiosk] .kx-guide-side .tile, html[data-kiosk] .svc-card { transition: none; }
 }
-
-/* ── 키오스크 머리: 알약 모양·노란 그라데이션·그림자 없이 평평한 흰 띠 ── */
-html[data-kiosk] body .flow .flow-bar { background: var(--color-surface); border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; margin-top: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); }
-
-/* ── 안내가 열린 뒤: 항공편 판·길 단추·시설 칸을 같은 평평한 선과 같은 모서리로 ── */
-html[data-kiosk] .kx-guide .tile,
-html[data-kiosk] .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }

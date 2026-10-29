@@ -1,164 +1,103 @@
-/* Haneuli's sunflower welcome: scoped to the guide kiosk only. */
-.haneuli-welcome { --h-ink:#234237; --h-green:#375f47; --h-yellow:#f5cc42; display:grid; grid-template-columns:minmax(0, .9fr) minmax(0,1.25fr); gap:24px; padding:24px 0; color:var(--h-ink); }
-body:has(.haneuli-welcome) { background:#faf8ef; }
-.haneuli-intro { position:relative; padding:28px; border-radius:28px; background:linear-gradient(150deg,#fffdf3,#f5edcb); overflow:hidden; }
-.haneuli-location { display:flex; gap:8px; align-items:center; font-size:15px; margin:0 0 28px; }
-.haneuli-location svg { width:18px; }
-.haneuli-eyebrow { display:flex; gap:8px; align-items:center; font-size:15px; font-weight:650; color:#5a6d48; }
-.haneuli-eyebrow svg { color:#946810; width:20px; }
-html[data-kiosk] .flow-body .haneuli-intro h1 { font-size:clamp(30px,3.1vw,50px); line-height:1.25; white-space:pre-line; letter-spacing:-.055em; margin:16px 0; color:var(--h-ink); }
-.haneuli-description { white-space:pre-line; font-size:18px; line-height:1.65; margin:0; }
-.haneuli-garden { height:300px; position:relative; margin:8px -15px 0; }
-.haneuli-wander { position:absolute; width:270px; height:270px; left:calc(50% - 135px); bottom:15px; animation:haneuli-walk 18s ease-in-out infinite; z-index:2; }
-.haneuli-character { position:relative; width:100%; height:100%; animation:haneuli-bob 2s ease-in-out infinite; }
-.haneuli-character img { width:100%; height:100%; object-fit:contain; position:absolute; inset:0; filter:drop-shadow(0 15px 14px #40513922); }
-.haneuli-sleep { opacity:0; }
-.haneuli-ground { position:absolute; bottom:20px; left:16%; width:68%; height:30px; border-radius:50%; background:#dbc88755; }
-.haneuli-bubble { position:absolute; z-index:3; right:0; top:14px; border-radius:18px 18px 18px 3px; padding:11px 16px; background:#fffefa; box-shadow:0 4px 20px #68612c10; font-size:15px; }
-.haneuli-zzz { position:absolute; right:0; top:5%; color:#4f6b7b; font-size:25px; font-weight:700; opacity:0; }
-.haneuli-orbit { position:absolute; border:1px solid #d4bd6570; width:270px; height:270px; border-radius:50%; left:calc(50% - 135px); top:10px; }
-.orbit-two { transform:scale(.75); border-style:dashed; }
-.haneuli-start { display:flex; justify-content:space-between; align-items:center; gap:24px; width:100%; min-height:64px; border:0; border-radius:16px; padding:16px 20px; background:var(--h-green); color:white; font:inherit; font-weight:700; font-size:20px; cursor:pointer; }
-.haneuli-menu { position:relative; align-self:stretch; padding:28px; border-radius:28px; background:#eff2e7; transition:background .7s,box-shadow .7s; }
-.haneuli-menu-heading > span { color:#4a5a3c; font-size:13px; font-weight:700; letter-spacing:.1em; }
-.haneuli-menu-heading h2 { font-size:24px; margin:12px 0 24px; color:var(--h-ink); }
-.haneuli-service-grid { transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .7s; transform-origin:center; }
-.haneuli-service-grid .task-launcher { display:contents; }
-.haneuli-service-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-.haneuli-service-grid .task-action { position:relative; min-height:155px; background:#fffef9; border:1px solid #dce2cd; border-radius:18px; padding:20px; box-shadow:none; display:flex; flex-direction:column; gap:20px; }
-.haneuli-service-grid .task-action-icon { width:32px; height:32px; color:var(--h-green); }
-.haneuli-service-grid .task-action-link { display:flex; gap:8px; justify-content:space-between; align-items:center; color:var(--h-ink); text-decoration:none; flex:1; }
-.haneuli-service-grid .task-action-link::after { position:absolute; content:""; inset:0; border-radius:18px; }
-.haneuli-service-grid .task-action-link strong { display:block; font-size:21px; line-height:1.35; }
-.haneuli-service-grid .task-action-link small { display:block; font-size:14px; line-height:1.5; color:#4a5a3c; margin-top:7px; }
-.haneuli-service-grid .task-action-link > svg { width:20px; flex-shrink:0; }
-.haneuli-service-grid .task-action-mobility { background:#fff2ba; border-color:#edda87; }
-.haneuli-service-grid .task-action-guidance { background:#dde9d3; border-color:#ccdabc; }
-.haneuli-service-grid .task-action:hover { box-shadow:0 8px 24px #526a3920; }
-.is-idle .haneuli-service-grid { transform:scale(.91); opacity:.65; }
-.is-awake .haneuli-menu { background:#e8eedf; box-shadow:0 14px 40px #43603912; }
-.is-awake .haneuli-wander { animation:haneuli-wake .75s ease-out both; }
-.is-awake .haneuli-character { animation:haneuli-bob 3s ease-in-out infinite; }
-.is-sleeping .haneuli-wander { animation:none; transform:translateX(35px) rotate(-7deg); }
-.is-sleeping .haneuli-character { animation:haneuli-breathe 4s ease-in-out infinite; }
-.is-sleeping .haneuli-happy { opacity:0; }
-.is-sleeping .haneuli-sleep { opacity:1; }
-.is-sleeping .haneuli-zzz { animation:haneuli-dream 3s ease-in-out infinite; }
-.haneuli-scan { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) 210px auto; gap:18px; align-items:center; background:#fffefa; border:1px solid #e5d9ad; border-radius:24px; padding:20px 26px; }
-.haneuli-scan-copy { display:flex; gap:16px; align-items:center; }
-.haneuli-scan-icon { display:grid; place-items:center; padding:15px; border-radius:16px; background:#fff0b0; }
-.haneuli-scan-copy h2 { font-size:21px; margin:0 0 7px; }
-.haneuli-scan-copy p { font-size:16px; margin:0; line-height:1.6; }
-.haneuli-camera { min-width:0; max-height:240px; overflow:auto; border-radius:14px; font-size:12px; }
-.haneuli-camera video { max-height:110px; object-fit:cover; }
-.haneuli-camera .scanner { margin:0; }
-.haneuli-number { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:transparent; border:1px solid #bcc8a9; border-radius:14px; padding:12px; color:var(--h-ink); font:inherit; font-size:17px; cursor:pointer; }
-.haneuli-status { grid-column:1/-1; }
-.haneuli-status:empty { display:none; }
-.haneuli-saved-greeting { padding:14px 20px; border-radius:16px; background:#fff1b5; color:#375f47; animation:haneuli-wake .6s ease-out; }
-.haneuli-welcome button:focus-visible,.haneuli-welcome a:focus-visible { outline:4px solid #305f8a; outline-offset:4px; }
-@keyframes haneuli-walk { 0%,100% { transform:translateX(-35px) rotate(-3deg); } 30% { transform:translateX(40px) rotate(4deg); } 65% { transform:translateX(0) rotate(-2deg); } }
-@keyframes haneuli-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
-@keyframes haneuli-breathe { 0%,100% { transform:scale(1); } 50% { transform:scale(1.025); } }
-@keyframes haneuli-dream { 0% { opacity:0; transform:translateY(0); } 50% { opacity:1; } 100% { opacity:0; transform:translateY(-25px); } }
-@keyframes haneuli-wake { 0% { transform:translateY(10px) scale(.94); } 55% { transform:translateY(-12px) scale(1.04); } 100% { transform:translateY(0) scale(1); } }
-@media(min-width:1500px) { .haneuli-garden { height:365px; } .haneuli-wander { width:330px; height:330px; left:calc(50% - 165px); } .haneuli-service-grid .task-action { min-height:180px; } }
-@media(max-width:800px) { .haneuli-welcome { grid-template-columns:1fr; gap:16px; padding:12px 0; } .haneuli-intro { padding:24px; } .haneuli-garden { height:260px; } .haneuli-wander { width:240px; height:240px; left:calc(50% - 120px); } .haneuli-location { margin-bottom:12px; } .haneuli-menu { padding:20px; } .haneuli-scan { grid-template-columns:1fr 160px; padding:18px; } .haneuli-number { grid-column:1/-1; } .haneuli-service-grid .task-action { padding:16px; min-height:145px; } .haneuli-service-grid .task-action-link strong { font-size:19px; } }
-@media(max-width:450px) { .haneuli-scan { grid-template-columns:1fr; } .haneuli-camera { max-width:250px; width:100%; justify-self:center; } .haneuli-menu-heading h2 { font-size:21px; } }
-@media(prefers-reduced-motion:reduce) { .haneuli-welcome *, .haneuli-saved-greeting { animation:none!important; transition:none!important; } .is-idle .haneuli-service-grid { transform:none; } .haneuli-zzz { opacity:1; } }
-.haneuli-service-grid > .task-action, .haneuli-service-grid .task-launcher > .task-action { grid-column:auto; grid-row:auto; width:auto; }
-.haneuli-service-grid .task-action .task-action-link, .haneuli-service-grid .task-action .task-action-link strong, .haneuli-service-grid .task-action .task-action-icon { color:var(--h-ink); }
-.haneuli-camera .scanner { aspect-ratio:16/9; height:110px; max-width:none; width:100%; }
-.haneuli-camera .scan-hint { font-size:12px; margin:5px 0; }
-.haneuli-camera .scan > .btn { min-height:36px; font-size:12px; padding:6px 10px; }
-.haneuli-rest { margin-top:10px; padding:8px 12px; border:0; background:transparent; color:#375f47; font:inherit; font-size:15px; text-decoration:underline; cursor:pointer; }
-@media(max-width:600px) {
- body:has(.haneuli-welcome) .flow-bar { display:flex; flex-wrap:wrap; padding-right:0; gap:8px; min-height:130px; }
- body:has(.haneuli-welcome) .flow-bar .brand { width:100%; }
- body:has(.haneuli-welcome) .flow-bar-side { display:flex; flex-direction:row; flex-wrap:wrap; gap:4px; }
- body:has(.haneuli-welcome) .call-dock { top:0; }
- body:has(.haneuli-welcome) .call-dock-inner { height:70px; }
-}/* Landscape kiosks use the available viewport, including laptop-height screens.
-   The garden and service rows absorb the height difference, rather than pushing
-   the scanner below the fold. No overflow clipping is used to conceal controls. */
-@media (min-width: 900px) and (orientation: landscape) {
-  body:has(.haneuli-welcome) { --call-w: 220px; }
-  .flow:has(.haneuli-welcome) { height:100dvh; min-height:0; flex:none; display:grid; grid-template-rows:76px minmax(0,1fr); }
-  html[data-kiosk] body:has(.haneuli-welcome) .flow-bar { height:76px; min-height:0; padding:8px 244px 8px 24px; flex-wrap:nowrap; gap:12px; }
-  body:has(.haneuli-welcome) .brand { font-size:22px; gap:10px; flex-shrink:0; }
-  body:has(.haneuli-welcome) .brand small { font-size:12px; }
-  body:has(.haneuli-welcome) .brand .sunflower { width:40px; height:40px; }
-  body:has(.haneuli-welcome) .flow-bar .bar-btn { font-size:18px; min-height:44px; padding:8px 12px; }
-  /* 「도움 요청하기」 크기·자리는 다른 키오스크 화면과 같게 둔다(kiosk-layout.css). */
-  .flow:has(.haneuli-welcome) .flow-workspace,
-  .flow:has(.haneuli-welcome) .flow-form-area { min-height:0; height:100%; }
-  html[data-kiosk] .flow:has(.haneuli-welcome) .flow-body { min-height:0; height:100%; flex:1 1 0; padding:12px 24px; }
-  .haneuli-welcome { height:100%; min-height:0; padding:0; gap:14px; grid-template-rows:minmax(0,1fr) clamp(132px,20dvh,180px); }
-  .haneuli-intro { min-height:0; display:flex; flex-direction:column; padding:clamp(14px,2.2dvh,24px); }
-  .haneuli-location { margin:0 0 8px; font-size:13px; line-height:1.3; }
-  .haneuli-eyebrow { margin:0; font-size:13px; line-height:1.4; }
-  html[data-kiosk] .flow-body .haneuli-intro h1 { margin:10px 0; font-size:clamp(26px,4.5dvh,46px); line-height:1.18; }
-  .haneuli-description { font-size:clamp(14px,1.9dvh,18px); line-height:1.45; }
-  .haneuli-garden { flex:1 1 0; min-height:65px; height:auto; margin:6px 0; }
-  .haneuli-wander { width:min(100%,clamp(100px,26dvh,310px)); height:100%; max-height:310px; left:50%; bottom:0; margin-left:calc(clamp(100px,26dvh,310px) / -2); }
-  .haneuli-character img { object-fit:contain; }
-  .haneuli-orbit { width:auto; height:90%; max-height:290px; aspect-ratio:1; top:5%; left:50%; translate:-50% 0; }
-  .haneuli-ground { bottom:0; height:16px; }
-  .haneuli-bubble { top:0; right:0; padding:7px 10px; font-size:12px; margin:0; }
-  .haneuli-start { flex:none; min-height:48px; padding:10px 16px; font-size:18px; }
-  .haneuli-actions { display:flex; align-items:center; gap:8px; flex:none; }
-  .haneuli-actions > * { min-width:0; }
-  .haneuli-actions .listen-start { flex:1; }
-  .haneuli-actions .btn { min-height:48px; margin:0; padding:8px 12px; font-size:17px; }
-  .haneuli-rest { margin:0; font-size:13px; padding:8px; flex-shrink:0; }
-  .haneuli-menu { min-height:0; display:flex; flex-direction:column; padding:clamp(14px,2.2dvh,24px); }
-  .haneuli-menu-heading > span { font-size:12px; }
-  .haneuli-menu-heading h2 { margin:6px 0 12px; font-size:clamp(18px,2.6dvh,26px); line-height:1.3; }
-  .haneuli-service-grid { flex:1; min-height:0; grid-template-rows:repeat(3,minmax(0,1fr)); gap:10px; }
-  .haneuli-service-grid .task-action { min-height:0; padding:clamp(10px,1.5dvh,18px); gap:6px; }
-  .haneuli-service-grid .task-action-icon { width:clamp(20px,3dvh,30px); height:clamp(20px,3dvh,30px); flex-shrink:0; }
-  .haneuli-service-grid .task-action-link strong { font-size:clamp(16px,2.35dvh,23px); line-height:1.25; }
-  .haneuli-service-grid .task-action-link small { font-size:clamp(12px,1.6dvh,15px); margin-top:4px; line-height:1.3; }
-  .haneuli-scan { min-height:0; padding:12px 20px; gap:8px 18px; grid-template-columns:minmax(0,1fr) minmax(260px,360px) 140px; }
-  .haneuli-scan-copy { gap:12px; }
-  .haneuli-scan-copy h2 { margin:0 0 6px; font-size:19px; }
-  .haneuli-scan-copy p { font-size:14px; line-height:1.4; }
-  .haneuli-scan-icon { padding:12px; }
-  .haneuli-camera { max-height:none; overflow:visible; }
-  .haneuli-camera .scan { display:grid; grid-template-columns:140px minmax(0,1fr); gap:6px 10px; align-items:center; }
-  .haneuli-camera .scanner { grid-row:1/3; height:80px; align-self:center; }
-  .haneuli-camera video { height:100%; max-height:80px; }
-  .haneuli-camera .scan-hint { font-size:11px; line-height:1.4; margin:0; }
-  .haneuli-camera .scan > .btn { grid-column:2; min-height:36px; padding:6px; font-size:11px; margin:0; }
-  .haneuli-number { font-size:15px; min-height:48px; padding:8px; }
-  .haneuli-status { font-size:13px; line-height:1.3; }
-  .haneuli-status p { margin:0; }
+/* 안내 키오스크(/kiosk/guide)의 모양. GuideKiosk 가 body 에 kiosk-guide 를 걸어 이 화면에서만 쓰이게 한다.
+   색·간격·모서리·움직임은 tokens.css 의 값만 쓰고, 크기는 rem 으로 둔다. */
+body:has(.haneuli-welcome) { background: var(--color-canvas); }
+
+/* 안내 키오스크의 모든 화면(번호, 등록 내용, 안내, 길)의 머리: 알약·그라데이션 없이 평평한 흰 띠 */
+html[data-kiosk] body.kiosk-guide .flow .flow-bar { background: var(--color-surface); border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); margin-top: 0; }
+html[data-kiosk] body.kiosk-guide .kx-guide .tile,
+html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }
+
+/* ── 처음 화면: 왼쪽은 하늘이, 오른쪽은 해야 할 일 ── */
+.haneuli-welcome { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-5); align-items: stretch; padding: var(--space-4) 0 var(--space-5); color: var(--color-text); }
+.haneuli-stage { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; padding: var(--space-5); border-radius: var(--radius-medium); background: var(--color-blue-soft); }
+.haneuli-location { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-primary-hover); font-size: var(--text-body); font-weight: var(--weight-heading); }
+.haneuli-location svg { flex: none; width: 1.25rem; height: 1.25rem; }
+.haneuli-hero { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--space-4); min-height: 12rem; }
+.haneuli-bubble { position: relative; margin: 0; padding: var(--space-4) var(--space-5); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: 1.4; text-align: center; white-space: pre-line; }
+.haneuli-bubble::after { content: ""; position: absolute; left: 50%; bottom: -0.5rem; width: 1rem; height: 1rem; background: var(--color-surface); transform: translateX(-50%) rotate(45deg); }
+.haneuli-character { position: relative; width: min(100%, 13rem); aspect-ratio: 1; }
+.haneuli-character img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.haneuli-sleep { opacity: 0; }
+.is-idle .haneuli-sleep { opacity: 1; }
+.is-idle .haneuli-happy { opacity: 0; }
+.haneuli-zzz { position: absolute; top: 6%; right: 4%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
+.is-idle .haneuli-zzz { animation: haneuli-dream 3s ease-in-out infinite; }
+.is-idle .haneuli-character { animation: haneuli-breathe var(--motion-breathe) ease-in-out infinite; }
+.is-awake .haneuli-character { animation: haneuli-bob 3s ease-in-out infinite; }
+
+.haneuli-actions { display: flex; align-items: stretch; gap: var(--space-3); }
+.haneuli-actions > * { min-width: 0; margin: 0; }
+.haneuli-actions .listen-start { flex: 1 1 0; width: auto; min-height: 4rem; }
+.haneuli-start { flex: 1.4 1 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 4rem; padding: var(--space-3) var(--space-5); border: 0; border-radius: var(--radius-medium); background: var(--color-primary); color: var(--color-surface); font: inherit; font-size: var(--text-heading); font-weight: var(--weight-heading); cursor: pointer; }
+.haneuli-start:disabled { opacity: 0.6; cursor: default; }
+.haneuli-rest { flex: 1 1 0; min-height: 4rem; border: 0.125rem solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-body); font-weight: var(--weight-label); cursor: pointer; }
+
+.haneuli-panel { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.haneuli-title h1, .haneuli-choose h1 { margin: 0 0 var(--space-2); color: var(--color-text); font-size: var(--text-large); font-weight: var(--weight-heading); line-height: 1.2; letter-spacing: -0.03em; }
+.haneuli-title p { margin: 0; color: var(--color-muted); font-size: var(--text-heading); line-height: 1.5; }
+
+/* 깨운 뒤: 미리 작성했는지 먼저 묻는다 */
+.haneuli-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.haneuli-choice { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-height: 9rem; padding: var(--space-5); border: 0.125rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
+.haneuli-choice svg { width: 2.5rem; height: 2.5rem; color: var(--color-primary); }
+.haneuli-choice strong { font-size: 1.5rem; line-height: 1.25; }
+.haneuli-choice span { color: var(--color-muted); font-size: var(--text-body); line-height: 1.4; }
+.haneuli-choice:hover, .haneuli-choice[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary-faint); }
+
+/* 탑승권 스캔: 처음 화면의 가장 중요한 칸이라 초록 테두리로 드러낸다 */
+.haneuli-scan { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-3) var(--space-4); align-items: center; padding: var(--space-5); border: 0.125rem solid var(--color-primary); border-radius: var(--radius-medium); background: var(--color-surface); }
+.is-pre .haneuli-scan { background: var(--color-primary-faint); }
+.haneuli-scan-copy { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-4); }
+.haneuli-scan-icon { display: grid; place-items: center; padding: var(--space-3); border-radius: var(--radius-medium); background: var(--color-primary-soft); color: var(--color-primary); }
+.haneuli-scan-icon svg { width: 2rem; height: 2rem; }
+.haneuli-scan-copy h2 { margin: 0 0 var(--space-1); font-size: 1.5rem; font-weight: var(--weight-heading); }
+.haneuli-scan-copy p { margin: 0; color: var(--color-muted); font-size: var(--text-body); line-height: 1.5; }
+.haneuli-camera { min-width: 0; }
+.haneuli-camera .scanner { width: 100%; max-width: none; aspect-ratio: 16 / 9; margin: 0; }
+.haneuli-camera .scan-hint { margin: var(--space-2) 0 0; font-size: var(--text-small); line-height: 1.4; }
+.haneuli-camera .scan > .btn { min-height: 3rem; margin: var(--space-2) 0 0; }
+.haneuli-number { display: flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 4rem; padding: var(--space-3); border: 0.125rem solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 1.25rem; font-weight: var(--weight-label); cursor: pointer; }
+.haneuli-number svg { width: 1.75rem; height: 1.75rem; }
+.haneuli-status { grid-column: 1 / -1; }
+.haneuli-status:empty { display: none; }
+.haneuli-status p { margin: 0; }
+.haneuli-welcome button:focus-visible, .haneuli-welcome a:focus-visible, .haneuli-scan:focus-visible { outline: 0.1875rem solid var(--color-focus); outline-offset: 0.25rem; }
+
+/* 하늘이가 한마디 하는 줄(서비스 고르기, 등록 내용, 끝 인사) */
+.haneuli-says { display: flex; align-items: center; gap: var(--space-4); }
+.haneuli-says-face { flex: none; width: 6rem; height: 6rem; object-fit: contain; mix-blend-mode: multiply; }
+.haneuli-says-sm .haneuli-says-face { width: 4rem; height: 4rem; }
+.haneuli-says-lg .haneuli-says-face { width: 10rem; height: 10rem; }
+.haneuli-says-bubble { margin: 0; padding: var(--space-3) var(--space-5); border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: 1.4; white-space: pre-line; }
+.haneuli-saved-greeting { padding: var(--space-3) var(--space-5); border-radius: var(--radius-medium); background: var(--color-primary-soft); color: var(--color-primary-hover); animation: haneuli-wake var(--motion-slow) var(--ease-out); }
+
+/* ── 서비스 고르기(등록 내용을 확인한 뒤) ── */
+.guide-services { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-3) 0; }
+.guide-services .haneuli-says-face { width: 5rem; height: 5rem; }
+.guide-services .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+.guide-services .svc-card { min-height: 8.5rem; padding: var(--space-4); gap: var(--space-1); border: 0.125rem solid var(--color-line); border-radius: var(--radius-medium); box-shadow: none; text-decoration: none; transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
+.guide-services .svc-card svg { width: 2rem; height: 2rem; }
+.guide-services .svc-card strong { font-size: 1.25rem; line-height: 1.25; }
+.guide-services .svc-card span { font-size: var(--text-small); line-height: 1.4; }
+.guide-services .svc-card:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
+.guide-services .svc-card.is-main { background: var(--color-primary); border-color: var(--color-primary); }
+.guide-services .svc-card.is-main :is(svg, strong, span) { color: var(--color-surface); }
+.guide-services .svc-card.is-sub { border-width: 0.0625rem; background: var(--color-canvas); }
+
+@media (orientation: portrait), (max-width: 1100px) {
+  .haneuli-welcome { grid-template-columns: minmax(0, 1fr); }
+  .guide-services .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .haneuli-choices, .guide-services .svc-grid, .haneuli-scan { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Flat, plain kiosk look. Same markup, text and behavior: only the decoration goes.
-   No gradients, glows, orbits or pastel panels; solid fills, 2px edges, one yellow (help button). */
-body:has(.haneuli-welcome) { background: var(--color-canvas); }
-html[data-kiosk] body:has(.haneuli-welcome) .flow-bar { background: var(--color-surface); border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; box-shadow: 0 0 0 100vmax var(--color-surface); clip-path: inset(0 -100vmax); margin-top: 0; }
-.haneuli-welcome { --h-ink: var(--color-text); --h-green: var(--color-primary); }
-
-.haneuli-intro { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
-.haneuli-eyebrow, .haneuli-menu-heading > span, .haneuli-orbit, .haneuli-ground { display: none; }
-.haneuli-location { color: var(--color-primary-hover); font-weight: 700; }
-.haneuli-bubble { border: 1px solid var(--color-line); box-shadow: none; border-radius: var(--radius-medium); }
-.haneuli-start { border-radius: var(--radius-medium); letter-spacing: -0.01em; }
-
-.haneuli-menu, .is-awake .haneuli-menu { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
-.haneuli-menu-heading h2 { margin: 0 0 12px; font-size: 22px; color: var(--color-muted); font-weight: 700; }
-.is-idle .haneuli-service-grid { transform: none; opacity: 1; }
-.haneuli-service-grid .task-action { background: var(--color-surface); border: 2px solid var(--color-line); border-radius: var(--radius-medium); box-shadow: none; }
-.haneuli-service-grid .task-action:hover { border-color: var(--color-primary); background: var(--color-primary-faint); box-shadow: none; }
-.haneuli-service-grid .task-action-mobility, .haneuli-service-grid .task-action-guidance { background: var(--color-surface); border-color: var(--color-line); }
-.haneuli-service-grid .task-action-icon { color: var(--color-primary); }
-.haneuli-service-grid .task-action-link small { color: var(--color-muted); }
-.haneuli-service-grid .task-launcher > .task-action.task-action-guidance { background: var(--color-primary); border-color: var(--color-primary); }
-.haneuli-service-grid .task-action.task-action-guidance :is(.task-action-icon, .task-action-link, strong, small, .task-action-link > svg) { color: #fff; }
-
-.haneuli-scan { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
-.haneuli-scan-icon { background: var(--color-primary-soft); color: var(--color-primary); border-radius: var(--radius-medium); }
-.haneuli-number { border: 2px solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-surface); }
-.haneuli-saved-greeting { background: var(--color-primary-soft); color: var(--color-primary-hover); border-radius: var(--radius-medium); }
+@keyframes haneuli-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.5rem); } }
+@keyframes haneuli-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+@keyframes haneuli-dream { 0% { opacity: 0; transform: translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-1.5rem); } }
+@keyframes haneuli-wake { 0% { transform: translateY(0.5rem) scale(0.96); } 100% { transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .haneuli-welcome .haneuli-character, .haneuli-welcome .haneuli-zzz, .haneuli-saved-greeting { animation: none; }
+  .is-idle .haneuli-zzz { opacity: 1; }
+  .haneuli-choice, .guide-services .svc-card { transition: none; }
+}
