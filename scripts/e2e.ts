@@ -508,6 +508,12 @@ async function resetFlights(clearLocks = false) {
     return !!services && !services.querySelector(".ph-section-head, .ph-gate, #home-gate")
       && services.querySelectorAll(".task-action").length === 6;
   }));
+  check("첫 화면은 하늘이 소개와 같은 크기의 서비스 카드 여섯 개를 보여 준다", await page.evaluate(() => {
+    const image = document.querySelector<HTMLImageElement>(".ph-hero-art img");
+    const cards = [...document.querySelectorAll(".ph-services .task-action")].map((e) => e.getBoundingClientRect());
+    return !!image && image.complete && image.naturalWidth > 0 && cards.length === 6
+      && cards.every((r) => Math.abs(r.width - cards[0].width) <= 1 && Math.abs(r.height - cards[0].height) <= 1);
+  }));
   await shot(page, "휴대전화-첫화면");
   // 제안서 1단계: 항공권 예매 완료 화면의 링크로 들어온다(시연용 모의 화면).
   await page.click('a[href="/demo/booking"]');

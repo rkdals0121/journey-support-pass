@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, CalendarClock, Plane, Stamp } from "lucide-react";
 import { TaskLauncher } from "./TaskLauncher";
 import { MyRequestPanel } from "./MyRequestPanel";
@@ -13,17 +14,20 @@ export function TaskHome({ en = false }: { en?: boolean }) {
   const q = en ? "?lang=en" : "";
   return (
     <div className="ph-home">
+      <section className="ph-hero" aria-labelledby="home-title">
+        <div className="ph-hero-copy">
+          <span className="ph-hero-label"><Plane aria-hidden="true" />{en ? "A little help for your journey" : "더 편안한 공항 여정"}</span>
+          <h1 id="home-title">{en ? "How can we help at the airport?" : "공항에서 무엇을 도와드릴까요?"}</h1>
+          <p>{en
+            ? "Directions, mobility help and on-site requests for passengers who need a little more support."
+            : "도움이 조금 더 필요한 여객을 위한 길 안내, 이동 도움, 현장 요청을 한곳에서."}</p>
+        </div>
+        <div className="ph-hero-art" aria-hidden="true">
+          <span className="ph-hero-orbit" />
+          <Image src="/images/haneuli/friend.webp" alt="" width={1280} height={1280} priority sizes="(max-width: 760px) 144px, 256px" />
+        </div>
+      </section>
       <div className="ph-home-lead">
-        <section className="ph-hero" aria-labelledby="home-title">
-          <h1 id="home-title">
-            {en ? "How can we help at the airport?" : "공항에서 무엇을 도와드릴까요?"}
-          </h1>
-          <p>
-            {en
-              ? "Directions, mobility help and on-site requests for passengers who need a little more support."
-              : "도움이 조금 더 필요한 여객을 위한 길 안내, 이동 도움, 현장 요청을 한곳에서."}
-          </p>
-        </section>
         <section className="ph-prepare" aria-labelledby="home-prepare-title">
           <span className="ph-prepare-icon">
             <Plane aria-hidden="true" />
