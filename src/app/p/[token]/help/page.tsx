@@ -32,6 +32,8 @@ export default async function RegisteredHelp({
     returnTo: session?.isKiosk ? kioskReturn(q.returnTo) : undefined,
     freshShared: session?.isKiosk === true && q.fresh === "1",
     checkExisting: q.resume === "1",
+    // 키오스크 머리(FieldTaskShell)에 이미 돌아가기·언어·글자 크기가 있다. 휴대전화에서는 「내 등록으로」 줄을 남긴다.
+    embedded: session?.isKiosk === true,
   };
   const found = await lookupPass(await getDb(), token, new Date());
   const place = session?.isKiosk ? placeOf(session.placeId) : undefined;

@@ -12,6 +12,7 @@ import "./styles/staff-layout.css";
 import "./styles/kiosk-layout.css";
 import "./styles/haneuli.css";
 import "./styles/sunflower.css";
+import "./styles/site-bar.css";
 
 // 본문은 Pretendard, 숫자(탑승구·시각·편명·번호)는 공항 표지판처럼 굵고 좁은 Barlow Condensed.
 const num = Barlow_Condensed({
