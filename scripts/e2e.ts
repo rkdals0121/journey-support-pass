@@ -503,6 +503,11 @@ async function resetFlights(clearLocks = false) {
   check("첫 화면은 이름·연락처를 입력받지 않는다", !(await page.$('input[type="tel"],input[type="email"],input[autocomplete="name"]')));
   check("첫 화면은 직원이 먼저 돕겠다는 약속을 하지 않는다", !(await has(page, "다시 묻지 않습니다")) && !(await has(page, "먼저 다가")));
   check("직접 안내받을 수 있는 안내데스크 위치가 연결된다", !!(await page.$('a[href="/services/desks"]')));
+  check("첫 화면은 서비스 묶음 제목·전체 서비스 링크·탑승구 바로 검색 없이 서비스 카드를 보여 준다", await page.evaluate(() => {
+    const services = document.querySelector(".ph-services");
+    return !!services && !services.querySelector(".ph-section-head, .ph-gate, #home-gate")
+      && services.querySelectorAll(".task-action").length === 6;
+  }));
   await shot(page, "휴대전화-첫화면");
   // 제안서 1단계: 항공권 예매 완료 화면의 링크로 들어온다(시연용 모의 화면).
   await page.click('a[href="/demo/booking"]');
