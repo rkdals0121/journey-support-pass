@@ -1,6 +1,7 @@
 "use client";
+import { Sunflower } from "./Sunflower";
 
-import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, Minus, MonitorSmartphone, Plane, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { ArrowRight, BarChart3, Check, FileCheck2, FileText, MapPin, Minus, MonitorSmartphone, Plane, Plus, Pencil, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   BRANCHES,
@@ -33,7 +34,6 @@ import { bucketKey, bucketsOf, CityPicker, type Destination } from "./FlightFind
 import { FlowShell } from "./FlowShell";
 import { DocScan } from "./DocScan";
 import { AlnumPad, Choice } from "./Inputs";
-import { ListenStart } from "./ListenStart";
 import type { Target } from "@/lib/docscan";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { REGISTRATION_DRAFT, readRegistrationDraft, normalizeFlightQuery } from "@/lib/registration-draft";
@@ -524,16 +524,32 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                       : edit
                         ? t.editReviewTitle
                         : t.reviewTitle;
-  // 제목 위의 작은 글. 체크리스트의 쪽 이름이다.
-  const kickerOf: Partial<Record<StepKind, string>> = {
-    trouble: t.troubleKicker,
-    companion: t.moreKicker,
-    help: t.moreKicker,
-    stops: t.moreKicker,
-    docs: t.lastKicker,
-    note: t.lastKicker,
+  // Every registration step uses the same informational heading pattern.
+  const kickerOf: Partial<Record<StepKind, string>> = lang === "en" ? {
+    trouble: "Airport support preferences",
+    consent: "Privacy and consent",
+    companion: "Travel party",
+    help: "Assistance preferences",
+    stops: "Facilities along your route",
+    flight: "Flight information",
+    docs: "Supporting documents",
+    note: "Additional support needs",
+    review: "Registration summary",
+  } : {
+    trouble: "공항 이용 도움 안내",
+    consent: "개인정보 수집·이용 안내",
+    companion: "동반 인원 안내",
+    help: "지원 방식 안내",
+    stops: "공항 편의시설 안내",
+    flight: "탑승 항공편 안내",
+    docs: "증빙서류 안내",
+    note: "추가 지원사항 안내",
+    review: "등록 내용 확인",
   };
-  const kicker = isBranch(kind) ? t.branchKicker : kickerOf[kind];
+  const kicker = isBranch(kind)
+    ? (lang === "en" ? `${stepName(kind)} · Support preferences` : `${stepName(kind)} 지원 안내`)
+    : kickerOf[kind];
+  const multipleSelectionStep = kind === "trouble" || kind === "stops" || kind === "help";
   const hint: string | undefined =
     kind === "trouble"
       ? t.troubleHint
@@ -610,10 +626,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         // 확인 화면에서 등록하지 못했으면 그 까닭을 맨 먼저 읽는다.
         ...(kind === "review" && error ? [error] : []),
         // 항공편 화면에서 내용이 바뀐 뒤에는 제목과 설명을 되풀이하지 않고 바뀐 내용만 읽는다.
-        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [kicker ?? "", titleOf(kind), hint ?? ""]),
+        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [kicker ?? "", titleOf(kind), multipleSelectionStep ? (lang === "en" ? "Multiple selections allowed" : "중복 선택 가능") : hint ?? ""]),
         ...(kind === "trouble" ? [t.troubleRead] : []),
         ...stepGroups.flatMap((g) => [...(g === "buggy" ? [t.buggyAsk] : []), ...itemsOf(g).map(itemLabel)]),
-        ...(kind === "trouble" ? [t.troubleProxy, t.troubleLater] : []),
+        ...(kind === "trouble" ? [t.troubleProxy] : []),
         ...(kind === "companion" ? [t.partyLabel] : []),
         ...(kind === "docs" ? [...DOCS.map((d) => t.docs[d.key]), t.docs.none, t.docsUpload, t.docsKeep] : []),
         ...(kind === "note" ? [t.noteExample] : []),
@@ -655,12 +671,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       </button>
     ) : kind === "consent" ? (
       <>
+        <div className="consent-decline"><button className="btn btn-ghost" onClick={() => setDeclined(true)}>{t.decline}</button></div>
         <button className="btn btn-primary" onClick={next}>
           {t.agree}
           <ArrowRight size={22} aria-hidden="true" />
-        </button>
-        <button className="btn btn-ghost" onClick={() => setDeclined(true)}>
-          {t.decline}
         </button>
       </>
     ) : (
@@ -699,6 +713,15 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       speakKey={speakKey}
       onBack={back}
       onHome={() => onExit(lang)}
+      headerRightTools={
+        <label className="registration-language">
+          <span>Language</span>
+          <select aria-label={lang === "en" ? "Language" : "언어 설정"} value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
+            <option value="ko">한국어</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+      }
       progress={{ n: step + 1, total: ORDER.length, name: stepName(kind) }}
       onStepSelect={index => { if (index < step) goTo(index, true); }}
       desktopSteps={
@@ -730,52 +753,23 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                   : "선택한 필요 정보가 여기에 표시돼요."}
               </p>
             )}
-            <p className="fine">
-              {lang === "en"
-                ? "Review and edit before you submit. Registration does not confirm assistance."
-                : "최종 확인 단계에서 수정할 수 있어요. 사전등록은 서비스 예약 확정이 아니에요."}
-            </p>
+
           </>
         ) : undefined
       }
       // 키오스크의 항공편 화면에서는 편을 고를 때까지 「다음」을 치워 둔다. 화면 글자판과 도시 목록이 버튼에 가려지지 않는다.
       cta={kiosk && kind === "flight" && !flight ? undefined : cta}
-      ctaAfterContent={kind === "consent"}
     >
+      <div className="registration-page-heading">
       {kicker && <p className="kicker">{kicker}</p>}
       {mode === "web" && booking && sameFlight(flight, booking.flight) && <p className="booking-provenance" role="note">{lang === "en" ? "Demo booking · fictional flight. " : "시연 예약에서 불러온 가상 항공편입니다. "}<a href={"/prepare/booking" + (lang === "en" ? "?lang=en" : "")}>{lang === "en" ? "Search again (restarts registration)" : "다시 조회 (등록 처음부터)"}</a></p>}
-      <h1>{titleOf(kind)}</h1>
-      {hint && <p className="lead">{hint}</p>}
-
-      {kind === "trouble" && (
-        <>
-          {/* 한국어 화면에도 영어 사용자가 언어 단추를 찾을 수 있게 "Language"를 덧붙인다. 영어 화면에서는 같은 말이 두 번 되므로 붙이지 않는다.
-              덧붙인 영어에는 lang 을 달아 화면 읽기 프로그램이 영어로 읽게 하고, 묶음의 이름도 이 글로 삼아 두 말이 함께 들리게 한다. */}
-          <div className="ph-step-tools">
-          <div className="lang-pick" role="radiogroup" aria-labelledby="lang-pick-label" onKeyDown={radioKeys}>
-            <span className="lang-pick-label" id="lang-pick-label">
-              {lang === "en" ? (
-                t.language
-              ) : (
-                <>
-                  {t.language} · <span lang="en">Language</span>
-                </>
-              )}
-            </span>
-            {(["ko", "en"] as const).map((l) => (
-              <button key={l} role="radio" aria-checked={lang === l} className={lang === l ? "on" : ""} onClick={() => setLang(l)} lang={l}>
-                {l === "ko" ? "한국어" : "English"}
-              </button>
-            ))}
-          </div>
-          {/* 체크리스트: 「읽어드릴까요? 말하거나 가리켜 답하셔도 돼요.」 */}
-          <div className="read-offer">
-            <p className="fine">{t.troubleRead}</p>
-            <ListenStart t={t} />
-          </div>
-          </div>
-        </>
-      )}
+      <div className="registration-question-heading">
+        <h1>{titleOf(kind)}</h1>
+        {multipleSelectionStep && <p className="multi-select-note"><Sunflower />{lang === "en" ? "Multiple selections" : "중복 선택 가능"}</p>}
+      </div>
+      {kind === "flight" && <p className="flight-search-note">{lang === "en" ? "Search by flight number or destination city." : "편명 또는 도착지로 항공편을 검색할 수 있습니다."}</p>}
+      {hint && !multipleSelectionStep && kind !== "flight" && kind !== "note" && <p className="lead">{hint}</p>}
+      </div>
 
       {kind === "walk" ? (
         <>
@@ -790,7 +784,6 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       {kind === "trouble" && (
         <>
           <p className="fine">{t.troubleProxy}</p>
-          <p className="fine">{t.troubleLater}</p>
         </>
       )}
 
@@ -873,16 +866,14 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
             rows={4}
             maxLength={NOTE_MAX}
             value={extra.note}
-            aria-describedby="reg-note-example reg-note-count"
+            placeholder={t.noteExample}
+            aria-describedby="reg-note-count"
             onChange={(e) => {
               touched();
               const note = e.target.value.slice(0, NOTE_MAX);
               setExtra((x) => ({ ...x, note }));
             }}
           />
-          <p className="fine" id="reg-note-example">
-            {t.noteExample}
-          </p>
           <p className="fine num" id="reg-note-count" aria-live="polite">
             {t.noteCount(extra.note.length, NOTE_MAX)}
           </p>
@@ -1174,7 +1165,6 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           </dl>
         </div>
       )}
-      {kind === "review" && !edit && <p className="fine">{t.doneLater}</p>}
 
       {error && <ErrorNote>{error}</ErrorNote>}
     </FlowShell>
@@ -1301,10 +1291,11 @@ function ReviewGroup({
   empty: string;
 }) {
   return (
-    <>
+    <div className="registration-review-group">
       <dt>
         {title}
         <button className="review-edit" onClick={onEdit} aria-label={`${title} ${edit}`}>
+          <Pencil size={15} aria-hidden="true" />
           {edit}
         </button>
       </dt>
@@ -1319,6 +1310,6 @@ function ReviewGroup({
           </dd>
         ))
       )}
-    </>
+    </div>
   );
 }

@@ -54,6 +54,7 @@ interface Props {
   onStepSelect?: (index: number) => void;
   serviceHome?: boolean;
   headerTools?: React.ReactNode;
+  headerRightTools?: React.ReactNode;
 }
 
 /**
@@ -84,6 +85,7 @@ export function FlowShell({
   onStepSelect,
   serviceHome = false,
   headerTools,
+  headerRightTools,
 }: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang, prefs.slow);
@@ -131,6 +133,30 @@ export function FlowShell({
   const scale = view.scale ?? (prefs.large ? 1.25 : 1);
   const picture = view.picture ?? prefs.picture;
   const voice = view.voice ?? prefs.voice;
+
+  // Only scroll when actual content extends beyond the reading area. Bottom
+  // padding and collapsed margins must not create a few pixels of wheel travel.
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!body || !desktopSteps) return;
+    const update = () => {
+      const last = body.lastElementChild;
+      if (!last) return;
+      const box = body.getBoundingClientRect();
+      const contentBottom = last.getBoundingClientRect().bottom + body.scrollTop;
+      const needsScroll = contentBottom > box.top + body.clientTop + body.clientHeight;
+      body.dataset.scrollNeeded = String(needsScroll);
+      if (!needsScroll) body.scrollTop = 0;
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(body);
+    for (const child of body.children) observer.observe(child);
+    update();
+    return () => {
+      observer.disconnect();
+      delete body.dataset.scrollNeeded;
+    };
+  }, [screenKey, scale, lang, desktopSteps]);
 
   // 등록 화면에서 "큰 글씨·그림·소리" 항목을 직접 켜고 끄면 그쪽을 따른다. 설정에서 바꿔 둔 값이 그 선택을 가리지 않게 한다.
   // 바뀐 항목만 되돌린다. 키오스크 처음 화면에서 소리를 켠 여객이 QR 을 댔을 때 소리가 꺼지지 않게 하기 위해서다.
@@ -261,9 +287,11 @@ export function FlowShell({
           </button>
           {headerTools}
         </div>
+        <div className="flow-bar-right">
+        {headerRightTools}
         {supported && (
           <button
-            className={`bar-btn bar-icon ${speaking ? "on" : ""}`}
+            className={`bar-btn ${headerRightTools ? "bar-listen" : "bar-icon"} ${speaking ? "on" : ""}`}
             onClick={() => (speaking ? stop() : speak(speakText))}
             aria-label={speaking ? t.listenStop : t.listen}
             aria-pressed={speaking}
@@ -273,8 +301,10 @@ export function FlowShell({
             ) : (
               <Volume2 size={22} aria-hidden="true" />
             )}
+            {headerRightTools && <span>{speaking ? t.listenStop : (lang === "en" ? "Listen" : "소리 안내 듣기")}</span>}
           </button>
         )}
+        </div>
       </header>
 
       {progress && (

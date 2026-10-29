@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X, ArrowUpRight, Type } from "lucide-react";
+import { Menu, X, ArrowUpRight } from "lucide-react";
+import { TextSizeControl } from "./TextSizeControl";
 import { Sunflower } from "./Sunflower";
-import { useViewSettings, setViewSettings } from "./viewSettings";
+import { useViewSettings } from "./viewSettings";
 export function PublicShell({
   lang = "ko",
   children,
@@ -21,8 +22,7 @@ export function PublicShell({
   const languageHref =
     path + (languageParams.size ? "?" + languageParams.toString() : "");
   const [menu, setMenu] = useState(false);
-  const view = useViewSettings(),
-    large = (view.scale ?? 1) > 1;
+  const view = useViewSettings();
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--scale",
@@ -57,14 +57,7 @@ export function PublicShell({
             <Link href={languageHref} hrefLang={en ? "ko" : "en"}>
               {en ? "한국어" : "EN"}
             </Link>
-            <button
-              type="button"
-              aria-pressed={large}
-              aria-label={en ? "Larger text" : "글자 크게"}
-              onClick={() => setViewSettings({ scale: large ? 1 : 1.25 })}
-            >
-              <Type size={19} aria-hidden="true" />
-            </button>
+            <TextSizeControl en={en} />
             <button
               className="public-menu-toggle"
               type="button"
