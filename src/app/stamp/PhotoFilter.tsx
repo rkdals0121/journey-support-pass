@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BUDDY, COSTUME_PHOTO, COSTUME_SIZE, Costume, FilterDeco, HANEUL_SRC, SLOT, costumeLayout } from "./art";
+import { COSTUME_PHOTO, COSTUME_SIZE, FRIENDS, FilterDeco, SLOT, costumeLayout } from "./art";
 
 interface Props {
   role: string;
@@ -20,22 +20,24 @@ const MODEL = "https://storage.googleapis.com/mediapipe-models/face_detector/bla
 // 그래서 얼굴이 화면 어디에 있든 인증 사진은 옷과 얼굴이 가운데 줄을 맞춰 나온다.
 // ponytail: 맞춤 값. 인식된 얼굴 폭(눈썹~턱 상자)을 얼굴 자리 폭의 이만큼으로 맞춘다. 얼굴이 옷에 가리면 줄이고, 둘레가 비면 키운다.
 const FACE_FILL = 0.85;
-// 하늘이 친구 옷 SVG 를 그릴 범위(Costume 좌표). 모자 꼭대기와 길게 내린 몸통이 다 들어가게 넉넉히 잡는다.
-const BOX = { x: -150, y: -150, w: 600, h: 1200 };
 // 얼굴을 놓친 뒤에도 이만큼은 마지막 자리에 옷을 둔다. 고개를 잠깐 돌려도 옷이 깜빡이지 않는다.
 const HOLD_MS = 600;
 
 /** 찾은 얼굴: 두 눈 사이 가운데, 얼굴 폭(w), 기울기(a). 모두 캔버스 좌표. */
 interface Pose { x: number; y: number; w: number; a: number }
 type Detector = { detectForVideo(src: CanvasImageSource, ts: number): { detections: { boundingBox?: { width: number }; keypoints: { x: number; y: number }[] }[] }; close(): void };
-type Art = { costume: HTMLImageElement; box: typeof BOX; layout: ReturnType<typeof costumeLayout>; buddy?: HTMLImageElement; deco: HTMLImageElement };
+/** 옷 필터는 옷 사진과 그 자리, 하늘이 친구 필터는 사진 둘레에 설 하늘이 그림들. */
+type Art = { deco: HTMLImageElement } & (
+  | { costume: HTMLImageElement; layout: ReturnType<typeof costumeLayout> }
+  | { friends: HTMLImageElement[] }
+);
 
-// 앞 카메라 영상에서 얼굴을 찾아, 얼굴이 옷의 얼굴 자리에 오도록 화면을 옮겨 그리고 옷을 입힌다.
+// 옷 필터: 앞 카메라 영상에서 얼굴을 찾아, 얼굴이 옷의 얼굴 자리에 오도록 화면을 옮겨 그리고 옷을 입힌다.
 // 얼굴 인식을 못 불러오면(인터넷이 약하거나 기기가 못 돌리면) 점선 동그라미에 얼굴을 맞추는 고정 틀로 돈다.
+// 하늘이 친구 필터: 옷도 얼굴 인식도 없이, 카메라 화면 그대로에 하늘이들이 함께 선다.
 export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const costumeRef = useRef<SVGSVGElement>(null);
   const decoRef = useRef<SVGSVGElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const detectorRef = useRef<Detector | null>(null);
@@ -47,24 +49,15 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
   const [count, setCount] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  // 옷(사진이나 SVG)과 장식을 그림으로 준비해 둔다. 캔버스에 매 장면 그려 넣는다.
+  const photo = COSTUME_PHOTO[role];
+
+  // 옷 사진(또는 하늘이들)과 장식을 그림으로 준비해 둔다. 캔버스에 매 장면 그려 넣는다.
   useEffect(() => {
     let alive = true;
-    const photo = COSTUME_PHOTO[role];
-    const art: Promise<Art> = photo
-      ? Promise.all([load(photo.src), toImage(decoRef.current!)]).then(([costume, deco]) => ({
-          costume,
-          deco,
-          box: { x: 0, y: 0, ...COSTUME_SIZE },
-          layout: costumeLayout(role),
-        }))
-      : Promise.all([toImage(costumeRef.current!), toImage(decoRef.current!), load(HANEUL_SRC)]).then(([costume, deco, buddy]) => ({
-          costume,
-          deco,
-          buddy,
-          box: BOX,
-          layout: costumeLayout(role),
-        }));
+    const p = COSTUME_PHOTO[role];
+    const art: Promise<Art> = p
+      ? Promise.all([load(p.src), toImage(decoRef.current!)]).then(([costume, deco]) => ({ costume, deco, layout: costumeLayout(p) }))
+      : Promise.all([Promise.all(FRIENDS.map((f) => load(f.src))), toImage(decoRef.current!)]).then(([friends, deco]) => ({ friends, deco }));
     art.then((a) => {
       if (alive) imgs.current = a;
     });
@@ -73,9 +66,10 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
     };
   }, [role]);
 
-  // 얼굴 인식 준비. 휴대전화 GPU 를 먼저 쓰고, 안 되면 CPU 로.
+  // 얼굴 인식 준비(옷 필터만). 휴대전화 GPU 를 먼저 쓰고, 안 되면 CPU 로.
   useEffect(() => {
     let alive = true;
+    if (!COSTUME_PHOTO[role]) return;
     (async () => {
       try {
         const { FilesetResolver, FaceDetector } = await import("@mediapipe/tasks-vision");
@@ -95,7 +89,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
       detectorRef.current?.close();
       detectorRef.current = null;
     };
-  }, []);
+  }, [role]);
 
   // 카메라를 켜고 매 장면 그린다.
   useEffect(() => {
@@ -192,6 +186,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
 
   const hint =
     cam === "none" ? "" :
+    !photo ? "하늘이 친구들 사이에서 활짝 웃어요!" :
     ai === "loading" ? "얼굴 인식을 준비하고 있어요…" :
     ai === "off" ? "점선 동그라미에 얼굴을 맞춰 주세요" :
     face ? "좋아요! 찰칵 버튼을 눌러요" : "얼굴이 화면에 보이게 해 주세요";
@@ -202,7 +197,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
         <video ref={videoRef} playsInline muted aria-hidden="true" className="sb-camera-src" />
         <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="필터를 입힌 카메라 화면" />
         {cam === "none" && <p className="sb-camera-none">카메라를 켤 수 없어요.<br />아래 「사진 고르기」로 찍어 주세요.</p>}
-        {cam === "live" && ai === "off" && (
+        {cam === "live" && photo && ai === "off" && (
           <svg viewBox="0 0 300 400" className="sb-overlay" aria-hidden="true">
             <ellipse cx={SLOT.x / 2} cy={SLOT.y / 2 + 14} rx="64" ry="80" fill="none" stroke="var(--color-surface)" strokeWidth="2.5" strokeDasharray="8 8" opacity=".8" />
           </svg>
@@ -232,10 +227,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
           if (f) void fromFile(f);
         }}
       />
-      {/* 캔버스에 그릴 원본 그림. 화면에는 보이지 않는다. */}
-      <svg ref={costumeRef} xmlns="http://www.w3.org/2000/svg" viewBox={`${BOX.x} ${BOX.y} ${BOX.w} ${BOX.h}`} width={BOX.w} height={BOX.h} className="sb-hidden-art" aria-hidden="true">
-        <Costume role={role} />
-      </svg>
+      {/* 캔버스에 그릴 장식 그림. 화면에는 보이지 않는다. */}
       <svg ref={decoRef} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width={W} height={H} className="sb-hidden-art" aria-hidden="true">
         <FilterDeco role={role} />
       </svg>
@@ -278,7 +270,7 @@ function findFace(d: Detector, src: CanvasImageSource, sw: number, sh: number, m
 const mix = (a: Pose, b: Pose, t: number): Pose => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, w: a.w + (b.w - a.w) * t, a: a.a + (b.a - a.a) * t });
 
 /**
- * 사진 + 옷 + 장식을 그린다. 옷은 늘 같은 자리(가운데)에 그리고, 얼굴을 찾았으면 사진을 옮기고 키우고 돌려
+ * 사진 + 옷(또는 하늘이들) + 장식을 그린다. 옷은 늘 같은 자리(가운데)에 그리고, 얼굴을 찾았으면 사진을 옮기고 키우고 돌려
  * 두 눈 사이 가운데가 SLOT 에, 얼굴 폭이 옷의 얼굴 자리 폭에 맞게 한다. 사진이 못 채운 곳은 하늘색으로 둔다.
  */
 function draw(ctx: CanvasRenderingContext2D, src: CanvasImageSource, sw: number, sh: number, mirror: boolean, pose: Pose | null, art: Art | null) {
@@ -286,7 +278,7 @@ function draw(ctx: CanvasRenderingContext2D, src: CanvasImageSource, sw: number,
   ctx.fillStyle = cssColor("--color-art-sky") || "#a8c2cf";
   ctx.fillRect(0, 0, W, H);
   ctx.save();
-  if (pose && art) {
+  if (pose && art && "layout" in art) {
     const m = Math.min(4, Math.max(0.35, (art.layout.faceW * FACE_FILL) / pose.w));
     ctx.translate(SLOT.x, SLOT.y);
     ctx.rotate(-pose.a);
@@ -300,13 +292,21 @@ function draw(ctx: CanvasRenderingContext2D, src: CanvasImageSource, sw: number,
   ctx.drawImage(src, sx, sy, W / k, H / k, 0, 0, W, H);
   ctx.restore();
   if (!art) return;
-  const { layout, box } = art;
-  ctx.save();
-  ctx.translate(layout.x, layout.y);
-  ctx.scale(layout.scale, layout.scale);
-  ctx.drawImage(art.costume, box.x, box.y, box.w, box.h);
-  if (art.buddy) ctx.drawImage(art.buddy, BUDDY.x, BUDDY.y, BUDDY.size, BUDDY.size);
-  ctx.restore();
+  if ("layout" in art) {
+    const { layout } = art;
+    ctx.save();
+    ctx.translate(layout.x, layout.y);
+    ctx.scale(layout.scale, layout.scale);
+    ctx.drawImage(art.costume, 0, 0, COSTUME_SIZE.w, COSTUME_SIZE.h);
+    ctx.restore();
+  } else
+    FRIENDS.forEach((f, i) => {
+      ctx.save();
+      ctx.translate(f.x + f.w / 2, f.y + f.h / 2);
+      ctx.rotate((f.rotate * Math.PI) / 180);
+      ctx.drawImage(art.friends[i], -f.w / 2, -f.h / 2, f.w, f.h);
+      ctx.restore();
+    });
   ctx.drawImage(art.deco, 0, 0, W, H);
 }
 
