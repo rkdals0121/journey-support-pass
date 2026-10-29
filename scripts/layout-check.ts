@@ -53,6 +53,11 @@ async function inspect(page: Page, where: string) {
   const found = (await page.evaluate(() => {
     const out: string[] = [];
     const doc = document.documentElement;
+    const scale = Number(getComputedStyle(doc).getPropertyValue("--scale")) || 1;
+    if (document.querySelector(".ph-home") && innerWidth >= 1101 && innerHeight >= 633 && scale === 1
+      && doc.scrollHeight > innerHeight + 1) {
+      out.push(`첫 화면에 불필요한 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
+    }
     if (doc.scrollWidth > doc.clientWidth + 1) {
       const wide = [...document.querySelectorAll("body *")]
         .filter((e) => e.getBoundingClientRect().right > doc.clientWidth + 1 && e.getBoundingClientRect().width > 0)
