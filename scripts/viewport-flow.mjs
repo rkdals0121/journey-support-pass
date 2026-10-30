@@ -2,31 +2,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import puppeteer from 'puppeteer-core';
-const base='http://127.0.0.1:3170';
-const out=path.resolve('GPT 작업내역/2026-10-30_첫화면_배치');
-const browser=await puppeteer.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
-const results=[];
-async function clickText(page,selector,text){const handles=await page.$$(selector);for(const h of handles){if((await h.evaluate(e=>e.textContent)).includes(text)&&await h.boundingBox()){await h.click();return}}throw Error('Missing '+text)}
-try {
- for(const width of [390,1280,1920]){
-  const page=await browser.newPage();await page.setViewport({width,height:width===390?844:width===1280?633:937});
-  await page.goto(base+'/help?topic=mobility&fresh=1',{waitUntil:'networkidle0'});
-  assert.equal(await page.$eval('[data-request-step="1"]',e=>getComputedStyle(e).display),'none');
-  await clickText(page,'.request-task-options label','휠체어');
-  await page.click('[data-request-next]');await page.waitForSelector('.request-form[data-active-step="1"]');
-  await page.$eval('.place-manual',e=>e.open=true);await page.select('#dx-place','cc-center');
-  await clickText(page,'.request-mobile-nav button','이전');
-  await page.waitForSelector('.request-form[data-active-step="0"]');
-  assert.equal(await page.$eval('#dx-place',e=>e.value),'cc-center');
-  await page.click('[data-request-next]');await page.waitForSelector('.request-form[data-final-step="true"]');
-  await page.click('input[type="checkbox"][required]');await page.click('button[type="submit"]');
-  await page.waitForSelector('.request-review-card');assert.match(await page.$eval('.request-review-card',e=>e.textContent),/휠체어/);
-  await clickText(page,'.request-review-actions button','내용 수정');
-  await page.waitForSelector('.request-form');assert.equal(await page.$eval('#dx-place',e=>e.value),'cc-center');
-  await page.screenshot({path:path.join(out,`mobility-final-${width}.png`)});
-  results.push({width,flow:'mobility',backRetainsPlace:true,review:true});await page.close();
- }
- const page=await browser.newPage();await page.setViewport({width:1280,height:633});
- await page.goto(base+'/navigate',{waitUntil:'networkidle0'});await page.$eval('.place-manual',e=>e.open=true);await page.select('#nav-place','cc-center');await page.type('#nav-gate','130');await page.click('button[type="submit"]');await page.waitForSelector('.journey-route-steps');results.push({flow:'navigation',route:true});await page.close();
+const base=process.env.VIEWPORT_BASE??'http://127.0.0.1:3170';if(new URL(base).hostname!=='127.0.0.1')throw Error('Local checks only');
+const out=path.resolve('GPT 작업내역/2026-10-30_첫화면_배치/conflict-check');fs.mkdirSync(out,{recursive:true});
+const browser=await puppeteer.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});const results=[];
+async function clickText(p,sel,text){for(const h of await p.$$(sel)){if((await h.evaluate(e=>e.textContent)).includes(text)&&await h.boundingBox()){await h.evaluate(e=>e.scrollIntoView({block:'center'}));await h.click();return}}throw Error('Missing '+text)}
+async function choose(p,text){const input=await p.waitForSelector('input[type=search]');await input.click({count:3});await p.keyboard.press('Backspace');await input.type(text);await p.waitForSelector('[aria-label="검색 결과"] button');await clickText(p,'[aria-label="검색 결과"] button',text)}
+try{
+ for(const width of [390,1280,1920]){const p=await browser.newPage();await p.setViewport({width,height:width===390?844:width===1280?633:937});await p.goto(base+'/help?topic=guidance&fresh=1',{waitUntil:'networkidle0',timeout:90000});
+ await p.waitForSelector('[data-request-next]');await p.click('[data-request-next]');await p.waitForSelector('.request-form[data-active-step="1"]');await p.$eval('.place-manual',e=>e.open=true);await p.select('#dx-place','cc-center');await clickText(p,'.request-mobile-nav button','이전');await p.waitForSelector('.request-form[data-active-step="0"]');assert.equal(await p.$eval('#dx-place',e=>e.value),'cc-center');await p.click('[data-request-next]');await p.waitForSelector('.request-form[data-final-step="true"]');await p.click('input[type=checkbox][required]');await p.click('button[type=submit]');await p.waitForSelector('.request-review-card');await clickText(p,'.request-review-actions button','내용 수정');await p.waitForSelector('.request-form');assert.equal(await p.$eval('#dx-place',e=>e.value),'cc-center');results.push({width,flow:'guidance-wizard',backAndReview:true});await p.close()}
+ const p=await browser.newPage();await p.setViewport({width:1280,height:800});await p.goto(base+'/help?topic=mobility&fresh=1',{waitUntil:'networkidle0',timeout:90000});await p.waitForSelector('.request-form[data-map-flow="true"]');assert.equal(await p.$eval('.request-mobile-nav',e=>getComputedStyle(e).display),'none');await clickText(p,'.request-task-options label','휠체어');await choose(p,'화장실');await p.click('input[type=checkbox][required]');await clickText(p,'button[type=submit]','요청 내용 확인');await p.waitForSelector('.request-review-card');assert.match(await p.$eval('.request-review-card',e=>e.textContent),/화장실/);await p.screenshot({path:path.join(out,'map-mobility-review.png')});await clickText(p,'.request-review-actions button','내용 수정');await p.waitForSelector('.request-form[data-map-flow="true"]');assert.match(await p.$eval('.request-submit-card',e=>e.textContent),/화장실/);results.push({flow:'mobility-map',selectionAndReview:true});
+ await p.goto(base+'/navigate',{waitUntil:'networkidle0',timeout:90000});await choose(p,'탑승구 25');await choose(p,'탑승구 26');await p.waitForFunction(()=>document.body.innerText.includes('경로 확인 완료'),{timeout:60000});await p.screenshot({path:path.join(out,'navigation-shared-map.png')});results.push({flow:'navigation-map',route:true});await p.close();
  fs.writeFileSync(path.join(out,'flow-check.json'),JSON.stringify(results,null,2));console.log(JSON.stringify(results));
-}finally{await browser.close()}
+}catch(e){const pages=await browser.pages();const p=pages.at(-1);if(p){console.error((await p.evaluate(()=>document.body.innerText)).slice(-1300));await p.screenshot({path:path.join(out,'failed.png')});}throw e;}finally{await browser.close()}

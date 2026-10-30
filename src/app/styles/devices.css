@@ -307,4 +307,3 @@ html[data-kiosk] .flow-body { padding:1rem 1.5rem 1.5rem; }
 /* Mobility assistance keeps the shared map at the full device width. */
 html[data-kiosk] .request-experience[data-mobility-map="true"]{width:100%;max-width:none;padding:var(--space-4)}
 html[data-kiosk] .request-experience[data-mobility-map="true"] .request-form{display:grid;grid-template-columns:minmax(0,1fr)}
-

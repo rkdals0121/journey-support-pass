@@ -115,6 +115,12 @@ export default function AirportMap({
       if (message.type === "error") handlers.current.onError?.(message.message);
     };
     window.addEventListener("message", receive);
+    // An SSR iframe can finish loading before hydration installs this listener.
+    // Ask for readiness again after subscribing, without weakening origin checks.
+    frame.current?.contentWindow?.postMessage(
+      { channel: CHANNEL, version: 1, type: "ping" },
+      window.location.origin,
+    );
     return () => window.removeEventListener("message", receive);
   }, []);
 
