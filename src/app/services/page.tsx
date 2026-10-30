@@ -18,10 +18,10 @@ export default async function ServicesPage({
     lang = en ? "en" : "ko";
   return (
     <PublicShell lang={lang}>
-      <main id="public-main" className="airport-portal">
+      <main id="public-main" className="service-page service-directory-page">
         <ServiceDirectory lang={lang} portal />
         <PortalSupport lang={lang} />
-        <details className="business-reference airport-business-reference">
+        <details className="business-reference service-business-reference">
           <summary>
             {en ? "Business responsibilities" : "담당 업무 전체 보기"}
           </summary>

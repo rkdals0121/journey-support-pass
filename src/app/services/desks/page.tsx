@@ -1,4 +1,5 @@
 import { PublicShell } from "../../components/PublicShell";
+import { MapPin, Phone, ArrowUpRight } from "lucide-react";
 import { OfficialMapPanel } from "../../components/OfficialMapPanel";
 const desks = [
   {
@@ -47,33 +48,29 @@ export default async function DeskLocations({
   const en = (await searchParams).lang === "en";
   return (
     <PublicShell lang={en ? "en" : "ko"}>
-      <main id="public-main" className="booking-lookup desk-locations">
-        <h1>{en ? "Information desk locations" : "안내데스크 위치"}</h1>
-        <OfficialMapPanel en={en} />
-        {desks.map((d) => (
-          <section key={d.name}>
-            <h2>{en ? d.en : d.name}</h2>
-            <ul>
-              {d.rows.map((row) => (
-                <li key={row[0]}>{row[en ? 1 : 0]}</li>
-              ))}
-            </ul>
-          </section>
-        ))}
-        <p>
-          <a href="tel:15772600">
-            {en ? "Airport information 1577-2600" : "공항 고객센터 1577-2600"}
-          </a>
-        </p>
-        <a
-          href="https://iasc.airport.kr/faqbbs/ap_ko/faqBbsArtclList.do"
-          target="_blank"
-          rel="noreferrer"
-        >
-          {en
-            ? "Source: Incheon Airport information service"
-            : "출처: 인천공항 안내서비스"}
-        </a>
+      <main id="public-main" className="service-page desk-locations">
+        <section className="ph-hero" aria-labelledby="desks-title">
+          <div className="ph-hero-copy service-intro-copy">
+            <span className="ph-hero-label"><MapPin aria-hidden="true" />{en ? "Airport information" : "공항 이용 안내"}</span>
+            <h1 id="desks-title">{en ? "Information desks" : "안내데스크 위치"}</h1>
+            <p>{en ? "Find a desk in your terminal." : "이용하시는 터미널의 안내데스크를 확인하세요."}</p>
+          </div>
+        </section>
+        <div className="service-info-grid">
+          {desks.map((d) => (
+            <section className="service-info-card" key={d.name}>
+              <header className="service-info-heading"><span className="service-info-icon"><MapPin aria-hidden="true" /></span><h2>{en ? d.en : d.name}</h2></header>
+              <ul>{d.rows.map(row => <li key={row[0]}>{row[en ? 1 : 0]}</li>)}</ul>
+            </section>
+          ))}
+        </div>
+        <div className="service-page-actions">
+          <OfficialMapPanel en={en} appearance="service" />
+          <div className="service-contact-links">
+            <a href="tel:15772600"><Phone aria-hidden="true" />{en ? "Airport information 1577-2600" : "공항 고객센터 1577-2600"}</a>
+            <a href="https://iasc.airport.kr/faqbbs/ap_ko/faqBbsArtclList.do" target="_blank" rel="noreferrer">{en ? "Source: Incheon Airport" : "출처: 인천공항 안내서비스"}<ArrowUpRight aria-hidden="true" /></a>
+          </div>
+        </div>
       </main>
     </PublicShell>
   );

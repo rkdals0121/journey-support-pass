@@ -114,33 +114,20 @@ export function ServiceDirectory({
     const Icon = icons[s.icon];
     return (
       <article
-        className={
-          "airport-service-item" +
-          (s.id === "other" ? " airport-service-other" : "")
-        }
+        className="task-action"
         key={s.id}
         data-service-topic={s.id}
       >
-        <span className="airport-service-icon">
-          <Icon size={25} aria-hidden="true" />
-        </span>
-        <div className="airport-service-copy">
-          <h3>{en ? s.en : s.label}</h3>
-          <p>
-            {descriptions[s.id]?.[en ? 1 : 0] ??
-              (en ? s.descriptionEn : s.description)}
-          </p>
-          {s.mode === "simulation" && (
-            <span className="airport-demo-tag">
-              {en ? "Simulation" : "모의 시연"}
-            </span>
-          )}
-        </div>
+        <Icon className="task-action-icon" strokeWidth={1.7} aria-hidden="true" />
         <Link
+          className="task-action-link"
           href={topicLink(s.id, lang)}
           aria-label={`${en ? s.en : s.label} · ${en ? "Use service" : "서비스 이용"}`}
         >
-          <span className="sr-only">{en ? "Use service" : "서비스 이용"}</span>
+          <span>
+            <strong>{en ? s.en : s.label}</strong>
+            <small>{descriptions[s.id]?.[en ? 1 : 0] ?? (en ? s.descriptionEn : s.description)}{s.mode === "simulation" && <em className="service-mode-label">{en ? "Simulation" : "모의 시연"}</em>}</small>
+          </span>
           <ArrowUpRight size={19} aria-hidden="true" />
         </Link>
       </article>
@@ -148,23 +135,23 @@ export function ServiceDirectory({
   };
   return (
     <section
-      className="airport-directory"
+      className="service-directory"
       aria-label={en ? "Airport services" : "공항 서비스"}
     >
       {portal ? (
-        <div className="airport-entry-hero">
-          <div className="airport-entry-copy">
-            <p className="airport-eyebrow">
+        <div className="ph-hero">
+          <div className="ph-hero-copy">
+            <span className="ph-hero-label"><Signpost aria-hidden="true" />
               {en ? "Airport services" : "공항 현장 서비스"}
-            </p>
+            </span>
             <h1>{en ? "Find a service" : "서비스 찾기"}</h1>
-            <p className="airport-entry-intro">
+            <p>
               {en
                 ? "Directions, mobility and assistance at the airport."
                 : "길 찾기부터 이동 지원, 시설 불편 접수까지."}
             </p>
           </div>
-          <div className="airport-entry-search">
+          <div className="service-directory-search">
             {search}
             <div className="airport-popular">
               <span>{en ? "Quick search" : "바로 찾기"}</span>
@@ -191,14 +178,14 @@ export function ServiceDirectory({
       ) : (
         search
       )}
-      <div className="airport-directory-top">
+      <div className="service-directory-toolbar">
         <h2 id="service-results-title" tabIndex={-1}>
           {en ? "Services" : "서비스 안내"}
         </h2>
         <span role="status">
           {en ? `${rows.length} services` : `서비스 ${rows.length}개`}
         </span>
-        <details className="airport-service-filters">
+        <details className="service-directory-filter">
           <summary>
             {en ? "Filter services" : "서비스 필터"}
             {filter !== "all" ? (en ? " · Applied" : " · 적용 중") : ""}
@@ -228,7 +215,7 @@ export function ServiceDirectory({
       </div>
       {rows.length > 0 ? (
         <>
-          <div className="airport-service-grid">{rows.map(result)}</div>
+          <div className="ph-list service-directory-grid">{rows.map(result)}</div>
         </>
       ) : (
         <div className="airport-directory-empty" role="status">

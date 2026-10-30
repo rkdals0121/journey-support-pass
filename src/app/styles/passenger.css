@@ -873,3 +873,57 @@
 
 .request-mobile-nav[hidden] { display:none; }
 .request-form[data-map-flow="true"] { grid-template-columns:minmax(0,1fr); }
+.service-page {
+  --w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  width: var(--w);
+  margin-inline: calc((100% - var(--w)) / 2);
+  display: grid;
+  gap: var(--space-4);
+}
+.service-directory { display: grid; gap: var(--space-4); }
+.service-intro-copy { grid-column: 1 / -1; }
+.service-directory-search { min-width: 0; }
+.service-directory-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.service-directory-toolbar h2 { margin: 0; font-size: var(--text-heading); }
+.service-directory-toolbar > span { color: var(--color-muted); font-size: var(--text-small); }
+.service-directory-filter { margin-left: auto; }
+.service-directory-filter summary { cursor: pointer; min-height: 2.75rem; align-content: center; color: var(--color-primary); }
+.service-mode-label { display: block; font-style: normal; color: var(--color-muted); font-size: var(--text-caption); }
+.service-info-grid, .service-support-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); }
+.service-lost-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.service-info-card { display: flex; flex-direction: column; min-width: 0; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.service-info-heading { display: flex; gap: var(--space-4); align-items: center; }
+.service-info-card h2 { margin: 0; font-size: var(--text-heading); color: var(--color-primary); }
+.service-info-card p { margin: 0; color: var(--color-muted); }
+.service-info-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
+.desk-locations ul { margin: 0; padding-left: var(--space-4); }
+.desk-locations li { line-height: 1.5; margin-block: var(--space-2); font-size: var(--text-small); }
+.service-card-action { display: inline-flex; gap: var(--space-2); align-items: center; justify-content: center; min-height: 3.5rem; margin-top: auto; font-weight: var(--weight-label); color: var(--color-primary); }
+.service-primary-action { margin-top: auto; }
+.service-page-actions { display: grid; gap: var(--space-4); }
+.service-contact-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.service-contact-links a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; color: var(--color-primary); }
+.service-map-panel { border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: var(--space-4); background: var(--color-surface); }
+.service-map-panel summary { cursor: pointer; min-height: 2.75rem; align-content: center; color: var(--color-primary); }
+.service-map-panel > a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.service-map-panel iframe { display: block; width: 100%; height: clamp(16rem, 50dvh, 34rem); border: 1px solid var(--color-line); border-radius: var(--radius-small); }
+.service-support-request { display: grid; min-width: 0; }
+.service-support-card { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+.service-support-card > p, .service-support-card > a { grid-column: 1 / -1; }
+.service-support-card > p { font-size: var(--text-small); }
+.service-business-reference { margin-top: 0; border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: var(--space-4); background: var(--color-surface); }
+.service-business-reference summary { cursor: pointer; min-height: 2.75rem; align-content: center; }
+@media (min-width: 1101px) {
+  .service-page-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .service-info-grid, .service-support-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .service-info-card { padding: var(--space-4); }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .service-support-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-height: 700px) {
+  .service-info-card { padding: var(--space-4); }
+  .service-map-panel { padding-block: var(--space-2); }
+}
