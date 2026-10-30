@@ -136,7 +136,8 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .flow-pretrip .flow-body { border-radius: var(--radius-medium); }
 .flow-pretrip .choice { border-radius: var(--radius-medium); }
 .flow-pretrip .choice[aria-checked=true] { background: var(--sun-soft); border-color: var(--green); }
-.pretrip-site { min-height: 100dvh; background: var(--bg); }
+/* 위쪽 바는 그대로, 두 박스가 남는 높이를 모두 쓰고 아래 안내 줄은 맨 아래에 붙는다. */
+.pretrip-site { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bg); }
 .pretrip-site .pretrip-header { max-width: 76rem; padding: 1.25rem 2rem; border: 0; }
 .pretrip-site .pretrip-header .public-logo small { letter-spacing: .01em; }
 /* 큰 박스 하나 대신 두 박스(왼쪽 소개, 오른쪽 순서)로 나눈다. 두 박스를 합친 너비와 끝선은 위쪽 바와 같다. */
@@ -144,7 +145,7 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
   display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
   align-items: stretch; gap: var(--space-4);
   box-sizing: border-box; width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
-  max-width: var(--site-bar-width); margin: var(--space-4) auto var(--space-6); padding: 0;
+  max-width: var(--site-bar-width); flex: 1 0 auto; margin: var(--space-4) auto 0; padding: 0;
   border: 0; background: none; box-shadow: none;
 }
 .pretrip-site .prepare-intro,
@@ -159,18 +160,27 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 }
 .pretrip-site .prepare-intro .public-eyebrow { display: inline-flex; padding: .5rem .875rem; border-radius: 999px; background: var(--sun-soft); }
 .pretrip-site .prepare-intro h1 { font-size: var(--text-large); line-height: 1.15; letter-spacing: -.055em; margin: var(--space-4) 0; max-width: 8em; white-space: pre-line; text-wrap: balance; }
-.pretrip-site .prepare-intro > p { font-size: 1.125rem; line-height: 1.7; }
+.pretrip-site .prepare-intro > p { font-size: var(--text-heading); line-height: 1.7; }
 .pretrip-site .prepare-intro > .public-button { margin: 1.5rem 0 1rem; }
 .pretrip-site .prepare-lookup-link { display: block; width: fit-content; font-size: .875rem; color: var(--muted); margin-top: .5rem; }
 /* 오른쪽 박스 안의 세 단계는 박스 속 박스가 아니라 선으로 나눈 줄로 둔다. */
 .pretrip-site .prepare-steps { display: flex; flex-direction: column; justify-content: center; gap: 0; background: var(--color-surface); }
-.pretrip-site .prepare-step { padding: var(--space-4) 0; margin: 0; border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; background: none; box-shadow: none; }
-.pretrip-site .prepare-step:first-child { padding-top: 0; }
+/* 세 단계가 박스 높이를 나눠 쓴다(줄마다 같은 높이). */
+.pretrip-site .prepare-step { flex: 1 1 0; align-items: center; padding: var(--space-4) 0; margin: 0; border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; background: none; box-shadow: none; }
 .pretrip-site .prepare-step > svg { background: var(--sun-soft); box-sizing: content-box; padding: .75rem; border-radius: 1rem; width: 1.5rem; height: 1.5rem; flex: none; }
 .pretrip-site .prepare-step h2 { font-size: 1rem; margin: 0 0 .375rem; }
 .pretrip-site .prepare-step p { font-size: .875rem; line-height: 1.65; margin: 0; }
 .pretrip-site .prepare-benefit { justify-content: flex-start; padding: var(--space-5) 0 0; font-size: .875rem; }
-.pretrip-site .prepare-footer { border: 0; padding: 1rem 1.5rem 3rem; font-size: 1rem; }
+.pretrip-site .prepare-footer { border: 0; padding: var(--space-4) 1.5rem var(--space-5); font-size: 1rem; }
+/* 넉넉한 노트북 화면(낮은 화면 제외): 박스가 커진 만큼 글자·아이콘도 한 단계 키운다. */
+@media (min-width: 1101px) and (min-height: 701px) {
+  .pretrip-site .prepare-intro h1 { font-size: var(--text-display); }
+  .pretrip-site .prepare-intro > .public-button { min-height: 3.75rem; padding-inline: var(--space-6); font-size: var(--text-heading); }
+  .pretrip-site .prepare-step h2 { font-size: var(--text-heading); margin-bottom: var(--space-2); }
+  .pretrip-site .prepare-step p { font-size: var(--text-body); }
+  .pretrip-site .prepare-step > svg { width: 1.75rem; height: 1.75rem; padding: var(--space-4); }
+  .pretrip-site .prepare-benefit { font-size: var(--text-body); }
+}
 @media (max-width: 60rem) {
   .pretrip-site .prepare-layout { grid-template-columns: 1fr; margin: var(--space-4) auto; gap: var(--space-4); }
   .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 2rem; }
