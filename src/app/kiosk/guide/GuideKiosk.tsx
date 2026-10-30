@@ -594,6 +594,7 @@ export function GuideKiosk({
         <>
           <RegisterFlow
             mode="kiosk"
+            sideSteps
             initialLang={lang}
             onExit={reset}
             onBackOut={() => setView({ kind: "scan" })}
@@ -683,7 +684,7 @@ export function GuideKiosk({
           <p className="kicker">
             <ClipboardList size={20} aria-hidden="true" /> {t.savedTitle}
           </p>
-          <HaneuliSays size="sm" text={lang === "en" ? "Welcome back! I found your registration." : "반가워요! 미리 등록하신 내용을 찾았어요."} />
+          <HaneuliSays size="sm" pose="left" text={lang === "en" ? "Welcome back! I found your registration." : "반가워요! 미리 등록하신 내용을 찾았어요."} />
           <h1>{t.savedAsk}</h1>
           <FlightBoard flight={guide.flight} t={t} lang={lang} />
           <SavedNeeds
