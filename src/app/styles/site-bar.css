@@ -223,3 +223,27 @@ html[data-kiosk] .flow .flow-bar {
 .field-task-shell .field-task-header .brand .sunflower {
   width: 32px; height: 32px; flex: 0 0 32px;
 }
+
+/* 아래쪽 바: 위쪽 바와 같은 너비·같은 끝선의 둥근 바. 그라데이션 없이 흰 단색. */
+.airport-site .public-footer {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+  width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  margin: var(--space-2) auto 12px;
+  padding: var(--space-2) var(--space-6);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+}
+.airport-site .public-footer > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4); }
+.airport-site .public-footer .public-caption { margin: 0; }
+.airport-site .public-footer-links { margin: 0; }
+@media (max-width: 760px) {
+  .airport-site .public-footer { display: block; border-radius: calc(var(--radius-medium) * 2); padding: var(--space-4) var(--space-5); }
+  .airport-site .public-footer-links { margin-top: var(--space-3); }
+}

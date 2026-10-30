@@ -50,7 +50,7 @@ export function PublicShell({
           <Link href={"/" + suffix} className="public-logo">
             <Sunflower />
             <span>
-              공항 이용 지원<small>Journey Support Pass</small>
+              Journey Support Pass
             </span>
           </Link>
           <div className="public-tools">
@@ -102,10 +102,10 @@ export function PublicShell({
       <footer className="public-footer">
         <div>
           <span className="public-footer-brand">
-            공항 이용 지원 · Journey Support Pass
+            Journey Support Pass
           </span>
           <p className="public-caption">
-            {en ? "Contest prototype" : "공모전 시제품"}
+            {en ? "2026 Inha University ESG Idea Contest · Team 분(分)실" : "2026 인하대학교 ESG 아이디어 공모전 팀 분(分)실"}
           </p>
         </div>
         <div className="public-footer-links">
