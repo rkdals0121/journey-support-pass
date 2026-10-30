@@ -96,3 +96,5 @@ body {
 .checkpoint-hint[hidden] { display: none; }
 
 #checkpoint-panel{position:absolute;z-index:6;bottom:12px;left:12px;width:min(480px,calc(100% - 80px));background:white;padding:12px;border:1px solid #a5beae;border-radius:14px;color:#195b43;box-shadow:0 4px 18px #17382b22}#checkpoint-panel[hidden]{display:none}#checkpoint-panel small{display:block;font-size:12px;color:#657a6c}#checkpoint-options{display:flex;gap:8px;overflow-x:auto;padding:8px 0}#checkpoint-options button{flex-shrink:0;padding:8px 10px;min-height:44px;border:1px solid #a5beae;border-radius:10px;background:white;color:#195b43;cursor:pointer}#checkpoint-options button[aria-pressed=true]{background:#195b43;color:white}#checkpoint-confirm{width:100%;min-height:44px;background:#195b43;color:white;border:0;border-radius:10px;font:600 16px system-ui;cursor:pointer}#checkpoint-confirm:disabled{opacity:.45}button:focus-visible{outline:3px solid #cf8e16;outline-offset:-3px}
+
+html[data-kiosk="true"] .map-controls button { width:4rem; height:4rem; min-width:4rem; min-height:4rem; }

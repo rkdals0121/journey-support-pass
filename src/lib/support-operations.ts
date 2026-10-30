@@ -1,5 +1,5 @@
 import type { Db } from "./db";
-import { placeOf } from "./airport";
+import { requestPlaceOf as placeOf } from "./service-locations";
 import {
   DEFAULT_RULE,
   SERVICE_HUBS,

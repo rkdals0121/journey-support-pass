@@ -1,315 +1,101 @@
 "use client";
+
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import {
-  Navigation,
-  ArrowRight,
-  MapPin,
-  Clock,
-  Accessibility,
-} from "lucide-react";
-import { PlaceFinder } from "../components/PlaceFinder";
+import { useEffect, useId, useRef, useState } from "react";
+import { Navigation, Bot, ArrowRight } from "lucide-react";
+import { AirportRoutePlanner, type RoutePlannerResult } from "../components/AirportRoutePlanner";
 import { IdleGuard } from "../components/IdleGuard";
+import { placeOf } from "@/lib/airport";
+import { MAP_FACILITIES, facilityForPlace, areaBuilding, type MapFacility } from "@/lib/map-facilities";
 import type { KioskReturn } from "@/lib/help-entry";
-import {
-  placeOf,
-  GATE_PICKUP_POINTS,
-  routeToGateFrom,
-  nearestFacilities,
-  routeOptionsOf,
-  type Route,
-  type FacilityKind,
-} from "@/lib/airport";
 import { textOf } from "@/lib/i18n";
-const floorKo = (n: number) => (n < 0 ? `지하 ${-n}층` : `${n}층`);
-const floorEn = (n: number) => (n < 0 ? `B${-n}` : `${n}F`);
-export function NavigationFlow({
-  en,
-  initialGate = "",
-  initialPlace = "",
-  fixedPlace = false,
-  returnTo = "/kiosk/guide",
-  idleAskSec = 120,
-  idleAnswerSec = 30,
-}: {
-  en: boolean;
-  initialGate?: string;
-  initialPlace?: string;
-  fixedPlace?: boolean;
-  returnTo?: KioskReturn;
-  idleAskSec?: number;
-  idleAnswerSec?: number;
+import styles from "./navigation-map.module.css";
+
+type RobotPhase = "idle" | "guiding" | "arrived" | "ended";
+type Props = {
+  en: boolean; initialGate?: string; initialPlace?: string; fixedPlace?: boolean; robotGuidance?: boolean;
+  returnTo?: KioskReturn; idleAskSec?: number; idleAnswerSec?: number;
+};
+function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,robotPhase,setRobotPhase,result}: {
+  en:boolean;from:MapFacility|null;target:MapFacility|null;homeHref:string;helpHref:string;
+  isRobotMode:boolean;robotPhase:RobotPhase;setRobotPhase:(phase:RobotPhase)=>void;result:RoutePlannerResult;
 }) {
-  const t = (ko: string, english: string) => (en ? english : ko),
-    labels = textOf(en ? "en" : "ko").facility;
-  const [place, setPlace] = useState(initialPlace),
-    [kind, setKind] = useState("gate"),
-    [gate, setGate] = useState(initialGate),
-    [stepFree, setStepFree] = useState(true),
-    [result, setResult] = useState<{ title: string; route: Route } | null>(
-      null,
-    ),
-    [error, setError] = useState("");
-  const resultHeading = useRef<HTMLHeadingElement>(null);
-  const errorMessage = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    if (result) {
-      resultHeading.current?.focus({ preventScroll: true });
-      if (window.matchMedia("(max-width: 850px)").matches)
-        resultHeading.current?.scrollIntoView({ block: "center" });
-    } else if (error) errorMessage.current?.focus();
-  }, [result, error]);
-  function find() {
-    setResult(null);
-    setError("");
-    const from = placeOf(place);
-    if (!from) {
-      setError(
-        t(
-          "현재 위치 후보를 먼저 확인해 주세요.",
-          "Confirm your current location first.",
-        ),
-      );
-      return;
-    }
-    const opts = routeOptionsOf(stepFree ? ["mov_no_stairs"] : []);
-    if (kind === "gate") {
-      const target = GATE_PICKUP_POINTS.find((p) => p.gate === Number(gate));
-      if (!/^\d{1,3}$/.test(gate) || !target) {
-        setError(
-          t(
-            "지원하는 탑승구 번호를 입력해 주세요.",
-            "Enter a supported gate number.",
-          ),
-        );
-        return;
-      }
-      const route = routeToGateFrom(from, target.place.area, Number(gate), opts);
-      if (route)
-        setResult({ title: t(`${gate}번 탑승구`, `Gate ${gate}`), route });
-      else
-        setError(
-          t(
-            "이 위치에서는 그 탑승구로 걸어서 갈 수 없어요. 터미널이 다르면 터미널 사이 셔틀버스를 타야 해요. 항공권에 적힌 터미널을 확인하시거나 현장 안내를 불러 주세요.",
-            "You cannot walk to that gate from here. Different terminals are linked by the inter-terminal shuttle bus. Check the terminal on your ticket, or request on-site guidance.",
-          ),
-        );
-    } else {
-      const near = nearestFacilities(from, opts).find((f) => f.kind === kind);
-      if (near)
-        setResult({
-          title: `${labels[kind as FacilityKind]} · ${near.nearGate}${t("번 부근", " nearby")}`,
-          route: near.route,
-        });
-      else
-        setError(
-          t(
-            "이 위치에서 확인된 시설 경로가 없어요.",
-            "No facility route is available from this location.",
-          ),
-        );
-    }
-  }
-  return (
-    <main id="public-main" className="service-workspace">
-      <IdleGuard
-        t={textOf(en ? "en" : "ko")}
-        enabled={fixedPlace}
-        askSec={idleAskSec}
-        answerSec={idleAnswerSec}
-        onTimeout={() =>
-          window.location.assign(returnTo + (en ? "?lang=en" : ""))
-        }
-      />
-      <header className="service-heading">
-        <span className="service-kicker">
-          <Navigation aria-hidden="true" />
-          {t("바로 이용하는 안내", "SELF-SERVICE DIRECTIONS")}
-        </span>
-        <h1>{t("어디로 가시나요?", "Where are you heading?")}</h1>
-        <p>
-          {t(
-            "현재 위치와 목적지를 고르면 이동 경로가 나와요.",
-            "Choose your location and destination for directions.",
-          )}
-        </p>
-        <span className="service-demo-label">
-          {t("시연 지도 기준", "Prototype map")}
-        </span>
-      </header>
-      <div className="service-form-layout">
-        <form
-          className="service-form-card"
-          onSubmit={(e) => {
-            e.preventDefault();
-            find();
-          }}
-        >
-          <section className="request-section">
-            <h2>
-              <span>1</span>
-              {t("출발 위치", "Start location")}
-            </h2>
-            {fixedPlace ? (
-              <p className="field-current-location">
-                <MapPin aria-hidden="true" />
-                {en ? placeOf(place)?.labelEn : placeOf(place)?.label}
-              </p>
-            ) : (
-              <PlaceFinder
-                id="nav-place"
-                value={place}
-                onChange={(id) => {
-                  setPlace(id);
-                  setResult(null);
-                }}
-                en={en}
-              />
-            )}
-          </section>
-          <section className="request-section">
-            <h2>
-              <span>2</span>
-              {t("목적지", "Destination")}
-            </h2>
-            <label htmlFor="nav-kind">{t("찾을 곳", "Destination type")}</label>
-            <select
-              id="nav-kind"
-              value={kind}
-              onChange={(e) => {
-                setKind(e.target.value);
-                setResult(null);
-              }}
-            >
-              <option value="gate">{t("탑승구", "Boarding gate")}</option>
-              {Object.entries(labels).map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            {kind === "gate" && (
-              <>
-                <label htmlFor="nav-gate">
-                  {t("탑승구 번호", "Gate number")}
-                </label>
-                <input
-                  id="nav-gate"
-                  inputMode="numeric"
-                  maxLength={3}
-                  value={gate}
-                  onChange={(e) => {
-                    setGate(e.target.value);
-                    setResult(null);
-                  }}
-                  required
-                  placeholder="130"
-                />
-              </>
-            )}
-            <label className="request-check">
-              <input
-                type="checkbox"
-                checked={stepFree}
-                onChange={(e) => {
-                  setStepFree(e.target.checked);
-                  setResult(null);
-                }}
-              />
-              <Accessibility aria-hidden="true" />
-              {t("계단 없는 경로", "Step-free route")}
-            </label>
-          </section>
-          {error && (
-            <p
-              className="error-note"
-              role="alert"
-              ref={errorMessage}
-              tabIndex={-1}
-            >
-              {error}
-            </p>
-          )}
-          <button className="public-button" type="submit">
-            {t("경로 보기", "Show route")}
-            <ArrowRight aria-hidden="true" />
-          </button>
-        </form>
-        <aside
-          className="service-route-result"
-          aria-label={t("경로 결과", "Route result")}
-          aria-live="polite"
-        >
-          {result ? (
-            <>
-              <span className="service-kicker">
-                {t("이동 경로", "YOUR ROUTE")}
-              </span>
-              <h2 ref={resultHeading} tabIndex={-1}>
-                {result.title}
-              </h2>
-              <div className="route-metrics">
-                <span>
-                  <Clock aria-hidden="true" />
-                  {t(
-                    `약 ${result.route.minutes}분`,
-                    `About ${result.route.minutes} min`,
-                  )}
-                </span>
-                <span>{Math.round(result.route.meters)}m</span>
-              </div>
-              <ol className="journey-route-steps">
-                <li>
-                  <MapPin aria-hidden="true" />
-                  {en ? placeOf(place)?.labelEn : placeOf(place)?.label}
-                </li>
-                {result.route.steps.map((s, i) => (
-                  <li key={i}>
-                    {s.kind === "walk"
-                      ? t(
-                          `${s.towardGate}번 방향으로 ${Math.round(s.meters)}m 이동`,
-                          `Walk ${Math.round(s.meters)}m towards gate ${s.towardGate}`,
-                        )
-                      : s.kind === "shuttle"
-                        ? t("셔틀트레인 이용", "Take the shuttle train")
-                        : s.kind === "security"
-                          ? t("출국장에서 보안검색·출국심사", "Security and passport control")
-                          : t(
-                            `${s.kind === "elevator" ? "엘리베이터" : "에스컬레이터"}로 ${floorKo(s.fromLevel)} → ${floorKo(s.toLevel)}`,
-                            `Take the ${s.kind} from ${floorEn(s.fromLevel)} to ${floorEn(s.toLevel)}`,
-                          )}
-                  </li>
-                ))}
-                <li>{result.title}</li>
-              </ol>
-              <p className="service-muted">
-                {t(
-                  "거리·시간은 시연 지도 기준 추정치예요.",
-                  "Estimated using the prototype map.",
-                )}
-              </p>
-            </>
-          ) : (
-            <div className="route-empty">
-              <Navigation aria-hidden="true" />
-              <h2>{t("나에게 맞는 경로", "Your route")}</h2>
-              <p>
-                {t(
-                  "출발 위치와 목적지를 선택해 주세요.",
-                  "Choose your start and destination.",
-                )}
-              </p>
-            </div>
-          )}
-          <Link
-            className="public-text-link"
-            href={`/help?topic=guidance&fresh=1${place ? "&place=" + encodeURIComponent(place) : ""}${fixedPlace ? "&returnTo=" + encodeURIComponent(returnTo) : ""}${en ? "&lang=en" : ""}`}
-          >
-            {t("현장 안내 지원 요청", "Request on-site guidance")}
-            <ArrowRight aria-hidden="true" />
+  const t = (ko:string,english:string)=>en?english:ko;
+  const {distance,hasResult,clearDestination:chooseAnotherDestination}=result;
+  const resultRef=useRef<HTMLElement>(null);
+  useEffect(()=>{if(hasResult)resultRef.current?.scrollIntoView({block:"nearest",behavior:"auto"});},[hasResult,robotPhase]);
+  const completionActions = !isRobotMode ? <>
+    <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
+    <Link className={styles.primary} href={homeHref}>{t("처음 화면으로", "Back to home")}<ArrowRight size={20} aria-hidden="true" /></Link>
+  </> : robotPhase === "guiding" ? <>
+    <p role="status">{t("저니봇이 목적지까지 안내하고 있어요.", "Journey Bot is guiding you to your destination.")}</p>
+    <button type="button" className={styles.primary} onClick={()=>setRobotPhase("arrived")}>{t("목적지 도착 확인(시연)", "Confirm arrival (demo)")}</button>
+    <button type="button" className={styles.clear} onClick={()=>setRobotPhase("idle")}>{t("안내 취소", "Cancel guidance")}</button>
+  </> : robotPhase === "arrived" ? <>
+    <p role="status">{t(`${target?.name ?? "목적지"}에 도착했어요.`, `You have arrived at ${target?.name ?? "your destination"}.`)}</p>
+    <button type="button" className={styles.primary} onClick={()=>setRobotPhase("ended")}>{t("안내 종료", "End guidance")}</button>
+  </> : <>
+    {robotPhase === "ended" ? <p role="status">{t("안내가 끝났어요. 저니봇을 이용해 주셔서 감사합니다.", "Guidance has ended. Thank you for using Journey Bot.")}</p> : <button type="button" className={styles.primary} onClick={()=>setRobotPhase("guiding")}>{t("안내 시작", "Start guidance")}</button>}
+    <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
+    <Link className={robotPhase === "ended" ? styles.primary : styles.clear} href={homeHref}>{t("처음 화면으로", "Back to home")}</Link>
+  </>;
+  const resultTitle = isRobotMode && robotPhase !== "idle"
+    ? robotPhase === "guiding" ? t("저니봇 안내 중", "Journey Bot guidance") : robotPhase === "arrived" ? t("목적지 도착", "Destination reached") : t("안내 종료", "Guidance ended")
+    : t("경로 확인 완료", "Route ready");
+  const summary = (
+<aside ref={resultRef} className={styles.summary} aria-live="polite" aria-label={t("경로 결과", "Route result")}>
+          {isRobotMode ? <Bot aria-hidden="true" /> : <Navigation aria-hidden="true" />}<h2>{hasResult ? resultTitle : t("한 지도에서 바로 찾기", "Find it on one map")}</h2>
+          {hasResult ? <><strong className={styles.distance}>{Math.round(distance!)} m</strong>
+            <dl className={styles.routeEndpoints}>
+              <div><dt>{t("출발지", "Start")}</dt><dd>{from?.name}<small>{from?.description}</small></dd></div>
+              <div><dt>{t("목적지", "Destination")}</dt><dd>{target?.name}<small>{target?.description}</small></dd></div>
+            </dl>
+            <p>{t("지도에 표시된 경로를 확인해 주세요.", "Check the route displayed on the map.")}</p>
+            {isRobotMode && <p className={styles.locationNote}>{t("안내 시연 · 실제 로봇 이동과 자동 도착 감지는 연결되지 않았어요.", "Guidance demo · robot movement and automatic arrival detection are not connected.")}</p>}
+            <div className={styles.completionActions}>{completionActions}</div></> : <p>{t("출발지와 목적지 칸을 누르고 지도에서 장소를 선택하세요.", "Select Start or Destination, then choose a place on the map.")}</p>}
+          <small>{t("3층 시연 지도입니다. 실제 이동·계단 없는 접근 가능 여부는 직원에게 확인해 주세요.", "3F prototype. Confirm actual routes and step-free access with staff.")}</small>
+          <Link className={styles.help} href={helpHref}>
+            {t("현장 안내 지원 요청", "Ask staff for guidance")}<ArrowRight size={18} aria-hidden="true" />
           </Link>
         </aside>
-      </div>
-    </main>
   );
+  return summary;
+}
+export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedPlace = false, robotGuidance = false,
+  returnTo = "/kiosk/guide", idleAskSec = 120, idleAnswerSec = 30 }: Props) {
+  const t=(ko:string,english:string)=>en?english:ko;
+  const deviceModeName=useId();
+  const [deviceMode,setDeviceMode]=useState<"kiosk"|"robot">(robotGuidance?"robot":"kiosk");
+  const [robotPhase,setRobotPhase]=useState<RobotPhase>("idle");
+  const isRobotMode=deviceMode==="robot";
+  const robotActive=isRobotMode&&(robotPhase==="guiding"||robotPhase==="arrived");
+  const currentLocation=facilityForPlace(placeOf(initialPlace));
+  const [from,setFrom]=useState<MapFacility|null>(()=>facilityForPlace(placeOf(initialPlace)));
+  const [target,setTarget]=useState<MapFacility|null>(()=>MAP_FACILITIES.find(p=>p.name===`탑승구 ${initialGate}`)??null);
+  const homeHref=(fixedPlace?returnTo:isRobotMode?"/devices/robot":"/")+(en?"?lang=en":"");
+  const helpHref=`/help?topic=guidance&fresh=1${initialPlace?"&place="+encodeURIComponent(initialPlace):""}${fixedPlace?"&returnTo="+encodeURIComponent(returnTo):""}${en?"&lang=en":""}`;
+  const deviceControls=<fieldset className={styles.deviceMode}>
+    <legend>{t("이용 기기 선택 · 시제품","Choose device · prototype")}</legend>
+    {(["kiosk","robot"] as const).map(value=><label key={value}>
+      <input type="radio" name={deviceModeName} value={value} checked={deviceMode===value} onChange={()=>{setDeviceMode(value);setRobotPhase("idle");}}/>
+      <span>{value==="robot"?t("저니봇","Journey Bot"):t("키오스크","Kiosk")}</span>
+    </label>)}
+    <p>{isRobotMode?t("경로 확인 후 안내 시작·도착·종료를 체험해요.","Try guidance, arrival and completion after finding a route."):t("경로를 확인하고 처음 화면으로 돌아가요.","Check your route, then return to the home screen.")}</p>
+  </fieldset>;
+  return <main id="public-main" className={styles.workspace} data-kiosk={fixedPlace}>
+    <IdleGuard t={textOf(en?"en":"ko")} enabled={fixedPlace&&!robotActive} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={()=>window.location.assign(returnTo+(en?"?lang=en":""))}/>
+    <AirportRoutePlanner en={en} kiosk={fixedPlace} disabled={robotActive} start={from} destination={target} currentLocation={currentLocation}
+      onStartChange={p=>{setFrom(p);setRobotPhase("idle");}} onDestinationChange={p=>{setTarget(p);setRobotPhase("idle");}}
+      initialBuilding={areaBuilding(placeOf(initialPlace)?.area)}
+      title={isRobotMode?t("저니봇 길 안내","Journey Bot guidance"):t("탑승구·시설 찾기","Gates & facilities")}
+      backHref={homeHref} beforeControls={deviceControls}
+      instructions={robotActive?<p className={styles.instruction} role="status">{t("아래에서 저니봇 안내 상태를 확인하세요","Check Journey Bot guidance below")}</p>:undefined}
+      footer={result=><>
+        {!result.hasResult&&<div className={styles.actions}>
+          <button type="button" className={styles.primary} disabled={result.pending||robotActive} onClick={result.findRoute}>{result.pending?t("경로 확인 중…","Finding route…"):t("경로 보기","Show route")}<ArrowRight size={20} aria-hidden="true"/></button>
+          <button type="button" className={styles.clear} disabled={robotActive} onClick={result.reset}>{t("다시 선택","Start over")}</button>
+        </div>}
+        <NavigationResult en={en} from={from} target={target} homeHref={homeHref} helpHref={helpHref} isRobotMode={isRobotMode} robotPhase={robotPhase} setRobotPhase={setRobotPhase} result={result}/>
+      </>}/>
+  </main>;
 }
