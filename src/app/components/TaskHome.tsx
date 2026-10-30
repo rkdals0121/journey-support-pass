@@ -37,8 +37,8 @@ export function TaskHome({ en = false }: { en?: boolean }) {
           </h2>
           <p>
             {en
-              ? "Register your flight and the help you need."
-              : "항공편과 필요한 도움을 미리 등록하세요."}
+              ? "Register your flight and the help you need. Airport kiosks and staff pick it up from your boarding pass."
+              : "항공편과 필요한 도움을 미리 등록하세요. 공항 키오스크와 직원이 탑승권으로 그대로 이어받아요."}
           </p>
           <Link className="btn btn-primary ph-prepare-go" href={"/prepare" + q}>
             {en ? "Register support before you travel" : "여행 전 지원 등록"}
