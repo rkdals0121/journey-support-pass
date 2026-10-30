@@ -129,9 +129,7 @@ export function useBookingFind({ lang, onScreenPad, onFound }: { lang: Lang; onS
         </div>
       </div>
       <p className="fine booking-find-note">
-        {en
-          ? "Demo: airlines are not connected yet, so only the fictional booking DEMO01 / KIM can be found."
-          : "시연: 아직 항공사와 연결되어 있지 않아 가상 예약 DEMO01 / KIM만 찾을 수 있어요."}
+        {en ? "Demo booking: DEMO01 / KIM" : "시연 예약: DEMO01 / KIM"}
       </p>
       {error && <ErrorNote>{error}</ErrorNote>}
       <div className="booking-find-actions">

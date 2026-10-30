@@ -51,6 +51,8 @@ import { FacilityIcon } from "../../components/NeedIcon";
 import { Scanner } from "../../components/Scanner";
 import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
+import { useBookingFind } from "../../components/FlightMethods";
+import type { BookingHandoff } from "@/lib/booking-model";
 import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
 import { HaneuliSays, HaneuliWelcome } from "../../components/HaneuliWelcome";
@@ -74,6 +76,7 @@ interface Props {
 type View =
   | { kind: "scan" }
   | { kind: "number" }
+  | { kind: "passport" }
   | { kind: "saved" }
   | { kind: "edit" }
   | { kind: "register" }
@@ -126,6 +129,10 @@ export function GuideKiosk({
   const [guide, setGuide] = useState<GuideDto | null>(null);
   const [startLang, setStartLang] = useState<Lang>(initialLang);
   const [digits, setDigits] = useState("");
+  // 「예약번호 입력」 화면에서 고른 번호 종류. 고유 일련 번호(사전등록 때 받은 숫자 6자리)와 항공 예약번호.
+  const [numberKind, setNumberKind] = useState<"pass" | "booking">("pass");
+  // 항공 예약번호로 찾은 예약. 현장등록에 항공편을 채워 넘긴다.
+  const [booking, setBooking] = useState<BookingHandoff | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callActive, setCallActive] = useState(false);
@@ -197,6 +204,16 @@ export function GuideKiosk({
   const lang: Lang = guide ? guide.lang : startLang;
   const prefs = guide ? prefsOf(guide.choices) : NO_PREFS;
   const t = textOf(lang, prefs.easy);
+  // 항공 예약번호로 찾기. 찾으면 그 항공편으로 현장등록을 시작한다(미리 등록한 내용은 고유 일련 번호·탑승권으로 찾는다).
+  const bookingFind = useBookingFind({
+    lang,
+    onScreenPad: true,
+    onFound: (b) => {
+      setBooking(b);
+      setAwake(true);
+      setView({ kind: "register" });
+    },
+  });
   const { speak, stop } = useSpeech(lang, prefs.slow);
   // 직원 부르기의 상태도 소리로 읽는다. 등록 때 소리를 고르지 않았어도 키오스크에서 소리를 켰으면 읽는다.
   const viewSettings = useViewSettings();
@@ -258,6 +275,8 @@ export function GuideKiosk({
     setToken(null);
     setGuide(null);
     setDigits("");
+    setNumberKind("pass");
+    setBooking(null);
     setError(null);
     setEdited(false);
     setStartLang("ko");
@@ -535,6 +554,24 @@ export function GuideKiosk({
             }}
             onHome={reset}
           >
+            {/* 예약번호 두 가지: 사전등록 때 받은 고유 일련 번호(등록 내용을 찾는다), 항공 예약번호(항공편을 찾아 현장등록). */}
+            <div className="kx-number-kinds" role="group" aria-label={lang === "en" ? "Number type" : "번호 종류"}>
+              <button type="button" className={`pick ${numberKind === "pass" ? "on" : ""}`} aria-pressed={numberKind === "pass"} onClick={() => setNumberKind("pass")}>
+                {lang === "en" ? "Registration number" : "고유 일련 번호"}
+              </button>
+              <button type="button" className={`pick ${numberKind === "booking" ? "on" : ""}`} aria-pressed={numberKind === "booking"} onClick={() => { setNumberKind("booking"); setDigits(""); }}>
+                {lang === "en" ? "Airline booking reference" : "항공 예약번호"}
+              </button>
+            </div>
+            {numberKind === "booking" ? (
+              <div className="kx-code kx-number kx-booking">
+                <div className="kx-code-entry">
+                  <h1>{lang === "en" ? "Enter your booking reference" : "항공 예약번호 입력"}</h1>
+                  {bookingFind.form}
+                </div>
+                {bookingFind.pad}
+              </div>
+            ) : (
             <div className="kx-code kx-number">
               <div className="kx-code-entry">
                 <p className="kx-here">
@@ -583,6 +620,53 @@ export function GuideKiosk({
                 eraseLabel={t.erase}
               />
             </div>
+            )}
+          </FlowShell>
+          {call}
+          {idle}
+        </>
+      );
+    }
+    if (view.kind === "passport") {
+      return (
+        <>
+          <FlowShell
+            lang={lang}
+            prefs={prefs}
+            kiosk
+            screenKey="passport"
+            speakText={lang === "en" ? "Hold the photo page of your passport to the camera." : "여권 사진면을 카메라에 대 주세요."}
+            onBack={() => setView({ kind: "scan" })}
+            onHome={reset}
+          >
+            <div className="kx-passport">
+              <div className="kx-passport-copy">
+                <p className="kx-here">
+                  <MapPin aria-hidden="true" />
+                  {here}
+                </p>
+                <HaneuliSays size="md" pose="left" text={lang === "en" ? "Hold the photo page of\nyour passport to the camera." : "여권 사진면을\n카메라에 대 주세요."} />
+                <p className="kx-lead">{lang === "en" ? "Demo screen" : "시연 화면"}</p>
+                <button
+                  className="btn btn-primary kx-passport-go"
+                  onClick={() => {
+                    setBooking(null);
+                    setView({ kind: "register" });
+                  }}
+                >
+                  {lang === "en" ? "Read passport (demo)" : "여권 읽기 (시연)"}
+                  <ArrowRight size={24} aria-hidden="true" />
+                </button>
+              </div>
+              <div className="kx-passport-camera">
+                {/* 여기서 탑승권을 비춰도 그대로 등록을 찾는다. */}
+                <Scanner onScan={onScan} paused={busy} prefer="user" text={{
+                  starting: t.camStarting, ready: lang === "en" ? "Hold your passport photo page to the camera" : "여권 사진면을 네모 안에 보여 주세요",
+                  read: t.camRead, none: t.camNone, switchCamera: t.camSwitch,
+                }} />
+                {error && <ErrorNote>{error}</ErrorNote>}
+              </div>
+            </div>
           </FlowShell>
           {call}
           {idle}
@@ -595,6 +679,7 @@ export function GuideKiosk({
           <RegisterFlow
             mode="kiosk"
             sideSteps
+            booking={booking ?? undefined}
             initialLang={lang}
             onExit={reset}
             onBackOut={() => setView({ kind: "scan" })}
@@ -624,7 +709,7 @@ export function GuideKiosk({
               </button>
             </>
           }
-          speakText={awake ? (lang === "en" ? "Let us check the help you need. If you filled it in before, scan your boarding pass. If not, choose the second button." : "필요한 도움을 확인할게요. 미리 작성하셨다면 탑승권을 스캔해 주세요. 아직이라면 두 번째 단추를 눌러 주세요.") : (lang === "en" ? "Scan your boarding pass to wake Haneuli, or touch Start with help." : "탑승권을 스캔하여 하늘이를 깨워 주세요. 또는 도움받아 시작을 눌러 주세요.")}
+          speakText={awake ? (lang === "en" ? "Hello, I am Haneuli. Please check in by entering your booking number, scanning your boarding pass, or scanning your passport." : "안녕하세요, 저는 하늘이예요. 예약번호 입력, 탑승권 스캔, 여권 스캔 중 하나로 확인해 주세요.") : (lang === "en" ? "This kiosk is for passengers who need assistance. Scan your boarding pass to wake Haneuli." : "교통약자 전용 키오스크입니다. 탑승권을 스캔해 하늘이를 깨워 주세요.")}
           speakKey={awake ? "services" : "welcome"}
         >
           <HaneuliWelcome
@@ -635,7 +720,7 @@ export function GuideKiosk({
             onWake={() => setAwake(true)}
             onRest={reset}
             onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
-            onNew={() => { setAwake(true); setView({ kind: "register" }); }}
+            onPassport={() => { setAwake(true); setError(null); setView({ kind: "passport" }); }}
             listen={<ListenStart t={t} />}
             error={error ? <ErrorNote>{error}</ErrorNote> : null}
             scanner={<Scanner onScan={onScan} paused={busy} prefer="user" text={{

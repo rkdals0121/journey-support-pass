@@ -308,7 +308,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family:
 }
 
 /* ── 고유 일련 번호 넣는 화면 ── 같은 틀: 왼쪽 번호 칸, 오른쪽 숫자판 */
-html[data-kiosk] .flow-body .kx-number { padding: var(--space-5) 0 var(--space-6); align-items: center; }
+html[data-kiosk] .flow-body .kx-number { padding: var(--space-5) var(--space-6); align-items: center; }
 html[data-kiosk] .flow-body .kx-number h1 { margin: 0; font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.3; letter-spacing: -0.03em; }
 html[data-kiosk] .flow-body .kx-number .kx-here { align-self: flex-start; margin-bottom: var(--space-2); }
 html[data-kiosk] .flow-body .kx-number .code-boxes { justify-content: flex-start; margin: var(--space-2) 0 0; }
@@ -316,6 +316,17 @@ html[data-kiosk] .flow-body .kx-number .code-boxes span { width: 3.5rem; height:
 html[data-kiosk] .flow-body .kx-number .pad-num { width: 100%; max-width: 30rem; margin: 0 auto; gap: var(--space-3); }
 html[data-kiosk] .flow-body .kx-number .pad-key { min-height: 5rem; box-shadow: none; border-width: 0.0625rem; transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
 html[data-kiosk] .flow-body .kx-number .pad-key:active { background: var(--color-primary-soft); transform: scale(0.97); }
+/* 항공 예약번호: 영문·숫자 글자판이 넓어야 해서 오른쪽 칸을 더 넓게, 단추 높이는 줄인다 */
+html[data-kiosk] .flow-body .kx-booking { grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr); gap: var(--space-5); padding-block: var(--space-4); }
+html[data-kiosk] .flow-body .kx-booking .pad-alnum { width: 100%; max-width: none; margin: 0; gap: var(--space-2); }
+html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-row { gap: var(--space-2); }
+/* 단추가 길쭉한 알약이 되지 않게 너비에 가까운 높이(정사각형에 가깝게) */
+html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-key { min-height: 3.5rem; border-radius: var(--radius-medium); font-size: var(--text-title); }
+html[data-kiosk] .flow-body .kx-booking .kx-lead { margin: 0 0 var(--space-2); }
+html[data-kiosk] .flow-body .kx-booking .booking-find-note { margin: var(--space-2) 0; }
+/* 번호 종류 줄: 아래 카드와 같은 너비·끝선(위쪽 바와도 같다) */
+.kx-number-kinds { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); --kx-card-w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter))); box-sizing: border-box; width: var(--kx-card-w); margin-inline: calc((100% - var(--kx-card-w)) / 2); margin-bottom: var(--space-3); }
+.kx-number-kinds .pick { min-height: 3.5rem; padding-inline: var(--space-5); font-size: var(--text-body); }
 @media (prefers-reduced-motion: reduce) {
   html[data-kiosk] .flow-body .kx-number .pad-key { transition: none; }
   html[data-kiosk] .flow-body .kx-number .pad-key:active { transform: none; }
