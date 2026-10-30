@@ -49,7 +49,6 @@ import { IdleGuard } from "../../components/IdleGuard";
 import { NumPad } from "../../components/Inputs";
 import { FacilityIcon } from "../../components/NeedIcon";
 import { Scanner } from "../../components/Scanner";
-import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { useBookingFind } from "../../components/FlightMethods";
 import type { BookingHandoff } from "@/lib/booking-model";
@@ -721,7 +720,6 @@ export function GuideKiosk({
             onRest={reset}
             onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
             onPassport={() => { setAwake(true); setError(null); setView({ kind: "passport" }); }}
-            listen={<ListenStart t={t} />}
             error={error ? <ErrorNote>{error}</ErrorNote> : null}
             scanner={<Scanner onScan={onScan} paused={busy} prefer="user" text={{
               starting: t.camStarting, ready: t.camReady, read: t.camRead,

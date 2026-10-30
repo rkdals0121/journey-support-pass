@@ -19,10 +19,11 @@ html[data-kiosk] .flow-bar {
   clip-path: inset(0 -100vmax);
 }
 html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; padding-right: calc(var(--call-w) + 1.25rem); }
+/* 「도움 요청하기」는 위쪽 둥근 바 안쪽 오른쪽 끝에 둔다(바와 같은 끝선 기준). 모든 키오스크 화면에서 같은 자리. */
 html[data-kiosk] .call-dock {
-  top: 0;
+  top: 12px;
   left: auto;
-  right: max(0rem, calc((100vw - var(--col)) / 2));
+  right: calc((100vw - min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)))) / 2);
   z-index: 21;
   border: 0;
   background: transparent;

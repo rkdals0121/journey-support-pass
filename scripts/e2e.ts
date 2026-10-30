@@ -133,7 +133,11 @@ async function audit(page: Page, name: string) {
 async function kioskServices(page: Page) {
   await page.waitForSelector(".haneuli-welcome", { timeout: WAIT });
   // 교통약자 전용 첫 화면: 하늘이(화면)를 누르면 깨어 확인 방법을 안내한다.
-  if (!(await page.$(".haneuli-welcome.is-awake"))) await page.click(".haneuli-character");
+  // 화면이 준비되기(React 연결) 전에 누르면 아무 일도 없다. 깨어날 때까지 잠깐씩 기다리며 다시 누른다.
+  for (let i = 0; i < 30 && !(await page.$(".haneuli-welcome.is-awake")); i++) {
+    await page.click(".haneuli-character").catch(() => undefined);
+    await new Promise((r) => setTimeout(r, 500));
+  }
   await page.waitForSelector(".haneuli-welcome.is-awake", { timeout: WAIT });
 }
 const isKioskHome = async (page: Page) => !!(await page.$(".haneuli-welcome"));
