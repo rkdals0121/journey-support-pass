@@ -117,6 +117,21 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
 .staff-visit-settings > details[open] { flex-basis: 100%; }
 .staff-visit-settings > details > summary { cursor: pointer; font-size: var(--text-small); font-weight: var(--weight-label); }
 .staff-visit-console > ul:empty { margin: 0; }
+.staff-legacy-list { display: grid; gap: var(--space-4); }
+.staff-legacy-context { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
+.staff-legacy-context > span:first-child { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-primary); font-size: var(--text-small); font-weight: var(--weight-label); }
+.staff-legacy-list .staff-queue-panel h2 { font-size: var(--text-body); }
+.staff-legacy-list .staff-queue-panel h2 b { display: inline-flex; justify-content: center; min-width: 2rem; margin-left: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--color-primary-faint); color: var(--color-primary-hover); font-size: var(--text-body); }
+.staff-legacy-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.staff-legacy-filters button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 2.75rem; padding: var(--space-2) var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-small); background: var(--color-surface); color: var(--color-primary-hover); font: inherit; font-size: var(--text-small); font-weight: var(--weight-label); cursor: pointer; }
+.staff-legacy-filters button[aria-pressed="true"] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-surface); }
+.staff-legacy-filters .seg-refresh { margin-left: auto; }
+.staff-legacy-list .staff-queue-empty { margin: 0; }
+.staff-legacy-list .calls:empty { display: none; }
+.staff-legacy-list .call { padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: none; }
+.staff-legacy-list .call-other { border-style: dashed; }
+.staff-legacy-list .call-accepted { border-color: var(--color-primary); }
+.staff-legacy-list .calls-ended { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
 
 /* 운영 기준과 기타 업무도 같은 제목·카드·간격을 사용한다. */
 .staff-reference-intro { margin: 0 0 var(--space-4); color: var(--color-muted); font-size: var(--text-small); line-height: 1.7; }
