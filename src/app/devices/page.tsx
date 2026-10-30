@@ -54,7 +54,7 @@ export default async function Devices({
             <div className="device-art">
               <div className="kiosk-illustration" aria-hidden="true">
                 <Monitor />
-                <span>공항 이용 지원</span>
+                <span>Journey Support Pass</span>
                 <i />
                 <i />
                 <i />

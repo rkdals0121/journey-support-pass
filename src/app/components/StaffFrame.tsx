@@ -133,7 +133,7 @@ export function StaffFrame({
         <Link className="public-logo" href="/staff/requests">
           <Sunflower />
           <span>
-            공항 이용 지원<small>직원 통합 운영</small>
+            Journey Support Pass<small>직원 통합 운영</small>
           </span>
         </Link>
         <Link href="/">
@@ -150,7 +150,7 @@ export function StaffFrame({
           <Link className="workspace-brand" href="/staff/requests">
             <Sunflower />
             <span>
-              공항 이용 지원<small>직원 통합 운영</small>
+              Journey Support Pass<small>직원 통합 운영</small>
             </span>
           </Link>
           <nav aria-label="업무 메뉴">{menu}</nav>

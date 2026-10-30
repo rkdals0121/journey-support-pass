@@ -24,7 +24,7 @@ const num = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "공항 이용 지원 | Airport Assist",
+  title: "Journey Support Pass",
   description: "공항 길 찾기, 현장 도움 요청과 처리 현황 확인",
   robots: { index: false, follow: false },
 };

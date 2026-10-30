@@ -55,7 +55,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
         <p className="haneuli-location"><MapPin aria-hidden="true" />{here}</p>
         {!awake ? (
           <div className="haneuli-title">
-            <h1>{en ? "Airport Assistance" : "공항 이용 지원"}</h1>
+            <h1>Journey Support Pass</h1>
             <p>{en ? "From boarding to getting around, we are here to help." : "탑승부터 이동까지, 편안한 공항 이용을 도와드립니다."}</p>
           </div>
         ) : (

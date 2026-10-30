@@ -17,7 +17,7 @@ export default async function VisitsPage({
     <PublicShell lang={en ? "en" : "ko"}>
       <main id="public-main" className={`${styles.page} ${styles.visitPage}`}>
         <p className={styles.eyebrow}>
-          {en ? "AIRPORT ASSIST" : "공항 이용 지원"}
+          Journey Support Pass
         </p>
         <h1>{en ? "Arrange your assistance" : "로봇·이동지원 예약"}</h1>
         <p>
