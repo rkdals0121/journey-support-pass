@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-30T01:52:02.481Z",
+  "base": "https://journey-support-pass-cg4ktswlf-rkdals0121-6460s-projects.vercel.app",
+  "commit": "5c6b847208bb633ebe1105343562bb6bd3230e96",
+  "rows": [
+    {
+      "route": "/",
+      "status": 200,
+      "finalPath": "/",
+      "title": "공항 이용 지원 | Airport Assist",
+      "heading": "공항에서 무엇을 도와드릴까요?",
+      "main": true,
+      "contentRegion": true,
+      "theme": "#2F5D46",
+      "text": "본문 바로가기\n공항 이용 지원\nJourney Support Pass\nEN\n가\n가\n가\n서비스 찾기\n현장 도움 요청\n내 요청 확인\n만남 예약\n여행 전 사전등록\n더 편안한 공항 여정\n공항에서 무엇을 도와드릴까요?\n\n도움이 조금 더 필요한 여객을 위한 길 안내, 이동 도움, 현장 요청을 한곳에",
+      "expectedHeading": "공항에서 무엇을 도와드릴까요?",
+      "errors": [],
+      "serverErrors": [],
+      "screenshot": "home.png",
+      "ok": true
+    },
+    {
+      "route": "/register",
+      "status": 200,
+      "finalPath": "/register",
+      "title": "공항 이용 지원 | Airport Assist",
+      "heading": "어떤 점이 불편하세요?",
+      "main": false,
+      "contentRegion": true,
+      "theme": "#2F5D46",
+      "text": "이전\n처음으로\n설정\n가\n가\n가\nLanguage\n한국어\nEnglish\n소리 안내 듣기\n불편한 점 1/9\n\n여행 전 사전등록\n\n필요한 도움 미리 등록\n1\n불편한 점\n2\n동의\n3\n함께 가는 분\n4\n도움 받는 방식\n5\n들를 곳\n6\n항공편\n7\n서류\n8\n더 하고 싶은 말씀\n9\n확인\n\n공항 이용 도",
+      "expectedHeading": "어떤 점이 불편하세요?",
+      "errors": [],
+      "serverErrors": [],
+      "screenshot": "register.png",
+      "ok": true
+    },
+    {
+      "route": "/staff/login",
+      "status": 200,
+      "finalPath": "/staff/login",
+      "title": "공항 이용 지원 | Airport Assist",
+      "heading": "직원 로그인",
+      "main": true,
+      "contentRegion": true,
+      "theme": "#2F5D46",
+      "text": "공항 이용 지원\nJourney Support Pass\n\n지원 운영\n\n직원 로그인\n\n받은 접속 코드를 입력해 주세요.\n\n접속 코드\n로그인\n접속 코드 안내\n여객 첫 화면으로",
+      "expectedHeading": "직원 로그인",
+      "errors": [],
+      "serverErrors": [],
+      "screenshot": "staff-login.png",
+      "ok": true
+    },
+    {
+      "route": "/kiosk",
+      "status": 200,
+      "finalPath": "/kiosk",
+      "title": "공항 이용 지원 | Airport Assist",
+      "heading": "현장 기기 설치",
+      "main": true,
+      "contentRegion": true,
+      "theme": "#2F5D46",
+      "text": "공항 이용 지원\nJourney Support Pass\n현장 기기 설치\n\n직원용 설치 코드로 기기를 연결하세요.\n\n쓰임새\n공항 입구 안내로봇\n탑승권 확인 · 필요한 도움 · 서비스 연결\n안내 키오스크 (출국심사 뒤)\n탑승구·편의시설 맞춤 안내\n놓을 자리\n자리를 골라 주세요\n제1여객터미널 ",
+      "expectedHeading": "현장 기기 설치",
+      "errors": [],
+      "serverErrors": [],
+      "screenshot": "kiosk.png",
+      "ok": true
+    }
+  ]
+}

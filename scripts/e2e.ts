@@ -208,11 +208,12 @@ async function clickText(page: Page, selector: string, s: string) {
  * 그 화면이 나오면 「이대로 안내 받기」를 누르고 안내 첫 화면을 기다린다.
  */
 async function openGuide(page: Page, keep = "이대로 안내 받기", hello = "나에게 맞춘 안내") {
-  await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
-  if (await has(page, keep)) {
-    await clickText(page, "button", keep);
-    await page.waitForFunction((a, b) => !document.body.innerText.includes(a) && document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
-  }
+  // Registration confirmation now opens a service menu before personalised directions.
+  await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, keep, hello);
+  if (await has(page, keep)) await clickText(page, "button", keep);
+  await page.waitForFunction((b) => document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, hello);
+  if (await page.$(".svc-card.is-main")) await page.click(".svc-card.is-main");
+  await waitText(page, hello);
 }
 
 async function fill(page: Page, selector: string, value: string) {
@@ -482,8 +483,17 @@ async function resetFlights(clearLocks = false) {
     }
   }
 
+  // Next dev compiles API modules on their first request. Warm them with read-only
+  // requests so compilation time is not mistaken for a user-facing network timeout.
+  const apiRoot = path.join(process.cwd(), "src", "app", "api");
+  for (const entry of fs.readdirSync(apiRoot, { recursive: true })) {
+    if (typeof entry !== "string" || !entry.endsWith("route.ts")) continue;
+    const route = "/api/" + entry.split(path.sep).join("/").replace(/\/?route\.ts$/, "").replace(/\[[^\]]+\]/g, "e2e-warmup");
+    await fetch(BASE + route, { redirect: "manual" }).catch(() => undefined);
+  }
+
   // 개발 서버는 화면을 처음 열 때 그 화면을 만든다(느린 컴퓨터에서는 몇 분). 점검이 그 시간에 걸리지 않게 미리 한 번씩 열어 둔다.
-  for (const p of ["/", "/register", "/p/0000000000000000", "/kiosk", "/kiosk/guide", "/kiosk/register", "/staff/login", "/staff/zone", "/staff", "/staff/desk", "/staff/desk/register", "/staff/desk/stats"]) {
+  for (const p of ["/api/flights/destinations", "/api/flights/search?q=MK1", "/", "/register", "/p/0000000000000000", "/kiosk", "/kiosk/guide", "/kiosk/register", "/staff/login", "/staff/zone", "/staff", "/staff/desk", "/staff/desk/register", "/staff/desk/stats"]) {
     await fetch(`${BASE}${p}`, { redirect: "manual" }).catch(() => {});
   }
   for (const p of ["/api/guide", "/api/kiosk/resolve", "/api/kiosk/call", "/api/events", "/api/pass/erase", "/api/desk/register", "/api/desk/erase", "/api/staff/calls/x", "/api/staff/zone"]) {
@@ -1528,8 +1538,8 @@ async function resetFlights(clearLocks = false) {
   check("등록하면 맞춤 안내·이동지원 요청·접수 상태 확인으로 이어진다", (await count(page, ".svc-card")) === 3);
   await shot(page, "입구로봇-서비스");
   await clickText(page, ".svc-card", "이동지원 요청");
-  await page.waitForSelector("#dx-place");
-  check("안내로봇의 이동지원은 위치가 고정된 통합 요청으로 이어진다",await page.$eval('#dx-place',e=>(e as HTMLSelectElement).value === 't1-info' && (e as HTMLSelectElement).disabled) && await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked));
+  await page.waitForSelector('.request-form[data-map-flow="true"]');
+  check("안내로봇의 이동지원은 현재 위치를 포함한 지도 기반 통합 요청으로 이어진다", await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked) && await page.$eval('.request-mobile-nav',e=>getComputedStyle(e).display==="none"));
   await page.click('input[type="checkbox"][required]');await page.click('button[type="submit"]');
   await clickText(page,'button','이 내용으로 요청 접수');await page.waitForSelector('.request-state-pill[role="status"]');
   const integrated=await page.evaluate(async()=>{const receipt=sessionStorage.getItem('jsp-dx-receipt-v1');return (await(await fetch('/api/requests/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receipt})})).json()).request;});

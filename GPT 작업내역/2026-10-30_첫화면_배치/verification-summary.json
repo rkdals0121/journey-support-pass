@@ -1,0 +1,26 @@
+{
+  "appCommit": "5c6b847208bb633ebe1105343562bb6bd3230e96",
+  "mainIntegratedThrough": "81eadae",
+  "ciRun": "https://github.com/rkdals0121/journey-support-pass/actions/runs/40987291667",
+  "ciUnitTests": 987,
+  "ciTestFiles": 59,
+  "ciBuild": "passed",
+  "e2e": {
+    "total": 289,
+    "passed": 289,
+    "failed": 0,
+    "mode": "isolated local mock data"
+  },
+  "layout": {
+    "states": 132,
+    "issues": 0
+  },
+  "preview": {
+    "base": "https://journey-support-pass-cg4ktswlf-rkdals0121-6460s-projects.vercel.app",
+    "entryRoutes": 4,
+    "changedPageStates": 14,
+    "allPassed": true
+  },
+  "postMergeCriticalFlows": "mobility step/back/review at 390/1280/1920 and navigation result passed",
+  "localViewportStates": 13
+}
