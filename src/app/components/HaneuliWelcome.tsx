@@ -21,7 +21,11 @@ export function HaneuliSays({ text, size = "md", pose = "front" }: { text: strin
   );
 }
 
-/** The camera stays mounted across sleep and wake. */
+/**
+ * 안내 키오스크 첫 장면. 가운데에는 하늘이와 말풍선, 가장자리에는 해야 할 일을 둔다.
+ * 왼쪽: 장소, 제목(깨운 뒤에는 「미리 작성했어요 / 아직 작성하지 않았어요」), 단추. 오른쪽: 탑승권 스캔.
+ * The camera stays mounted across sleep and wake.
+ */
 export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onNew, scanner, error, listen }: {
   en: boolean; here: string; awake: boolean; busy: boolean;
   onWake: () => void; onRest: () => void; onNumber: () => void; onNew: () => void;
@@ -47,27 +51,8 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
       event.stopPropagation();
       onWake();
     }}>
-      <section className="haneuli-stage">
+      <section className="haneuli-side haneuli-left">
         <p className="haneuli-location"><MapPin aria-hidden="true" />{here}</p>
-        <div className="haneuli-hero" aria-hidden="true">
-          <p className="haneuli-bubble">{bubble}</p>
-          <div className="haneuli-character">
-            <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
-            {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
-            <span className="haneuli-lid haneuli-lid-l" />
-            <span className="haneuli-lid haneuli-lid-r" />
-            <span className="haneuli-zzz">z Z Z</span>
-          </div>
-        </div>
-        <div className="haneuli-actions">
-          {listen}
-          {!awake
-            ? <button className="haneuli-start" onClick={onWake} disabled={busy}>{en ? "Start with help" : "도움받아 시작"}<ArrowRight aria-hidden="true" /></button>
-            : <button className="haneuli-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
-        </div>
-      </section>
-
-      <section className="haneuli-panel">
         {!awake ? (
           <div className="haneuli-title">
             <h1>{en ? "Airport Assistance" : "공항 이용 지원"}</h1>
@@ -90,7 +75,26 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
             </div>
           </div>
         )}
+        <div className="haneuli-actions">
+          {listen}
+          {!awake
+            ? <button className="haneuli-start" onClick={onWake} disabled={busy}>{en ? "Start with help" : "도움받아 시작"}<ArrowRight aria-hidden="true" /></button>
+            : <button className="haneuli-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
+        </div>
+      </section>
 
+      <section className="haneuli-center" aria-hidden="true">
+        <p className="haneuli-bubble">{bubble}</p>
+        <div className="haneuli-character">
+          <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
+          {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
+          <span className="haneuli-lid haneuli-lid-l" />
+          <span className="haneuli-lid haneuli-lid-r" />
+          <span className="haneuli-zzz">z Z Z</span>
+        </div>
+      </section>
+
+      <section className="haneuli-side haneuli-right">
         <section className="haneuli-scan" ref={scanRef} tabIndex={-1} aria-label={en ? "Boarding pass scanner" : "탑승권 스캔"}>
           <div className="haneuli-scan-copy"><span className="haneuli-scan-icon"><ScanLine aria-hidden="true" /></span><div><h2>{en ? "Boarding pass scan" : "탑승권 스캔"}</h2><p>{en ? "Scan your boarding pass to load your saved support." : "탑승권을 스캔하시면 등록하신 내용을 불러옵니다."}</p></div></div>
           <div className="haneuli-camera">{scanner}</div>
