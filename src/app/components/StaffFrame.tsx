@@ -12,6 +12,8 @@ import {
   ArrowUpRight,
   PlayCircle,
   Plug,
+  ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 import { Sunflower } from "./Sunflower";
 export function StaffFrame({
@@ -27,7 +29,11 @@ export function StaffFrame({
     {
       title: "현장 업무",
       items: [
-        { href: "/staff/visits", label: "거점 예약·현장 응대", Icon: ClipboardCheck },
+        {
+          href: "/staff/visits",
+          label: "거점 예약·현장 응대",
+          Icon: ClipboardCheck,
+        },
         { href: "/staff/requests", label: "접수·배정", Icon: Inbox },
         { href: "/staff/resources", label: "장비 현황·배차", Icon: CarFront },
         ...(isDesk
@@ -52,7 +58,11 @@ export function StaffFrame({
         ...(isDesk
           ? [
               { href: "/staff/alerts", label: "알림 운영", Icon: Bell },
-              { href: "/staff/experience", label: "운영 효과·체험 집계", Icon: ChartColumn },
+              {
+                href: "/staff/experience",
+                label: "운영 효과·체험 집계",
+                Icon: ChartColumn,
+              },
               { href: "/staff/integrations", label: "외부 연동", Icon: Plug },
             ]
           : []),
@@ -74,8 +84,14 @@ export function StaffFrame({
     },
   ];
   const menu = groups.map((group) => (
-    <div className="workspace-nav-group" key={group.title}>
-      <p>{group.title}</p>
+    <details
+      className="workspace-nav-group"
+      key={group.title}
+      open={group.items.some(
+        (item) => path === item.href || path.startsWith(item.href + "/"),
+      )}
+    >
+      <summary>{group.title}</summary>
       {group.items.map(({ href, label, Icon }) => (
         <Link
           key={href}
@@ -84,14 +100,21 @@ export function StaffFrame({
             path === href || path.startsWith(href + "/") ? "page" : undefined
           }
           onClick={(e) =>
-            e.currentTarget.closest("details")?.removeAttribute("open")
+            e.currentTarget
+              .closest(".workspace-mobile-menu")
+              ?.removeAttribute("open")
           }
         >
           <Icon size={19} aria-hidden="true" />
-          {label}
+          <span>{label}</span>
+          <ChevronRight
+            className="workspace-nav-arrow"
+            size={15}
+            aria-hidden="true"
+          />
         </Link>
       ))}
-    </div>
+    </details>
   ));
   const current = groups
     .flatMap((g) => g.items)
@@ -130,6 +153,13 @@ export function StaffFrame({
             </span>
           </Link>
           <nav aria-label="업무 메뉴">{menu}</nav>
+          <div className="workspace-side-footer">
+            <ShieldCheck size={17} aria-hidden="true" />
+            <span>
+              {isDesk ? "안내데스크 운영" : "현장 직원 업무"}
+              <small>Journey Support Pass</small>
+            </span>
+          </div>
         </aside>
         <div id="staff-content" className="workspace-content">
           {children}
