@@ -483,8 +483,17 @@ async function resetFlights(clearLocks = false) {
     }
   }
 
+  // Next dev compiles API modules on their first request. Warm them with read-only
+  // requests so compilation time is not mistaken for a user-facing network timeout.
+  const apiRoot = path.join(process.cwd(), "src", "app", "api");
+  for (const entry of fs.readdirSync(apiRoot, { recursive: true })) {
+    if (typeof entry !== "string" || !entry.endsWith("route.ts")) continue;
+    const route = "/api/" + entry.split(path.sep).join("/").replace(/\/?route\.ts$/, "").replace(/\[[^\]]+\]/g, "e2e-warmup");
+    await fetch(BASE + route, { redirect: "manual" }).catch(() => undefined);
+  }
+
   // 개발 서버는 화면을 처음 열 때 그 화면을 만든다(느린 컴퓨터에서는 몇 분). 점검이 그 시간에 걸리지 않게 미리 한 번씩 열어 둔다.
-  for (const p of ["/", "/register", "/p/0000000000000000", "/kiosk", "/kiosk/guide", "/kiosk/register", "/staff/login", "/staff/zone", "/staff", "/staff/desk", "/staff/desk/register", "/staff/desk/stats"]) {
+  for (const p of ["/api/flights/destinations", "/api/flights/search?q=MK1", "/", "/register", "/p/0000000000000000", "/kiosk", "/kiosk/guide", "/kiosk/register", "/staff/login", "/staff/zone", "/staff", "/staff/desk", "/staff/desk/register", "/staff/desk/stats"]) {
     await fetch(`${BASE}${p}`, { redirect: "manual" }).catch(() => {});
   }
   for (const p of ["/api/guide", "/api/kiosk/resolve", "/api/kiosk/call", "/api/events", "/api/pass/erase", "/api/desk/register", "/api/desk/erase", "/api/staff/calls/x", "/api/staff/zone"]) {
