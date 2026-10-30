@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
         ],
       },
+      // The embedded map may be framed only by pages on this same origin.
+      // Keep DENY on all other application pages.
+      {
+        source: "/airport-map/:path*",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
     ];
   },
 };

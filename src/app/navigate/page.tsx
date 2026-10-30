@@ -8,7 +8,7 @@ import { config } from "@/lib/config";
 export default async function Navigate({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string; gate?: string; returnTo?: string }>;
+  searchParams: Promise<{ lang?: string; gate?: string; returnTo?: string; device?: string }>;
 }) {
   const q = await searchParams;
   const en = q.lang === "en";
@@ -23,6 +23,7 @@ export default async function Navigate({
       initialGate={q.gate && /^\d{1,3}$/.test(q.gate) ? q.gate : ""}
       initialPlace={place?.id ?? ""}
       fixedPlace={!!place}
+      robotGuidance={q.device === "robot" || (!!place && returnTo === "/kiosk/entry")}
       returnTo={returnTo}
       idleAskSec={config.idleAskSec}
       idleAnswerSec={config.idleAnswerSec}

@@ -18,6 +18,16 @@ export type MapState = {
   /** Select a registered entrance checkpoint. Disable after matching. */
   checkpointSelection?: boolean;
   showCheckpoints?: boolean;
+  selectedPoiId?: string | number | null;
+  /** null shows all facilities; an empty array hides every facility icon. */
+  visiblePoiIds?: (string | number)[] | null;
+  showLandmarkLabels?: boolean;
+  facilityFilterActive?: boolean;
+  touchTargetSize?: number;
+  viewRevision?: number;
+  viewportPadding?: [number, number, number, number];
+  overview?: boolean;
+  nearby?: { start: MapLocation; candidatePoiIds: (string | number)[] } | null;
   markers?: Partial<
     Record<"user" | "robot" | "checkpoint" | "destination", MapLocation | null>
   >;
@@ -38,6 +48,8 @@ export type Facility = {
   description: string;
 };
 
+export type NearbyResult = { requestKey: string; results: { id: string | number; distance: number }[] };
+
 type Props = {
   state?: MapState;
   height?: number | string;
@@ -51,6 +63,7 @@ type Props = {
   ) => void;
   onError?: (message: string) => void;
   onReady?: () => void;
+  onNearby?: (result: NearbyResult) => void;
 };
 
 const CHANNEL = "journey-airport-map";
@@ -85,6 +98,8 @@ export default function AirportMap({
         setReady(true);
         handlers.current.onReady?.();
       }
+      if (message.type === "interaction")
+        window.dispatchEvent(new Event("journey-map-activity"));
       if (message.type === "checkpoint-select")
         handlers.current.onCheckpointSelect?.(message.location);
       if (message.type === "checkpoint-change")
@@ -93,6 +108,8 @@ export default function AirportMap({
         handlers.current.onFacilityClick?.(message.facility);
       if (message.type === "map-click")
         handlers.current.onMapClick?.(message.location);
+      if (message.type === "nearby-result")
+        handlers.current.onNearby?.(message.result);
       if (message.type === "route-result")
         handlers.current.onRoute?.(message.route);
       if (message.type === "error") handlers.current.onError?.(message.message);
@@ -118,16 +135,16 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title="공항 실내지도"
-      src="/airport-map/index.html"
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=spaced-facility-tiers-11" : "/airport-map/index.html?v=spaced-facility-tiers-11"}
       loading="eager"
       className={className}
       style={{
         display: "block",
         width: "100%",
         height,
-        minHeight: 280,
+        minHeight: "17.5rem",
         border: 0,
-        borderRadius: 16,
+        borderRadius: "var(--radius-medium, .75rem)",
       }}
       onLoad={() => {
         setReady(false);

@@ -1,3 +1,5 @@
+import { validMobilityPickupOverride } from "./mobility-map-places";
+import { validMapDestination } from "./map-facilities";
 import { operatingBlock } from "./support-operations";
 import { journeysByIds, isJourneyOver, lastRealPoll } from "./journey";
 import { createHash } from "node:crypto";
@@ -170,6 +172,13 @@ export async function createServiceRequest(
   if (body.consent !== true) return fail(400, "요청 정보 이용에 동의해 주세요");
   if (!SERVICE_TYPES.includes(body.service as ServiceType))
     return fail(400, "도움 종류를 골라 주세요");
+  let kioskPickup = session?.placeId;
+  if (session?.isKiosk && body.service === "mobility" && typeof body.placeId === "string" && body.placeId) {
+    const requested = placeOf(body.placeId);
+    if (!validMobilityPickupOverride(requested))
+      return fail(400, "지도나 목록에서 출발 위치를 골라 주세요");
+    kioskPickup = requested!.id;
+  }
   const place = placeOf(
     body.topicId === "facility" &&
       typeof body.placeId === "string" &&
@@ -178,12 +187,14 @@ export async function createServiceRequest(
       : body.topicId === "other" && body.placeId === NO_MEETING_PLACE
         ? NO_MEETING_PLACE
         : session?.isKiosk
-          ? session.placeId
+          ? kioskPickup
           : typeof body.placeId === "string"
             ? body.placeId
             : null,
   );
   if (!place) return fail(400, "현재 위치를 골라 주세요");
+  if (place.id.startsWith("map-poi-") && body.service !== "mobility")
+    return fail(400, "지도 시설 출발지는 이동 지원에서 선택해 주세요");
   if (place.id === NO_MEETING_PLACE && body.topicId !== "other")
     return fail(400, "이 서비스는 현장 위치가 필요합니다");
   if (place.id.startsWith("report-") && body.topicId !== "facility")
@@ -247,7 +258,7 @@ export async function createServiceRequest(
     destination !== null &&
     (body.service !== "mobility" ||
       typeof destination !== "string" ||
-      !pilotDestinations(place.id).some((p) => p.id === destination))
+      (!pilotDestinations(place.id).some((p) => p.id === destination) && !validMapDestination(place, destination)))
   )
     return fail(
       400,

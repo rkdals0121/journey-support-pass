@@ -1,0 +1,7 @@
+# Major airport signs remain in overview
+
+Supersedes the previous gate thresholds and shared collision grid: departure halls, entrance signs, check-in counter letters and gate numbers remain at every supported zoom. They bypass the screen-cell suppression that previously removed adjacent major locations. Information desks appear from zoom 16. Essential amenities appear from 18, shops from 19 and detailed names from 19.5; explicit matches appear from 17.5.
+
+Wide-view numbered signs do not repeat the same number as a second text label below the icon. Entrance signs use a distinct green numbered sign; gates use blue numbered signs. Departure hall names remain readable, and check-in signs keep their counter letters. At closer zoom full names appear. Nonmatching landmarks remain gray orientation labels when a filter is active, respecting the landmark-label toggle; nonmatching ordinary facilities remain hidden. Search, selection, route and assistance request behavior are unchanged.
+
+Latest main was pulled before work. Validation: 8 focused visibility/filter tests, TypeScript and targeted ESLint passed. The real bundled map and React component were visually inspected at overview and zoom-in. This asset/display-policy update did not repeat production build, API persistence or physical-device verification. The ZIP must be applied to the user's checkout; it does not push or deploy anything. Existing source/licensing notes remain applicable.

@@ -66,11 +66,13 @@ export function TaskLauncher({
   returnTo,
   field = false,
   topics,
+  device,
 }: {
   en?: boolean;
   returnTo?: KioskReturn;
   field?: boolean;
   topics?: readonly string[];
+  device?: "robot" | "kiosk";
 }) {
   return (
     <div className={"task-launcher" + (field ? " task-launcher-field" : "")}>
@@ -82,6 +84,7 @@ export function TaskLauncher({
             "https://local.invalid",
           );
           if (returnTo) href.searchParams.set("returnTo", returnTo);
+          if (id === "guidance" && (device === "robot" || returnTo === "/kiosk/entry")) href.searchParams.set("device", "robot");
           if (id !== "guidance") href.searchParams.set("fresh", "1");
           return (
             <article
