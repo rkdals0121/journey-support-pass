@@ -28,20 +28,23 @@ html[data-kiosk] .call-dock {
   border: 0;
   background: transparent;
 }
-html[data-kiosk] .call-dock-inner { height: var(--bar-real, var(--bar-h)); padding: 0 1.25rem; }
+html[data-kiosk] .call-dock-inner { height: var(--bar-real, var(--bar-h)); padding: 0 calc(1.25rem / var(--scale, 1)); }
+/* 크기를 고정한다. 여객이 큰 글씨(--scale)를 골라도 이 단추는 커지지 않는다(모든 화면 같은 자리·같은 크기).
+   글자 배율로 나눠 화면 위 실제 크기를 그대로 둔다. */
 html[data-kiosk] .call-btn {
-  min-height: 3rem;
-  padding: 0.5rem 1.25rem;
+  min-height: calc(3rem / var(--scale, 1));
+  gap: calc(0.5rem / var(--scale, 1));
+  padding: calc(0.5rem / var(--scale, 1)) calc(1.25rem / var(--scale, 1));
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   color: var(--color-text);
-  font-size: var(--text-body);
+  font-size: calc(var(--text-body) / var(--scale, 1));
   font-weight: var(--weight-heading);
   transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
 }
 html[data-kiosk] .call-btn:active { transform: scale(0.98); }
-html[data-kiosk] .call-btn svg { width: 1.375rem; height: 1.375rem; }
+html[data-kiosk] .call-btn svg { width: calc(1.375rem / var(--scale, 1)); height: calc(1.375rem / var(--scale, 1)); }
 
 /* ── 처음 화면 ── */
 .kx-home {
