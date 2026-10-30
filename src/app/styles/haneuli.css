@@ -22,13 +22,18 @@ html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; borde
   border: 1px solid var(--color-line); border-radius: var(--radius-medium);
   background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%);
 }
-.hw-hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); min-width: 0; }
+/* 소개 글: 표시 · 제목 · (위치 + 소리 안내 단추를 한 줄에) */
+.hw-hero-copy { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-3) var(--space-5); min-width: 0; }
+.hw-hero-copy > :is(.hw-label, h1) { grid-column: 1 / -1; justify-self: start; }
 .hw-label { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-primary); font-size: var(--text-body); font-weight: var(--weight-label); }
 .hw-label svg { width: 1.375rem; height: 1.375rem; flex: none; }
 /* 키오스크 공통 h1 크기(devices.css)보다 크게: 이 화면의 제목 */
 html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: var(--text-large); white-space: nowrap; line-height: 1.2; font-weight: var(--weight-heading); letter-spacing: -0.04em; }
 .hw-here { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-muted); font-size: var(--text-body); }
 .hw-here svg { width: 1.25rem; height: 1.25rem; flex: none; }
+.hw-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.hw-actions:empty { display: none; }
+.hw-actions .listen-start { width: auto; min-height: 3.5rem; margin: 0; }
 .hw-rest { min-height: 3.5rem; padding: 0 var(--space-5); border: 1px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-body); font-weight: var(--weight-label); cursor: pointer; }
 
 /* 하늘이: 말풍선(왼쪽) + 원 안의 하늘이(오른쪽). 웹 첫 화면의 하늘이 원과 같은 모양 */

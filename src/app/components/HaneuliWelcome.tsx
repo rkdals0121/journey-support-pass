@@ -27,10 +27,10 @@ export function HaneuliSays({ text, size = "md", pose = "front" }: { text: strin
  * 탑승권을 바로 비추면 하늘이가 깨며 다음 화면으로 간다. 화면만 누르면 하늘이가 깨어 카드 중 하나를 고르라고 알려 준다.
  * The camera stays mounted across sleep and wake.
  */
-export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onPassport, scanner, error }: {
+export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onPassport, scanner, error, listen }: {
   en: boolean; here: string; awake: boolean; busy: boolean;
   onWake: () => void; onRest: () => void; onNumber: () => void; onPassport: () => void;
-  scanner: ReactNode; error: ReactNode;
+  scanner: ReactNode; error: ReactNode; listen: ReactNode;
 }) {
   const bubble = busy
     ? (en ? "Finding your registration!" : "찾고 있어요!")
@@ -40,7 +40,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
 
   return (
     <div className={`haneuli-welcome ${awake ? "is-awake" : "is-idle"}`} onClickCapture={(event) => {
-      if (awake || busy || (event.target as HTMLElement).closest(".haneuli-ways, .hw-rest")) return;
+      if (awake || busy || (event.target as HTMLElement).closest(".haneuli-ways, .hw-actions")) return;
       event.preventDefault();
       event.stopPropagation();
       onWake();
@@ -50,7 +50,11 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
           <p className="hw-label"><Accessibility aria-hidden="true" />{en ? "Accessible kiosk" : "교통약자 전용"}</p>
           <h1>{en ? "Accessible kiosk" : "교통약자 전용 키오스크"}</h1>
           <p className="hw-here"><MapPin aria-hidden="true" />{here}</p>
-          {awake && <button className="hw-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
+          {/* 소리 안내를 쓰는 분은 탑승권을 대기 전에도 여기서 켠다 */}
+          <div className="hw-actions">
+            {listen}
+            {awake && <button className="hw-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
+          </div>
         </div>
         <div className="haneuli-center" aria-hidden="true">
           <p className="haneuli-bubble">{bubble}</p>
