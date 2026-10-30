@@ -89,6 +89,7 @@ npx tsx scripts/e2e.ts                 # 전체 흐름 점검, 30~40분 (화면 
 - 병합 전에 Vercel 미리보기 주소에서 첫 화면, `/register`, `/kiosk`, `/staff/login` 이 열리는지 확인한다.
 
 ## 7. 더 읽을 것
+- **화면을 만들거나 고칠 때의 기준(틀·끝선·한 화면 맞춤·확인 방법): `docs/ui-guide.md`** — 화면 작업 전에 반드시 읽는다.
 - 디자인 기준: `docs/design-system.md`
 - 화면 구성 개편 기록: `docs/layout-handoff.md`
 - 서비스 명세: `docs/spec.md`
