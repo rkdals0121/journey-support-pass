@@ -104,7 +104,7 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 /* 좁은 화면: 바를 두 줄로. 윗줄 이전·처음으로·설정, 아랫줄 글자 크기·언어·소리 */
 @media (max-width: 40rem) {
   html:not([data-kiosk]) .flow-pretrip .flow-bar { flex-wrap: wrap; row-gap: var(--space-2); padding: var(--space-2); }
-  html:not([data-kiosk]) .flow-pretrip .flow-bar-side { flex: 1 1 100%; flex-wrap: nowrap; }
+  html:not([data-kiosk]) .flow-pretrip .flow-bar-side { flex: 1 1 100%; flex-wrap: wrap; min-width:0; gap:var(--space-2); }
   .flow-pretrip .flow-bar-right { flex: 1 1 100%; flex-wrap: nowrap; justify-content: space-between; padding-top: var(--space-2); border-top: 0.0625rem solid var(--color-line); }
   .flow-pretrip .registration-language select { min-width: 6rem; }
   .flow-pretrip .text-size-control button { width: 2.25rem; min-height: 2.25rem; }
