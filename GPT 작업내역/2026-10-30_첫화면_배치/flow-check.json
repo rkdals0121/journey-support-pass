@@ -1,0 +1,24 @@
+[
+  {
+    "width": 390,
+    "flow": "mobility",
+    "backRetainsPlace": true,
+    "review": true
+  },
+  {
+    "width": 1280,
+    "flow": "mobility",
+    "backRetainsPlace": true,
+    "review": true
+  },
+  {
+    "width": 1920,
+    "flow": "mobility",
+    "backRetainsPlace": true,
+    "review": true
+  },
+  {
+    "flow": "navigation",
+    "route": true
+  }
+]

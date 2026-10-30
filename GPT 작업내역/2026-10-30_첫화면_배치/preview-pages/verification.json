@@ -1,0 +1,211 @@
+{
+  "base": "https://journey-support-pass-cg4ktswlf-rkdals0121-6460s-projects.vercel.app",
+  "commit": "5c6b847208bb633ebe1105343562bb6bd3230e96",
+  "checkedAt": "2026-10-30T01:53:03.258Z",
+  "rows": [
+    {
+      "route": "/help",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "어떤 도움이 필요하세요?",
+      "gridColumns": null,
+      "overflow": false,
+      "fields": [
+        462.96875
+      ],
+      "next": [
+        595.96875
+      ],
+      "ok": true
+    },
+    {
+      "route": "/help",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "어떤 도움이 필요하세요?",
+      "gridColumns": null,
+      "overflow": false,
+      "fields": [
+        484.65625
+      ],
+      "next": [
+        617.65625
+      ],
+      "ok": true
+    },
+    {
+      "route": "/navigate",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "어디로 가시나요?",
+      "gridColumns": null,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/navigate",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "어디로 가시나요?",
+      "gridColumns": null,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/visits",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "로봇·이동지원 예약",
+      "gridColumns": null,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/visits",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "로봇·이동지원 예약",
+      "gridColumns": null,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 3,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 3,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 320,
+      "height": 640,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 1,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 320,
+      "height": 640,
+      "scale": 1.5,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 1,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 1,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 1,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 768,
+      "height": 1024,
+      "scale": 1,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 2,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    },
+    {
+      "route": "/services",
+      "width": 768,
+      "height": 1024,
+      "scale": 1.5,
+      "status": 200,
+      "errors": [],
+      "heading": "서비스 찾기",
+      "gridColumns": 2,
+      "overflow": false,
+      "fields": [],
+      "next": [],
+      "ok": true
+    }
+  ]
+}

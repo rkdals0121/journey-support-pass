@@ -1,0 +1,331 @@
+[
+  {
+    "route": "/help",
+    "width": 1280,
+    "height": 633,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 719,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 462.96875
+      }
+    ],
+    "next": [
+      {
+        "bottom": 595.96875,
+        "top": 539.96875
+      }
+    ],
+    "file": "help-1280-1.png"
+  },
+  {
+    "route": "/help",
+    "width": 1366,
+    "height": 657,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 719,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 462.96875
+      }
+    ],
+    "next": [
+      {
+        "bottom": 595.96875,
+        "top": 539.96875
+      }
+    ],
+    "file": "help-1366-1.png"
+  },
+  {
+    "route": "/help",
+    "width": 1920,
+    "height": 937,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 937,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 484.65625
+      }
+    ],
+    "next": [
+      {
+        "bottom": 617.65625,
+        "top": 561.65625
+      }
+    ],
+    "file": "help-1920-1.png"
+  },
+  {
+    "route": "/help",
+    "width": 390,
+    "height": 844,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 1251,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 935.21875
+      }
+    ],
+    "next": [
+      {
+        "bottom": 832,
+        "top": 776
+      }
+    ],
+    "file": "help-390-1.png"
+  },
+  {
+    "route": "/help",
+    "width": 320,
+    "height": 640,
+    "scale": 1.5,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 2942,
+    "fontSize": "24px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 2316.25
+      }
+    ],
+    "next": [
+      {
+        "bottom": 930.671875,
+        "top": 818.296875
+      }
+    ],
+    "file": "help-320-1.5.png"
+  },
+  {
+    "route": "/help",
+    "width": 768,
+    "height": 1024,
+    "scale": 1.5,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 1537,
+    "fontSize": "24px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 1119.703125
+      }
+    ],
+    "next": [
+      {
+        "bottom": 1012,
+        "top": 928
+      }
+    ],
+    "file": "help-768-1.5.png"
+  },
+  {
+    "route": "/help",
+    "width": 1280,
+    "height": 633,
+    "scale": 1.5,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 1125,
+    "fontSize": "24px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 682.84375
+      }
+    ],
+    "next": [
+      {
+        "bottom": 621,
+        "top": 537
+      }
+    ],
+    "file": "help-1280-1.5.png"
+  },
+  {
+    "route": "/visits",
+    "width": 1280,
+    "height": 633,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 768,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [],
+    "next": [],
+    "file": "visits-1280-1.png"
+  },
+  {
+    "route": "/services",
+    "width": 1280,
+    "height": 633,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 839,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [],
+    "next": [],
+    "file": "services-1280-1.png"
+  },
+  {
+    "route": "/navigate",
+    "width": 1280,
+    "height": 633,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 996,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [],
+    "next": [
+      {
+        "bottom": 625,
+        "top": 569
+      }
+    ],
+    "file": "navigate-1280-1.png"
+  },
+  {
+    "route": "/help?lang=en",
+    "width": 1280,
+    "height": 633,
+    "scale": 1,
+    "kiosk": false,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 759,
+    "fontSize": "16px",
+    "targets": [],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 486.5625
+      }
+    ],
+    "next": [
+      {
+        "bottom": 625,
+        "top": 569
+      }
+    ],
+    "file": "en-help-1280-1.png"
+  },
+  {
+    "route": "/help?returnTo=/kiosk/guide",
+    "width": 1280,
+    "height": 800,
+    "scale": 1,
+    "kiosk": true,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 800,
+    "fontSize": "16px",
+    "targets": [
+      64,
+      64,
+      64,
+      64,
+      64,
+      66.796875,
+      64
+    ],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 516.671875
+      }
+    ],
+    "next": [
+      {
+        "bottom": 678.375,
+        "top": 614.375
+      }
+    ],
+    "file": "kiosk-help-1280-1.png"
+  },
+  {
+    "route": "/help?returnTo=/kiosk/guide",
+    "width": 1080,
+    "height": 1920,
+    "scale": 1.5,
+    "kiosk": true,
+    "status": 200,
+    "errors": [],
+    "overflow": false,
+    "documentHeight": 1920,
+    "fontSize": "24px",
+    "targets": [
+      64,
+      64,
+      64,
+      64,
+      64,
+      99.1875,
+      64
+    ],
+    "fields": [
+      {
+        "id": "task-purpose",
+        "bottom": 1027.796875
+      }
+    ],
+    "next": [
+      {
+        "bottom": 1163.796875,
+        "top": 1099.796875
+      }
+    ],
+    "file": "kiosk-help-1080-1.5.png"
+  }
+]
