@@ -24,6 +24,7 @@ export function StaffFrame({
   children: React.ReactNode;
 }) {
   const path = usePathname();
+  const navPath = path === "/staff/assist" ? "/staff/legacy" : path;
   if (path === "/staff/login" || path === "/staff/zone") return children;
   const groups = [
     {
@@ -88,7 +89,7 @@ export function StaffFrame({
       className="workspace-nav-group"
       key={group.title}
       open={group.items.some(
-        (item) => path === item.href || path.startsWith(item.href + "/"),
+          (item) => navPath === item.href || navPath.startsWith(item.href + "/"),
       )}
     >
       <summary>{group.title}</summary>
@@ -97,7 +98,7 @@ export function StaffFrame({
           key={href}
           href={href}
           aria-current={
-            path === href || path.startsWith(href + "/") ? "page" : undefined
+              navPath === href || navPath.startsWith(href + "/") ? "page" : undefined
           }
           onClick={(e) =>
             e.currentTarget
@@ -118,7 +119,7 @@ export function StaffFrame({
   ));
   const current = groups
     .flatMap((g) => g.items)
-    .find((i) => path === i.href || path.startsWith(i.href + "/"));
+    .find((i) => navPath === i.href || navPath.startsWith(i.href + "/"));
   return (
     <div className="staff-workspace airport-workspace">
       <a href="#staff-content" className="public-skip">
