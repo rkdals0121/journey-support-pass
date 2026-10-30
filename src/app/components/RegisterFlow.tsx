@@ -195,12 +195,13 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
   // 찾다가 연결이 끊겼을 때 「다시 찾기」로 한 번 더 찾게 한다.
   const [retry, setRetry] = useState(0);
   const [searching, setSearching] = useState(false);
-  const [flight, setFlight] = useState<FlightOption | null>(mode === "web" ? booking?.flight ?? null : null);
+  // 예약번호로 찾은 예약이 있으면 그 항공편으로 시작한다(사전등록: 예매 완료 화면, 현장등록: 키오스크의 항공 예약번호).
+  const [flight, setFlight] = useState<FlightOption | null>(mode !== "edit" ? booking?.flight ?? null : null);
   // 항공편 찾는 방법. 사전등록은 예약번호부터, 현장등록은 편명부터 보여 주고 예약번호·탑승권으로 바꿀 수 있다.
   const methods = methodsOf(mode);
-  const [method, setMethod] = useState<FlightMethod>(methods[0]);
+  const [method, setMethod] = useState<FlightMethod>(booking && mode !== "edit" ? "booking" : methods[0]);
   // 예약번호로 불러온 예약. 등록할 때 조회 확인값을 함께 보낸다. 예매 완료 화면에서 조회해 들어온 예약도 같다.
-  const [found, setFound] = useState<BookingHandoff | null>(mode === "web" ? booking ?? null : null);
+  const [found, setFound] = useState<BookingHandoff | null>(mode !== "edit" ? booking ?? null : null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // 등록하지 못한 횟수. 확인 화면에서 실패할 때마다 늘려, 같은 화면에 새로 나타난 오류 글을 소리로 읽게 한다.

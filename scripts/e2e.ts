@@ -129,10 +129,11 @@ async function audit(page: Page, name: string) {
   await page.evaluate((y) => window.scrollTo(0, y), scrolled);
 }
 
-/** 키오스크 처음 화면(하늘이). 대기 중이면 「도움받아 시작」으로 깨워 필요한 도움 확인을 연다. */
+/** 키오스크 처음 화면(하늘이). 대기 중이면 하늘이를 눌러 깨워 확인 방법(탑승권·여권·예약번호)을 연다. */
 async function kioskServices(page: Page) {
   await page.waitForSelector(".haneuli-welcome", { timeout: WAIT });
-  if (!(await page.$(".haneuli-welcome.is-awake"))) await clickText(page, ".haneuli-start", "도움받아 시작");
+  // 교통약자 전용 첫 화면: 하늘이(화면)를 누르면 깨어 확인 방법을 안내한다.
+  if (!(await page.$(".haneuli-welcome.is-awake"))) await page.click(".haneuli-character");
   await page.waitForSelector(".haneuli-welcome.is-awake", { timeout: WAIT });
 }
 const isKioskHome = async (page: Page) => !!(await page.$(".haneuli-welcome"));
@@ -956,7 +957,7 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".listen-start", "소리 안내 끄기");
   await page.waitForFunction(() => document.querySelector(".listen-start")?.getAttribute("aria-pressed") === "false", { timeout: WAIT });
   await shot(page, "안내키오스크-처음-카메라없음");
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   check("번호 화면에서도 「도움 요청하기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
   for (const d of "000000") await clickText(page, ".pad-num .pad-key", d);
@@ -1057,7 +1058,7 @@ async function resetFlights(clearLocks = false) {
   // 오래 그대로 두면 계속 쓸지 묻는다. 점검에서는 기다리는 시간을 20초로 줄여서 본다(주소의 ?idle=20, 개발 서버에서만 된다).
   // 이 장면만 따로 연다. 짧게 둔 채 다른 장면을 보면 느린 컴퓨터에서는 그림을 뜨는 사이에 묻는 창이 떠서 눌림을 가로챈다.
   await page.goto(`${BASE}/kiosk/guide?idle=20`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   // 여섯 자리를 한꺼번에 누른다. 하나씩 누르다 시간이 지나면 번호 화면에서 묻는 창이 먼저 뜬다.
   await page.evaluate((no) => {
@@ -1075,7 +1076,7 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".sheet-box button", "끝내기");
   await kioskServices(page);
   // 앞사람이 「설정」을 열어 둔 채 떠난다. 처음 화면으로 돌아가면 설정 창이 닫혀 있어야 한다.
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   await page.evaluate((no) => {
     const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
@@ -1092,7 +1093,7 @@ async function resetFlights(clearLocks = false) {
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
 
   // 번호를 여러 번 틀리면 잠근다
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   for (let i = 0; i < 9; i++) {
     for (const d of "999999") await clickText(page, ".pad-num .pad-key", d);
     await page.waitForFunction(() => document.querySelectorAll(".code-boxes .filled").length === 0 && !!document.querySelector(".error"), { timeout: WAIT });
@@ -1149,7 +1150,7 @@ async function resetFlights(clearLocks = false) {
 
   // 앞사람(MK112)이 안내를 보는 중에 30초마다 다시 받는 답이 오는 사이 「처음으로」를 누른다.
   // 늦게 온 앞사람의 답이 안내를 되살리면, 다음 사람이 번호 화면을 열 때 앞사람의 항공편이 나온다.
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "여섯 자리를 눌러 주세요");
   await typeNo(voicePass.passNo);
   await waitText(page, "MK112");
@@ -1160,7 +1161,7 @@ async function resetFlights(clearLocks = false) {
   const lateGuide = await page.evaluate("window.__release()");
   await sleep(2500);
   const startClean = !(await has(page, "MK112")) && (await isKioskHome(page));
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await page.waitForFunction(() => /여섯 자리를 눌러 주세요|MK112|나에게 맞춘 안내/.test(document.body.innerText), { timeout: WAIT });
   check("「처음으로」를 누른 뒤 앞사람의 안내를 다시 받은 답이 늦게 와도, 다음 사람 화면에 앞사람의 항공편이나 안내가 나오지 않는다", startClean && !(await has(page, "MK112")) && !(await has(page, "나에게 맞춘 안내")), `늦은 답 ${lateGuide}개`);
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
@@ -1277,7 +1278,7 @@ async function resetFlights(clearLocks = false) {
   for (const [flightNo, expected, name] of cases) {
     const made = await register(flightNo, ["fac_calm"]);
     await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-    await clickText(page, ".haneuli-number", "번호로 찾기");
+    await clickText(page, ".haneuli-number", "예약번호 입력");
     for (const d of made.passNo) await clickText(page, ".pad-num .pad-key", d);
     await openGuide(page);
     check(name, (await has(page, expected)) && (await count(page, ".gate-go")) === 0 && (await count(page, ".tile")) === 6);
@@ -1286,7 +1287,7 @@ async function resetFlights(clearLocks = false) {
   }
   const late = await register("MK402", ["mov_need_rest"]);
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   for (const d of late.passNo) await clickText(page, ".pad-num .pad-key", d);
   await openGuide(page);
   check("탑승이 마감된 편은 빨갛게 알리고 직원을 부르라고 안내한다", (await has(page, "탑승이 마감되었습니다")) && (await has(page, "「도움 요청하기」를 눌러 주세요")) && (await count(page, ".gate-go.pace-late")) === 1);
