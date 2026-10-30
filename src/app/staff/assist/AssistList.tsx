@@ -13,7 +13,12 @@ const STATE_LABEL: Record<AssistItemDto["state"], string> = {
   done: "완료",
   cancelled: "취소·닫힘",
 };
-const NEXT: Partial<Record<AssistItemDto["state"], { action: "assign" | "move" | "done"; label: string }>> = {
+const NEXT: Partial<
+  Record<
+    AssistItemDto["state"],
+    { action: "assign" | "move" | "done"; label: string }
+  >
+> = {
   received: { action: "assign", label: "제가 맡겠습니다" },
   assigned: { action: "move", label: "이동 시작" },
   moving: { action: "done", label: "이동지원 마침" },
@@ -30,16 +35,24 @@ export function AssistList({ refreshSec }: { refreshSec: number }) {
     const ctrl = new AbortController();
     const limit = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
     try {
-      const res = await fetch("/api/staff/assist", { cache: "no-store", signal: ctrl.signal });
+      const res = await fetch("/api/staff/assist", {
+        cache: "no-store",
+        signal: ctrl.signal,
+      });
       if (res.status === 401) return window.location.replace("/staff/login");
       if (res.status === 409) return window.location.replace("/staff/zone");
       const body = await res.json();
       if (!res.ok) return setError(body.error ?? "불러오지 못했습니다");
       setError(null);
       const list = body.requests as AssistItemDto[];
-      const fresh = list.filter((a) => a.state === "received" && known.current && !known.current.has(a.id));
+      const fresh = list.filter(
+        (a) =>
+          a.state === "received" && known.current && !known.current.has(a.id),
+      );
       if (fresh.length > 0) navigator.vibrate?.([200, 100, 200]);
-      known.current = new Set(list.filter((a) => a.state === "received").map((a) => a.id));
+      known.current = new Set(
+        list.filter((a) => a.state === "received").map((a) => a.id),
+      );
       setItems(list);
     } catch {
       setError("연결할 수 없습니다. 잠시 후 다시 불러옵니다.");
@@ -62,7 +75,10 @@ export function AssistList({ refreshSec }: { refreshSec: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      if (!res.ok) setError((await res.json().catch(() => ({}))).error ?? "처리하지 못했습니다");
+      if (!res.ok)
+        setError(
+          (await res.json().catch(() => ({}))).error ?? "처리하지 못했습니다",
+        );
     } catch {
       setError("연결할 수 없습니다. 잠시 후 다시 해 주세요.");
     }
@@ -74,19 +90,40 @@ export function AssistList({ refreshSec }: { refreshSec: number }) {
   const open = items.filter((a) => NEXT[a.state]);
   const ended = items.filter((a) => !NEXT[a.state]);
   return (
-    <div>
+    <div className="staff-legacy-list">
       {error && <ErrorNote>{error}</ErrorNote>}
-      <h2>진행 중 {open.length}건</h2>
-      {open.length === 0 && <p className="muted">진행 중인 이동지원 요청이 없습니다.</p>}
+      <section className="staff-queue-panel" aria-label="이전 이동지원 조회">
+        <h2>
+          진행 중 <span>{open.length}건</span>
+        </h2>
+        <p className="staff-reference-intro">
+          여객이 요청한 지원과 항공편을 확인합니다.
+        </p>
+      </section>
+      {open.length === 0 && (
+        <div className="staff-queue-empty">
+          <span>
+            <CarFront size={28} aria-hidden="true" />
+          </span>
+          <strong>진행 중인 이동지원 요청이 없습니다.</strong>
+          <p>이전 이동지원 요청이 접수되면 이곳에 표시됩니다.</p>
+        </div>
+      )}
       <ul className="calls">
         {open.map((a) => {
           const next = NEXT[a.state]!;
           const canAct = a.state === "received" || a.assignedByMe;
           return (
-            <li key={a.id} className={`call call-${a.state === "received" ? "waiting" : "accepted"}`}>
+            <li
+              key={a.id}
+              className={`call call-${a.state === "received" ? "waiting" : "accepted"}`}
+            >
               <div className="call-head">
-                <span className={`call-state ${a.state === "received" ? "waiting" : "accepted"}`}>
-                  <CarFront size={18} aria-hidden="true" /> {STATE_LABEL[a.state]}
+                <span
+                  className={`call-state ${a.state === "received" ? "waiting" : "accepted"}`}
+                >
+                  <CarFront size={18} aria-hidden="true" />{" "}
+                  {STATE_LABEL[a.state]}
                 </span>
                 <span className="call-wait">
                   {a.time} · {a.waitedMin}분 전
@@ -96,27 +133,48 @@ export function AssistList({ refreshSec }: { refreshSec: number }) {
               {a.pass ? (
                 <>
                   <p className="call-flight">
-                    <PlaneTakeoff size={18} aria-hidden="true" /> <b className="num">{a.pass.flight.flightNo}</b> {a.pass.flight.destName} · 탑승구{" "}
-                    <b className="num">{a.pass.flight.gate ?? "미정"}</b> · 출발 {a.pass.flight.estTime ?? a.pass.flight.schedTime}
+                    <PlaneTakeoff size={18} aria-hidden="true" />{" "}
+                    <b className="num">{a.pass.flight.flightNo}</b>{" "}
+                    {a.pass.flight.destName} · 탑승구{" "}
+                    <b className="num">{a.pass.flight.gate ?? "미정"}</b> · 출발{" "}
+                    {a.pass.flight.estTime ?? a.pass.flight.schedTime}
                   </p>
                   <ul className="chips" aria-label="여객이 고른 필요한 지원">
-                    {a.pass.lang === "en" && <li className="chip chip-sun">영어 사용</li>}
-                    {a.pass.proofVerified && <li className="chip chip-sun">우대 확인됨</li>}
+                    {a.pass.lang === "en" && (
+                      <li className="chip chip-sun">영어 사용</li>
+                    )}
+                    {a.pass.proofVerified && (
+                      <li className="chip chip-sun">우대 확인됨</li>
+                    )}
                     {a.pass.needs.map((n) => (
                       <li key={n} className="chip">
                         {n}
                       </li>
                     ))}
                   </ul>
-                  {a.pass.party !== null && a.pass.party > 1 && <p className="small">함께 가는 분 포함 모두 {a.pass.party}명</p>}
-                  {a.pass.note && <p className="call-note">여객의 말: {a.pass.note}</p>}
+                  {a.pass.party !== null && a.pass.party > 1 && (
+                    <p className="small">
+                      함께 가는 분 포함 모두 {a.pass.party}명
+                    </p>
+                  )}
+                  {a.pass.note && (
+                    <p className="call-note">여객의 말: {a.pass.note}</p>
+                  )}
                 </>
               ) : (
-                <p className="muted">여객 정보가 지워졌습니다(출발했거나 여객이 지움).</p>
+                <p className="muted">
+                  여객 정보가 지워졌습니다(출발했거나 여객이 지움).
+                </p>
               )}
-              {a.assignedBy && <p className="muted">맡은 구역: {a.assignedBy}</p>}
+              {a.assignedBy && (
+                <p className="muted">맡은 구역: {a.assignedBy}</p>
+              )}
               {canAct ? (
-                <button className="btn btn-primary" onClick={() => void act(a.id, next.action)} disabled={busy === a.id}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => void act(a.id, next.action)}
+                  disabled={busy === a.id}
+                >
                   {next.label}
                 </button>
               ) : (

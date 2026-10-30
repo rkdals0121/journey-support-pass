@@ -1342,7 +1342,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "탑승동 중앙부");
   check("공통 코드로 들어와 근무 구역을 고르면 호출 화면이 열린다", true);
   await waitText(page, "지금은 호출이 없습니다");
-  check("호출이 없으면 '여객이 부를 때 갑니다'라고 안내한다 (먼저 다가가는 화면이 아니다)", (await has(page, "지금은 호출이 없습니다")) && (await has(page, "먼저 다가가 돕지 않고")));
+  check("호출이 없으면 대기 상태와 새 호출 알림을 안내한다", (await has(page, "지금은 호출이 없습니다")) && (await has(page, "호출이 오면 진동과 소리로 알립니다")));
   check("직원 화면에 여객 목록이 없다", !(await has(page, "여객 목록")));
   await page.focus(".seg-refresh");
   await sleep(6500);
@@ -1351,7 +1351,7 @@ async function resetFlights(clearLocks = false) {
 
   // 여객이 키오스크에서 부른다 (화면 대신 서버에 직접). 다른 구역 호출이 먼저 온다.
   const c2 = await post("/api/kiosk/call", { screen: "guide" }, await kioskCookie("t2-center"));
-  await page.waitForFunction(() => document.querySelectorAll(".seg .count")[1]?.textContent === "1", { timeout: WAIT });
+  await page.waitForFunction(() => document.querySelectorAll(".staff-legacy-filters .count")[1]?.textContent === "1", { timeout: WAIT });
   check("「내 구역」을 보고 있으면 다른 구역의 새 호출로는 울리지 않는다", (await buzz()) === 0, `${await buzz()}번`);
   const callKiosk = await kioskCookie("cc-center");
   const c1 = await post("/api/kiosk/call", { token: voicePass.token, screen: "guide" }, callKiosk);
@@ -1365,7 +1365,7 @@ async function resetFlights(clearLocks = false) {
   check("호출 카드에 이름이 없다", !card.includes("이름"));
   check("내 구역 탭에는 내 구역 호출만 보인다", (await count(page, ".call")) === 1);
   await shot(page, "직원-호출옴");
-  await clickText(page, ".seg button", "전체");
+  await clickText(page, ".staff-legacy-filters button", "전체");
   await page.waitForFunction(() => document.querySelectorAll(".call").length === 2, { timeout: WAIT });
   check("전체 탭에는 다른 구역의 호출도 보인다 (점선 테두리)", (await count(page, ".call.call-other")) === 1);
   check("패스 없이 부른 호출은 '가서 여쭤봐 주세요'라고 안내한다", await has(page, "패스를 찍지 않고 불렀습니다"));
@@ -1382,7 +1382,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "다른 직원이 먼저 받았거나 끝난 호출입니다");
   await sleep(6500);
   check("다른 직원이 먼저 받은 호출을 누르면 그렇다고 알리고, 목록을 다시 읽어도 그 알림이 바로 사라지지 않는다", await has(page, "다른 직원이 먼저 받았거나 끝난 호출입니다"));
-  await clickText(page, ".seg button", "내 구역");
+  await clickText(page, ".staff-legacy-filters button", "내 구역");
   await clickText(page, ".call button", "가겠습니다");
   await waitText(page, "내 구역이 가는 중");
   check("'가겠습니다'를 누르면 '가는 중'으로 바뀐다", (await get(`/api/kiosk/call/${c1.body.id}`, callKiosk)).body.state === "accepted");
