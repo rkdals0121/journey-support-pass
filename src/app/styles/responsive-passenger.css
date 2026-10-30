@@ -6,7 +6,6 @@
   --site-bar-height: clamp(76px, 10vh, 98px);
 }
 .airport-site .airport-portal { padding-inline: clamp(20px, 4vw, 64px); }
-.pretrip-site .prepare-layout { width: calc(100% - 2 * var(--site-bar-gutter)); box-sizing: border-box; }
 .flow.flow-pretrip { width: 100%; max-width: 96rem; margin-inline: auto; }
 .flow-pretrip .flow-workspace { gap: var(--page-gap); padding: var(--page-gap); }
 .flow-pretrip .flow-body,

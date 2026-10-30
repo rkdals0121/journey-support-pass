@@ -139,33 +139,47 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .pretrip-site { min-height: 100dvh; background: var(--bg); }
 .pretrip-site .pretrip-header { max-width: 76rem; padding: 1.25rem 2rem; border: 0; }
 .pretrip-site .pretrip-header .public-logo small { letter-spacing: .01em; }
+/* 큰 박스 하나 대신 두 박스(왼쪽 소개, 오른쪽 순서)로 나눈다. 두 박스를 합친 너비와 끝선은 위쪽 바와 같다. */
 .pretrip-site .prepare-layout {
   display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
-  align-items: center; gap: 3rem; max-width: 72rem; margin: 1.5rem auto 3rem;
-  padding: 4rem 3rem; border: 1px solid var(--line); border-radius: 2rem;
-  background: radial-gradient(ellipse at 5% 0%, #fff5c2 0%, transparent 55%), var(--surface);
+  align-items: stretch; gap: var(--space-4);
+  box-sizing: border-box; width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  max-width: var(--site-bar-width); margin: var(--space-4) auto var(--space-6); padding: 0;
+  border: 0; background: none; box-shadow: none;
+}
+.pretrip-site .prepare-intro,
+.pretrip-site .prepare-steps {
+  box-sizing: border-box; min-width: 0; padding: 3.5rem 3rem;
+  border: 0.0625rem solid var(--color-line); border-radius: 2rem;
   box-shadow: var(--shadow-2);
+}
+.pretrip-site .prepare-intro {
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+  background: radial-gradient(ellipse at 5% 0%, var(--color-accent-soft) 0%, transparent 60%), var(--color-surface);
 }
 .pretrip-site .prepare-intro .public-eyebrow { display: inline-flex; padding: .5rem .875rem; border-radius: 999px; background: var(--sun-soft); }
 .pretrip-site .prepare-intro h1 { font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1.15; letter-spacing: -.055em; margin: 1.5rem 0; max-width: 8em; white-space: pre-line; text-wrap: balance; }
 .pretrip-site .prepare-intro > p { font-size: 1.125rem; line-height: 1.7; }
 .pretrip-site .prepare-intro > .public-button { margin: 1.5rem 0 1rem; }
 .pretrip-site .prepare-lookup-link { display: block; width: fit-content; font-size: .875rem; color: var(--muted); margin-top: .5rem; }
-.pretrip-site .prepare-steps { border: 0; padding: 0; background: transparent; display: grid; gap: .75rem; }
-.pretrip-site .prepare-step { padding: 1.5rem; margin: 0; border: 1px solid var(--line); border-radius: 1.25rem; background: var(--surface); box-shadow: var(--shadow-1); }
+/* 오른쪽 박스 안의 세 단계는 박스 속 박스가 아니라 선으로 나눈 줄로 둔다. */
+.pretrip-site .prepare-steps { display: flex; flex-direction: column; justify-content: center; gap: 0; background: var(--color-surface); }
+.pretrip-site .prepare-step { padding: var(--space-5) 0; margin: 0; border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; background: none; box-shadow: none; }
+.pretrip-site .prepare-step:first-child { padding-top: 0; }
 .pretrip-site .prepare-step > svg { background: var(--sun-soft); box-sizing: content-box; padding: .75rem; border-radius: 1rem; width: 1.5rem; height: 1.5rem; flex: none; }
 .pretrip-site .prepare-step h2 { font-size: 1rem; margin: 0 0 .375rem; }
 .pretrip-site .prepare-step p { font-size: .875rem; line-height: 1.65; margin: 0; }
-.pretrip-site .prepare-benefit { justify-content: center; padding: .75rem; font-size: .875rem; }
+.pretrip-site .prepare-benefit { justify-content: flex-start; padding: var(--space-5) 0 0; font-size: .875rem; }
 .pretrip-site .prepare-footer { border: 0; padding: 1rem 1.5rem 3rem; font-size: 1rem; }
 @media (max-width: 60rem) {
-  .pretrip-site .prepare-layout { grid-template-columns: 1fr; margin: 1rem; padding: 2rem; gap: 2rem; }
+  .pretrip-site .prepare-layout { grid-template-columns: 1fr; margin: var(--space-4) auto; gap: var(--space-4); }
+  .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 2rem; }
   .pretrip-site .prepare-intro h1 { font-size: 2.75rem; }
 }
 @media (max-width: 36rem) {
   .pretrip-site .pretrip-header { padding: 1rem; flex-wrap: wrap; }
   .prepare-tools { margin-left: auto; gap: .75rem; }
-  .pretrip-site .prepare-layout { padding: 1.5rem; border-radius: 1.5rem; }
+  .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 1.5rem; border-radius: 1.5rem; }
   .pretrip-site .prepare-intro > .public-button { width: 100%; }
   .pretrip-site .prepare-step { padding: 1rem; }
 }
