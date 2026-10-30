@@ -1,4 +1,5 @@
 "use client";
+import { destinationPlaceOf } from "@/lib/service-locations";
 import Link from "next/link";
 import { taskOf, serviceDetailsLines } from "@/lib/service-tasks";
 import { PushSettings } from "./PushSettings";
@@ -19,7 +20,6 @@ import {
   UNCLASSIFIED_BUSINESS,
   businessFilterLabel,
 } from "@/lib/business-overview-model";
-import { placeOf } from "@/lib/airport";
 import {
   nextRequestAction,
   requestServiceLabel,
@@ -896,7 +896,7 @@ export function RequestList({
                 )}
                 {r.destinationId && (
                   <p>
-                    <strong>목적지: {placeOf(r.destinationId)?.label}</strong>
+                    <strong>목적지: {destinationPlaceOf(r.destinationId)?.label}</strong>
                   </p>
                 )}
                 {historicalConflicts[r.id] > 0 && (

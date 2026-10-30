@@ -1538,10 +1538,8 @@ async function resetFlights(clearLocks = false) {
   check("등록하면 맞춤 안내·이동지원 요청·접수 상태 확인으로 이어진다", (await count(page, ".svc-card")) === 3);
   await shot(page, "입구로봇-서비스");
   await clickText(page, ".svc-card", "이동지원 요청");
-  await page.waitForSelector("#dx-place");
-  check("안내로봇의 이동지원은 위치가 고정된 통합 요청으로 이어진다",await page.$eval('#dx-place',e=>(e as HTMLSelectElement).value === 't1-info' && (e as HTMLSelectElement).disabled) && await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked));
-  await page.click("[data-request-next]");
-  await page.waitForSelector('.request-form[data-active-step="1"]');
+  await page.waitForSelector('.request-form[data-map-flow="true"]');
+  check("안내로봇의 이동지원은 현재 위치를 포함한 지도 기반 통합 요청으로 이어진다", await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked) && await page.$eval('.request-mobile-nav',e=>getComputedStyle(e).display==="none"));
   await page.click('input[type="checkbox"][required]');await page.click('button[type="submit"]');
   await clickText(page,'button','이 내용으로 요청 접수');await page.waitForSelector('.request-state-pill[role="status"]');
   const integrated=await page.evaluate(async()=>{const receipt=sessionStorage.getItem('jsp-dx-receipt-v1');return (await(await fetch('/api/requests/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receipt})})).json()).request;});

@@ -44,7 +44,7 @@ export function IdleGuard({ t, enabled, askSec, answerSec, onTimeout, say, hush 
       timer = setTimeout(() => setLeft(answerSec), askSec * 1000);
     };
     // click 도 본다. 화면 읽기 프로그램이나 스위치 같은 보조 기기는 손가락 대신 "누름"만 보내는 경우가 있다.
-    const events = ["pointerdown", "keydown", "touchstart", "wheel", "click"] as const;
+    const events = ["pointerdown", "keydown", "touchstart", "wheel", "click", "journey-map-activity"] as const;
     events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
     return () => {
       clearTimeout(timer);

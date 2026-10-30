@@ -1,3 +1,4 @@
+import { destinationPlaceOf } from "@/lib/service-locations";
 import Link from "next/link";
 import { Check, MapPin, ArrowRight, Clock3, RefreshCw } from "lucide-react";
 import {
@@ -8,7 +9,7 @@ import {
 import { taskOf } from "@/lib/service-tasks";
 import { supportTopic } from "@/lib/service-catalog";
 import { businessOf } from "@/lib/operating-profile";
-import { placeOf, NO_MEETING_PLACE } from "@/lib/airport";
+import { NO_MEETING_PLACE } from "@/lib/airport";
 import { ServiceDetailsView } from "../components/ServiceDetailsView";
 import { RequestResolutionView } from "../components/RequestResolutionView";
 export function RequestStatusPanel({
@@ -145,8 +146,8 @@ export function RequestStatusPanel({
               <p>
                 {t("목적지", "Destination")} ·{" "}
                 {en
-                  ? placeOf(r.destinationId)?.labelEn
-                  : placeOf(r.destinationId)?.label}
+                  ? destinationPlaceOf(r.destinationId)?.labelEn
+                  : destinationPlaceOf(r.destinationId)?.label}
               </p>
             )}
             {children}

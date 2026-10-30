@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ClipboardCheck, RefreshCw, Search } from "lucide-react";
 import {
   SERVICE_HUBS,
   VISIT_SERVICES,
@@ -142,86 +143,91 @@ export function VisitConsole({ isDesk }: { isDesk: boolean }) {
     setFilters((f) => ({ ...f, ...patch, offset: 0 }));
   return (
     <>
-      <div className={styles.queueHeading}>
-        <div>
-          <h2>
-            지금 확인할 지원 <span>{loaded ? total : "—"}</span>
-          </h2>
-          <p className={styles.demo}>도착·미배정 요청을 먼저 표시합니다.</p>
-        </div>
-        <button
-          type="button"
-          className={styles.secondary}
-          onClick={() => void load()}
-          disabled={busy}
-        >
-          새로고침
-        </button>
-      </div>
-      <div className={styles.queueTabs} role="group" aria-label="지원 범위">
-        {[
-          ["open", "진행 중"],
-          ["mine", "내 담당"],
-          ["all", "전체·완료"],
-        ].map(([key, label]) => (
+      <section className="staff-queue-panel" aria-label="예약 조회">
+        <div className={styles.queueHeading}>
+          <div>
+            <h2>
+              지금 확인할 지원 <span>{loaded ? total : "—"}</span>
+            </h2>
+            <p className={styles.demo}>도착·미배정 요청을 먼저 표시합니다.</p>
+          </div>
           <button
             type="button"
-            key={key}
-            aria-pressed={filters.state === key}
-            onClick={() => filter({ state: key })}
+            className={styles.secondary}
+            onClick={() => void load()}
+            disabled={busy}
           >
-            {label}
+            <RefreshCw size={16} aria-hidden="true" /> 새로고침
           </button>
-        ))}
-      </div>
-      <div className={styles.toolbar}>
-        <label>
-          확인번호·항공편·인상착의
-          <input
-            type="search"
-            id="visits-search"
-            value={query}
-            maxLength={80}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="예: AB12CD34, KE123"
-          />
-        </label>
-        <details className={styles.filterDetails}>
-          <summary>거점·날짜</summary>
-          <div className={styles.toolbar}>
-            <label>
-              거점
-              <select
-                id="visits-hub-filter"
-                value={filters.hub}
-                onChange={(e) => filter({ hub: e.target.value })}
-              >
-                <option value="all">모든 거점</option>
-                {SERVICE_HUBS.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              날짜
-              <input
-                type="date"
-                value={filters.day}
-                onChange={(e) => filter({ day: e.target.value })}
-              />
-            </label>
+        </div>
+        <div className={styles.queueTabs} role="group" aria-label="지원 범위">
+          {[
+            ["open", "진행 중"],
+            ["mine", "내 담당"],
+            ["all", "전체·완료"],
+          ].map(([key, label]) => (
             <button
               type="button"
-              className={styles.secondary}
-              onClick={() => filter({ hub: "all", day: "" })}
+              key={key}
+              aria-pressed={filters.state === key}
+              onClick={() => filter({ state: key })}
             >
-              조건 초기화
+              {label}
             </button>
-          </div>
-        </details>
-      </div>
+          ))}
+        </div>
+        <div className={`${styles.toolbar} staff-visit-toolbar`}>
+          <label>
+            확인번호·항공편·인상착의
+            <span className="staff-search-field">
+              <Search size={18} aria-hidden="true" />
+              <input
+                type="search"
+                id="visits-search"
+                value={query}
+                maxLength={80}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="예: AB12CD34, KE123"
+              />
+            </span>
+          </label>
+          <details className={styles.filterDetails}>
+            <summary>거점·날짜</summary>
+            <div className={styles.toolbar}>
+              <label>
+                거점
+                <select
+                  id="visits-hub-filter"
+                  value={filters.hub}
+                  onChange={(e) => filter({ hub: e.target.value })}
+                >
+                  <option value="all">모든 거점</option>
+                  {SERVICE_HUBS.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                날짜
+                <input
+                  type="date"
+                  value={filters.day}
+                  onChange={(e) => filter({ day: e.target.value })}
+                />
+              </label>
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => filter({ hub: "all", day: "" })}
+              >
+                조건 초기화
+              </button>
+            </div>
+          </details>
+        </div>
+      </section>
       {loadError && (
         <p role="alert" className={styles.error}>
           {loadError} 이전에 받은 자료가 남아 있을 수 있습니다.
@@ -239,7 +245,13 @@ export function VisitConsole({ isDesk }: { isDesk: boolean }) {
       )}
       {!loaded && <p role="status">지원 현황을 확인하고 있습니다.</p>}
       {loaded && !visits.length && (
-        <p className={styles.empty}>조건에 맞는 지원이 없습니다.</p>
+        <div className="staff-queue-empty" role="status">
+          <span>
+            <ClipboardCheck size={30} aria-hidden="true" />
+          </span>
+          <strong>조건에 맞는 지원이 없습니다.</strong>
+          <p>예약과 현장 요청이 접수되면 이곳에 표시됩니다.</p>
+        </div>
       )}
       <ul className={styles.workList}>
         {visits.map((v) => {
@@ -515,32 +527,29 @@ export function VisitConsole({ isDesk }: { isDesk: boolean }) {
           </button>
         </nav>
       )}
-      <ShiftSettings mine={mine} busy={busy} save={mutate} />
-      {isDesk && (
-        <details className={styles.panel}>
-          <summary>거점 운영시간·정원·장비 기준</summary>
-          <p className={styles.demo}>
-            시연 장비 대장과 예약·현장 호출에 함께 적용합니다. 운영 중지 후에는
-            진행 중인 지원을 확인하고 지연·대체 안내를 전달하세요.
-          </p>
-          <Link className={styles.link} href="/staff/resources">
-            장비 상태·점유 확인 →
-          </Link>
-          {rules.map((r) => (
-            <RuleForm
-              key={r.hubId + r.service}
-              rule={r}
-              busy={busy}
-              save={mutate}
-            />
-          ))}
-        </details>
-      )}
-      {isDesk && (
-        <Link className={styles.link} href="/staff/experience">
-          운영 효과·체험 집계 →
-        </Link>
-      )}
+      <div className="staff-visit-settings">
+        <ShiftSettings mine={mine} busy={busy} save={mutate} />
+        {isDesk && (
+          <details className={styles.panel}>
+            <summary>거점 운영시간·정원·장비 기준</summary>
+            <p className={styles.demo}>
+              시연 장비 대장과 예약·현장 호출에 함께 적용합니다. 운영 중지
+              후에는 진행 중인 지원을 확인하고 지연·대체 안내를 전달하세요.
+            </p>
+            <Link className={styles.link} href="/staff/resources">
+              장비 상태·점유 확인 →
+            </Link>
+            {rules.map((r) => (
+              <RuleForm
+                key={r.hubId + r.service}
+                rule={r}
+                busy={busy}
+                save={mutate}
+              />
+            ))}
+          </details>
+        )}
+      </div>
     </>
   );
 }

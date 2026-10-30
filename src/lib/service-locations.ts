@@ -1,3 +1,4 @@
+import { mapFacilityPlace } from "./map-facilities";
 import { NO_MEETING_PLACE, placeOf, type Place } from "./airport";
 /** Internal work-queue marker, deliberately excluded from airport maps and kiosk installation. */
 const remoteRequest: Place = {
@@ -21,7 +22,7 @@ export function requestPlaceOf(id: string | null | undefined) {
       labelEn: "Reported location details",
     };
   }
-  return id === NO_MEETING_PLACE ? remoteRequest : placeOf(id);
+  return id === NO_MEETING_PLACE ? remoteRequest : placeOf(id) ?? mapFacilityPlace(id);
 }
 export function reportLocationLabel(
   fields: Record<string, string> | undefined,
@@ -48,4 +49,9 @@ export function reportLocationLabel(
         : "지하 1층"
       : fields.reportLevel + (en ? "F" : "층");
   return `${area} ${floor} · ${fields.reportLocation}`;
+}
+
+/** Resolve destination labels without registering map facilities as pickup hubs. */
+export function destinationPlaceOf(id: string | null | undefined) {
+  return placeOf(id) ?? mapFacilityPlace(id);
 }

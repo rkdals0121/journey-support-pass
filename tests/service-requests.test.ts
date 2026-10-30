@@ -1,3 +1,4 @@
+import { MAP_FACILITIES, facilityId } from "@/lib/map-facilities";
 import { beforeAll, beforeEach, describe, it, expect } from "vitest";
 import {
   createServiceRequest,
@@ -220,6 +221,46 @@ describe("DX independent and pre-registered requests", () => {
       (await create(2, { topicId: "facility", service: "robot" })).status,
     ).toBe(400);
     expect((await create(3, { businessId: "unknown" })).status).toBe(400);
+  });
+  it("uses the explicitly chosen mobility pickup on a kiosk and preserves its map destination", async () => {
+    const p = MAP_FACILITIES.find(p => p.building === 3 && p.area === "AIR" && p.category === 112)!;
+    const r = await createServiceRequest(db, kioskSession(now, "cc-center"), {...body(1), placeId:"gate-132", service:"mobility", topicId:"mobility", destinationId:facilityId(p)}, "kiosk:mobility-map", now);
+    expect(r.status).toBe(200);
+    expect(get(r)).toMatchObject({placeId:"gate-132", destinationId:facilityId(p)});
+    expect(get(await serviceRequestStatus(db, receipt(1), now))).toMatchObject({placeId:"gate-132",destinationId:facilityId(p)});
+  });
+  it("keeps an explicitly selected facility as the pickup in create, status and staff views", async () => {
+    const p=MAP_FACILITIES.find(p=>p.building===3&&p.area==="AIR"&&p.category===112)!;
+    const destination=MAP_FACILITIES.find(q=>q.building===3&&q.area==="AIR"&&q.id!==p.id)!;
+    const result=await createServiceRequest(db,kioskSession(now,"cc-center"),{...body(1),placeId:facilityId(p),service:"mobility",topicId:"mobility",destinationId:facilityId(destination)},"kiosk:facility-pickup",now);
+    expect(result.status).toBe(200);
+    expect(get(result)).toMatchObject({placeId:facilityId(p),destinationId:facilityId(destination)});
+    expect(get(result).place).toContain(p.name);
+    expect(get(await serviceRequestStatus(db,receipt(1),now)).place).toContain(p.name);
+    expect(JSON.stringify((await listServiceRequests(db,desk,now,{topic:"mobility"})).body)).toContain(p.name);
+  });
+  it("allows a manual kiosk pickup in another terminal while rejecting unknown IDs", async () => {
+    for (const [n,id] of [[2,"t2-center"],[4,"t1-info"]] as const) {
+      const r = await createServiceRequest(db, kioskSession(now, "cc-center"), {...body(n),placeId:id,service:"mobility"}, "kiosk:mobility-map", now);
+      expect(r.status).toBe(200);
+      expect(get(r).placeId).toBe(id);
+    }
+    expect((await create(3,{placeId:"map-poi-forged",service:"mobility"})).status).toBe(400);
+  });
+  it("accepts facility pickups on mobile and keeps map pickup support scoped to mobility", async () => {
+    const p=MAP_FACILITIES.find(p=>p.category===112)!;
+    expect((await create(1,{placeId:facilityId(p),service:"mobility"})).status).toBe(200);
+    expect((await create(2,{placeId:facilityId(p),service:"guidance"})).status).toBe(400);
+  });
+  it("stores a map facility destination and rejects a foreign-terminal or forged ID", async () => {
+    const p = MAP_FACILITIES.find(p => p.building === 3 && p.area === "AIR")!;
+    const accepted = await create(1, {service:"mobility", topicId:"mobility", destinationId:facilityId(p)});
+    expect(accepted.status).toBe(200);
+    expect(get(accepted).destinationId).toBe(facilityId(p));
+    expect(get(await serviceRequestStatus(db, receipt(1), now)).destinationId).toBe(facilityId(p));
+    const foreign = MAP_FACILITIES.find(p=>p.building===2 && p.area==="AIR")!;
+    expect((await create(2, {service:"mobility", destinationId:facilityId(foreign)})).status).toBe(400);
+    expect((await create(3, {service:"mobility", destinationId:"map-poi-forged"})).status).toBe(400);
   });
   it("only saves valid mobility destinations within a terminal and security boundary", async () => {
     expect(

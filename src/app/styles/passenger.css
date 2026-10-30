@@ -666,7 +666,7 @@
 .request-local-tools button { font-size:var(--text-caption); }
 .service-form-card, .service-route-result { padding:1.25rem; }
 }
-.request-form[data-active-step="0"] [data-request-step]:not([data-request-step="0"]), .request-form[data-active-step="1"] [data-request-step]:not([data-request-step="1"]), .request-form[data-active-step="2"] [data-request-step]:not([data-request-step="2"]) { display:none; }
+.request-form:not([data-map-flow="true"])[data-active-step="0"] [data-request-step]:not([data-request-step="0"]), .request-form:not([data-map-flow="true"])[data-active-step="1"] [data-request-step]:not([data-request-step="1"]), .request-form:not([data-map-flow="true"])[data-active-step="2"] [data-request-step]:not([data-request-step="2"]) { display:none; }
 @media (max-width: 1200px) {
 .airport-entry-hero { gap: 2rem; }
 .airport-service-item { padding: 1.25rem; gap: 0.75rem; }
@@ -845,15 +845,8 @@
  .service-workspace > .service-heading:not(.request-heading) > p { grid-column:1;grid-row:2;margin:0; }
  .service-workspace > .service-heading:not(.request-heading) .service-kicker { grid-column:2;grid-row:2; }
  .service-workspace > .service-heading:not(.request-heading) .service-demo-label { grid-column:2;grid-row:1;margin:0;align-self:center; }
- .request-task-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .request-form:not([data-map-flow="true"]) .request-task-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
  .service-task-fields { grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3); }
- .navigation-form .place-finder-hint { margin:0 0 var(--space-2); }
- .navigation-form .place-candidate { padding:var(--space-2);gap:var(--space-2); }
- .navigation-form .place-candidates { gap:var(--space-2); }
- .navigation-form .place-area-filter { margin:var(--space-2) 0; }
- .navigation-form .place-manual { margin-top:var(--space-2); }
- .navigation-form > .public-button { position:sticky;bottom:var(--space-2);z-index:5; }
- .navigation-form .place-finder:has(.place-confirmed) > :is(.place-find-actions,.place-finder-hint,.place-manual) { display:none; }
  .airport-portal-support { grid-template-columns:1fr 1fr; }
  .airport-portal-links { grid-template-columns:1fr 1fr;gap:var(--space-3); }
  .airport-portal .airport-business-reference { margin-top:var(--space-3); }
@@ -862,26 +855,21 @@
  .request-task-options legend { margin-bottom:var(--space-2); }
 }
 @media (min-width: 1101px) {
- .request-service-options { grid-template-columns:repeat(5,minmax(0,1fr)); }
- .request-section[data-request-step="0"]:has(> .request-service-options) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-5); }
- .request-section[data-request-step="0"]:has(> .request-service-options) > h2 { grid-column:1 / -1;margin:0; }
- .request-section[data-request-step="0"] > .request-service-options { grid-column:1 / -1; }
- .request-section[data-request-step="0"]:has(> .request-service-options) > .request-task-options { grid-column:1;grid-row:3;margin:0;grid-template-columns:1fr; }
- .request-section[data-request-step="0"]:has(> .request-service-options) > .request-privacy-warning { grid-column:1;grid-row:4; }
- .request-section[data-request-step="0"]:has(> .request-service-options) > .service-task-fields { grid-column:2;grid-row:3 / span 2;grid-template-columns:1fr; }
- .request-section[data-request-step="0"]:has(> .request-service-options) .service-task-fields label { margin-top:0; }
+ .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(5,minmax(0,1fr)); }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-5); }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > h2 { grid-column:1 / -1;margin:0; }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"] > .request-service-options { grid-column:1 / -1; }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > .request-task-options { grid-column:1;grid-row:3;margin:0;grid-template-columns:1fr; }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > .request-privacy-warning { grid-column:1;grid-row:4; }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > .service-task-fields { grid-column:2;grid-row:3 / span 2;grid-template-columns:1fr; }
+ .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) .service-task-fields label { margin-top:0; }
 
  .airport-service-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
- .navigation-layout { grid-template-columns:minmax(0,1fr); }
- .navigation-form { display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:var(--space-4);align-items:start; }
- .navigation-form > .request-section { margin:0;padding:var(--space-3); }
- .navigation-form > .public-button,.navigation-form > .error-note { grid-column:1 / -1; }
- .navigation-layout > .service-route-result { margin:0; }
- .navigation-layout .route-empty { display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3); }
- .navigation-layout .route-empty > svg { width:var(--space-6);height:var(--space-6);margin:0; }
- .navigation-layout .route-empty h2,.navigation-layout .route-empty p { margin:0; }
 }
 @media (max-height: 700px) and (min-width: 761px) {
  .service-workspace,.request-experience { padding-block:var(--space-3); }
  .service-heading { margin-bottom:var(--space-3); }
 }
+
+.request-mobile-nav[hidden] { display:none; }
+.request-form[data-map-flow="true"] { grid-template-columns:minmax(0,1fr); }
