@@ -2,6 +2,7 @@ import { config } from "@/lib/config";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { AssistList } from "./AssistList";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +12,21 @@ export default async function AssistPage() {
   const session = await requireStaff();
   return (
     <>
-      <main className="page has-nav">
-        <p>
+      <main className="page has-nav staff-console staff-legacy-console">
+        <header className="workspace-page-head">
+          <div>
+            <p className="eyebrow">기타 업무 · 이전 요청</p>
+            <h1>이동지원 요청</h1>
+          </div>
+          <div className="workspace-page-tools">
+            <Link href="/staff/legacy">이전 요청·인계</Link>
+            <Link className="btn btn-primary" href="/staff/requests">
+              접수·배정
+            </Link>
+          </div>
+        </header>
+        <p className="staff-reference-intro">
           통합 전 이동지원 요청입니다. 새 접수는 통합 요청에서 확인해 주세요.
-        </p>
-        <h1>이동지원 요청</h1>
-        <p className="muted">
-          여객이 청한 전동차 이동지원입니다. 받으면 여객 화면에 「직원
-          배정됨」이 바로 보입니다. 여객의 필요한 지원과 항공편만 나옵니다.
         </p>
         <AssistList refreshSec={config.callRefreshSec} />
       </main>

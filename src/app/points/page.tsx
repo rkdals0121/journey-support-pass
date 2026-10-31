@@ -13,7 +13,7 @@ export default async function PointsPage({
     <PublicShell lang={en ? "en" : "ko"}>
       <main id="public-main" className={styles.page}>
         <p className={styles.eyebrow}>
-          {t("공항 이용 지원", "Airport assistance")}
+          Journey Support Pass
         </p>
         <h1>{t("만남 장소 찾기", "Find a meeting point")}</h1>
         <p>

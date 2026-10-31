@@ -9,9 +9,16 @@
 .staff-workspace .workspace-side nav { gap: 0; }
 .staff-workspace .workspace-side nav a { min-height: 2.5rem; margin: 0; padding: var(--space-2) var(--space-3); }
 .staff-workspace .workspace-side nav a svg { width: 1.125rem; height: 1.125rem; flex: none; }
+.workspace-side nav a > span { flex: 1; min-width: 0; }
+.workspace-nav-arrow { opacity: 0; }
+nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
+.workspace-side-footer { display: flex; align-items: center; gap: var(--space-2); margin-top: auto; padding: var(--space-5) var(--space-3) 0; color: var(--color-muted); font-size: var(--text-caption); }
+.workspace-side-footer small { display: block; margin-top: var(--space-1); font-size: var(--text-caption); }
 .staff-workspace .workspace-nav-group + .workspace-nav-group { margin-top: var(--space-4); }
 .staff-workspace .workspace-nav-group > p,
 .staff-workspace .workspace-nav-group > h2 { margin: 0 0 var(--space-1); padding: 0 var(--space-3); font-size: var(--text-caption); letter-spacing: 0.04em; }
+.workspace-nav-group > summary { cursor: pointer; min-height: 2.75rem; align-content: center; padding: var(--space-2) var(--space-3); color: var(--color-muted); font-size: var(--text-caption); font-weight: var(--weight-label); }
+.workspace-nav-group[open] > summary { color: var(--color-primary); }
 
 /* ── 화면 머리: 제목 왼쪽, 주요 버튼 하나와 보조 버튼은 오른쪽에 같은 높이로 ── */
 .staff-workspace .workspace-page-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin: 0 0 var(--space-5); }
@@ -86,3 +93,106 @@
 /* 알림·설정은 요약 줄 아래 오른쪽에 작게 */
 .staff-workspace.airport-workspace .work-requests .work-preferences { position: static; order: 1; align-self: flex-start; margin: 0 0 var(--space-4); inset: auto; }
 .work-requests .work-preferences > summary { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 var(--space-3); border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); font-size: var(--text-small); font-weight: var(--weight-label); cursor: pointer; }
+
+/* 업무 조회: 검색·필터는 한 패널, 처리할 내용은 그 아래 같은 기준선에 둔다. */
+.staff-queue-panel { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: var(--space-5); display: grid; gap: var(--space-4); }
+.staff-queue-panel h2 { margin: 0; color: var(--color-primary-hover); }
+.staff-queue-panel h2 span { display: inline-flex; justify-content: center; min-width: 2rem; margin-left: var(--space-2); padding: var(--space-1) var(--space-2); background: var(--color-primary-faint); border-radius: var(--radius-pill); }
+.staff-queue-panel p { margin: var(--space-1) 0 0; }
+.staff-queue-panel button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); }
+.staff-search-field { display: flex; align-items: center; gap: var(--space-2); }
+.staff-search-field > svg { flex: none; color: var(--color-muted); }
+.staff-visit-toolbar .staff-search-field input { margin: 0; min-width: 0; }
+.staff-visit-toolbar > label { min-width: 0; margin: 0; }
+.staff-visit-toolbar > details { margin: 0; }
+.staff-visit-toolbar > details > summary { min-height: 2.75rem; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-small); cursor: pointer; font-size: var(--text-small); }
+.staff-visit-toolbar > details[open] { flex-basis: 100%; }
+.staff-visit-toolbar > details[open] > div { margin-top: var(--space-3); padding: var(--space-4); border-radius: var(--radius-small); background: var(--color-primary-faint); }
+.staff-queue-empty { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-5); margin-top: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.staff-queue-empty > span { grid-row: 1 / span 2; display: grid; place-items: center; width: 3.5rem; height: 3.5rem; background: var(--color-primary-faint); color: var(--color-primary); border-radius: var(--radius-pill); }
+.staff-queue-empty strong { font-size: var(--text-body); }
+.staff-queue-empty p { margin: 0; font-size: var(--text-small); color: var(--color-muted); }
+.staff-visit-settings { display: flex; gap: var(--space-3); align-items: flex-start; flex-wrap: wrap; margin-top: var(--space-4); }
+.staff-visit-settings > details { flex: 1 1 15rem; min-width: 0; margin: 0; padding: var(--space-4); border-radius: var(--radius-medium); background: var(--color-surface); border: 1px solid var(--color-line); }
+.staff-visit-settings > details[open] { flex-basis: 100%; }
+.staff-visit-settings > details > summary { cursor: pointer; font-size: var(--text-small); font-weight: var(--weight-label); }
+.staff-visit-console > ul:empty { margin: 0; }
+.staff-legacy-list { display: grid; gap: var(--space-4); }
+.staff-legacy-context { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
+.staff-legacy-context > span:first-child { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-primary); font-size: var(--text-small); font-weight: var(--weight-label); }
+.staff-legacy-list .staff-queue-panel h2 { font-size: var(--text-body); }
+.staff-legacy-list .staff-queue-panel h2 b { display: inline-flex; justify-content: center; min-width: 2rem; margin-left: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--color-primary-faint); color: var(--color-primary-hover); font-size: var(--text-body); }
+.staff-legacy-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.staff-legacy-filters button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 2.75rem; padding: var(--space-2) var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-small); background: var(--color-surface); color: var(--color-primary-hover); font: inherit; font-size: var(--text-small); font-weight: var(--weight-label); cursor: pointer; }
+.staff-legacy-filters button[aria-pressed="true"] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-surface); }
+.staff-legacy-filters .seg-refresh { margin-left: auto; }
+.staff-legacy-list .staff-queue-empty { margin: 0; }
+.staff-legacy-list .calls:empty { display: none; }
+.staff-legacy-list .call { padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: none; }
+.staff-legacy-list .call-other { border-style: dashed; }
+.staff-legacy-list .call-accepted { border-color: var(--color-primary); }
+.staff-legacy-list .calls-ended { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
+
+/* 운영 기준과 기타 업무도 같은 제목·카드·간격을 사용한다. */
+.staff-reference-intro { margin: 0 0 var(--space-4); color: var(--color-muted); font-size: var(--text-small); line-height: 1.7; }
+.staff-reference-page > .fine { margin: var(--space-3) 0 0; color: var(--color-muted); font-size: var(--text-caption); line-height: 1.7; }
+.staff-section-nav { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
+.staff-section-nav :is(a, button) { display: inline-flex; align-items: center; min-height: 2.75rem; padding: var(--space-2) var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-pill); color: var(--color-primary-hover); background: var(--color-surface); text-decoration: none; font-size: var(--text-small); font-weight: var(--weight-label); cursor: pointer; }
+.staff-section-nav button[aria-selected="true"] { color: var(--color-surface); background: var(--color-primary); border-color: var(--color-primary); }
+.staff-reference-grid, .staff-business-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.staff-reference-panel { min-width: 0; padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); scroll-margin-top: var(--space-4); }
+.staff-reference-wide { grid-column: 1 / -1; }
+.staff-section-index { display: block; margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-caption); font-weight: var(--weight-label); letter-spacing: .06em; }
+.staff-reference-panel h2 { margin: 0 0 var(--space-4); font-size: var(--text-heading); color: var(--color-primary-hover); }
+.staff-reference-panel :is(p, li) { font-size: var(--text-small); line-height: 1.7; }
+.staff-reference-panel .fine { color: var(--color-muted); font-size: var(--text-caption); }
+.staff-reference-panel .dx-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); padding: 0; margin-block: var(--space-4); }
+.staff-reference-panel .dx-summary > div { padding: var(--space-3); border: 0; background: var(--color-primary-faint); }
+.staff-reference-panel .dx-summary dd { font-size: var(--text-body); margin: var(--space-1) 0 0; }
+.staff-reference-panel details.dx-card { border: 1px solid var(--color-line); border-radius: var(--radius-small); padding: var(--space-3) var(--space-4); margin: var(--space-2) 0; }
+.staff-reference-panel summary { cursor: pointer; font-size: var(--text-small); font-weight: var(--weight-label); min-height: 2rem; align-content: center; }
+.staff-business-groups h3 { margin: 0 0 var(--space-3); font-size: var(--text-body); color: var(--color-primary); }
+.staff-destination-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+.staff-destination-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); min-width: 0; padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); color: var(--color-text); background: var(--color-surface); text-decoration: none; }
+.staff-destination-card > svg { width: 2.5rem; height: 2.5rem; padding: var(--space-2); box-sizing: content-box; background: var(--color-primary-faint); color: var(--color-primary); border-radius: var(--radius-medium); }
+.staff-destination-card h2 { font-size: var(--text-heading); margin: 0; color: var(--color-primary-hover); }
+.staff-destination-card p { margin: 0; color: var(--color-muted); font-size: var(--text-small); line-height: 1.7; }
+.staff-destination-card > span { display: flex; align-items: center; gap: var(--space-2); margin-top: auto; padding-top: var(--space-4); font-size: var(--text-small); font-weight: var(--weight-label); color: var(--color-primary); }
+.staff-destination-card.is-primary { background: var(--color-primary-faint); }
+.staff-destination-card:hover, .staff-section-nav :is(a, button):hover { border-color: var(--color-primary); }
+/* 장비 조회도 예약·접수와 같은 흰색 패널 안에서 다룬다. */
+.resource-inventory .inventory-toolbar { padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.resource-register { padding: var(--space-4); margin-block: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.resource-register > summary { cursor: pointer; font-size: var(--text-small); font-weight: var(--weight-label); }
+.resource-inventory .inventory-empty { border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); padding: var(--space-6); color: var(--color-muted); font-size: var(--text-small); }
+.resource-console > p > a { color: var(--color-primary); font-size: var(--text-small); text-underline-offset: .2em; }
+.work-master-detail.is-empty .work-request-table thead { display: none; }
+.staff-workspace .work-master-detail.is-empty .work-request-table td { padding: 0; }
+@media (min-width: 761px) {
+  .staff-workspace.airport-workspace .work-requests { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); }
+  .work-requests > * { grid-column: 1 / -1; }
+  .staff-workspace.airport-workspace .work-requests .work-preferences { grid-column: 2; grid-row: 2; margin: 0; align-self: start; }
+  .staff-workspace.airport-workspace .work-requests .work-preferences[open] { grid-column: 1 / -1; grid-row: 3; width: 100%; }
+  .staff-workspace.airport-workspace .work-scope-control { grid-row: 2; grid-column: 1; min-width: 0; }
+  .staff-workspace.airport-workspace .work-scope-tabs { gap: var(--space-4); margin: 0; }
+  .staff-workspace.airport-workspace .work-requests > form.work-search { order: 2; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .staff-reference-grid, .staff-destination-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .staff-reference-grid, .staff-business-groups, .staff-destination-grid { grid-template-columns: minmax(0, 1fr); }
+  .staff-queue-panel, .staff-reference-panel, .staff-destination-card { padding: var(--space-4); }
+  .staff-queue-empty { padding: var(--space-5); }
+  .workspace-mobile-menu .workspace-nav-arrow { display: none; }
+}
+@media (max-height: 700px) {
+  .staff-workspace.airport-workspace .workspace-content { padding: var(--space-4); }
+  .staff-workspace.airport-workspace .workspace-page-head { margin-bottom: var(--space-3); }
+  .staff-workspace .workspace-nav-group + .workspace-nav-group { margin-top: var(--space-2); }
+  .staff-workspace .workspace-side .workspace-nav-group > p { margin-top: var(--space-2); }
+  .staff-workspace .workspace-brand { margin-bottom: var(--space-2); }
+  .staff-queue-panel { padding: var(--space-4); gap: var(--space-3); }
+  .staff-workspace .work-master > .dx-actions { padding: var(--space-2) var(--space-4); }
+  .staff-workspace .work-master-detail.is-empty .work-empty { min-height: 5rem; padding: var(--space-3); gap: var(--space-2); }
+}

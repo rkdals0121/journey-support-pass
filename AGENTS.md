@@ -67,7 +67,7 @@
 ## 5. 지켜야 할 동작
 - 서버에서 CSS 등 저장소 파일을 `readFileSync` 로 읽지 않는다. 배포본에는 그 파일이 없어 전 화면이 500 이 된다(실제로 있었던 일).
 - JSX 글자 안에 맨 `"` 를 쓰지 않는다(빌드 실패). 「」를 쓴다.
-- 자동 점검(`scripts/e2e.ts`)이 쓰는 클래스·id 를 바꾸면 점검 스크립트도 같이 고친다. 예: `.call-btn`, `.flow-cta`, `.flow-bar`, `.haneuli-start`, `.haneuli-number`, `.pad-num .pad-key`, `.code-boxes`, `.registration-language select`, `#reg-flight`.
+- 자동 점검(`scripts/e2e.ts`)이 쓰는 클래스·id 를 바꾸면 점검 스크립트도 같이 고친다. 예: `.call-btn`, `.flow-cta`, `.flow-bar`, `.haneuli-character`, `.haneuli-number`, `.haneuli-passport`, `.pad-num .pad-key`, `.code-boxes`, `.registration-language select`, `#reg-flight`.
 - 화면 문구를 바꾸면 그 문구를 기다리는 점검(`waitText`)도 같이 고친다.
 - DB 구조를 바꾸면 운영 DB 에는 자동으로 적용되지 않는다. PR 에 적고 관리자에게 알린다(`scripts/remote-setup.ts`).
 - 접속 코드·비밀값을 코드·문서·PR 에 쓰지 않는다.
@@ -89,6 +89,7 @@ npx tsx scripts/e2e.ts                 # 전체 흐름 점검, 30~40분 (화면 
 - 병합 전에 Vercel 미리보기 주소에서 첫 화면, `/register`, `/kiosk`, `/staff/login` 이 열리는지 확인한다.
 
 ## 7. 더 읽을 것
+- **화면을 만들거나 고칠 때의 기준(틀·끝선·한 화면 맞춤·확인 방법): `docs/ui-guide.md`** — 화면 작업 전에 반드시 읽는다.
 - 디자인 기준: `docs/design-system.md`
 - 화면 구성 개편 기록: `docs/layout-handoff.md`
 - 서비스 명세: `docs/spec.md`

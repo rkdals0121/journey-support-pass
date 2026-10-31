@@ -1,0 +1,424 @@
+[
+  {
+    "route": "/",
+    "width": 1280,
+    "height": 648,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 128,
+    "formTop": 180,
+    "actions": [
+      {
+        "text": "여행 전 지원 등록",
+        "bottom": 463.6875,
+        "inView": true
+      },
+      {
+        "text": "",
+        "bottom": 265.6875,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/",
+    "width": 1920,
+    "height": 937,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 281.453125,
+    "formTop": 333.453125,
+    "actions": [
+      {
+        "text": "여행 전 지원 등록",
+        "bottom": 617.140625,
+        "inView": true
+      },
+      {
+        "text": "",
+        "bottom": 419.140625,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/help",
+    "width": 1280,
+    "height": 1601,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 230,
+    "formTop": 479.96875,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 771.65625,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/help",
+    "width": 1920,
+    "height": 1619,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 247.6875,
+    "formTop": 497.65625,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 789.34375,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/help?topic=mobility",
+    "width": 1280,
+    "height": 1447,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 230,
+    "formTop": 479.96875,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 771.65625,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/help?topic=mobility",
+    "width": 1920,
+    "height": 1465,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 247.6875,
+    "formTop": 497.65625,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 789.34375,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/help?topic=facility",
+    "width": 1280,
+    "height": 1748,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 230,
+    "formTop": 479.96875,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 771.65625,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/help?topic=facility",
+    "width": 1920,
+    "height": 1765,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 247.6875,
+    "formTop": 497.65625,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 789.34375,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/help?topic=traffic",
+    "width": 1280,
+    "height": 687,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 176,
+    "actions": []
+  },
+  {
+    "route": "/help?topic=traffic",
+    "width": 1920,
+    "height": 937,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 193.6875,
+    "actions": []
+  },
+  {
+    "route": "/help?topic=other",
+    "width": 1280,
+    "height": 994,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 230,
+    "formTop": 479.96875,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 754.453125,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/help?topic=other",
+    "width": 1920,
+    "height": 1012,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 247.6875,
+    "formTop": 497.65625,
+    "actions": [
+      {
+        "text": "요청 내용 확인",
+        "bottom": 772.140625,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/services",
+    "width": 1280,
+    "height": 1420,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 177.6875,
+    "formTop": 145.640625,
+    "actions": [
+      {
+        "text": "",
+        "bottom": 203.03125,
+        "inView": true
+      },
+      {
+        "text": "내 요청 확인",
+        "bottom": 1012.078125,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/services",
+    "width": 1920,
+    "height": 1438,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 195.375,
+    "formTop": 163.328125,
+    "actions": [
+      {
+        "text": "",
+        "bottom": 220.71875,
+        "inView": true
+      },
+      {
+        "text": "내 요청 확인",
+        "bottom": 1029.765625,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/requests",
+    "width": 1280,
+    "height": 864,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 174,
+    "actions": [
+      {
+        "text": "서비스 이용하기",
+        "bottom": 624.671875,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/requests",
+    "width": 1920,
+    "height": 937,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 191.6875,
+    "actions": [
+      {
+        "text": "서비스 이용하기",
+        "bottom": 642.359375,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/navigate",
+    "width": 1280,
+    "height": 1432,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 174,
+    "formTop": 319.78125,
+    "actions": [
+      {
+        "text": "경로 보기",
+        "bottom": 1277.25,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/navigate",
+    "width": 1920,
+    "height": 1450,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 191.6875,
+    "formTop": 337.46875,
+    "actions": [
+      {
+        "text": "경로 보기",
+        "bottom": 1294.9375,
+        "inView": false
+      }
+    ]
+  },
+  {
+    "route": "/visits",
+    "width": 1280,
+    "height": 1067,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 132.390625,
+    "formTop": 291.96875,
+    "actions": []
+  },
+  {
+    "route": "/visits",
+    "width": 1920,
+    "height": 1085,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 150.078125,
+    "formTop": 309.65625,
+    "actions": []
+  },
+  {
+    "route": "/prepare",
+    "width": 1280,
+    "height": 764,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 267.578125,
+    "actions": [
+      {
+        "text": "필요한 도움 등록하기",
+        "bottom": 480.390625,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/prepare",
+    "width": 1920,
+    "height": 937,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 281.578125,
+    "actions": [
+      {
+        "text": "필요한 도움 등록하기",
+        "bottom": 501.765625,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/prepare/booking",
+    "width": 1280,
+    "height": 883,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 144.796875,
+    "formTop": 273.25,
+    "actions": [
+      {
+        "text": "예약 조회",
+        "bottom": 617.828125,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/prepare/booking",
+    "width": 1920,
+    "height": 937,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 162.484375,
+    "formTop": 290.9375,
+    "actions": [
+      {
+        "text": "예약 조회",
+        "bottom": 635.515625,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/services/desks",
+    "width": 1280,
+    "height": 1044,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 104,
+    "actions": []
+  },
+  {
+    "route": "/services/desks",
+    "width": 1920,
+    "height": 1061,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 121.6875,
+    "actions": []
+  },
+  {
+    "route": "/services/lost-property",
+    "width": 1280,
+    "height": 633,
+    "overflow": false,
+    "headerBottom": 88,
+    "h1Top": 104,
+    "actions": [
+      {
+        "text": "안내데스크 위치 보기",
+        "bottom": 405.25,
+        "inView": true
+      }
+    ]
+  },
+  {
+    "route": "/services/lost-property",
+    "width": 1920,
+    "height": 937,
+    "overflow": false,
+    "headerBottom": 105.6875,
+    "h1Top": 121.6875,
+    "actions": [
+      {
+        "text": "안내데스크 위치 보기",
+        "bottom": 422.9375,
+        "inView": true
+      }
+    ]
+  }
+]

@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, ClipboardCheck, FilePenLine, Keyboard, MapPin, ScanLine } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Accessibility, ArrowRight, BookUser, Keyboard, MapPin, ScanLine } from "lucide-react";
+import { type ReactNode } from "react";
 
 /** 새 하늘이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
 const POSES = {
@@ -21,82 +21,77 @@ export function HaneuliSays({ text, size = "md", pose = "front" }: { text: strin
   );
 }
 
-/** The camera stays mounted across sleep and wake. */
-export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onNew, scanner, error, listen }: {
+/**
+ * 안내 키오스크 첫 장면. 웹 첫 화면과 같은 틀: 위에 큰 소개 박스(제목 + 잠든 하늘이), 아래에 같은 크기의 카드 세 개.
+ * 교통약자 전용 키오스크라 본인 확인을 먼저 한다. 카드: 탑승권 스캔(카메라), 여권 스캔, 예약번호 입력.
+ * 탑승권을 바로 비추면 하늘이가 깨며 다음 화면으로 간다. 화면만 누르면 하늘이가 깨어 카드 중 하나를 고르라고 알려 준다.
+ * The camera stays mounted across sleep and wake.
+ */
+export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onPassport, scanner, error, listen }: {
   en: boolean; here: string; awake: boolean; busy: boolean;
-  onWake: () => void; onRest: () => void; onNumber: () => void; onNew: () => void;
+  onWake: () => void; onRest: () => void; onNumber: () => void; onPassport: () => void;
   scanner: ReactNode; error: ReactNode; listen: ReactNode;
 }) {
-  // 「미리 작성했어요」를 고르면 스캔 칸을 강조한다. 카메라는 늘 켜 둔 채라 칸을 새로 그리지 않는다.
-  const [pre, setPre] = useState(false);
-  const scanRef = useRef<HTMLElement>(null);
-  useEffect(() => { if (!awake) setPre(false); }, [awake]);
-
   const bubble = busy
-    ? (en ? "I’m finding your registration!" : "등록하신 내용을 찾고 있어요!")
+    ? (en ? "Finding your registration!" : "찾고 있어요!")
     : !awake
-      ? (en ? "Scan your boarding pass to wake me up!" : "탑승권을 스캔하여\n저를 깨워 주세요!")
-      : pre
-        ? (en ? "Hold your boarding pass to the camera." : "탑승권을 카메라에\n대 주세요.")
-        : (en ? "Hello! I’m Haneuli. Let’s check the help you need." : "안녕하세요! 저는 하늘이예요.\n필요한 도움을 확인할게요.");
+      ? (en ? "Scan your boarding pass!" : "탑승권을 스캔해 주세요!")
+      : (en ? "Choose one below!" : "아래에서 하나를 골라 주세요!");
 
   return (
-    <div className={`haneuli-welcome ${awake ? "is-awake" : "is-idle"} ${pre ? "is-pre" : ""}`} onClickCapture={(event) => {
-      if (awake || busy || (event.target as HTMLElement).closest(".haneuli-scan, .haneuli-actions")) return;
+    <div className={`haneuli-welcome ${awake ? "is-awake" : "is-idle"}`} onClickCapture={(event) => {
+      if (awake || busy || (event.target as HTMLElement).closest(".haneuli-ways, .hw-actions")) return;
       event.preventDefault();
       event.stopPropagation();
       onWake();
     }}>
-      <section className="haneuli-stage">
-        <p className="haneuli-location"><MapPin aria-hidden="true" />{here}</p>
-        <div className="haneuli-hero" aria-hidden="true">
-          <p className="haneuli-bubble">{bubble}</p>
-          <div className="haneuli-character">
-            <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
-            {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
-            <span className="haneuli-lid haneuli-lid-l" />
-            <span className="haneuli-lid haneuli-lid-r" />
-            <span className="haneuli-zzz">z Z Z</span>
+      <section className="hw-hero">
+        <div className="hw-hero-copy">
+          <p className="hw-label"><Accessibility aria-hidden="true" />{en ? "Accessible kiosk" : "교통약자 전용"}</p>
+          <h1>{en ? "Accessible kiosk" : "교통약자 전용 키오스크"}</h1>
+          <p className="hw-here"><MapPin aria-hidden="true" />{here}</p>
+          {/* 소리 안내를 쓰는 분은 탑승권을 대기 전에도 여기서 켠다 */}
+          <div className="hw-actions">
+            {listen}
+            {awake && <button className="hw-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
           </div>
         </div>
-        <div className="haneuli-actions">
-          {listen}
-          {!awake
-            ? <button className="haneuli-start" onClick={onWake} disabled={busy}>{en ? "Start with help" : "도움받아 시작"}<ArrowRight aria-hidden="true" /></button>
-            : <button className="haneuli-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
+        <div className="haneuli-center" aria-hidden="true">
+          <p className="haneuli-bubble">{bubble}</p>
+          <div className="hw-art">
+            <span className="hw-orbit" />
+            <div className="haneuli-character">
+              <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
+              {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
+              <span className="haneuli-lid haneuli-lid-l" />
+              <span className="haneuli-lid haneuli-lid-r" />
+              <span className="haneuli-zzz">z Z Z</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="haneuli-panel">
-        {!awake ? (
-          <div className="haneuli-title">
-            <h1>{en ? "Airport Assistance" : "공항 이용 지원"}</h1>
-            <p>{en ? "From boarding to getting around, we are here to help." : "탑승부터 이동까지, 편안한 공항 이용을 도와드립니다."}</p>
-          </div>
-        ) : (
-          <div className="haneuli-choose">
-            <h1>{en ? "Let’s check the help you need" : "필요한 도움을 확인해요"}</h1>
-            <div className="haneuli-choices">
-              <button className="haneuli-choice" onClick={() => { setPre(true); scanRef.current?.focus(); }} aria-pressed={pre}>
-                <ClipboardCheck aria-hidden="true" />
-                <strong>{en ? "I filled it in before" : "미리 작성했어요"}</strong>
-                <span>{en ? "Scan your boarding pass or enter your number" : "탑승권을 스캔하거나 번호로 찾아요"}</span>
-              </button>
-              <button className="haneuli-choice" onClick={onNew}>
-                <FilePenLine aria-hidden="true" />
-                <strong>{en ? "I haven’t filled it in yet" : "아직 작성하지 않았어요"}</strong>
-                <span>{en ? "Enter the help you need now" : "지금 필요한 도움을 입력해요"}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        <section className="haneuli-scan" ref={scanRef} tabIndex={-1} aria-label={en ? "Boarding pass scanner" : "탑승권 스캔"}>
-          <div className="haneuli-scan-copy"><span className="haneuli-scan-icon"><ScanLine aria-hidden="true" /></span><div><h2>{en ? "Boarding pass scan" : "탑승권 스캔"}</h2><p>{en ? "Scan your boarding pass to load your saved support." : "탑승권을 스캔하시면 등록하신 내용을 불러옵니다."}</p></div></div>
+      <section className="haneuli-ways" aria-label={en ? "Check in" : "확인 방법"}>
+        <div className="hw-card haneuli-scan">
+          <p className="hw-card-head">
+            <span className="hw-icon"><ScanLine aria-hidden="true" /></span>
+            <strong>{en ? "Scan boarding pass" : "탑승권 스캔"}</strong>
+          </p>
           <div className="haneuli-camera">{scanner}</div>
-          <button className="haneuli-number" onClick={onNumber} disabled={busy}><Keyboard aria-hidden="true" />{en ? "Enter pass number" : "번호로 찾기"}</button>
-          <div className="haneuli-status" aria-live="polite">{busy ? <p role="status">{en ? "Checking your registration…" : "탑승권을 확인하고 있습니다…"}</p> : error}</div>
-        </section>
+        </div>
+        <button className="hw-card haneuli-way haneuli-passport" onClick={onPassport} disabled={busy}>
+          <span className="hw-icon"><BookUser aria-hidden="true" /></span>
+          <strong>{en ? "Scan passport" : "여권 스캔"}</strong>
+          <small>{en ? "Photo page" : "사진면을 카메라에"}</small>
+          <ArrowRight aria-hidden="true" className="hw-arrow" />
+        </button>
+        <button className="hw-card haneuli-way haneuli-number" onClick={onNumber} disabled={busy}>
+          <span className="hw-icon"><Keyboard aria-hidden="true" /></span>
+          <strong>{en ? "Enter booking number" : "예약번호 입력"}</strong>
+          <small>{en ? "Registration or airline number" : "고유 일련 번호 · 항공 예약번호"}</small>
+          <ArrowRight aria-hidden="true" className="hw-arrow" />
+        </button>
+        <div className="haneuli-status" aria-live="polite">{busy ? <p role="status">{en ? "Checking your registration…" : "등록 내용을 확인하고 있습니다…"}</p> : error}</div>
       </section>
     </div>
   );
