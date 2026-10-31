@@ -19,6 +19,15 @@ export type MapState = {
   checkpointSelection?: boolean;
   showCheckpoints?: boolean;
   selectedPoiId?: string | number | null;
+  /** null shows all facilities; an empty array hides every facility icon. */
+  visiblePoiIds?: (string | number)[] | null;
+  showLandmarkLabels?: boolean;
+  facilityFilterActive?: boolean;
+  touchTargetSize?: number;
+  viewRevision?: number;
+  viewportPadding?: [number, number, number, number];
+  overview?: boolean;
+  nearby?: { start: MapLocation; candidatePoiIds: (string | number)[] } | null;
   markers?: Partial<
     Record<"user" | "robot" | "checkpoint" | "destination", MapLocation | null>
   >;
@@ -39,6 +48,8 @@ export type Facility = {
   description: string;
 };
 
+export type NearbyResult = { requestKey: string; results: { id: string | number; distance: number }[] };
+
 type Props = {
   state?: MapState;
   height?: number | string;
@@ -52,6 +63,7 @@ type Props = {
   ) => void;
   onError?: (message: string) => void;
   onReady?: () => void;
+  onNearby?: (result: NearbyResult) => void;
 };
 
 const CHANNEL = "journey-airport-map";
@@ -86,6 +98,8 @@ export default function AirportMap({
         setReady(true);
         handlers.current.onReady?.();
       }
+      if (message.type === "interaction")
+        window.dispatchEvent(new Event("journey-map-activity"));
       if (message.type === "checkpoint-select")
         handlers.current.onCheckpointSelect?.(message.location);
       if (message.type === "checkpoint-change")
@@ -94,11 +108,19 @@ export default function AirportMap({
         handlers.current.onFacilityClick?.(message.facility);
       if (message.type === "map-click")
         handlers.current.onMapClick?.(message.location);
+      if (message.type === "nearby-result")
+        handlers.current.onNearby?.(message.result);
       if (message.type === "route-result")
         handlers.current.onRoute?.(message.route);
       if (message.type === "error") handlers.current.onError?.(message.message);
     };
     window.addEventListener("message", receive);
+    // An SSR iframe can finish loading before hydration installs this listener.
+    // Ask for readiness again after subscribing, without weakening origin checks.
+    frame.current?.contentWindow?.postMessage(
+      { channel: CHANNEL, version: 1, type: "ping" },
+      window.location.origin,
+    );
     return () => window.removeEventListener("message", receive);
   }, []);
 
@@ -119,16 +141,16 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title="공항 실내지도"
-      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility" : "/airport-map/index.html"}
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=haneuli-controls-ui-17" : "/airport-map/index.html?v=haneuli-controls-ui-17"}
       loading="eager"
       className={className}
       style={{
         display: "block",
         width: "100%",
         height,
-        minHeight: 280,
+        minHeight: "17.5rem",
         border: 0,
-        borderRadius: 16,
+        borderRadius: "var(--radius-medium, .75rem)",
       }}
       onLoad={() => {
         setReady(false);

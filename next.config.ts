@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
         ],
       },
+      {
+        source: "/airport-map/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
     ];
   },
 };

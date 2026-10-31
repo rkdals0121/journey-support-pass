@@ -28,6 +28,8 @@ export function validMapDestination(pickup: Place | null, id: string) {
 /** Resolve an existing gate location only when its identity matches the map data. */
 export function facilityForPlace(place: Place | null) {
   if (!place || place.level !== 3) return null;
+  const exact = mapFacilityOf(place.id);
+  if (exact) return exact;
   const gate = place.label.match(/(\d+)번 탑승구/);
   if (!gate) return null;
   return MAP_FACILITIES.find(p => p.building === areaBuilding(place.area) && p.name === `탑승구 ${gate[1]}` && (p.area === "LAND") === place.landside) ?? null;

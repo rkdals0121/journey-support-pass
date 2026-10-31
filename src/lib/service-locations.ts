@@ -22,7 +22,7 @@ export function requestPlaceOf(id: string | null | undefined) {
       labelEn: "Reported location details",
     };
   }
-  return id === NO_MEETING_PLACE ? remoteRequest : placeOf(id);
+  return id === NO_MEETING_PLACE ? remoteRequest : placeOf(id) ?? mapFacilityPlace(id);
 }
 export function reportLocationLabel(
   fields: Record<string, string> | undefined,

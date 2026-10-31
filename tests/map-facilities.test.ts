@@ -8,7 +8,9 @@ describe("map facility destinations", () => {
     expect(mapFacilityOf(facilityId(poi))).toEqual(poi);
     expect(destinationPlaceOf(facilityId(poi))?.label).toContain(poi.name);
     expect(mapFacilityOf("map-poi-not-real")).toBeNull();
-    expect(requestPlaceOf(facilityId(poi))).toBeNull();
+    expect(requestPlaceOf(facilityId(poi))?.id).toBe(facilityId(poi));
+    expect(facilityForPlace(requestPlaceOf(facilityId(poi)))).toEqual(poi);
+    expect(requestPlaceOf("map-poi-not-real")).toBeNull();
   });
   it("rejects destinations across terminals and security boundaries and unsupported floors", () => {
     const from = placeOf("cc-center")!;

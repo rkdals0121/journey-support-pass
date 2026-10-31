@@ -66,6 +66,14 @@
       }
       return found;
     }
+    rank(start, destinations, building, accessible = true) {
+      if (this.nodes.get(start)?.building !== building) return [];
+      return destinations.flatMap(p => {
+        if (this.nodes.get(p.node)?.building !== building) return [];
+        const route = this.route(start, p.node, building, accessible);
+        return route ? [{ id: p.id, distance: route.distance }] : [];
+      }).sort((a, b) => a.distance - b.distance || String(a.id).localeCompare(String(b.id)));
+    }
     route(start, end, building, accessible = true) {
       if (!this.nodes.has(start) || !this.nodes.has(end)) return null;
       const dist = new Map([[start, 0]]),

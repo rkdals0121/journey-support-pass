@@ -129,10 +129,15 @@ async function audit(page: Page, name: string) {
   await page.evaluate((y) => window.scrollTo(0, y), scrolled);
 }
 
-/** 키오스크 처음 화면(하늘이). 대기 중이면 「도움받아 시작」으로 깨워 필요한 도움 확인을 연다. */
+/** 키오스크 처음 화면(하늘이). 대기 중이면 하늘이를 눌러 깨워 확인 방법(탑승권·여권·예약번호)을 연다. */
 async function kioskServices(page: Page) {
   await page.waitForSelector(".haneuli-welcome", { timeout: WAIT });
-  if (!(await page.$(".haneuli-welcome.is-awake"))) await clickText(page, ".haneuli-start", "도움받아 시작");
+  // 교통약자 전용 첫 화면: 하늘이(화면)를 누르면 깨어 확인 방법을 안내한다.
+  // 화면이 준비되기(React 연결) 전에 누르면 아무 일도 없다. 깨어날 때까지 잠깐씩 기다리며 다시 누른다.
+  for (let i = 0; i < 30 && !(await page.$(".haneuli-welcome.is-awake")); i++) {
+    await page.click(".haneuli-character").catch(() => undefined);
+    await new Promise((r) => setTimeout(r, 500));
+  }
   await page.waitForSelector(".haneuli-welcome.is-awake", { timeout: WAIT });
 }
 const isKioskHome = async (page: Page) => !!(await page.$(".haneuli-welcome"));
@@ -208,11 +213,12 @@ async function clickText(page: Page, selector: string, s: string) {
  * 그 화면이 나오면 「이대로 안내 받기」를 누르고 안내 첫 화면을 기다린다.
  */
 async function openGuide(page: Page, keep = "이대로 안내 받기", hello = "나에게 맞춘 안내") {
-  await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
-  if (await has(page, keep)) {
-    await clickText(page, "button", keep);
-    await page.waitForFunction((a, b) => !document.body.innerText.includes(a) && document.body.innerText.includes(b), { timeout: WAIT }, keep, hello);
-  }
+  // Registration confirmation now opens a service menu before personalised directions.
+  await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, keep, hello);
+  if (await has(page, keep)) await clickText(page, "button", keep);
+  await page.waitForFunction((b) => document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, hello);
+  if (await page.$(".svc-card.is-main")) await page.click(".svc-card.is-main");
+  await waitText(page, hello);
 }
 
 async function fill(page: Page, selector: string, value: string) {
@@ -482,8 +488,17 @@ async function resetFlights(clearLocks = false) {
     }
   }
 
+  // Next dev compiles API modules on their first request. Warm them with read-only
+  // requests so compilation time is not mistaken for a user-facing network timeout.
+  const apiRoot = path.join(process.cwd(), "src", "app", "api");
+  for (const entry of fs.readdirSync(apiRoot, { recursive: true })) {
+    if (typeof entry !== "string" || !entry.endsWith("route.ts")) continue;
+    const route = "/api/" + entry.split(path.sep).join("/").replace(/\/?route\.ts$/, "").replace(/\[[^\]]+\]/g, "e2e-warmup");
+    await fetch(BASE + route, { redirect: "manual" }).catch(() => undefined);
+  }
+
   // 개발 서버는 화면을 처음 열 때 그 화면을 만든다(느린 컴퓨터에서는 몇 분). 점검이 그 시간에 걸리지 않게 미리 한 번씩 열어 둔다.
-  for (const p of ["/", "/register", "/p/0000000000000000", "/kiosk", "/kiosk/guide", "/kiosk/register", "/staff/login", "/staff/zone", "/staff", "/staff/desk", "/staff/desk/register", "/staff/desk/stats"]) {
+  for (const p of ["/api/flights/destinations", "/api/flights/search?q=MK1", "/", "/register", "/p/0000000000000000", "/kiosk", "/kiosk/guide", "/kiosk/register", "/staff/login", "/staff/zone", "/staff", "/staff/desk", "/staff/desk/register", "/staff/desk/stats"]) {
     await fetch(`${BASE}${p}`, { redirect: "manual" }).catch(() => {});
   }
   for (const p of ["/api/guide", "/api/kiosk/resolve", "/api/kiosk/call", "/api/events", "/api/pass/erase", "/api/desk/register", "/api/desk/erase", "/api/staff/calls/x", "/api/staff/zone"]) {
@@ -946,7 +961,7 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".listen-start", "소리 안내 끄기");
   await page.waitForFunction(() => document.querySelector(".listen-start")?.getAttribute("aria-pressed") === "false", { timeout: WAIT });
   await shot(page, "안내키오스크-처음-카메라없음");
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   check("번호 화면에서도 「도움 요청하기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
   for (const d of "000000") await clickText(page, ".pad-num .pad-key", d);
@@ -1047,7 +1062,7 @@ async function resetFlights(clearLocks = false) {
   // 오래 그대로 두면 계속 쓸지 묻는다. 점검에서는 기다리는 시간을 20초로 줄여서 본다(주소의 ?idle=20, 개발 서버에서만 된다).
   // 이 장면만 따로 연다. 짧게 둔 채 다른 장면을 보면 느린 컴퓨터에서는 그림을 뜨는 사이에 묻는 창이 떠서 눌림을 가로챈다.
   await page.goto(`${BASE}/kiosk/guide?idle=20`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   // 여섯 자리를 한꺼번에 누른다. 하나씩 누르다 시간이 지나면 번호 화면에서 묻는 창이 먼저 뜬다.
   await page.evaluate((no) => {
@@ -1065,7 +1080,7 @@ async function resetFlights(clearLocks = false) {
   await clickText(page, ".sheet-box button", "끝내기");
   await kioskServices(page);
   // 앞사람이 「설정」을 열어 둔 채 떠난다. 처음 화면으로 돌아가면 설정 창이 닫혀 있어야 한다.
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "고유 일련 번호 여섯 자리를 눌러 주세요");
   await page.evaluate((no) => {
     const keys = [...document.querySelectorAll(".pad-num .pad-key")] as HTMLElement[];
@@ -1082,7 +1097,7 @@ async function resetFlights(clearLocks = false) {
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
 
   // 번호를 여러 번 틀리면 잠근다
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   for (let i = 0; i < 9; i++) {
     for (const d of "999999") await clickText(page, ".pad-num .pad-key", d);
     await page.waitForFunction(() => document.querySelectorAll(".code-boxes .filled").length === 0 && !!document.querySelector(".error"), { timeout: WAIT });
@@ -1139,7 +1154,7 @@ async function resetFlights(clearLocks = false) {
 
   // 앞사람(MK112)이 안내를 보는 중에 30초마다 다시 받는 답이 오는 사이 「처음으로」를 누른다.
   // 늦게 온 앞사람의 답이 안내를 되살리면, 다음 사람이 번호 화면을 열 때 앞사람의 항공편이 나온다.
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await waitText(page, "여섯 자리를 눌러 주세요");
   await typeNo(voicePass.passNo);
   await waitText(page, "MK112");
@@ -1150,7 +1165,7 @@ async function resetFlights(clearLocks = false) {
   const lateGuide = await page.evaluate("window.__release()");
   await sleep(2500);
   const startClean = !(await has(page, "MK112")) && (await isKioskHome(page));
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   await page.waitForFunction(() => /여섯 자리를 눌러 주세요|MK112|나에게 맞춘 안내/.test(document.body.innerText), { timeout: WAIT });
   check("「처음으로」를 누른 뒤 앞사람의 안내를 다시 받은 답이 늦게 와도, 다음 사람 화면에 앞사람의 항공편이나 안내가 나오지 않는다", startClean && !(await has(page, "MK112")) && !(await has(page, "나에게 맞춘 안내")), `늦은 답 ${lateGuide}개`);
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
@@ -1267,7 +1282,7 @@ async function resetFlights(clearLocks = false) {
   for (const [flightNo, expected, name] of cases) {
     const made = await register(flightNo, ["fac_calm"]);
     await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-    await clickText(page, ".haneuli-number", "번호로 찾기");
+    await clickText(page, ".haneuli-number", "예약번호 입력");
     for (const d of made.passNo) await clickText(page, ".pad-num .pad-key", d);
     await openGuide(page);
     check(name, (await has(page, expected)) && (await count(page, ".gate-go")) === 0 && (await count(page, ".tile")) === 6);
@@ -1276,7 +1291,7 @@ async function resetFlights(clearLocks = false) {
   }
   const late = await register("MK402", ["mov_need_rest"]);
   await page.goto(`${BASE}/kiosk/guide?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await clickText(page, ".haneuli-number", "번호로 찾기");
+  await clickText(page, ".haneuli-number", "예약번호 입력");
   for (const d of late.passNo) await clickText(page, ".pad-num .pad-key", d);
   await openGuide(page);
   check("탑승이 마감된 편은 빨갛게 알리고 직원을 부르라고 안내한다", (await has(page, "탑승이 마감되었습니다")) && (await has(page, "「도움 요청하기」를 눌러 주세요")) && (await count(page, ".gate-go.pace-late")) === 1);
@@ -1342,7 +1357,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "탑승동 중앙부");
   check("공통 코드로 들어와 근무 구역을 고르면 호출 화면이 열린다", true);
   await waitText(page, "지금은 호출이 없습니다");
-  check("호출이 없으면 '여객이 부를 때 갑니다'라고 안내한다 (먼저 다가가는 화면이 아니다)", (await has(page, "지금은 호출이 없습니다")) && (await has(page, "먼저 다가가 돕지 않고")));
+  check("호출이 없으면 대기 상태와 새 호출 알림을 안내한다", (await has(page, "지금은 호출이 없습니다")) && (await has(page, "호출이 오면 진동과 소리로 알립니다")));
   check("직원 화면에 여객 목록이 없다", !(await has(page, "여객 목록")));
   await page.focus(".seg-refresh");
   await sleep(6500);
@@ -1351,7 +1366,7 @@ async function resetFlights(clearLocks = false) {
 
   // 여객이 키오스크에서 부른다 (화면 대신 서버에 직접). 다른 구역 호출이 먼저 온다.
   const c2 = await post("/api/kiosk/call", { screen: "guide" }, await kioskCookie("t2-center"));
-  await page.waitForFunction(() => document.querySelectorAll(".seg .count")[1]?.textContent === "1", { timeout: WAIT });
+  await page.waitForFunction(() => document.querySelectorAll(".staff-legacy-filters .count")[1]?.textContent === "1", { timeout: WAIT });
   check("「내 구역」을 보고 있으면 다른 구역의 새 호출로는 울리지 않는다", (await buzz()) === 0, `${await buzz()}번`);
   const callKiosk = await kioskCookie("cc-center");
   const c1 = await post("/api/kiosk/call", { token: voicePass.token, screen: "guide" }, callKiosk);
@@ -1365,7 +1380,7 @@ async function resetFlights(clearLocks = false) {
   check("호출 카드에 이름이 없다", !card.includes("이름"));
   check("내 구역 탭에는 내 구역 호출만 보인다", (await count(page, ".call")) === 1);
   await shot(page, "직원-호출옴");
-  await clickText(page, ".seg button", "전체");
+  await clickText(page, ".staff-legacy-filters button", "전체");
   await page.waitForFunction(() => document.querySelectorAll(".call").length === 2, { timeout: WAIT });
   check("전체 탭에는 다른 구역의 호출도 보인다 (점선 테두리)", (await count(page, ".call.call-other")) === 1);
   check("패스 없이 부른 호출은 '가서 여쭤봐 주세요'라고 안내한다", await has(page, "패스를 찍지 않고 불렀습니다"));
@@ -1382,7 +1397,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "다른 직원이 먼저 받았거나 끝난 호출입니다");
   await sleep(6500);
   check("다른 직원이 먼저 받은 호출을 누르면 그렇다고 알리고, 목록을 다시 읽어도 그 알림이 바로 사라지지 않는다", await has(page, "다른 직원이 먼저 받았거나 끝난 호출입니다"));
-  await clickText(page, ".seg button", "내 구역");
+  await clickText(page, ".staff-legacy-filters button", "내 구역");
   await clickText(page, ".call button", "가겠습니다");
   await waitText(page, "내 구역이 가는 중");
   check("'가겠습니다'를 누르면 '가는 중'으로 바뀐다", (await get(`/api/kiosk/call/${c1.body.id}`, callKiosk)).body.state === "accepted");
@@ -1528,8 +1543,9 @@ async function resetFlights(clearLocks = false) {
   check("등록하면 맞춤 안내·이동지원 요청·접수 상태 확인으로 이어진다", (await count(page, ".svc-card")) === 3);
   await shot(page, "입구로봇-서비스");
   await clickText(page, ".svc-card", "이동지원 요청");
-  await page.waitForSelector("#dx-place");
-  check("안내로봇의 이동지원은 위치가 고정된 통합 요청으로 이어진다",await page.$eval('#dx-place',e=>(e as HTMLSelectElement).value === 't1-info' && (e as HTMLSelectElement).disabled) && await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked));
+  await page.waitForSelector('.request-form[data-map-flow="true"]');
+  await clickText(page, "button", "이 장소에서 도움받기");
+  check("안내로봇의 이동지원은 현재 위치를 포함한 지도 기반 통합 요청으로 이어진다", await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked) && await page.$eval('.request-mobile-nav',e=>getComputedStyle(e).display==="none"));
   await page.click('input[type="checkbox"][required]');await page.click('button[type="submit"]');
   await clickText(page,'button','이 내용으로 요청 접수');await page.waitForSelector('.request-state-pill[role="status"]');
   const integrated=await page.evaluate(async()=>{const receipt=sessionStorage.getItem('jsp-dx-receipt-v1');return (await(await fetch('/api/requests/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receipt})})).json()).request;});

@@ -72,7 +72,7 @@ export function DevicePreview({
               : "어떤 서비스를 이용하시겠어요?"}
           </h1>
         </div>
-        <TaskLauncher en={en} field topics={robot ? ["guidance", "mobility"] : undefined} />
+        <TaskLauncher en={en} device={device} field topics={robot ? ["guidance", "mobility"] : undefined} />
         <Link className="device-booking-entry" href={"/prepare/booking" + q}>
           <Ticket aria-hidden="true" />
           <span>

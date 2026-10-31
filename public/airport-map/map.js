@@ -32,6 +32,8 @@
     pendingFit = false,
     selected = null;
   let state = { building: 1, markers: {}, route: null, fit: true, checkpointSelection: true, showCheckpoints: true };
+  let visiblePoiIds = null;
+  let nearbyKey = null;
   const meetingSource = new E.VectorSource();
   const geometryLayers = new Map();
   const pois = new E.VectorSource(),
@@ -52,7 +54,7 @@
     });
   }
   function badge(symbol, color) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="10" fill="${color}" stroke="white" stroke-width="3"/><text x="18" y="24" text-anchor="middle" font-size="18" font-family="Arial" fill="white">${symbol}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="10" fill="${color}" stroke="white" stroke-width="3"/><text x="18" y="24" text-anchor="middle" font-size="${String(symbol).length > 1 ? 12 : 18}" font-family="Arial" fill="white">${symbol}</text></svg>`;
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }
   function publicPoi(p) {
@@ -141,6 +143,26 @@
     const aArea=a.checkpoint?.area || a.poi?.area, bArea=b.checkpoint?.area || b.poi?.area;
     if (aArea && bArea && aArea !== bArea) return null;
     return graph.route(nodeFor(a).id, nodeFor(b).id, state.building, true);
+  }
+  function rankNearby() {
+    const requestKey = JSON.stringify(state.nearby ?? null);
+    if (nearbyKey === requestKey) return;
+    nearbyKey = requestKey;
+    const results = [];
+    if (state.nearby) {
+      try {
+        const start = resolve(state.nearby.start);
+        const startArea = start.poi?.area ?? start.checkpoint?.area;
+        const candidates = [];
+        for (const id of state.nearby.candidatePoiIds) {
+          const p = data.pois.find(p => String(p.id) === String(id) && p.building === state.building);
+          if (!p || p.area !== startArea || String(p.id) === String(start.poi?.id)) continue;
+          try { candidates.push({id:p.id,node:nodeFor(resolve({poiId:p.id})).id}); } catch { /* Unconnected facilities cannot be recommended. */ }
+        }
+        results.push(...graph.rank(nodeFor(start).id, candidates, state.building, true));
+      } catch { /* The UI reports an unavailable current location separately. */ }
+    }
+    emit("nearby-result", {result:{requestKey,results}});
   }
   function markerStyle(kind, label) {
     return new E.Style({
@@ -238,11 +260,15 @@
   }
   function drawPois() {
     if (!ready || !map.getSize()) return;
-    const extent = view.calculateExtent(map.getSize()),
-      detailed = view.getZoom() >= 19.5;
+    const extent = view.calculateExtent(map.getSize()), zoom = view.getZoom();
+    const cells = new Set(), labelBoxes = [];
+    const labelMeasure = document.createElement("canvas").getContext("2d");
+    const candidates = data.pois.map(p => ({p, display: window.airportPoiVisibility(p, zoom, !!visiblePoiIds, !visiblePoiIds || visiblePoiIds.has(String(p.id)), state.showLandmarkLabels, String(selected) === String(p.id), state.facilityFilterActive ?? !!visiblePoiIds)}))
+      .filter(x => x.display).sort((a,b) => a.display.priority - b.display.priority || String(a.p.id).localeCompare(String(b.p.id)));
     pois.clear();
-    for (const p of data.pois) {
+    for (const {p, display} of candidates) {
       if (p.building !== state.building) continue;
+      const context = display.context;
       const xy = E.fromLonLat([p.lon, p.lat]);
       if (
         xy[0] < extent[0] ||
@@ -251,23 +277,49 @@
         xy[1] > extent[3]
       )
         continue;
-      const f = new E.Feature({ geometry: new E.Point(xy), poiId: p.id });
+      // Space overview symbols in screen coordinates; do not bunch them up.
+      if (zoom < 19.5 && display.priority !== 0 && !display.major) {
+        const pixel = map.getPixelFromCoordinate(xy);
+        if (!pixel) continue; // The first viewport may not have rendered yet.
+        const cellSize = zoom < 18 ? 48 : 32;
+        const cell = `${Math.floor(pixel[0]/cellSize)}:${Math.floor(pixel[1]/cellSize)}`;
+        if (cells.has(cell)) continue;
+        cells.add(cell);
+      }
+      const f = new E.Feature({ geometry: new E.Point(xy), poiId: p.id, contextOnly: context });
       const focused = String(selected) === String(p.id);
+      const gateNumber = p.name.match(/^탑승구\s*(\d+)$/)?.[1];
+
+      const wide = zoom < 18.5;
+      const entrance = p.name.match(/^3층\s*(\d+)번\s*입구$/)?.[1];
+      const counter = p.name.match(/^체크인카운터\s*([A-Z]+)$/)?.[1];
+      const compact = gateNumber ? gateNumber : entrance ? `입${entrance}` : counter;
+      // Numbered signs already carry their label; do not print it twice in overview.
+      const label = wide && compact ? (context ? compact : "") : p.name.replace("체크인카운터 ", "체크인 ");
+      const font = display.major ? "bold 12px Arial,sans-serif" : "11px Arial,sans-serif";
+      const preferredOffset = context && wide && compact ? 0 : counter && wide && counter.charCodeAt(0) % 2 === 0 ? -20 : context ? 18 : 23;
+      const pixel = map.getPixelFromCoordinate(xy);
+      if (labelMeasure) labelMeasure.font = font;
+      const labelOffset = display.label && label && pixel
+        ? window.airportPoiVisibility.placeLabel(labelBoxes, pixel, labelMeasure ? labelMeasure.measureText(label).width : label.length * 11, preferredOffset, focused)
+        : null;
+      const iconSize = focused ? 34 : display.match ? 30 : display.major && wide ? 22 : 26;
       f.setStyle(
         new E.Style({
-          image: new E.Icon({
-            src: p.icon || badge("i", "#3689ac"),
-            width: focused ? 34 : 26,
-            height: focused ? 34 : 26,
+          image: context ? undefined : new E.Icon({
+            src: gateNumber ? badge(gateNumber, "#4876bd") : entrance ? badge(`입${entrance}`, "#286d59") : p.icon || badge("i", "#3689ac"),
+            width: iconSize,
+            height: iconSize,
+            opacity: context && !focused ? 0.55 : 1,
           }),
           text: new E.Text({
-            text: detailed || focused ? p.name : "",
-            font: "11px Arial,sans-serif",
-            fill: new E.Fill({ color: focused ? "#087ba6" : "#354b41" }),
+            text: labelOffset === null ? "" : label,
+            font,
+            fill: new E.Fill({ color: focused ? "#087ba6" : context ? "#73817c" : "#354b41" }),
             stroke: new E.Stroke({ color: "white", width: 3 }),
-            offsetY: 23,
+            offsetY: labelOffset ?? preferredOffset,
           }),
-          zIndex: focused ? 10 : 1,
+          zIndex: focused ? 20 : display.major ? 15 : context ? 0 : 10,
         }),
       );
       pois.addFeature(f);
@@ -276,26 +328,55 @@
       pois.getFeatures().length,
     );
   }
-  function fit() {
+  function fit(serviceEntry = false) {
     const size = map.getSize();
     if (!size || size[0] < 1 || size[1] < 1) {
       pendingFit = true;
       return;
     }
     pendingFit = false;
-    const extents = [];
-    if (state.showCheckpoints && meetingSource.getFeatures().length) extents.push(meetingSource.getExtent());
-    if (markers.getFeatures().length) extents.push(markers.getExtent());
-    if (routes.getFeatures().length) extents.push(routes.getExtent());
+    // Fit actual geometry in the view's rotation, rather than its oversized
+    // north-aligned bounding box (which made the terminal look tiny).
+    const geometries = [];
+    const add = (source) => source?.getFeatures().forEach(f => {
+      const geometry = f.getGeometry();
+      if (geometry) geometries.push(geometry.clone());
+    });
+    if (state.overview) add(geometryLayers.get(state.building)?.getSource());
+    if (state.showCheckpoints) add(meetingSource);
+    add(markers);
+    add(routes);
     view.cancelAnimations();
-    if (extents.length) {
+    if (geometries.length) {
+      const rotation = view.getRotation();
+      const extents = geometries.map(geometry => {
+        geometry.rotate(-rotation, [0,0]);
+        return geometry.getExtent();
+      });
       const e = [
-        Math.min(...extents.map((x) => x[0])),
-        Math.min(...extents.map((x) => x[1])),
-        Math.max(...extents.map((x) => x[2])),
-        Math.max(...extents.map((x) => x[3])),
+        Math.min(...extents.map(x => x[0])), Math.min(...extents.map(x => x[1])),
+        Math.max(...extents.map(x => x[2])), Math.max(...extents.map(x => x[3])),
       ];
-      view.fit(e, { padding: [55, 65, 65, 45], maxZoom: 19, duration: 0 });
+      const frame = fmt.readGeometry({type:"Polygon",coordinates:[[
+        [e[0],e[1]],[e[2],e[1]],[e[2],e[3]],[e[0],e[3]],[e[0],e[1]],
+      ]]}, {dataProjection:"EPSG:3857",featureProjection:"EPSG:3857"});
+      frame.rotate(rotation, [0,0]);
+      const extra = state.viewportPadding || [0,0,0,0];
+      const available = map.getSize();
+      const padding = [55,65,65,45].map((v,i)=>v+(Number(extra[i])||0));
+      // Never let large text or a small portrait screen consume the whole view.
+      if(padding[0]+padding[2] >= available[1]-40) {padding[0]=20;padding[2]=Math.max(20,available[1]*.4);}
+      if(padding[1]+padding[3] >= available[0]-40) {padding[1]=20;padding[3]=Math.max(20,available[0]*.4);}
+      view.fit(frame, { padding, maxZoom: 19, duration: 0 });
+      // Service entry opens on the central hall at an essential-facility scale.
+      // Route fits keep their natural zoom so both endpoints remain visible.
+      if (serviceEntry === true && state.overview && !state.checkpointSelection && !state.route && view.getZoom() < 18.5) {
+        view.setZoom(18.5);
+        view.centerOn(E.fromLonLat(centers[state.building]), available, [
+          padding[3] + (available[0] - padding[3] - padding[1]) / 2,
+          padding[0] + (available[1] - padding[0] - padding[2]) / 2,
+        ]);
+      }
     } else {
       view.setCenter(E.fromLonLat(centers[state.building]));
       view.setZoom(state.building === 2 ? 17.5 : 18);
@@ -323,6 +404,14 @@
       checkpointSelection: next.checkpointSelection ?? state.checkpointSelection,
       showCheckpoints: next.showCheckpoints ?? state.showCheckpoints,
       selectedPoiId: next.selectedPoiId ?? null,
+      visiblePoiIds: next.visiblePoiIds === undefined ? (state.visiblePoiIds ?? null) : next.visiblePoiIds,
+      facilityFilterActive: next.facilityFilterActive ?? state.facilityFilterActive,
+      showLandmarkLabels: next.showLandmarkLabels ?? state.showLandmarkLabels ?? true,
+      touchTargetSize: next.touchTargetSize ?? state.touchTargetSize ?? 12,
+      viewRevision: next.viewRevision ?? state.viewRevision ?? 0,
+      nearby: next.nearby ?? null,
+      viewportPadding: next.viewportPadding ?? [0,0,0,0],
+      overview: next.overview === true,
     };
     state = merged;
     try {
@@ -336,7 +425,10 @@
       throw error;
     }
     state.markers = state.markers || {};
+    document.documentElement.dataset.kiosk = state.touchTargetSize >= 18 ? "true" : "false";
+    document.querySelector(".map-controls").style.bottom = ((state.viewportPadding?.[2] || 0) + 12) + "px";
     selected = state.selectedPoiId;
+    visiblePoiIds = Array.isArray(state.visiblePoiIds) ? new Set(state.visiblePoiIds.map(String)) : null;
     if(changed || !state.checkpointSelection || (next.markers !== undefined && next.markers?.checkpoint?.checkpointId !== pendingCheckpoint?.id)) pendingCheckpoint=null;
     drawCheckpoints();
     geometryLayers.forEach((layer, id) =>
@@ -344,8 +436,13 @@
     );
     redrawMarkers();
     redrawRoute();
+    rankNearby();
     document.getElementById("checkpoint-hint").hidden = !state.checkpointSelection;
-    if (state.fit) fit();
+    const changedView = changed || state.overview !== previous.overview || state.viewRevision !== previous.viewRevision ||
+      JSON.stringify(state.markers) !== JSON.stringify(previous.markers) ||
+      JSON.stringify(state.route) !== JSON.stringify(previous.route) ||
+      JSON.stringify(state.viewportPadding) !== JSON.stringify(previous.viewportPadding);
+    if (state.fit && changedView) fit(true);
     else drawPois();
     return { building: state.building, floor: "3F" };
   }
@@ -383,7 +480,7 @@
       new URLSearchParams(location.search).get("building"),
     );
     if ([1, 2, 3].includes(buildingParam)) state.building = buildingParam;
-    if (new URLSearchParams(location.search).get("mode") === "facility") {state.checkpointSelection=false;state.showCheckpoints=false;}
+    if (new URLSearchParams(location.search).get("mode") === "facility") {state.checkpointSelection=false;state.showCheckpoints=false;state.visiblePoiIds=[];visiblePoiIds=new Set();}
     view = new E.View({
       center: E.fromLonLat(centers[state.building]),
       zoom: 18,
@@ -435,17 +532,26 @@
     fit();
     document.getElementById("checkpoint-confirm").onclick=confirmCheckpoint;
     map.on("moveend", drawPois);
+    let lastActivity = 0;
+    const notifyActivity = () => {
+      if (Date.now() - lastActivity < 1000) return;
+      lastActivity = Date.now();
+      emit("interaction");
+    };
+    for (const eventName of ["pointerdown", "wheel"]) {
+      document.getElementById("map").addEventListener(eventName, notifyActivity, { passive: true });
+    }
     map.on("singleclick", (event) => {
       let p;
       map.forEachFeatureAtPixel(
         event.pixel,
         (f) => {
-          if (f.get("poiId") !== undefined) {
+          if (f.get("poiId") !== undefined && !f.get("contextOnly")) {
             p = data.pois.find((x) => String(x.id) === String(f.get("poiId")));
             return true;
           }
         },
-        { hitTolerance: 12 },
+        { hitTolerance: state.touchTargetSize || 12 },
       );
       const xy = event.coordinate,
         lon = ((xy[0] / 6378137) * 180) / Math.PI,
