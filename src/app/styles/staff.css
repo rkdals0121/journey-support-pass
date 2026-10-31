@@ -238,8 +238,6 @@
   > form.work-search
   > details
   > summary { min-height: max(2.75rem,var(--target-floor)); padding: 0.5rem 0.75rem; line-height: 1.5; font-size: var(--text-caption); max-width: none; white-space: normal; }
-.desk-locations section { border-top: 0.0625rem solid var(--color-control-line); margin-top: 1.5rem; padding-top: 1rem; }
-.desk-locations li { line-height: 1.8; margin: 0.5rem 0; }
 .staff-workspace.airport-workspace .workspace-side > p { font-size: var(--text-caption); color: var(--ui-muted); padding-left: 0.75rem; }
 .airport-workspace .workspace-header > a { color: var(--green-press); text-decoration: none; font-size: var(--text-caption); }
 .airport-workspace .workspace-header > a:hover { text-decoration: underline; }

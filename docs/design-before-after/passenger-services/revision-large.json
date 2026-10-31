@@ -1,0 +1,164 @@
+[
+  {
+    "route": "/services",
+    "lang": "ko",
+    "w": 390,
+    "h": 844,
+    "doc": 2832,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services",
+    "lang": "ko",
+    "w": 1333,
+    "h": 750,
+    "doc": 1220,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services",
+    "lang": "ko",
+    "w": 1920,
+    "h": 937,
+    "doc": 1238,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services",
+    "lang": "en",
+    "w": 390,
+    "h": 844,
+    "doc": 3531,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services",
+    "lang": "en",
+    "w": 1333,
+    "h": 750,
+    "doc": 1307,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services",
+    "lang": "en",
+    "w": 1920,
+    "h": 937,
+    "doc": 1325,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/desks",
+    "lang": "ko",
+    "w": 390,
+    "h": 844,
+    "doc": 1940,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/desks",
+    "lang": "ko",
+    "w": 1333,
+    "h": 750,
+    "doc": 944,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/desks",
+    "lang": "ko",
+    "w": 1920,
+    "h": 937,
+    "doc": 962,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/desks",
+    "lang": "en",
+    "w": 390,
+    "h": 844,
+    "doc": 2210,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/desks",
+    "lang": "en",
+    "w": 1333,
+    "h": 750,
+    "doc": 1016,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/desks",
+    "lang": "en",
+    "w": 1920,
+    "h": 937,
+    "doc": 1034,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/lost-property",
+    "lang": "ko",
+    "w": 390,
+    "h": 844,
+    "doc": 1526,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/lost-property",
+    "lang": "ko",
+    "w": 1333,
+    "h": 750,
+    "doc": 844,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/lost-property",
+    "lang": "ko",
+    "w": 1920,
+    "h": 937,
+    "doc": 937,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/lost-property",
+    "lang": "en",
+    "w": 390,
+    "h": 844,
+    "doc": 1668,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/lost-property",
+    "lang": "en",
+    "w": 1333,
+    "h": 750,
+    "doc": 844,
+    "sw": -15,
+    "scale": "1.5"
+  },
+  {
+    "route": "/services/lost-property",
+    "lang": "en",
+    "w": 1920,
+    "h": 937,
+    "doc": 937,
+    "sw": -15,
+    "scale": "1.5"
+  }
+]
