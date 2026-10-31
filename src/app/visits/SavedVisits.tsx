@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CalendarClock } from "lucide-react";
 import { VISIT_STORAGE } from "./VisitForm";
 import { VISIT_STATES, hubOf, type VisitView } from "@/lib/service-hubs";
 import { VISIT_STATE_EN } from "@/lib/visit-labels";
@@ -48,8 +49,13 @@ export function SavedVisits({ en = false }: { en?: boolean }) {
   }, []);
   if (!rows.length) return null;
   return (
-    <section className={styles.panel}>
-      <h2>{en ? "Appointments saved on this device" : "이 기기의 예약"}</h2>
+    <section className="service-info-card">
+      <header className="service-info-heading">
+        <span className="service-info-icon">
+          <CalendarClock aria-hidden="true" />
+        </span>
+        <h2>{en ? "Appointments saved on this device" : "이 기기의 예약"}</h2>
+      </header>
       <ul className={styles.list}>
         {rows.map(({ receipt, visit }) => (
           <li key={receipt}>
