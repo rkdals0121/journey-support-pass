@@ -4,7 +4,7 @@ import { PublicShell } from "../../components/PublicShell";
 export default async function LostProperty({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const en = (await searchParams).lang === "en";
   return <PublicShell lang={en ? "en" : "ko"}>
-    <main id="public-main" className="service-page">
+    <main id="public-main" className="service-page service-short-page">
       <section className="ph-hero" aria-labelledby="lost-title">
         <div className="ph-hero-copy service-intro-copy">
           <span className="ph-hero-label"><Briefcase aria-hidden="true" />{en ? "Airport information" : "공항 이용 안내"}</span>

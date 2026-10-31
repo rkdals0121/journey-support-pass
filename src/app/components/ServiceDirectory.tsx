@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Accessibility,
   Signpost,
@@ -54,9 +54,11 @@ const searchText = (value: string) =>
 export function ServiceDirectory({
   lang = "ko",
   portal = false,
+  children,
 }: {
   lang?: "ko" | "en";
   portal?: boolean;
+  children?: ReactNode;
 }) {
   const en = lang === "en";
   const [query, setQuery] = useState("");
@@ -213,11 +215,7 @@ export function ServiceDirectory({
           </div>
         </details>
       </div>
-      {rows.length > 0 ? (
-        <>
-          <div className="ph-list service-directory-grid">{rows.map(result)}</div>
-        </>
-      ) : (
+      {rows.length === 0 && (
         <div className="airport-directory-empty" role="status">
           <h3>{en ? "No matching services" : "일치하는 서비스가 없어요"}</h3>
           <button
@@ -236,6 +234,10 @@ export function ServiceDirectory({
           </Link>
         </div>
       )}
+      <div className="ph-list service-directory-grid">
+        {rows.map(result)}
+        {children}
+      </div>
     </section>
   );
 }

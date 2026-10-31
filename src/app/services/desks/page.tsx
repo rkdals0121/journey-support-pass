@@ -48,7 +48,7 @@ export default async function DeskLocations({
   const en = (await searchParams).lang === "en";
   return (
     <PublicShell lang={en ? "en" : "ko"}>
-      <main id="public-main" className="service-page desk-locations">
+      <main id="public-main" className="service-page service-short-page desk-locations">
         <section className="ph-hero" aria-labelledby="desks-title">
           <div className="ph-hero-copy service-intro-copy">
             <span className="ph-hero-label"><MapPin aria-hidden="true" />{en ? "Airport information" : "공항 이용 안내"}</span>

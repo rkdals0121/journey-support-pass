@@ -10,9 +10,11 @@ import {
 export function MyRequestPanel({
   lang = "ko",
   hideWhenEmpty = false,
+  appearance = "standard",
 }: {
   lang?: "ko" | "en";
   hideWhenEmpty?: boolean;
+  appearance?: "standard" | "service-card";
 }) {
   const en = lang === "en";
   const [request, setRequest] = useState<ServiceRequestView | null>(null),
@@ -75,6 +77,18 @@ export function MyRequestPanel({
     };
   }, [en]);
   if (hideWhenEmpty && !request && !error) return null;
+  if (appearance === "service-card") return (
+    <aside className="task-action" aria-label={en ? "My request" : "내 요청"}>
+      <Clock3 className="task-action-icon" aria-hidden="true" />
+      <Link className="task-action-link" href={"/requests" + (en ? "?lang=en" : "")}>
+        <span>
+          <strong>{en ? "Request progress" : "요청 진행 현황"}</strong>
+          <small role="status">{loading ? (en ? "Checking…" : "확인 중…") : error || (request ? requestStateLabel(request, lang) : (en ? "View requests made in this tab." : "이 탭에서 접수한 요청을 확인하세요."))}</small>
+        </span>
+        <ArrowRight aria-hidden="true" />
+      </Link>
+    </aside>
+  );
   return (
     <aside
       className={`my-request-panel${!request && !loading && !error ? " is-empty" : ""}`}
