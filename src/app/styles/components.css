@@ -540,13 +540,15 @@ a.svc-card { text-decoration:none; }
 .report-location-picker > label { margin-top: 1rem; }
 .report-photo-helper { margin-top: 1rem; }
 .report-photo-helper > summary { cursor: pointer; color: var(--color-primary-hover); padding: 0.5rem 0; }
-.traffic-intent-options { display: grid; gap: 1rem; margin: 2rem 0; }
-.traffic-intent { display: flex; flex-direction: column; gap: 0.5rem; text-align: left; border: 0.0625rem solid var(--color-control-line); background: var(--color-surface); border-radius: var(--radius-small); color: var(--color-dark); padding: 1.5rem; font: inherit; cursor: pointer; }
-.traffic-intent strong { font-size: var(--text-heading); }
-.traffic-intent span { font-size: var(--text-small); color: var(--color-muted); }
-.traffic-intent:hover { border-color: var(--color-primary-hover); background: var(--color-primary-faint); }
+/* 교통·주차 고르기: 첫 화면 서비스 카드와 같은 흰 카드 + 아이콘 칩, 두 칸 같은 높이. */
+.traffic-intent-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); margin: 0; }
+.traffic-intent { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); min-height: 7rem; text-align: left; border: 1px solid var(--color-line); background: var(--color-surface); border-radius: var(--radius-medium); color: var(--color-text); padding: var(--space-4); font: inherit; cursor: pointer; }
+.traffic-intent strong { display: block; font-size: var(--text-body); line-height: 1.5; }
+.traffic-intent small { display: block; margin-top: var(--space-2); font-size: var(--text-small); line-height: 1.5; color: var(--color-muted); }
+.traffic-intent:hover { border-color: var(--color-primary); }
 .traffic-intent:focus-visible { outline: 0.1875rem solid var(--color-control-line); outline-offset: 0.1875rem; }
-.traffic-information p { padding: 0.5rem 0; }
+.traffic-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-5); }
+.traffic-links > * { display: flex; align-items: center; min-height: 2.75rem; margin: 0; }
 .entry-number-pad { border: 0; margin: 0.75rem 0; padding: 0; min-width: 0; }
 .brand > span { display: grid; gap: 0.25rem; }
 .brand > span > small { display: block; font-size: 0.55em; font-weight: var(--weight-body); letter-spacing: 0.02em; color: var(--color-primary-hover); }
@@ -670,7 +672,7 @@ html .sheet-box { padding-inline: min(1.25rem, 4vw); }
 @media (max-width: 760px) {
 .official-map-panel { padding: 0.75rem; }
 .official-map-panel iframe { height: 28.75rem; }
-.traffic-intent { padding: 1.25rem; }
+.traffic-intent-options, .traffic-links { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: no-preference) {
 .choice { transition:
