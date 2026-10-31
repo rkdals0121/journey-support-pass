@@ -922,7 +922,7 @@ export function HelpFlow({
                       : "I agree to share my location and service details with the handling team.",
                   )}
                 </label>
-                <button className="public-button" type="submit" disabled={busy}>
+                <button className="btn btn-primary" type="submit" disabled={busy}>
                   {tr("요청 내용 확인", "Review request")}
                   <ArrowRight aria-hidden="true" />
                 </button>
@@ -1062,90 +1062,94 @@ export function HelpFlow({
         </section>
       ) : (
         <>
-          <header className="service-heading request-heading">
-            {/* 피드백: 모든 화면 같은 자리에 「이전」. 확인 화면 → 입력, 입력 단계 → 앞 단계, 첫 단계 → 앞 화면. */}
-            <button type="button" className="request-back" onClick={goBack}>
-              <ArrowLeft aria-hidden="true" />
-              {tr("이전", "Back")}
-            </button>
-            <span className="service-kicker">
-              <MapPin aria-hidden="true" />
-              {tr("공항 현장 서비스", "AIRPORT SERVICES")}
-            </span>
-            <div className="request-heading-row">
-              <h1>
-                {review
-                  ? tr("이 내용으로 접수할까요?", "Ready to submit?")
-                  : topic
-                    ? en
-                      ? topic.en
-                      : topic.label
-                    : tr("어떤 도움이 필요하세요?", "How can we help?")}
-              </h1>
-              {speech.supported && (
-                <button
-                  type="button"
-                  className="request-speech"
-                  onClick={() =>
-                    speech.speaking ? speech.stop() : speech.speak(readText)
-                  }
-                  aria-label={tr("소리로 듣기", "Read aloud")}
-                >
-                  <Volume2 aria-hidden="true" />
+          <header className="ph-hero request-heading">
+            <div className="ph-hero-copy">
+              {/* 피드백: 모든 화면 같은 자리에 「이전」. 확인 화면 → 입력, 입력 단계 → 앞 단계, 첫 단계 → 앞 화면. */}
+              <div className="request-hero-top">
+                <button type="button" className="request-back" onClick={goBack}>
+                  <ArrowLeft aria-hidden="true" />
+                  {tr("이전", "Back")}
                 </button>
-              )}
-            </div>
-            <p>
-              {review
-                ? tr(
-                    "제출하면 담당 업무로 전달돼요.",
-                    "Your request will be sent to the handling team.",
-                  )
-                : tr(
-                    noMeeting
-                      ? "전달할 요청 내용을 확인해 주세요."
-                      : "필요한 내용과 위치를 확인해 주세요.",
-                    noMeeting
-                      ? "Review the request you want to send."
-                      : "Confirm the service details and location.",
-                  )}
-            </p>
-            <span className="service-demo-label">
-              {tr(
-                "공모전 시연 · 실제 출동 없음",
-                "Contest demo · no real dispatch",
-              )}
-            </span>
-          </header>
-          <ol
-            className="request-stepbar"
-            aria-label={tr("접수 단계", "Request steps")}
-          >
-            {(noMeeting
-              ? [tr("요청 내용", "Request"), tr("내용 확인", "Review")]
-              : [
-                  tr("서비스 선택", "Service"),
-                  tr("위치 확인", "Location"),
-                  tr("내용 확인", "Details"),
-                ]
-            ).map((label, i) => (
-              <li
-                key={label}
-                aria-current={
-                  (review ? reviewIndex : inputStep) === i ? "step" : undefined
-                }
-              >
-                <span>
-                  {(review ? reviewIndex : inputStep) > i ? (
-                    <Check aria-hidden="true" />
-                  ) : (
-                    i + 1
+                <span className="service-kicker">
+                  <MapPin aria-hidden="true" />
+                  {tr("공항 현장 서비스", "AIRPORT SERVICES")}
+                </span>
+                <span className="service-demo-label">
+                  {tr(
+                    "공모전 시연 · 실제 출동 없음",
+                    "Contest demo · no real dispatch",
                   )}
                 </span>
-                {label}
-              </li>
-            ))}
-          </ol>
+              </div>
+              <div className="request-heading-row">
+                <h1>
+                  {review
+                    ? tr("이 내용으로 접수할까요?", "Ready to submit?")
+                    : topic
+                      ? en
+                        ? topic.en
+                        : topic.label
+                      : tr("어떤 도움이 필요하세요?", "How can we help?")}
+                </h1>
+                {speech.supported && (
+                  <button
+                    type="button"
+                    className="request-speech"
+                    onClick={() =>
+                      speech.speaking ? speech.stop() : speech.speak(readText)
+                    }
+                    aria-label={tr("소리로 듣기", "Read aloud")}
+                  >
+                    <Volume2 aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+              <p>
+                {review
+                  ? tr(
+                      "제출하면 담당 업무로 전달돼요.",
+                      "Your request will be sent to the handling team.",
+                    )
+                  : tr(
+                      noMeeting
+                        ? "전달할 요청 내용을 확인해 주세요."
+                        : "필요한 내용과 위치를 확인해 주세요.",
+                      noMeeting
+                        ? "Review the request you want to send."
+                        : "Confirm the service details and location.",
+                    )}
+              </p>
+            </div>
+            <ol
+              className="request-stepbar"
+              aria-label={tr("접수 단계", "Request steps")}
+            >
+              {(noMeeting
+                ? [tr("요청 내용", "Request"), tr("내용 확인", "Review")]
+                : [
+                    tr("서비스 선택", "Service"),
+                    tr("위치 확인", "Location"),
+                    tr("내용 확인", "Details"),
+                  ]
+              ).map((label, i) => (
+                <li
+                  key={label}
+                  aria-current={
+                    (review ? reviewIndex : inputStep) === i ? "step" : undefined
+                  }
+                >
+                  <span>
+                    {(review ? reviewIndex : inputStep) > i ? (
+                      <Check aria-hidden="true" />
+                    ) : (
+                      i + 1
+                    )}
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ol>
+          </header>
           {registrationError && (
             <p role="status">
               {tr(
@@ -1230,7 +1234,7 @@ export function HelpFlow({
                 {note && <p>{note}</p>}
                 <div className="request-review-actions">
                   <button
-                    className="public-button"
+                    className="btn btn-primary btn-inline"
                     disabled={busy}
                     onClick={() => void submit()}
                   >
@@ -1399,7 +1403,7 @@ export function HelpFlow({
                 {inputStep < lastInputStep && (
                   <button
                     type="button"
-                    className="public-button"
+                    className="btn btn-primary"
                     data-request-next
                     onClick={advanceInput}
                   >
