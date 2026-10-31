@@ -1544,6 +1544,7 @@ async function resetFlights(clearLocks = false) {
   await shot(page, "입구로봇-서비스");
   await clickText(page, ".svc-card", "이동지원 요청");
   await page.waitForSelector('.request-form[data-map-flow="true"]');
+  await clickText(page, "button", "이 장소에서 도움받기");
   check("안내로봇의 이동지원은 현재 위치를 포함한 지도 기반 통합 요청으로 이어진다", await page.$eval('input[name="service"][value="mobility"]',e=>(e as HTMLInputElement).checked) && await page.$eval('.request-mobile-nav',e=>getComputedStyle(e).display==="none"));
   await page.click('input[type="checkbox"][required]');await page.click('button[type="submit"]');
   await clickText(page,'button','이 내용으로 요청 접수');await page.waitForSelector('.request-state-pill[role="status"]');

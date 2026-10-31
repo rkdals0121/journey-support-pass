@@ -13,17 +13,20 @@ import styles from "./navigation-map.module.css";
 
 type RobotPhase = "idle" | "guiding" | "arrived" | "ended";
 type Props = {
+  backHref?: string;
   en: boolean; initialGate?: string; initialPlace?: string; fixedPlace?: boolean; robotGuidance?: boolean;
   returnTo?: KioskReturn; idleAskSec?: number; idleAnswerSec?: number;
 };
-function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,robotPhase,setRobotPhase,result}: {
+export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,robotPhase,setRobotPhase,result}: {
   en:boolean;from:MapFacility|null;target:MapFacility|null;homeHref:string;helpHref:string;
   isRobotMode:boolean;robotPhase:RobotPhase;setRobotPhase:(phase:RobotPhase)=>void;result:RoutePlannerResult;
 }) {
   const t = (ko:string,english:string)=>en?english:ko;
-  const {distance,hasResult,clearDestination:chooseAnotherDestination}=result;
+  const {distance,hasResult}=result;
+  const chooseAnotherDestination=()=>{setRobotPhase("idle");result.clearDestination();};
   const resultRef=useRef<HTMLElement>(null);
   useEffect(()=>{if(hasResult)resultRef.current?.scrollIntoView({block:"nearest",behavior:"auto"});},[hasResult,robotPhase]);
+  if (!hasResult) return null;
   const completionActions = !isRobotMode ? <>
     <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
     <Link className={styles.primary} href={homeHref}>{t("처음 화면으로", "Back to home")}<ArrowRight size={20} aria-hidden="true" /></Link>
@@ -53,7 +56,7 @@ function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,robotPha
             <p>{t("지도에 표시된 경로를 확인해 주세요.", "Check the route displayed on the map.")}</p>
             {isRobotMode && <p className={styles.locationNote}>{t("안내 시연 · 실제 로봇 이동과 자동 도착 감지는 연결되지 않았어요.", "Guidance demo · robot movement and automatic arrival detection are not connected.")}</p>}
             <div className={styles.completionActions}>{completionActions}</div></> : <p>{t("출발지와 목적지 칸을 누르고 지도에서 장소를 선택하세요.", "Select Start or Destination, then choose a place on the map.")}</p>}
-          <small>{t("3층 시연 지도입니다. 실제 이동·계단 없는 접근 가능 여부는 직원에게 확인해 주세요.", "3F prototype. Confirm actual routes and step-free access with staff.")}</small>
+          <details className={styles.moreInfo}><summary>{t("이용 전 확인", "Before you go")}</summary><p>{t("3층 시연 지도입니다. 실제 이동·계단 없는 접근 가능 여부는 직원에게 확인해 주세요.", "3F prototype. Confirm actual routes and step-free access with staff.")}</p></details>
           <Link className={styles.help} href={helpHref}>
             {t("현장 안내 지원 요청", "Ask staff for guidance")}<ArrowRight size={18} aria-hidden="true" />
           </Link>
@@ -61,7 +64,7 @@ function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,robotPha
   );
   return summary;
 }
-export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedPlace = false, robotGuidance = false,
+export function NavigationFlow({ backHref, en, initialGate = "", initialPlace = "", fixedPlace = false, robotGuidance = false,
   returnTo = "/kiosk/guide", idleAskSec = 120, idleAnswerSec = 30 }: Props) {
   const t=(ko:string,english:string)=>en?english:ko;
   const deviceModeName=useId();
@@ -72,15 +75,14 @@ export function NavigationFlow({ en, initialGate = "", initialPlace = "", fixedP
   const currentLocation=facilityForPlace(placeOf(initialPlace));
   const [from,setFrom]=useState<MapFacility|null>(()=>facilityForPlace(placeOf(initialPlace)));
   const [target,setTarget]=useState<MapFacility|null>(()=>MAP_FACILITIES.find(p=>p.name===`탑승구 ${initialGate}`)??null);
-  const homeHref=(fixedPlace?returnTo:isRobotMode?"/devices/robot":"/")+(en?"?lang=en":"");
+  const homeHref=backHref??(fixedPlace?returnTo:isRobotMode?"/devices/robot":"/")+(en?"?lang=en":"");
   const helpHref=`/help?topic=guidance&fresh=1${initialPlace?"&place="+encodeURIComponent(initialPlace):""}${fixedPlace?"&returnTo="+encodeURIComponent(returnTo):""}${en?"&lang=en":""}`;
   const deviceControls=<fieldset className={styles.deviceMode}>
-    <legend>{t("이용 기기 선택 · 시제품","Choose device · prototype")}</legend>
+    <legend>{t("이용 기기 · 시연","Device · demo")}</legend>
     {(["kiosk","robot"] as const).map(value=><label key={value}>
       <input type="radio" name={deviceModeName} value={value} checked={deviceMode===value} onChange={()=>{setDeviceMode(value);setRobotPhase("idle");}}/>
       <span>{value==="robot"?t("저니봇","Journey Bot"):t("키오스크","Kiosk")}</span>
     </label>)}
-    <p>{isRobotMode?t("경로 확인 후 안내 시작·도착·종료를 체험해요.","Try guidance, arrival and completion after finding a route."):t("경로를 확인하고 처음 화면으로 돌아가요.","Check your route, then return to the home screen.")}</p>
   </fieldset>;
   return <main id="public-main" className={styles.workspace} data-kiosk={fixedPlace}>
     <IdleGuard t={textOf(en?"en":"ko")} enabled={fixedPlace&&!robotActive} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={()=>window.location.assign(returnTo+(en?"?lang=en":""))}/>

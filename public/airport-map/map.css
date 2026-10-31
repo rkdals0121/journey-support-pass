@@ -31,13 +31,13 @@ body {
   box-shadow: 0 3px 16px #173c251a;
 }
 .map-controls button {
-  width: 46px;
-  height: 46px;
+  width: 4rem;
+  height: 4rem;
   border: 0;
   border-bottom: 1px solid #e2e8e3;
   background: #fff;
   color: #245a43;
-  font-size: 26px;
+  font-size: 1.75rem;
   cursor: pointer;
 }
 .map-controls button:last-child {
@@ -65,14 +65,14 @@ body {
 .map-status[hidden] {
   display: none;
 }
-@media (max-width: 480px) {
+@media (max-width: 760px) {
   .map-controls {
     right: 10px;
     bottom: 10px;
   }
   .map-controls button {
-    width: 44px;
-    height: 44px;
+    width: 3.5rem;
+    height: 3.5rem;
   }
 }
 

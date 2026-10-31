@@ -117,6 +117,9 @@ export function HelpFlow({
   assisted = false,
   initialReceipt,
   initialService = "guidance",
+  initialTask = "",
+  initialMobilityMode = "staff",
+  mobilityHomeHref,
   initialNote = "",
   initialTopic,
   initialBusiness,
@@ -137,6 +140,9 @@ export function HelpFlow({
   assisted?: boolean;
   initialReceipt?: string;
   initialService?: ServiceType;
+  initialTask?: string;
+  initialMobilityMode?: "staff" | "robot";
+  mobilityHomeHref?: string;
   initialNote?: string;
   initialTopic?: string;
   initialBusiness?: string;
@@ -165,7 +171,7 @@ export function HelpFlow({
   const [topicId, setTopicId] = useState(initialTopic);
   const [businessId, setBusinessId] = useState(initialBusiness);
   const [destinationId, setDestinationId] = useState("");
-  const [taskId, setTaskId] = useState("");
+  const [taskId, setTaskId] = useState(initialTask);
   const [taskFields, setTaskFields] = useState<Record<string, string>>({});
   const availableTasks = tasksFor(topicId ?? initialTopic ?? service);
   const task = availableTasks.find((t) => t.id === taskId) ?? availableTasks[0];
@@ -1301,10 +1307,10 @@ export function HelpFlow({
               }}
             >
               <div className="request-form-main">
-                {service === "mobility" && (<MobilityMapPlanner placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
+                {service === "mobility" && (<MobilityMapPlanner initialSupportMode={initialMobilityMode} placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
                         en={en} disabled={busy} kiosk={sharedDevice} destinationEnabled={task?.id !== "mobility-wheelchair"}
                         requestContent={<>{requestDetails}{requestAdditional}{error && <p role="alert">{error}</p>}{requestSummary}</>}
-                        backHref={returnTo ?? (en ? "/?lang=en" : "/")}
+                        backHref={mobilityHomeHref ?? returnTo ?? (en ? "/?lang=en" : "/")}
                         onChange={(nextPlace, nextDestination) => { setPlaceId(nextPlace); setDestinationId(nextDestination); setError(""); }} />)}
                 {service !== "mobility" && requestDetails}
                 {!noMeeting && service !== "mobility" && (

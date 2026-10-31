@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Armchair, Baby, Banknote, Bus, Check, ChevronDown, ClipboardCheck, Coffee, DoorOpen, HeartPulse, Info, LayoutGrid, Pill, Plane, Search, ShieldCheck, ShoppingBasket, Smile, Toilet, UtensilsCrossed } from "lucide-react";
 import AirportMap, { type MapState, type NearbyResult } from "../../../components/AirportMap";
 import {
   MAP_FACILITIES, facilityId, mapFacilityOf, areaBuilding,
   facilityAllowed, facilityForPlace, type MapFacility,
 } from "@/lib/map-facilities";
-import { FACILITY_FILTERS, facilitiesForMapDisplay, type FacilityFilter } from "@/lib/facility-map-filter";
+import { FACILITY_FILTERS, PRIMARY_FACILITY_FILTERS, facilityInCategory, facilitiesForMapDisplay, type FacilityFilter } from "@/lib/facility-map-filter";
 import type { Place } from "@/lib/airport";
 import styles from "./facility-map.module.css";
+
+const filterIcons = {all: LayoutGrid, restroom: Toilet, pharmacy: Pill, nursing: Baby, information: Info, children: Smile, lounge: Armchair, support: ShieldCheck, aed: HeartPulse, priority: ShieldCheck, gate: Plane, departure: DoorOpen, entrance: DoorOpen, checkin: ClipboardCheck, food: UtensilsCrossed, cafe: Coffee, convenience: ShoppingBasket, atm: Banknote, exchange: Banknote, bus: Bus};
 
 type Props = {
   value: string;
@@ -32,6 +35,8 @@ type Props = {
   kioskFooter?: ReactNode;
   kioskTitle?: string;
   kioskBackHref?: string;
+  showSelectionTools?: boolean;
+  additionalHelp?: ReactNode;
   onKioskClose?: () => void;
   allowedFacilityIds?: readonly (string | number)[];
   pickupSelection?: boolean;
@@ -42,7 +47,7 @@ type Props = {
 export function FacilityMapPicker({
   value, onChange, en = false, disabled = false, pickup, restrictToPickup = false,
   initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, route, start, destination, selectionRole = "destination",
-  kiosk = false, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskBackHref, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
+  kiosk = false, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskBackHref, showSelectionTools = true, additionalHelp, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
 }: Props) {
   const id = useId();
   const shell = useRef<HTMLDivElement>(null);
@@ -155,10 +160,10 @@ export function FacilityMapPicker({
   );
   const searchControls = (
     <div className={styles.searchWrap}>
-        <label htmlFor={id} className={styles.searchLabel}>{pickupSelection ? t("만날 탑승구 검색", "Find a meeting gate") : t("시설·탑승구 검색", "Find a facility or gate")}</label>
+        <label htmlFor={id} className={styles.searchLabel}><Search className={styles.searchIcon} aria-hidden="true" />{pickupSelection ? t("만날 탑승구 검색", "Find a meeting gate") : t("시설·탑승구 검색", "Find a facility or gate")}</label>
         <div className={styles.searchRow}>
           <input id={id} type="search" value={query} disabled={disabled} maxLength={100}
-            placeholder={pickupSelection ? t("출발할 탑승구 번호", "Starting gate number") : t("시설명 또는 탑승구 번호", "Facility name or gate number")}
+            placeholder={pickupSelection ? t("출발할 탑승구 번호", "Starting gate number") : t("예: 화장실, 약국, 25번", "e.g. restroom, pharmacy, gate 25")}
             onChange={e => { setQuery(e.target.value); setShowResults(true); }} />
           {(query || filter !== "all") && <button type="button" className={styles.reset} disabled={disabled}
             onClick={() => { setQuery(""); setFilter("all"); setShowResults(false); }}>
@@ -173,13 +178,29 @@ export function FacilityMapPicker({
         </div>}
       </div>
   );
+  const extraSelected = !PRIMARY_FACILITY_FILTERS.includes(effectiveFilter);
+  const selectedFilterLabel = FACILITY_FILTERS.find(item=>item.id===effectiveFilter);
+  const categoryCounts = new Map(FACILITY_FILTERS.map(item=>[item.id, MAP_FACILITIES.filter(p=>p.building===activeBuilding && eligible(p) && facilityInCategory(p,item.id)).length]));
+  const filterButton = (item: (typeof FACILITY_FILTERS)[number], card = false) => {
+    const Icon = filterIcons[item.id];
+    const count = categoryCounts.get(item.id) ?? 0;
+    return <button key={item.id} type="button" disabled={disabled || (card && count === 0)} aria-pressed={effectiveFilter === item.id}
+      onClick={()=>{setFilter(item.id);setQuery("");setShowResults(false);}}>
+      <Icon aria-hidden="true"/><span>{t(item.ko,item.en)}</span>
+      {card && <small>{count ? t(`${count}곳`,`${count} places`) : t("이 구역에 없음","None in this area")}</small>}
+      {effectiveFilter===item.id && <Check className={styles.selectedCheck} aria-hidden="true"/>}
+    </button>;
+  };
   const filterControls = !pickupSelection && (
     <div className={styles.filters} role="group" aria-label={t("시설 필터", "Facility filter")}>
-        {FACILITY_FILTERS.map(item => <button key={item.id} type="button" disabled={disabled || (pickupSelection && item.id !== "all")}
-          aria-pressed={effectiveFilter === item.id} onClick={() => { setFilter(item.id); setQuery(""); setShowResults(false); }}>
-          {t(item.ko, item.en)}
-        </button>)}
-      </div>
+      {FACILITY_FILTERS.filter(item=>!full || PRIMARY_FACILITY_FILTERS.includes(item.id)).map(item=>filterButton(item))}
+      {full && <details className={styles.moreFacilities}>
+        <summary><LayoutGrid aria-hidden="true"/><span>{extraSelected && selectedFilterLabel ? t(selectedFilterLabel.ko,selectedFilterLabel.en) : t("다른 시설","More facilities")}</span><ChevronDown aria-hidden="true"/></summary>
+        <div className={styles.facilityCards}>
+          {FACILITY_FILTERS.filter(item=>!PRIMARY_FACILITY_FILTERS.includes(item.id)).map(item=>filterButton(item,true))}
+        </div>
+      </details>}
+    </div>
   );
   const nearbyControls = (nearby && <section className={styles.nearby} aria-label={t("출발지에서 가까운 시설", "Facilities near your start")}>
         <div className={styles.nearbyTitle}><strong>{t("출발지에서 가까운 순", "Nearest to your start")}</strong><span>{t("연결된 통로 거리 기준", "By connected corridor distance")}</span></div>
@@ -210,8 +231,10 @@ export function FacilityMapPicker({
       {!hideSelection && selected && <div className={styles.selection} role="status"><div>
         <small>{t("선택한 목적지", "Selected destination")}</small><strong>{selected.name}</strong><span>{selected.description}</span>
       </div><button type="button" disabled={disabled} onClick={() => onChange("")}>{t("선택 해제", "Clear")}</button></div>}
-      {(notice || mapError) && <p role="alert" className={styles.error}>{notice || mapError}</p>}
-      {restrictToPickup && !pickup && <p role="status">{t("현재 위치를 먼저 선택해 주세요.", "Choose your current location first.")}</p>}
+  </>;
+  const errors = <>
+    {(notice || mapError) && <p role="alert" className={styles.error}>{notice || mapError}</p>}
+    {restrictToPickup && !pickup && <p role="status">{t("현재 위치를 먼저 선택해 주세요.", "Choose your current location first.")}</p>}
   </>;
 
   if (full) return (
@@ -230,14 +253,15 @@ export function FacilityMapPicker({
       {panelOpen && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
         <header className={styles.panelHeading}>
           {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")} title={t("뒤로 가기", "Go back")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg></a>}
-          <h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1>
+          <div className={styles.panelTitle}><span>{t("3층 안내", "3F guide")}</span><h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1></div>
           {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
         </header>
-        {searchControls}{filterControls}{kioskPanel}{nearbyControls}{metaControls}{notices}{kioskFooter}
+        {kioskPanel}{showSelectionTools && <>{searchControls}{filterControls}{nearbyControls}</>}{errors}{kioskFooter}
+        <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details>
       </aside>}
     </div>
   );
   return <div className={styles.picker} data-kiosk={kiosk}>
-    {terminalControls}{searchControls}{filterControls}{nearbyControls}{metaControls}{mapView}{notices}
+    {terminalControls}{searchControls}{filterControls}{nearbyControls}{metaControls}{mapView}{errors}{notices}
   </div>;
 }
