@@ -597,11 +597,8 @@
 }
 
 /* Scope booking density so staff and checkpoint pages keep their own layout. */
-.visitPage { margin:var(--space-4) auto var(--space-5); }
-.visitPage h1 { font-size:var(--text-title);margin:var(--space-2) 0; }
-.visitPage > p { margin-block:var(--space-2); }
 .visitLayout { gap:var(--space-4); }
-.visitLayout > .panel { padding:var(--space-4);margin:var(--space-2) 0; }
+.visitLayout > .panel { padding:var(--space-4);margin:0;border-color:var(--color-line);border-radius:var(--radius-medium); }
 .visitLayout .field { margin-bottom:var(--space-3);gap:var(--space-2); }
 .visitLayout .field > label { margin:0; }
 .visitLayout .draftSteps { margin-bottom:var(--space-3); }
@@ -614,4 +611,14 @@
  .visitLayout .hubMap .landmark { margin:0; }
  .visitLayout .hubMap > figure { min-width:0; }
  .visitLayout .mapLegend { margin:0;align-content:start; }
+ .visitLayout .hubMap .map { max-height:26dvh; }
+}
+@media (max-height: 700px) {
+ .visitLayout > .panel { padding:var(--space-3); padding-block:var(--space-2); }
+ .visitLayout .field { margin-bottom:var(--space-2);gap:var(--space-1); }
+ .visitLayout .field select,.visitLayout .field input { min-height:2.75rem; }
+ .visitLayout h2 { margin-block:0 var(--space-2); }
+ .visitLayout .draftSteps { margin-bottom:var(--space-2); }
+ .visitLayout .draftSteps button,.visitLayout .button,.visitLayout .secondary { min-height:2.75rem; }
+ .visitLayout .actions { margin-top:var(--space-2);padding-block:var(--space-1); }
 }
