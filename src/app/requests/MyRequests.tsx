@@ -85,20 +85,22 @@ export function MyRequests({
     };
   }, [version, en]);
   return (
-    <main id="public-main" className="service-workspace">
-      <header className="service-heading">
-        <span className="service-kicker">
-          <ClipboardList aria-hidden="true" />
-          {t("서비스 이용 내역", "MY REQUESTS")}
-        </span>
-        <h1>{t("내 요청", "My requests")}</h1>
-        <p>
-          {t(
-            "접수한 서비스와 진행 상황을 확인하세요.",
-            "Track your services and their progress.",
-          )}
-        </p>
-      </header>
+    <main id="public-main" className="service-page service-short-page">
+      <section className="ph-hero" aria-labelledby="requests-title">
+        <div className="ph-hero-copy service-intro-copy">
+          <span className="ph-hero-label">
+            <ClipboardList aria-hidden="true" />
+            {t("서비스 이용 내역", "My requests")}
+          </span>
+          <h1 id="requests-title">{t("내 요청", "My requests")}</h1>
+          <p>
+            {t(
+              "접수한 서비스와 진행 상황을 확인하세요.",
+              "Track your services and their progress.",
+            )}
+          </p>
+        </div>
+      </section>
       {children}
       <div className="request-list-bar">
         <span>
@@ -147,9 +149,13 @@ export function MyRequests({
           ))}
         </div>
       ) : (
-        <section className="request-empty-state">
-          <ClipboardList aria-hidden="true" />
-          <h2>{t("아직 접수한 요청이 없어요", "No requests yet")}</h2>
+        <section className="service-info-card">
+          <header className="service-info-heading">
+            <span className="service-info-icon">
+              <ClipboardList aria-hidden="true" />
+            </span>
+            <h2>{t("아직 접수한 요청이 없어요", "No requests yet")}</h2>
+          </header>
           <p>
             {t(
               "이 탭에서 접수한 서비스가 여기에 표시돼요.",
@@ -157,7 +163,7 @@ export function MyRequests({
             )}
           </p>
           <Link
-            className="public-button"
+            className="btn btn-primary service-primary-action"
             href={"/services" + (en ? "?lang=en" : "")}
           >
             {t("서비스 이용하기", "Find a service")}
@@ -172,8 +178,8 @@ export function MyRequests({
       )}
       <p className="request-list-privacy">
         {t(
-          "이 탭의 최근 접수만 표시하며, 접수 정보는 24시간 후 만료돼요. 다른 기기에서는 저장한 접수 링크로 열어 주세요.",
-          "Recent requests in this tab only. Details expire after 24 hours. On another device, use the saved request link.",
+          "이 탭의 최근 접수만 보여요. 24시간 후 만료돼요.",
+          "Recent requests in this tab only. They expire after 24 hours.",
         )}
       </p>
     </main>
