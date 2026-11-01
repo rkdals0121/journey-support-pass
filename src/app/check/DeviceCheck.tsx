@@ -1,10 +1,9 @@
 "use client";
 
-import { Camera, CircleCheck, CircleHelp, CircleX, Globe, MonitorSmartphone, Volume2, WifiOff, Sun } from "lucide-react";
+import { ArrowRight, Camera, CircleCheck, CircleHelp, CircleX, Globe, MonitorSmartphone, Stethoscope, Volume2, WifiOff, Sun } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { extractToken } from "@/lib/pass-format";
-import { Brand } from "../components/Sunflower";
 import { Scanner } from "../components/Scanner";
 
 type State = "ok" | "bad" | "warn" | "wait";
@@ -27,7 +26,7 @@ function Item({ id, icon: Icon, title, row, children }: { id: string; icon: type
   return (
     <section className={`dc-item dc-${row.state}`} aria-labelledby={`check-${id}`}>
       <h2 id={`check-${id}`}>
-        <Icon size={22} aria-hidden="true" />
+        <span className="service-info-icon"><Icon size={22} aria-hidden="true" /></span>
         <span>{title}</span>
         <b className="dc-mark">
           <Mark size={20} aria-hidden="true" />
@@ -95,12 +94,10 @@ export function DeviceCheck() {
       const h = window.innerHeight;
       // 화면이 아직 그려지지 않았으면(뒤에 숨은 탭) 크기가 0 으로 나온다. 보일 때 다시 잰다.
       if (w === 0 || h === 0) return;
-      const ratio = window.devicePixelRatio || 1;
       const touch = navigator.maxTouchPoints > 0;
-      const what = w >= 900 ? "태블릿·노트북 크기" : w >= 600 ? "작은 태블릿 크기" : "휴대전화 크기";
       setScreen({
         state: touch ? "ok" : "warn",
-        text: `화면 ${w} × ${h} (${what}, 화소 배율 ${ratio}). ${touch ? "손가락으로 누를 수 있습니다." : "터치 화면이 아닙니다. 키오스크로 쓰려면 터치가 되는 기기가 좋습니다."}`,
+        text: `화면 ${w} × ${h}. ${touch ? "터치가 됩니다." : "터치 화면이 아닙니다. 키오스크로 쓰려면 터치가 되는 기기가 좋습니다."}`,
       });
     };
     size();
@@ -113,12 +110,12 @@ export function DeviceCheck() {
     } else if (!("serviceWorker" in navigator) || !window.isSecureContext) {
       setOffline({ state: "bad", text: "이 브라우저는 고유 일련 번호 화면을 휴대전화에 남겨 두지 못합니다. 인터넷이 끊기면 QR이 열리지 않습니다." });
     } else {
-      setOffline({ state: "ok", text: "고유 일련 번호 화면을 한 번 열어 두면 인터넷이 끊겨도 다시 열립니다." });
+      setOffline({ state: "ok", text: "한 번 열어 두면 인터넷이 끊겨도 열립니다." });
     }
 
     setWake(
       "wakeLock" in navigator
-        ? { state: "ok", text: "고유 일련 번호 화면을 보는 동안에는 휴대전화 화면이 꺼지지 않습니다. 키오스크로 쓸 기기는 기기 설정에서 화면 자동 꺼짐을 꺼 두세요." }
+        ? { state: "ok", text: "화면이 꺼지지 않습니다. 키오스크 기기는 설정에서 자동 꺼짐을 꺼 두세요." }
         : { state: "warn", text: "이 브라우저는 화면 꺼짐을 막지 못합니다. 고유 일련 번호 화면을 보여 주는 동안 화면이 꺼질 수 있습니다. 키오스크로 쓸 기기는 기기 설정에서 화면 자동 꺼짐을 꺼 두세요." },
     );
 
@@ -137,7 +134,7 @@ export function DeviceCheck() {
       if (list.length === 0) {
         setVoice({ state: "warn", text: "목소리 목록을 아직 받지 못했습니다. 「소리 들어 보기」를 눌러 직접 들어 보세요." });
       } else if (ko && en) {
-        setVoice({ state: "ok", text: "한국어와 영어 목소리가 있습니다. 「소리 들어 보기」로 실제로 들리는지 확인해 주세요." });
+        setVoice({ state: "ok", text: "한국어·영어 목소리가 있습니다. 눌러서 들어 보세요." });
       } else {
         const missing = !ko && !en ? "한국어와 영어" : ko ? "영어" : "한국어";
         setVoice({
@@ -193,20 +190,22 @@ export function DeviceCheck() {
   }
 
   return (
-    <div className="device-check">
-      <Brand />
-      <h1>기기 점검</h1>
-      <p className="muted">
-        사용할 기기에서 연결·카메라·소리를 확인하세요.
-      </p>
-
+    <>
+      <section className="ph-hero" aria-labelledby="check-title">
+        <div className="ph-hero-copy service-intro-copy">
+          <span className="ph-hero-label"><Stethoscope aria-hidden="true" />시연·설치 전 점검</span>
+          <h1 id="check-title">기기 점검</h1>
+          <p>사용할 기기에서 연결·카메라·소리를 확인하세요.</p>
+        </div>
+      </section>
+      <div className="dc-grid">
       <Item id="net" icon={Globe} title="인터넷" row={net}>
         <button type="button" className="btn btn-inline" onClick={() => void checkNet()}>
           다시 확인
         </button>
       </Item>
 
-      <Item id="cam" icon={Camera} title="카메라로 QR 읽기" row={scan}>
+      <Item id="cam" icon={Camera} title="카메라" row={scan}>
         {cam ? (
           <Scanner
             onScan={onScan}
@@ -224,38 +223,36 @@ export function DeviceCheck() {
             카메라 켜기
           </button>
         )}
-        <p className="hint">
-          읽어 볼 QR이 없으면 다른 휴대전화로 이 화면을 열고 아래 「점검용 QR」을 보여 주세요. 카메라가 둘이면 영상 위의 바꾸기 단추로 고르고, 고른 카메라는 키오스크에서도 그대로 씁니다.
-        </p>
       </Item>
 
       <Item id="voice" icon={Volume2} title="소리 안내" row={voice}>
         <div className="dc-row">
           <button type="button" className="btn btn-inline" onClick={() => speak("ko")}>
-            소리 들어 보기
+            한국어 듣기
           </button>
           <button type="button" className="btn btn-inline" onClick={() => speak("en")} lang="en">
-            English voice
+            English
           </button>
         </div>
-        {heard && <p className="hint">안 들리면 기기의 소리 크기와 무음(매너) 모드를 확인해 주세요. 아이폰·아이패드는 옆의 무음 스위치도 확인해 주세요.</p>}
+        {heard && <p className="hint">안 들리면 소리 크기와 무음 모드를 확인해 주세요.</p>}
       </Item>
 
       <Item id="screen" icon={MonitorSmartphone} title="화면" row={screen} />
-      <Item id="offline" icon={WifiOff} title="인터넷 없이 고유 일련 번호 화면 열기 (휴대전화)" row={offline} />
+      <Item id="offline" icon={WifiOff} title="인터넷 없이 열기" row={offline} />
       <Item id="wake" icon={Sun} title="화면 꺼짐 막기" row={wake} />
 
       {qr && (
         <section className="dc-qr" aria-labelledby="check-qr">
-          <h2 id="check-qr">점검용 QR</h2>
-          <p className="hint">키오스크로 쓸 기기의 이 화면에서 「카메라 켜기」를 누른 뒤 이 QR을 보여 주세요.</p>
+          <h2 id="check-qr">다른 기기용 점검 QR</h2>
           <div dangerouslySetInnerHTML={{ __html: qr }} role="img" aria-label="점검용 QR" />
         </section>
       )}
 
-      <Link className="home-staff" href="/kiosk">
-        키오스크 설치로
+      <Link className="dc-setup" href="/kiosk">
+        <span>키오스크 설치로</span>
+        <ArrowRight aria-hidden="true" />
       </Link>
-    </div>
+      </div>
+    </>
   );
 }
