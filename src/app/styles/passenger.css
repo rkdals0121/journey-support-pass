@@ -111,17 +111,25 @@
 .public-request-layout .place-manual { margin-top: 0.5rem; }
 .public-request-layout .place-manual summary { min-height: 2rem; font-size: var(--text-caption); font-weight: var(--weight-body); }
 .devices-main .public-page-heading { padding-bottom: 1.75rem; }
-.service-workspace, .request-experience { width:min(100%,74rem); margin:0 auto; padding:var(--space-5) var(--space-5) var(--space-6); color:var(--text); }
+.service-workspace { width:min(100%,74rem); margin:0 auto; padding:var(--space-5) var(--space-5) var(--space-6); color:var(--text); }
+/* 현장 도움 요청: 위쪽 바와 같은 끝선(docs/ui-guide.md 2절). */
+.request-experience {
+  --w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  box-sizing: border-box; width: var(--w); margin-inline: calc((100% - var(--w)) / 2); padding: var(--space-4) 0 var(--space-5); color: var(--text);
+}
 .service-heading { margin-bottom:var(--space-4); position:relative; }
 .service-kicker { display:flex; align-items:center; gap:0.5rem; color:var(--green); font-size:var(--text-caption); font-weight:var(--weight-heading); letter-spacing:.04em; }
 .service-heading>p { font-size:var(--text-body); color:var(--muted); margin:0; }
 .service-demo-label { display:inline-block; margin-top:var(--space-2); color:var(--muted); font-size:var(--text-caption); }
-.request-heading-row { display:flex; align-items:center; gap:1rem; justify-content:space-between; }
+.request-heading { margin-bottom:var(--space-4); }
+.request-hero-top { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2) var(--space-4); margin-bottom:var(--space-2); }
+.request-hero-top .service-demo-label { margin:0; }
+.request-heading-row { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2) 1rem; }
 .request-speech, .request-local-tools button, .request-list-bar button { background:none; border:0; font:inherit; color:var(--green-press); cursor:pointer; min-height:max(2.75rem,var(--target-floor)); }
 .request-speech { border:0.0625rem solid var(--line); border-radius:50%; width:2.75rem; flex:none; display:grid; place-items:center; }
 .request-local-tools { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; font-size:var(--text-small); }
 .request-local-tools a { margin-right:auto; color:var(--green-press); }
-.request-stepbar { display:flex; padding:0; margin:0 0 var(--space-4); list-style:none; gap:var(--space-5); border-bottom:0.0625rem solid var(--line); padding-bottom:var(--space-3); margin-bottom: var(--space-3); }
+.request-stepbar { display:flex; padding:0; margin:0; list-style:none; gap:var(--space-5); }
 .request-stepbar li { display:flex; align-items:center; gap:0.5rem; color:var(--muted); font-size:var(--text-small); }
 .request-stepbar li>span { width:1.7rem; height:1.7rem; display:grid; place-items:center; border:0.0625rem solid var(--line-strong); border-radius:50%; font-size:var(--text-caption); }
 .request-stepbar li[aria-current=step] { color:var(--green-press); font-weight:var(--weight-heading); }
@@ -225,7 +233,7 @@
 .request-location-tools>summary { cursor:pointer; font-size:var(--text-small); color:var(--green-press); font-weight:var(--weight-label); min-height:max(2.75rem,var(--target-floor)); line-height:2.75rem; }
 .request-location-tools .pickup-change { margin-top:0.5rem; }
 .request-experience .place-finder:has(.place-confirmed)>.place-find-actions, .request-experience .place-finder:has(.place-confirmed)>label, .request-experience .place-finder:has(.place-confirmed)>.place-finder-hint, .request-experience .place-finder:has(.place-confirmed)>.place-manual { display:none; }
-.request-back { display:inline-flex; align-items:center; gap:0.25rem; min-height:max(2.75rem,var(--target-floor)); margin:0 0 0.75rem; padding:0 1rem 0 0.5rem; border:0.0625rem solid var(--line); border-radius:var(--radius-pill); background:var(--surface,var(--color-surface)); color:var(--green-press); font:inherit; font-weight:var(--weight-heading); cursor:pointer; }
+.request-back { display:inline-flex; align-items:center; gap:0.25rem; min-height:max(2.75rem,var(--target-floor)); margin:0; padding:0 1rem 0 0.5rem; border:0.0625rem solid var(--line); border-radius:var(--radius-pill); background:var(--surface,var(--color-surface)); color:var(--green-press); font:inherit; font-weight:var(--weight-heading); cursor:pointer; }
 .request-back svg { width:1.25rem; height:1.25rem; }
 .request-privacy-warning { display:flex; gap:0.5rem; align-items:flex-start; margin:var(--space-2) 0; padding:0; color:var(--color-muted); font-size:var(--text-caption); line-height:1.6; }
 .request-privacy-warning svg { flex:none; width:1.125rem; height:1.125rem; margin-top:0.25rem; }
@@ -345,16 +353,14 @@
 .airport-site .public-footer-links a { color: var(--color-muted); text-decoration: none; }
 .airport-site .public-footer-links a:hover { text-decoration: underline; }
 .airport-site .public-button, .pretrip-site .public-button { border-radius: var(--radius-small); box-shadow: none; font-weight: var(--weight-label); min-height: 3.25rem; }
-.airport-site :is(.service-workspace, .request-experience, .booking-lookup) { max-width: 72rem; }
+.airport-site :is(.service-workspace, .booking-lookup) { max-width: 72rem; }
 .airport-site :is(.service-heading, .public-page-heading) h1 { font-size: var(--text-title); line-height: 1.35; letter-spacing: -0.035em; }
 .airport-site :is(.service-heading, .public-page-heading) > p { color: var(--ui-muted); font-size: var(--text-body); }
 .airport-site :is(.service-kicker, .public-eyebrow) { font-size: var(--text-caption); font-weight: var(--weight-label); letter-spacing: 0; }
-.airport-site .request-heading { padding-bottom: 0; }
 .airport-site .request-back { border: 0; border-radius: var(--radius-small); padding: 0.25rem 0; color: var(--ui-muted); background: none; text-decoration: underline; text-underline-offset: 0.3em; }
-.airport-site .request-stepbar { border-bottom: 0.0625rem solid var(--ui-rule); padding-bottom: var(--space-3); }
 .airport-site .request-stepbar li { font-size: var(--text-small); }
 .airport-site .request-form { gap: var(--space-4); }
-.airport-site .request-section { animation: none; border: 0; border-radius: 0; box-shadow: none; padding: var(--space-4); border-top: 0.0625rem solid var(--ui-rule); background: var(--color-surface); }
+.airport-site .request-section { animation: none; border: 1px solid var(--color-line); border-radius: var(--radius-medium); box-shadow: none; padding: var(--space-4); background: var(--color-surface); }
 .airport-site .request-section h2 { font-size: var(--text-heading); margin-bottom: var(--space-3); }
 .airport-site .request-section h2 > span { border-radius: var(--radius-small); width: 1.65rem; height: 1.65rem; font-size: var(--text-caption); background: var(--mint); }
 .airport-site .request-selected-service { padding: 0.75rem 0; margin-bottom: 1.5rem; border-radius: 0; background: transparent; border-bottom: 0.0625rem solid var(--ui-rule); }
@@ -370,7 +376,7 @@
     .service-form-card,
     .service-route-result
   ) { border-radius: var(--radius-small); box-shadow: none; }
-.airport-site .request-submit-card { background: var(--color-primary-faint); border: 0; padding: 1.5rem; border-top: 0.1875rem solid var(--color-control-line); }
+.airport-site .request-submit-card { background: var(--color-primary-faint); border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: 1.5rem; }
 .airport-site .request-review-card { animation: airport-panel-enter var(--airport-panel) var(--airport-ease); padding: 2rem; }
 .airport-site .place-finder { background: transparent; border: 0; border-radius: 0; padding: 0; }
 .airport-site .place-candidates { gap: 0.75rem; }
@@ -380,8 +386,6 @@
 .airport-site .request-empty-state > svg { width: 2rem; height: 2rem; background: none; padding: 0; border-radius: 0; color: var(--color-muted); }
 .airport-site .request-empty-state h2 { font-size: var(--text-heading); }
 .airport-site .request-empty-state .public-button { margin-top: 1rem; }
-.airport-site .traffic-intent { border-radius: var(--radius-small); box-shadow: none; border-width: 0.0625rem; padding: 1.75rem; }
-.airport-site .traffic-information { border-radius: 0; border: 0; border-top: 0.0625rem solid var(--ui-rule); padding-inline: 0; }
 .pretrip-site .prepare-intro h1 { font-size: var(--text-large); letter-spacing: -0.045em; }
 .pretrip-site .prepare-intro > p { font-size: var(--text-body); line-height: 1.8; }
 .pretrip-site .prepare-steps { border: 0; border-radius: 0; border-left: 0.0625rem solid var(--ui-rule); background: transparent; padding-left: 2.5rem; }
@@ -474,7 +478,6 @@
 .airport-service-copy p { font-size: var(--text-small); color: var(--color-muted); line-height: 1.6; margin: 0; }
 .airport-service-icon { flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 0; background: transparent; color: var(--color-primary); margin-top: 0.25rem; border: 0; }
 .airport-site .service-workspace { max-width: calc(var(--col) * 2.25); padding: var(--space-5) var(--space-5); width: 100%; margin: 0 auto; }
-.airport-site .request-experience { max-width: calc(var(--col) * 2.25); padding: var(--space-4) var(--space-5) var(--space-5); width: 100%; margin: 0 auto; }
 .service-heading h1 { font-size: var(--text-title); letter-spacing: -.04em; margin: var(--space-2) 0; line-height: 1.25; }
 .service-heading > p { font-size: var(--text-small); line-height: 1.7; color: var(--color-muted); }
 .request-section { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: var(--space-4); box-shadow: none; }
@@ -597,7 +600,6 @@
 .airport-service-grid { border-radius: var(--radius-medium); grid-template-columns: 1fr; gap: 0; padding: 0 1.25rem; }
 .airport-portal { padding: 1.5rem 1.25rem 2rem; }
 .airport-site .service-workspace { padding: 1.5rem 1.25rem 2rem; }
-.airport-site .request-experience { padding: 1.5rem 1.25rem 2rem; }
 .service-heading h1 { font-size: var(--text-title); }
 .request-section { padding: 1.5rem 1.25rem; }
 .pretrip-site .prepare-layout { gap: 2.5rem; padding-top: 2rem; display: block; padding: 2rem 1.25rem; margin: 0; }
@@ -621,13 +623,13 @@
 .request-section { padding:1.25rem; }
 }
 @media (max-width:760px) {
-.service-workspace, .request-experience { padding:1.5rem 1rem 2.5rem; }
+.service-workspace { padding:1.5rem 1rem 2.5rem; }
 .service-heading { margin-bottom:1.5rem; }
 .service-heading h1 { font-size:var(--text-title); margin:0.5rem 0 0.75rem; }
 .service-heading>p { font-size:var(--text-small); }
 .service-kicker { font-size:var(--text-caption); }
 .service-demo-label { font-size:var(--text-caption); }
-.request-stepbar { gap:1rem; margin-bottom:1.25rem; padding-bottom:1rem; }
+.request-stepbar { gap:1rem; }
 .request-stepbar li { font-size:var(--text-caption); gap:0.5rem; flex:1; }
 .request-stepbar li>span { width:1.4rem; height:1.4rem; font-size:var(--text-caption); flex:none; }
 .request-form, .request-status-layout, .service-form-layout { display:flex; flex-direction:column; gap:1rem; }
@@ -756,14 +758,14 @@
 .airport-site .public-footer-links { display: flex; gap: 0.75rem 1.25rem; margin-top: 1rem; align-items: flex-start; }
 .airport-site :is(.service-heading, .public-page-heading) h1 { font-size: var(--text-title); }
 .airport-site :is(.service-heading, .public-page-heading) > p { font-size: var(--text-small); line-height: 1.65; }
-.airport-site .request-stepbar { gap: 0.5rem; margin-bottom: 0.5rem; }
+.airport-site .request-stepbar { gap: 0.5rem; }
 .airport-site .request-stepbar li { font-size: var(--text-caption); }
-.airport-site .request-section { padding: 1.25rem 0; border-top: 0; }
+.airport-site .request-section { padding: var(--space-4); }
 .airport-site .request-section h2 { font-size: var(--text-body); margin-bottom: 1rem; }
 .airport-site .request-selected-service { margin-bottom: 1rem; }
 .airport-site .request-task-options label { font-size: var(--text-body); min-height: 3.75rem; }
 .airport-site .request-form { gap: 1rem; }
-.airport-site .request-submit-card { padding: 1.25rem 0; border: 0; background: none; }
+.airport-site .request-submit-card { padding: var(--space-4); }
 .airport-site .request-review-card { padding: 1.5rem 1rem; }
 .pretrip-site .prepare-intro h1 { font-size: var(--text-title); }
 .pretrip-site .prepare-intro > p { font-size: var(--text-body); }
@@ -819,20 +821,14 @@
 }
 .request-form > .request-submit-card { display:none; }
 .request-form[data-final-step="true"] > .request-submit-card { display:block; }
-.request-mobile-nav > .public-button { flex:1; cursor:pointer; }
+.request-mobile-nav > :is(.public-button, .btn) { flex:1; margin:0; cursor:pointer; }
 @media (min-width: 761px) {
- .request-heading { display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"back title demo" "back subtitle kicker";gap:var(--space-2) var(--space-4);align-items:center; }
- .request-heading .request-back { grid-area:back;margin:0;align-self:start; }
- .request-heading .request-heading-row { grid-area:title; }
- .request-heading h1 { margin:0; }
- .request-heading > p { grid-area:subtitle; }
- .request-heading .service-kicker { grid-area:kicker;justify-self:end; }
- .request-heading .service-demo-label { grid-area:demo;margin:0;justify-self:end; }
+ .request-heading > .request-stepbar { flex-direction:column; gap:var(--space-2); justify-self:end; }
  .request-form:not([data-final-step="true"]) { grid-template-columns:minmax(0,1fr); }
  .request-mobile-nav { grid-column:1/-1;justify-content:flex-end; }
  .request-form[data-final-step="true"] > .request-submit-card { grid-column:2;grid-row:1 / span 2; }
  .request-form[data-final-step="true"] > .request-mobile-nav { grid-column:1; }
- .request-mobile-nav > .public-button { flex:0 1 auto;min-width:12rem; }
+ .request-mobile-nav > :is(.public-button, .btn) { flex:0 1 auto;width:auto;min-width:12rem; }
  .service-workspace > .service-heading:not(.request-heading) { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-1) var(--space-4); }
  .service-workspace > .service-heading:not(.request-heading) h1 { grid-column:1;grid-row:1;margin:0; }
  .service-workspace > .service-heading:not(.request-heading) > p { grid-column:1;grid-row:2;margin:0; }
@@ -843,12 +839,19 @@
  .airport-portal-support { grid-template-columns:1fr 1fr; }
  .airport-portal-links { grid-template-columns:1fr 1fr;gap:var(--space-3); }
  .airport-portal .airport-business-reference { margin-top:var(--space-3); }
- .request-mobile-nav { padding-block:var(--space-2); }
- .request-mobile-nav > .public-button { min-height:max(2.75rem,var(--target-floor));padding:var(--space-2) var(--space-4); }
+ .request-mobile-nav { padding-block:var(--space-1); }
+ .request-mobile-nav > :is(.public-button, .btn) { min-height:max(2.75rem,var(--target-floor));padding:var(--space-2) var(--space-4); }
  .request-task-options legend { margin-bottom:var(--space-2); }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+ .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 @media (min-width: 1101px) {
  .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(5,minmax(0,1fr)); }
+ .airport-service-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+/* 첫 단계: 서비스 고르기는 한 줄, 세부 선택과 적는 칸은 두 칸 나란히(태블릿·키오스크 가로 화면 포함). */
+@media (min-width: 761px) {
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-5); }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > h2 { grid-column:1 / -1;margin:0; }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"] > .request-service-options { grid-column:1 / -1; }
@@ -856,12 +859,17 @@
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > .request-privacy-warning { grid-column:1;grid-row:4; }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > .service-task-fields { grid-column:2;grid-row:3 / span 2;grid-template-columns:1fr; }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) .service-task-fields label { margin-top:0; }
-
- .airport-service-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 @media (max-height: 700px) and (min-width: 761px) {
  .service-workspace,.request-experience { padding-block:var(--space-3); }
  .service-heading { margin-bottom:var(--space-3); }
+ .request-experience { padding-top:var(--space-2); }
+ .request-heading { margin-bottom:var(--space-2); }
+ .request-hero-top { margin-bottom:0; }
+ .airport-site .request-form { gap:var(--space-2); }
+ .airport-site .request-section { padding-block:var(--space-2); }
+ .request-mobile-nav { padding-block:0; }
+ .request-privacy-warning { margin-block:var(--space-1) 0; }
 }
 
 .request-mobile-nav[hidden] { display:none; }

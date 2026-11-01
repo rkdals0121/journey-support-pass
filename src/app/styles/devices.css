@@ -134,9 +134,15 @@ html[data-kiosk] .robot-panel { border: 0; background: var(--color-primary-faint
 .field-task-back { display: inline-flex; align-items: center; min-height: max(3rem,var(--target-floor)); gap: 0.5rem; text-decoration: none; color: var(--green); font-weight: var(--weight-label); white-space: nowrap; }
 .field-task-back svg { width: 1.5rem; }
 .field-task-shell
-  :is(.request-experience, .service-workspace, .booking-lookup) { width: min(100%, 80rem); max-width: 80rem; padding: 2rem 2.5rem; margin: auto; }
+  :is(.service-workspace, .booking-lookup) { width: min(100%, 80rem); max-width: 80rem; padding: 2rem 2.5rem; margin: auto; }
 .field-task-shell :is(h1) { font-size: var(--text-title); }
-.field-task-shell .request-section { border-radius: var(--radius-small); }
+/* 현장 도움 요청: 키오스크는 누르는 곳이 커서 같은 내용이 더 길다. 한 화면에 들도록 여백부터 줄인다. */
+.field-task-shell .request-experience { padding-top: var(--space-2); }
+.field-task-shell .request-heading { margin-bottom: var(--space-2); }
+.field-task-shell .request-hero-top { margin-bottom: 0; }
+.field-task-shell .request-form { gap: var(--space-2); }
+.field-task-shell .request-section { border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding-block: var(--space-2); }
+.field-task-shell .request-privacy-warning { margin-block: var(--space-1) 0; }
 .field-task-shell .request-task-options label { font-size: var(--text-body); padding: 1.25rem; min-height: 4rem; }
 .field-task-shell .public-button { min-height: 3.75rem; font-size: var(--text-body); }
 html[data-kiosk] .kiosk-taskhome.kiosk-scan-surface { display: block; padding-top: 0.5rem; }
@@ -284,7 +290,7 @@ html[data-kiosk] .flow-body { padding:1rem 1.5rem 1.5rem; }
 .field-task-header > span { font-size: var(--text-caption); flex: 1 1 10rem; justify-content: flex-end; }
 .field-task-back { min-height: max(2.75rem,var(--target-floor)); font-size: var(--text-body); }
 .field-task-shell
-    :is(.request-experience, .service-workspace, .booking-lookup) { padding: 1.5rem 1.25rem; }
+    :is(.service-workspace, .booking-lookup) { padding: 1.5rem 1.25rem; }
 .field-task-shell .request-form, .field-task-shell .service-form-layout { display: block; }
 .field-task-shell .request-section { margin-bottom: 1rem; }
 .field-task-shell .request-submit-card { margin-top: 1rem; }
@@ -301,7 +307,7 @@ html[data-kiosk] .flow-body { padding:1rem 1.5rem 1.5rem; }
 .task-device-preview.kiosk-preview .device-preview-body { justify-content: center; }
 }
 /* Shared help uses kiosk-sized targets even on the public /help route. */
-.request-shared :is(.public-button,.request-back,.request-speech,.request-service-options label,.request-task-options label,.request-check) { min-height:var(--target-kiosk-floor); }
+.request-shared :is(.public-button,.btn,.request-back,.request-speech,.request-service-options label,.request-task-options label,.request-check) { min-height:var(--target-kiosk-floor); }
 .request-shared .request-speech { min-width:var(--target-kiosk-floor); }
 .request-shared :is(input:not([type="radio"]):not([type="checkbox"]):not([type="file"]),select,textarea) { min-height:var(--target-kiosk-floor); }
 /* Mobility assistance keeps the shared map at the full device width. */
