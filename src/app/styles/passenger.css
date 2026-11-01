@@ -408,7 +408,8 @@
 .flow-pretrip .choice { border: 0; border-bottom: 0.0625rem solid var(--ui-rule); border-radius: 0; box-shadow: none; padding: 1rem 0.75rem; min-height: 4rem; font-size: var(--text-body); background: var(--color-surface); }
 .flow-pretrip .choice:hover { background: var(--color-canvas); transform: none; }
 .flow-pretrip .choice.choice-on { background: var(--color-primary-faint); border-bottom-color: var(--color-control-line); box-shadow: inset 0.1875rem 0 var(--green); }
-.flow-pretrip .choice-icon { width: 1.75rem; height: 1.75rem; border-radius: 0; background: none; }
+html[data-kiosk] .flow-pretrip .choice-icon { width: 1.75rem; height: 1.75rem; border-radius: 0; background: none; }
+html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; width: 1.5rem; height: 1.5rem; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
 .flow-pretrip .choice-icon svg { width: 1.5rem; height: 1.5rem; }
 .flow-pretrip .choice-mark { border-radius: var(--radius-small); width: 1.25rem; height: 1.25rem; flex: none; }
 .flow-pretrip .choice-single .choice-mark { border-radius: 50%; }
