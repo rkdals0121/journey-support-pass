@@ -328,7 +328,7 @@
       pois.getFeatures().length,
     );
   }
-  function fit() {
+  function fit(serviceEntry = false) {
     const size = map.getSize();
     if (!size || size[0] < 1 || size[1] < 1) {
       pendingFit = true;
@@ -368,6 +368,15 @@
       if(padding[0]+padding[2] >= available[1]-40) {padding[0]=20;padding[2]=Math.max(20,available[1]*.4);}
       if(padding[1]+padding[3] >= available[0]-40) {padding[1]=20;padding[3]=Math.max(20,available[0]*.4);}
       view.fit(frame, { padding, maxZoom: 19, duration: 0 });
+      // Service entry opens on the central hall at an essential-facility scale.
+      // Route fits keep their natural zoom so both endpoints remain visible.
+      if (serviceEntry === true && state.overview && !state.checkpointSelection && !state.route && view.getZoom() < 18.5) {
+        view.setZoom(18.5);
+        view.centerOn(E.fromLonLat(centers[state.building]), available, [
+          padding[3] + (available[0] - padding[3] - padding[1]) / 2,
+          padding[0] + (available[1] - padding[0] - padding[2]) / 2,
+        ]);
+      }
     } else {
       view.setCenter(E.fromLonLat(centers[state.building]));
       view.setZoom(state.building === 2 ? 17.5 : 18);
@@ -433,7 +442,7 @@
       JSON.stringify(state.markers) !== JSON.stringify(previous.markers) ||
       JSON.stringify(state.route) !== JSON.stringify(previous.route) ||
       JSON.stringify(state.viewportPadding) !== JSON.stringify(previous.viewportPadding);
-    if (state.fit && changedView) fit();
+    if (state.fit && changedView) fit(true);
     else drawPois();
     return { building: state.building, floor: "3F" };
   }

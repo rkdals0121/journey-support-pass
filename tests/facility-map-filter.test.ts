@@ -36,3 +36,32 @@ describe("facility map filtering", () => {
     expect(MAP_FACILITIES.every(p => facilityMatches(p, "all", ""))).toBe(true);
   });
 });
+
+describe("accessible facility categories", () => {
+  it("separates nursing rooms from playgrounds even though they share a source category", () => {
+    const rooms = MAP_FACILITIES.filter(p => facilityMatches(p, "nursing", ""));
+    const play = MAP_FACILITIES.filter(p => facilityMatches(p, "children", ""));
+    expect(rooms.length).toBeGreaterThan(0);
+    expect(play.length).toBeGreaterThan(0);
+    expect(rooms.every(p => !play.includes(p))).toBe(true);
+    expect(rooms.every(p => /수유|유아휴게/.test(p.name))).toBe(true);
+  });
+  it("does not include robot meeting zones in priority exits or duty-free food shops in convenience stores", () => {
+    expect(MAP_FACILITIES.filter(p => facilityMatches(p, "priority", "")).every(p => /우대/.test(p.name))).toBe(true);
+    expect(MAP_FACILITIES.filter(p => facilityMatches(p, "convenience", "")).every(p => /^(CU|GS25)\s*$/i.test(p.name))).toBe(true);
+    const shop = {...MAP_FACILITIES[0], category:30, name:"면세 식품 매장", description:"CU 옆"};
+    expect(facilityMatches(shop, "convenience", "")).toBe(false);
+  });
+  it("distinguishes terminal entrances from departure halls sharing a source category", () => {
+    const entrances=MAP_FACILITIES.filter(p=>facilityMatches(p,"entrance",""));
+    const halls=MAP_FACILITIES.filter(p=>facilityMatches(p,"departure",""));
+    expect(entrances.length).toBeGreaterThan(0);
+    expect(halls.length).toBeGreaterThan(0);
+    expect(entrances.every(p=>!halls.includes(p))).toBe(true);
+  });
+  it("matches an exact accessible facility search without including neighbouring shops", () => {
+    const shop={...MAP_FACILITIES[0],category:28,name:"기념품",description:"자동심장충격기 옆"};
+    expect(facilityMatches(shop,"all","자동심장충격기")).toBe(false);
+    expect(MAP_FACILITIES.filter(p=>facilityMatches(p,"all","자동심장충격기")).every(p=>p.category===111)).toBe(true);
+  });
+});

@@ -75,6 +75,8 @@
   .ph-hero { padding-block: var(--space-2); }
   .ph-hero h1 { font-size: var(--text-title); margin-bottom: var(--space-2); }
   .ph-hero-label { margin-bottom: var(--space-2); }
+  .service-short-page .ph-hero { padding-block: var(--space-1); }
+  .service-short-page .ph-hero-label, .service-short-page .ph-hero h1 { margin-bottom: var(--space-1); }
   .ph-hero-art img { max-height: 10rem; width: auto; max-width: 100%; }
 }
 @media (min-width: 761px) and (max-width: 1100px) and (max-height: 700px) {

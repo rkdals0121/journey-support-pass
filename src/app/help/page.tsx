@@ -1,4 +1,5 @@
 import { currentSession } from "@/lib/session-server";
+import { MobilityHome } from "../components/MobilityHome";
 import { HelpFlow } from "./HelpFlow";
 import { helpService, kioskReturn } from "@/lib/help-entry";
 import { businessOf } from "@/lib/operating-profile";
@@ -11,6 +12,8 @@ export default async function HelpPage({
   searchParams,
 }: {
   searchParams: Promise<{
+    flow?: string;
+    task?: string;
     lang?: string;
     place?: string;
     service?: string;
@@ -25,12 +28,17 @@ export default async function HelpPage({
   if (q.topic === "lost-property")
     redirect("/services/lost-property" + (q.lang === "en" ? "?lang=en" : ""));
   const session = await currentSession();
+  const mobility = q.topic === "mobility" || (!q.topic && q.service === "mobility");
+  if (mobility && !["staff","robot"].includes(q.flow??"") && q.resume !== "1") {
+    const home = session?.isKiosk ? kioskReturn(q.returnTo) ?? "/kiosk/guide" : "/";
+    return <MobilityHome en={q.lang==="en"} homeHref={home+(q.lang==="en"?"?lang=en":"")} place={session?.isKiosk?session.placeId??"":q.place??""} returnTo={session?.isKiosk?home:""}/>;
+  }
   const business = businessOf(q.business);
   const topic = supportTopic(q.topic),
     lang = q.lang === "en" ? "en" : "ko";
   const flow = (
     <HelpFlow
-      key={q.topic ?? "generic"}
+      key={`${q.topic??"generic"}:${q.flow??""}:${q.task??""}`}
       freshPrivate={!session?.isKiosk && q.fresh === "1"}
       lang={q.lang === "en" ? "en" : "ko"}
       initialPlace={
@@ -41,6 +49,9 @@ export default async function HelpPage({
       initialService={topic?.service ?? helpService(q.service)}
       initialTopic={topic?.id}
       initialBusiness={business?.id}
+      mobilityHomeHref={mobility ? "/help?"+new URLSearchParams({topic:"mobility",...(q.lang==="en"?{lang:"en"}:{}),...(q.place?{place:q.place}:{}),...(session?.isKiosk?{returnTo:kioskReturn(q.returnTo)??"/kiosk/guide"}:{})}).toString() : undefined}
+      initialTask={mobility && q.task === "mobility-vehicle" ? q.task : undefined}
+      initialMobilityMode={q.flow === "robot" ? "robot" : "staff"}
       initialNote=""
       returnTo={session?.isKiosk ? kioskReturn(q.returnTo) : undefined}
       freshShared={session?.isKiosk === true && q.fresh === "1"}

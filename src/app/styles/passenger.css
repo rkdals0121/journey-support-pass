@@ -205,11 +205,18 @@
 .request-recovery { padding:1.5rem; background:var(--sun-soft); border-radius:var(--radius-medium); margin:1rem 0; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; }
 .request-recovery p { width:100%; }
 .request-list-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; color:var(--muted); font-size:var(--text-small); }
-.my-service-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
-.my-service-request:hover { border-color:var(--green); }
-.my-service-request h2 { font-size:var(--text-heading); margin:1rem 0 0.75rem; }
-.my-service-request>p { display:flex; align-items:center; gap:0.5rem; font-size:var(--text-small); color:var(--muted); }
-.my-service-open { display:flex; justify-content:space-between; align-items:center; border-top:0.0625rem solid var(--line); padding-top:1rem; font-size:var(--text-small); color:var(--green-press); font-weight:var(--weight-label); margin-top:1.25rem; }
+/* 내 요청 카드: 첫 화면 서비스 카드와 같은 흰 카드. 누르는 곳은 카드 전체 */
+.my-service-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); }
+.my-service-request { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); text-decoration: none; transition: border-color var(--motion-normal) var(--ease-out), box-shadow var(--motion-normal) var(--ease-out); }
+.my-service-request:hover { border-color: var(--color-primary); box-shadow: var(--shadow-1); }
+.my-service-request:focus-visible { outline: .1875rem solid var(--color-focus); outline-offset: .125rem; }
+.my-service-request .request-state-pill { grid-column: 1; justify-self: start; }
+.my-service-request h2 { grid-column: 1 / -1; margin: 0; font-size: var(--text-body); }
+.my-service-request > p { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-muted); font-size: var(--text-small); }
+.my-service-open { grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-primary); font-size: var(--text-small); font-weight: var(--weight-label); }
+.my-service-open svg { width: 1rem; height: 1rem; }
+@media (min-width: 1101px) { .my-service-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .my-service-list { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; } }
 .request-empty-state>svg { width:3rem; height:3rem; color:var(--green); margin-bottom:0.5rem; }
 .request-empty-state h1, .request-empty-state h2 { font-size:var(--text-heading); margin:0; }
 .request-empty-state p { font-size:var(--text-small); color:var(--muted); margin:0; }
@@ -379,12 +386,6 @@
 .airport-site .request-empty-state > svg { width: 2rem; height: 2rem; background: none; padding: 0; border-radius: 0; color: var(--color-muted); }
 .airport-site .request-empty-state h2 { font-size: var(--text-heading); }
 .airport-site .request-empty-state .public-button { margin-top: 1rem; }
-.airport-site .my-service-list { grid-template-columns: 1fr; gap: 0; border-top: 0.0625rem solid var(--ui-rule); }
-.airport-site .my-service-request { display: grid; grid-template-columns: 7rem 1fr auto; gap: 0.5rem 1rem; border: 0; border-bottom: 0.0625rem solid var(--ui-rule); border-radius: 0; padding: 1.5rem 0.75rem; box-shadow: none; }
-.airport-site .my-service-request .request-state-pill { grid-column: 1; grid-row: 1 / 3; align-self: center; justify-self: start; }
-.airport-site .my-service-request h2 { grid-column: 2; margin: 0; font-size: var(--text-body); }
-.airport-site .my-service-request > p { grid-column: 2; margin: 0; }
-.airport-site .my-service-open { grid-column: 3; grid-row: 1 / 3; align-self: center; }
 .pretrip-site .prepare-intro h1 { font-size: var(--text-large); letter-spacing: -0.045em; }
 .pretrip-site .prepare-intro > p { font-size: var(--text-body); line-height: 1.8; }
 .pretrip-site .prepare-steps { border: 0; border-radius: 0; border-left: 0.0625rem solid var(--ui-rule); background: transparent; padding-left: 2.5rem; }
@@ -485,7 +486,6 @@
 .request-task-options label { display: flex; gap: 0.5rem; align-items: center; margin: 0; padding: var(--space-2) var(--space-3); border: .0625rem solid var(--color-line); border-radius: var(--radius-small); font-size: var(--text-body); font-weight: var(--weight-label); min-height: 2.75rem; cursor: pointer; background: var(--color-surface); }
 .request-review-card { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 2rem; max-width: 48rem; margin: auto; }
 .request-empty-state { background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 3rem 2rem; text-align: center; display: flex; align-items: center; flex-direction: column; gap: 1rem; }
-.my-service-request { display: block; position: relative; padding: 1.5rem; background: var(--color-surface); border: .0625rem solid var(--color-line); border-radius: var(--radius-medium); color: var(--text); text-decoration: none; box-shadow: none; }
 .pretrip-site { width: 100%; background: var(--color-canvas); color: var(--text); }
 .pretrip-site .prepare-layout { max-width: 72rem; gap: 4rem; padding-top: 4.5rem; padding: 3rem 2rem; margin: auto; align-items: start; }
 .prepare-intro h1 { font-size: var(--text-large); line-height: 1.3; letter-spacing: -.045em; margin: 1rem 0 1.5rem; }
@@ -659,9 +659,6 @@
 .request-next-action { font-size:var(--text-small); padding:1rem; }
 .request-reference { font-size:var(--text-caption); }
 .request-order-summary .service-detail-list>div { grid-template-columns:5.5rem minmax(0,1fr); font-size:var(--text-small); }
-.my-service-list { grid-template-columns:1fr; }
-.my-service-request { padding:1.25rem; }
-.my-service-request h2 { font-size:var(--text-body); }
 .request-empty-state { padding:3rem 1.25rem; }
 .request-empty-state h1, .request-empty-state h2 { font-size:var(--text-heading); }
 .request-local-tools { gap:0.75rem; font-size:var(--text-caption); flex-wrap:wrap; }
@@ -770,10 +767,6 @@
 .airport-site .request-form { gap: 1rem; }
 .airport-site .request-submit-card { padding: var(--space-4); }
 .airport-site .request-review-card { padding: 1.5rem 1rem; }
-.airport-site .my-service-request { grid-template-columns: 1fr auto; padding: 1.25rem 0; }
-.airport-site .my-service-request .request-state-pill { grid-column: 1; grid-row: 1; margin-bottom: 0.5rem; }
-.airport-site .my-service-request h2, .airport-site .my-service-request > p { grid-column: 1 / -1; }
-.airport-site .my-service-open { grid-column: 2; grid-row: 1; font-size: var(--text-caption); }
 .pretrip-site .prepare-intro h1 { font-size: var(--text-title); }
 .pretrip-site .prepare-intro > p { font-size: var(--text-body); }
 .pretrip-site .prepare-steps { border-left: 0; border-top: 0.0625rem solid var(--ui-rule); padding-left: 0; }

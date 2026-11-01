@@ -141,7 +141,7 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title="공항 실내지도"
-      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=spaced-facility-tiers-11" : "/airport-map/index.html?v=spaced-facility-tiers-11"}
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=haneuli-controls-ui-17" : "/airport-map/index.html?v=haneuli-controls-ui-17"}
       loading="eager"
       className={className}
       style={{
