@@ -45,7 +45,6 @@
 .public-request-layout .my-request-panel { position:sticky; top:1rem; }
 .request-guide h2 { font-size:var(--text-heading); line-height:1.5; margin:0.75rem 0; }
 .public-request-layout .dx-page form { padding:0; border:0; box-shadow:none; }
-.public-request-layout.request-solo { display:block; max-width:52rem; }
 .public-request-layout .dx-notice { font-size:var(--text-small); background:var(--mint-2); padding:0.75rem 1rem; border:0; border-left:0.1875rem solid var(--sun); }
 .pretrip-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.5rem 2rem; max-width:78rem; margin:auto; border-bottom:0.0625rem solid var(--line); }
 .pretrip-header>a:last-child { color:var(--green-press); font-size:var(--text-small); }

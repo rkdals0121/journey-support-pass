@@ -32,8 +32,8 @@ export default async function RegisteredHelp({
     returnTo: session?.isKiosk ? kioskReturn(q.returnTo) : undefined,
     freshShared: session?.isKiosk === true && q.fresh === "1",
     checkExisting: q.resume === "1",
-    // 키오스크 머리(FieldTaskShell)에 이미 돌아가기·언어·글자 크기가 있다. 휴대전화에서는 「내 등록으로」 줄을 남긴다.
-    embedded: session?.isKiosk === true,
+    // 위쪽 바(키오스크 FieldTaskShell, 여객 PublicShell)에 이미 언어·글자 크기가 있다. 「내 등록으로」는 소개 박스의 「이전」 자리에 있다.
+    embedded: true,
   };
   const found = await lookupPass(await getDb(), token, new Date());
   const place = session?.isKiosk ? placeOf(session.placeId) : undefined;
@@ -58,8 +58,6 @@ export default async function RegisteredHelp({
   return session?.isKiosk ? (
     <FieldTaskShell en={lang === "en"} returnTo={kioskReturn(q.returnTo) ?? (place?.landside ? "/kiosk/entry" : "/kiosk/guide")} place={lang === "en" ? (place?.labelEn ?? "") : (place?.label ?? "")} defaultLarge={prefsOf(found.journey.choices).large}>{flow}</FieldTaskShell>
   ) : (
-    <PublicShell lang={lang}>
-      <div className="public-request-layout request-solo">{flow}</div>
-    </PublicShell>
+    <PublicShell lang={lang}>{flow}</PublicShell>
   );
 }

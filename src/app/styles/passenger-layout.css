@@ -122,15 +122,57 @@
 }
 
 /* ── 내 등록 (/p/…) ──
-   위: 내 등록과 고유 일련 번호를 한 줄에, 그 아래 내 항공편. 그다음 할 수 있는 일 두 가지. 준비 상황과 고른 안내는 그 아래. */
-.ph-pass-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); margin: 0 0 var(--space-4); }
+   첫 화면(/)과 같은 틀: 위쪽 바와 같은 끝선의 소개 박스(내 등록·고유 일련 번호) 아래 두 칸.
+   지금 할 일(내 항공편, 도움 요청, 이동지원) · 준비 상황 · 고른 안내. 노트북은 세 칸, 태블릿은 두 칸, 휴대전화는 한 줄. */
+.ph-pass {
+  --w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  display: grid; gap: var(--space-4);
+  width: var(--w); margin-inline: calc((100% - var(--w)) / 2);
+}
+.ph-pass-main, .ph-pass-more { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.ph-pass-head { grid-template-columns: minmax(0, 1fr) auto; }
+.ph-pass-head .ph-hero-label, .ph-pass-head .success-head { margin: 0 0 var(--space-2); }
 .flow-body .ph-pass-head h1 { margin: 0; }
 .ph-pass-head .pass-reference { flex-direction: column; align-items: flex-end; gap: 0; margin: 0; padding: 0; border: 0; }
 .ph-pass-head .pass-reference dt { color: var(--color-muted); font-size: var(--text-caption); font-weight: var(--weight-label); }
 .ph-pass-head .pass-reference dd { margin: 0; color: var(--color-text); font-size: var(--text-heading); letter-spacing: 0.08em; }
-.ph-pass-actions { display: grid; gap: var(--space-2); margin: var(--space-4) 0 var(--space-5); }
+.ph-pass-main > * { margin: 0; }
+.ph-pass-actions { display: grid; gap: var(--space-2); }
 .flow-body .ph-pass-actions .btn { margin: 0; }
-.flow-body .ph-pass-actions .dx-pass-help { margin: 0; }
+/* 카드: 첫 화면 카드와 같은 흰 바탕·선·모서리. 카드 안의 고른 안내 줄은 상자 없이 선으로만 나눈다(상자 속 상자 금지). */
+.ph-pass-card,
+.ph-pass-main > :is(.assist-box, .dx-card) {
+  margin: 0; padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface);
+}
+.ph-pass-card h2, .ph-pass-main > :is(.assist-box, .dx-card) h2 { margin: 0 0 var(--space-2); }
+.ph-pass-card .ready { margin: 0; }
+.ph-pass-card .ready-row { padding-block: var(--space-3); }
+.ph-pass-card .ready-row .ready-btn { margin: var(--space-2) 0 0; }
+.ph-pass-card .info-row.quiet { padding-block: var(--space-2); }
+.ph-pass-card .saved-needs { gap: 0; margin: 0; }
+.ph-pass-card .saved-row { padding: var(--space-2) 0; border: 0; border-radius: 0; background: none; }
+.ph-pass-card .saved-row + .saved-row { border-top: 1px solid var(--color-line); }
+.ph-pass-card > .fine { margin: var(--space-2) 0 0; }
+.ph-pass-more > .ph-pass-card { flex: 1 0 auto; }
+.ph-pass-more > .btn-danger-text { align-self: flex-start; margin: 0; }
 @media (min-width: 40rem) {
   .ph-pass-actions { grid-template-columns: 3fr 2fr; }
+}
+@media (min-width: 761px) {
+  .ph-pass { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-areas: "head head" "main ready" "main more"; }
+  .ph-pass-head { grid-area: head; }
+  .ph-pass-main { grid-area: main; }
+  .ph-pass-ready { grid-area: ready; }
+  .ph-pass-more { grid-area: more; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .ph-pass-actions { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 1101px) {
+  .ph-pass { grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr); grid-template-areas: "head head head" "main ready more"; }
+}
+@media (max-height: 700px) {
+  .ph-pass-card, .ph-pass-main > :is(.assist-box, .dx-card) { padding-block: var(--space-3); }
+  .ph-pass-card .ready-row { padding-block: var(--space-2); }
 }
