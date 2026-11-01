@@ -611,6 +611,7 @@ export function HelpFlow({
   const readText = request
     ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
     : `${tr("지금 도움 요청하기", "Request help now")}. ${tr("현재 위치와 필요한 도움을 확인해 주세요. 사전등록은 서비스 예약 확정이 아닙니다.", "Confirm your pickup point and assistance. Pre-registration is not a confirmed service booking.")}`;
+  const atStart = !review && inputStep === 0 && !(topic?.id === "traffic" && trafficIntent === "dispatch");
   function goBack() {
     setError("");
     if (review) return setReview(false);
@@ -621,6 +622,7 @@ export function HelpFlow({
     }
     if (topic?.id === "traffic" && trafficIntent === "dispatch")
       return setTrafficIntent("choose");
+    if (registrationHome) return window.location.assign(registrationHome);
     if (window.history.length > 1) window.history.back();
     else window.location.assign("/services" + (en ? "?lang=en" : ""));
   }
@@ -1074,7 +1076,8 @@ export function HelpFlow({
               <div className="request-hero-top">
                 <button type="button" className="request-back" onClick={goBack}>
                   <ArrowLeft aria-hidden="true" />
-                  {tr("이전", "Back")}
+                  {/* 내 등록에서 온 첫 단계는 「이전」이 내 등록으로 돌아간다. 따로 있던 「내 등록으로」 줄을 이 자리로 옮겼다. */}
+                  {registrationHome && atStart ? tr("내 등록으로", "My registration") : tr("이전", "Back")}
                 </button>
                 <span className="service-kicker">
                   <MapPin aria-hidden="true" />
