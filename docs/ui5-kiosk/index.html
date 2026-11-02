@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>키오스크 화면 전후 비교</title>
+<style>
+body{margin:0;padding:1.5rem;font-family:system-ui,sans-serif;color:CanvasText;background:Canvas}
+main{max-width:100rem;margin:auto}h1{font-size:1.5rem}p{line-height:1.6}nav{display:flex;gap:1rem;flex-wrap:wrap;margin-block:1rem}
+label{display:grid;gap:.5rem}select{font:inherit;min-height:2.75rem;padding:.5rem;border:1px solid GrayText;border-radius:.5rem}
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;align-items:start}
+figure{margin:0;border:1px solid GrayText;border-radius:.75rem;padding:1rem}h2{margin-top:0;font-size:1.25rem}
+img{display:block;width:100%;height:auto}figcaption{margin-bottom:.75rem;color:GrayText}
+@media(max-width:48rem){.compare{grid-template-columns:minmax(0,1fr)}}
+</style>
+<main><h1>키오스크 화면 전후 비교</h1>
+<p>같은 브라우저 내부 크기·글자 1배로 찍었습니다. 변경 전 그림이 세로로 긴 것은 페이지 전체를 촬영했기 때문입니다. <a href="report.md">실측·검증 보고서</a></p>
+<nav aria-label="비교할 화면 고르기"><label>화면<select id="screen"></select></label><label>기준 크기<select id="size"></select></label></nav>
+<div class="compare"><figure><h2>바꾸기 전</h2><figcaption id="before-meta"></figcaption><a id="before-link" target="_blank" rel="noopener"><img id="before-img" alt="변경 전 키오스크 화면"></a><p id="before-empty" hidden>별도 단계로 분리하기 전의 동일 조건 그림은 없습니다.</p></figure>
+<figure><h2>바꾼 뒤</h2><figcaption id="after-meta"></figcaption><a id="after-link" target="_blank" rel="noopener"><img id="after-img" alt="변경 후 키오스크 화면"></a></figure></div></main>
+<script>
+const screens={"entry-home":"입구 첫 화면","entry-confirm":"입구 등록 확인","entry-services":"입구 서비스","guide-saved":"안내 등록 확인","guide-services":"안내 서비스","guide-home":"맞춤 시설 안내","entry-number":"입구 번호 입력","entry-scan":"입구 탑승권 스캔","entry-ask":"현장 등록 질문","entry-proof":"서류 대상 선택","entry-proof-camera":"서류 카메라","entry-consent":"등록 동의"};
+const sizes=["390x844","1333x750","1920x1080","1024x768","1080x1920"],original=Object.keys(screens).slice(0,6);
+const screen=document.querySelector("#screen"),size=document.querySelector("#size");
+for(const [v,t] of Object.entries(screens))screen.add(new Option(t,v));
+for(const v of sizes)size.add(new Option(v.replace("x"," × "),v));size.value="1333x750";
+function render(){for(const phase of ["before","after"]){const image=document.querySelector("#"+phase+"-img"),link=document.querySelector("#"+phase+"-link"),meta=document.querySelector("#"+phase+"-meta");const has=phase==="after"||original.includes(screen.value);link.hidden=!has;meta.textContent=has?"불러오는 중…":"";if(phase==="before")document.querySelector("#before-empty").hidden=has;if(has){const src=phase+"/"+screen.value+"-"+size.value+".png";link.href=src;image.onload=()=>meta.textContent="그림 "+image.naturalWidth+" × "+image.naturalHeight+" · 기준 화면 "+size.value.replace("x"," × ");image.onerror=()=>meta.textContent="그림을 불러오지 못했습니다.";image.src=src;}}}
+screen.onchange=size.onchange=render;render();
+</script></html>

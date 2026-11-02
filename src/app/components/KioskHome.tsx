@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, MapPin } from "lucide-react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { KioskReturn } from "@/lib/help-entry";
+import { KioskHero } from "./KioskHero";
 import { TaskLauncher } from "./TaskLauncher";
 
 /**
@@ -14,8 +15,6 @@ export function KioskHome({
   en,
   here,
   title,
-  lead,
-  figure,
   pass,
   listen,
   topics,
@@ -36,20 +35,11 @@ export function KioskHome({
   appointmentLabel: string;
 }) {
   return (
-    <div className="kx-home">
+    <div className="kc-page kc-entry">
+      <KioskHero title={title} lead={here} />
+      <div className="kc-entry-grid">
       <section className="kx-home-intro">
-        <p className="kx-here">
-          <MapPin aria-hidden="true" />
-          <span>
-            <span className="sr-only">
-              {en ? "You are here: " : "현재 위치: "}
-            </span>
-            {here}
-          </span>
-        </p>
-        {figure}
-        <h1>{title}</h1>
-        <p className="kx-lead">{lead}</p>
+
         <div className="kx-pass">{pass}</div>
         <div className="kx-listen">{listen}</div>
       </section>
@@ -58,11 +48,9 @@ export function KioskHome({
           {en ? "Use a service now" : "바로 이용하기"}
         </h2>
         <div
-          className={
-            "kx-tiles" + (topics && topics.length <= 2 ? " kx-tiles-few" : "")
-          }
+          className="ph-list kc-entry-services"
         >
-          <TaskLauncher en={en} returnTo={returnTo} field topics={topics} />
+          <TaskLauncher en={en} returnTo={returnTo} topics={topics} />
           <article className="task-action task-action-appointment">
             <CalendarCheck
               aria-hidden="true"
@@ -86,6 +74,7 @@ export function KioskHome({
           </article>
         </div>
       </section>
+      </div>
     </div>
   );
 }

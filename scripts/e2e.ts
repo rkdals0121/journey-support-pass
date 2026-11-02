@@ -171,12 +171,51 @@ async function waitText(page: Page, s: string) {
   await page.waitForFunction((t) => (document.body?.innerText ?? "").includes(t), { timeout: WAIT }, s);
 }
 
+async function resetFacilityPage(page: Page) {
+  for (let i = 0; i < 20; i++) {
+    const moved = await page.evaluate(() => {
+      const prev = document.querySelector(".kc-pages .kc-pager button") as HTMLButtonElement | null;
+      if (!prev || prev.disabled) return false;
+      prev.click(); return true;
+    });
+    if (!moved) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+async function facilityTitles(page: Page) {
+  await resetFacilityPage(page);
+  const titles: string[] = [];
+  for (let i = 0; i < 20; i++) {
+    titles.push(...await page.$$eval(".tile strong", es => es.map(e => (e as HTMLElement).innerText)));
+    const moved = await page.evaluate(() => {
+      const next = document.querySelector(".kc-pages .kc-pager button:last-child") as HTMLButtonElement | null;
+      if (!next || next.disabled) return false;
+      next.click(); return true;
+    });
+    if (!moved) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  await resetFacilityPage(page);
+  return titles;
+}
+
 async function waitGone(page: Page, s: string) {
   await page.waitForFunction((t) => !(document.body?.innerText ?? "").includes(t), { timeout: WAIT }, s);
 }
 
 /** 글자가 들어 있는 것을 누른다. 화면에 보이는 것 가운데 글자가 가장 짧은 것을 고른다. */
 async function clickText(page: Page, selector: string, s: string) {
+  if (selector === ".tile" && await page.$(".kc-pages")) {
+    await resetFacilityPage(page);
+    for (let i = 0; i < 20; i++) {
+      if (await page.$$eval(selector, (els, text) => els.some(e => e.textContent?.includes(text)), s)) break;
+      const moved = await page.evaluate(() => { const next = document.querySelector(".kc-pages .kc-pager button:last-child") as HTMLButtonElement | null; if (!next || next.disabled) return false; next.click(); return true; });
+      if (!moved) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
+
   if(selector===".staff-nav a") {
     const menu=await page.$(".workspace-mobile-menu");
     if(menu&&await menu.isVisible()) {
@@ -213,7 +252,8 @@ async function clickText(page: Page, selector: string, s: string) {
  * 그 화면이 나오면 「이대로 안내 받기」를 누르고 안내 첫 화면을 기다린다.
  */
 async function openGuide(page: Page, keep = "이대로 안내 받기", hello = "나에게 맞춘 안내") {
-  // Registration confirmation now opens a service menu before personalised directions.
+  // 등록 확인 다음에는 서비스 고르기를 거친다. 입구의 스캔·번호 입력도 별도 단계로 열리므로
+  // 아래 준비 과정은 펼침 단추만 열고, 스캐너/폼은 새 단계에서 기다린다.
   await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, keep, hello);
   if (await has(page, keep)) await clickText(page, "button", keep);
   await page.waitForFunction((b) => document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, hello);
@@ -982,7 +1022,7 @@ async function resetFlights(clearLocks = false) {
   const goText = await page.$eval(".gate-go", (e) => (e as HTMLElement).innerText);
   check("탑승구 가는 길에 걸리는 시간과 거리, '계단 없는 길'이 나온다", /약 \d+분 · \d+m/.test(goText) && goText.includes("계단 없는 길"), goText.replace(/\n/g, " "));
   check("남은 시간과 견주어 '시간이 넉넉합니다'라고 알려 준다", goText.includes("시간이 넉넉합니다"));
-  const tiles = await page.$$eval(".tile strong", (es) => es.map((e) => (e as HTMLElement).innerText));
+  const tiles = await facilityTitles(page);
   check("고른 시설(장애인 화장실)이 '자주 찾는 시설'로 맨 앞에 나온다", tiles[0] === "장애인 화장실" && (await has(page, "자주 찾는 시설")), tiles.join(", "));
   check("고르지 않은 시설은 '다른 시설'로 뒤에 나온다", (await has(page, "다른 시설")) && tiles.length === 6);
   check("안내 화면에서도 「도움 요청하기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
@@ -1285,7 +1325,7 @@ async function resetFlights(clearLocks = false) {
     await clickText(page, ".haneuli-number", "예약번호 입력");
     for (const d of made.passNo) await clickText(page, ".pad-num .pad-key", d);
     await openGuide(page);
-    check(name, (await has(page, expected)) && (await count(page, ".gate-go")) === 0 && (await count(page, ".tile")) === 6);
+    check(name, (await has(page, expected)) && (await count(page, ".gate-go")) === 0 && (await facilityTitles(page)).length === 6);
     if (flightNo === "MK900") await shot(page, "안내키오스크-탑승구미정");
     if (flightNo === "MK403") await shot(page, "안내키오스크-결항");
   }
@@ -1527,9 +1567,10 @@ async function resetFlights(clearLocks = false) {
   page = await open(browser, KIOSK_WIDE);
   await useCookie(page, await kioskCookie("t1-info"));
   await page.goto(`${BASE}/kiosk/entry?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await page.$eval(".robot-pass-entry", e => (e as HTMLDetailsElement).open = true);
+  await clickText(page, "summary", "탑승권으로");
+  await page.waitForSelector('[data-screen="entry-scan"]', { timeout: WAIT });
   await waitText(page, "어떤 점이 불편하세요?");
-  check("탑승권을 찍으면 로봇이 깨어나고, 등록하지 않은 여객에게 체크리스트 1쪽의 불편(여섯 가지)을 묻는다", (await count(page, ".easy-tile")) === 6 && (await has(page, "왔군요!")) && (await has(page, entryFlight.flightNo)));
+  check("탑승권을 찍으면 로봇이 깨어나고, 등록하지 않은 여객에게 체크리스트 1쪽의 불편(여섯 가지)을 묻는다", (await count(page, ".easy-tile")) === 6 && (await has(page, entryFlight.flightNo)));
   await shot(page, "입구로봇-불편고르기");
   await clickText(page, ".easy-tile", "걷기");
   await clickText(page, ".flow-cta button", "다음");
@@ -1558,7 +1599,8 @@ async function resetFlights(clearLocks = false) {
   await waitText(page,'담당자 배정');await shot(page,'입구로봇-통합배정');
   await clickText(page,'button','요청 취소');await waitText(page,'취소됨');
   await page.goto(`${BASE}/kiosk/entry?idle=1800`, { waitUntil: "load", timeout: 300_000 });
-  await page.$eval(".robot-pass-entry", e => (e as HTMLDetailsElement).open = true);
+  await clickText(page, "summary", "탑승권으로");
+  await page.waitForSelector('[data-screen="entry-scan"]', { timeout: WAIT });
   await waitText(page, "미리 등록하신 내용이에요");
   check("같은 탑승권을 다시 찍으면 등록한 여객으로 알아보고 고른 도움을 확인하게 한다", (await has(page, "계단과 에스컬레이터")) && (await has(page, "고치기")));
   await shot(page, "입구로봇-도움확인");

@@ -161,7 +161,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
 }
 
 /* 키오스크: 둥근 바 안에서 「도움 요청하기」 자리만큼 오른쪽을 비운다(바의 소리 단추와 겹치던 것). */
-html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: calc(var(--call-w, 14rem) + 3rem); }
+html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: var(--kiosk-bar-reserve, calc(var(--call-w, 14rem) + 3rem)); padding-top: var(--kiosk-bar-top, var(--space-2)); }
 /* 하늘이 첫 화면: 카메라를 쓸 수 없을 때의 안내가 좁은 칸에 갇혀 한 글자씩 줄바꿈되던 것을 위아래로 놓는다. */
 .haneuli-camera .scan { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); }
 .haneuli-camera .scan > .banner { width: 100%; }
@@ -246,4 +246,9 @@ html[data-kiosk] .flow .flow-bar {
 @media (max-width: 760px) {
   .airport-site .public-footer { display: block; border-radius: calc(var(--radius-medium) * 2); padding: var(--space-4) var(--space-5); }
   .airport-site .public-footer-links { margin-top: var(--space-3); }
+}
+
+/* 좁은 화면에서도 도움 단추는 오른쪽 위에 두고 탐색 단추를 그 아래로 감싼다. */
+@media (max-width: 760px) {
+  html[data-kiosk] { --kiosk-bar-reserve: var(--space-3); --kiosk-bar-top: calc(var(--target-kiosk-floor) + var(--space-4)); }
 }

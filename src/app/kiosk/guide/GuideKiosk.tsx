@@ -53,7 +53,10 @@ import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { useBookingFind } from "../../components/FlightMethods";
 import type { BookingHandoff } from "@/lib/booking-model";
-import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
+import { KioskHero } from "../../components/KioskHero";
+import { KioskNeeds } from "../../components/KioskNeeds";
+import { KioskPages } from "../../components/KioskPages";
+import { savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
 import { HaneuliSays, HaneuliWelcome } from "../../components/HaneuliWelcome";
 import { useRobotTheme } from "../../components/useRobotTheme";
@@ -743,6 +746,7 @@ export function GuideKiosk({
           prefs={prefs}
           kiosk
           screenKey="saved"
+          className="kiosk-content"
           speakText={[
             t.savedTitle,
             `${guide.flight.flightNo}, ${destOf(guide.flight, lang)}`,
@@ -766,18 +770,13 @@ export function GuideKiosk({
             </>
           }
         >
-          <p className="kicker">
-            <ClipboardList size={20} aria-hidden="true" /> {t.savedTitle}
-          </p>
-          <HaneuliSays size="sm" pose="left" text={lang === "en" ? "Welcome back! I found your registration." : "반가워요! 미리 등록하신 내용을 찾았어요."} />
-          <h1>{t.savedAsk}</h1>
-          <FlightBoard flight={guide.flight} t={t} lang={lang} />
-          <SavedNeeds
-            choices={guide.choices}
-            extra={guide.extra}
-            lang={lang}
-            t={t}
-          />
+          <div className="kc-page">
+            <KioskHero title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} />
+            <div className="kc-review">
+              <FlightBoard flight={guide.flight} t={t} lang={lang} />
+              <KioskNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
+            </div>
+          </div>
         </FlowShell>
         {call}
         {idle}
@@ -874,14 +873,14 @@ export function GuideKiosk({
     const help = (service: ServiceType, topic?: string, resume = false) =>
       kioskHelpHref(token, lang, service, "/kiosk/guide", resume) + (topic ? `&topic=${topic}` : "");
     const cards = [
-      { key: "guidance", Icon: Navigation, main: true, to: null, title: en ? "Gate and facility guide" : "탑승구 및 편의시설 안내", body: en ? "Directions from where you are" : "지금 계신 곳에서 가는 길을 안내합니다" },
-      { key: "mobility", Icon: CarFront, to: help("mobility"), title: en ? "Mobility assistance service" : "이동 지원 서비스", body: en ? "Wheelchair or an escort" : "휠체어, 이동 동행이 필요하신가요?" },
-      { key: "robot", Icon: Bot, to: help("robot"), title: en ? "Call a guide robot" : "안내로봇 호출", body: en ? "Ask a robot to walk with you" : "이동할 때 로봇이 함께 갑니다" },
-      { key: "status", Icon: ClipboardCheck, to: help("guidance", undefined, true), title: en ? "Check your request" : "신청 내용 확인", body: en ? "See the status of your request" : "접수한 요청의 처리 상태를 확인합니다" },
+      { key: "guidance", Icon: Navigation, main: true, to: null, title: en ? "Gate & facilities" : "탑승구·시설 안내", body: en ? "Directions from where you are" : "현재 위치에서 가는 길" },
+      { key: "mobility", Icon: CarFront, to: help("mobility"), title: en ? "Mobility assistance" : "이동 도움받기", body: en ? "Wheelchair or an escort" : "휠체어·이동 동행" },
+      { key: "robot", Icon: Bot, to: help("robot"), title: en ? "Call a guide robot" : "안내로봇 호출", body: en ? "Ask a robot to walk with you" : "로봇과 함께 이동" },
+      { key: "status", Icon: ClipboardCheck, to: help("guidance", undefined, true), title: en ? "Check your request" : "신청 내용 확인", body: en ? "See the status of your request" : "접수·처리 상태" },
       { key: "facility", Icon: Wrench, to: help("guidance", "facility"), title: en ? "Report a facility issue" : "시설 불편 신고", body: en ? "Cleaning or facility inspection" : "청소, 시설 점검을 요청합니다" },
-      { key: "traffic", Icon: Bus, to: help("guidance", "traffic"), title: en ? "Transport and parking information" : "교통 및 주차 안내", body: en ? "Transport information or on-site help" : "승차 안내, 주차장 현장 지원" },
-      { key: "other", Icon: MessagesSquare, to: help("guidance", "other"), title: en ? "Other information and enquiries" : "기타 안내 및 문의", body: en ? "Enquiries and other requests" : "문의와 그 밖의 요청" },
-      { key: "meeting", Icon: CalendarCheck, sub: true, to: "/kiosk/visits" + (en ? "?lang=en" : ""), title: en ? "Meeting appointment" : "만남 예약 확인", body: en ? "Find your appointment" : "예약하신 만남을 확인합니다" },
+      { key: "traffic", Icon: Bus, to: help("guidance", "traffic"), title: en ? "Transport & parking" : "교통 및 주차 안내", body: en ? "Transport information or on-site help" : "승차 안내, 주차장 현장 지원" },
+      { key: "other", Icon: MessagesSquare, to: help("guidance", "other"), title: en ? "Other enquiries" : "기타 문의", body: en ? "Enquiries and other requests" : "문의와 그 밖의 요청" },
+      { key: "meeting", Icon: CalendarCheck, sub: true, to: "/kiosk/visits" + (en ? "?lang=en" : ""), title: en ? "Meeting appointment" : "만남 예약 확인", body: en ? "Find your appointment" : "예약한 장소·시간" },
     ];
     const heading = en ? "Which service do you need?" : "어떤 서비스가 필요하세요?";
     return (
@@ -891,6 +890,7 @@ export function GuideKiosk({
           prefs={prefs}
           kiosk
           screenKey="services"
+          className="kiosk-content"
           speakText={[heading, ...cards.map((c) => c.title)].join(". ")}
           onBack={() => setView({ kind: "saved" })}
           onHome={reset}
@@ -900,11 +900,10 @@ export function GuideKiosk({
             </button>
           }
         >
-          <div className="guide-services">
-            <HaneuliSays size="md" text={heading} />
-            <h1 className="sr-only">{heading}</h1>
+          <div className="guide-services kc-page">
+            <KioskHero title={heading} />
             {edited && <Banner role="status">{t.editSaved}</Banner>}
-            <div className="svc-grid">
+            <div className="svc-grid kc-menu">
               {cards.map(({ key, Icon, to, title, body, main, sub }) => {
                 const cls = "svc-card" + (main ? " is-main" : sub ? " is-sub" : "");
                 const inner = (
@@ -1070,15 +1069,41 @@ export function GuideKiosk({
         prefs={prefs}
         kiosk
         screenKey="home"
+        className="kiosk-content"
         speakText={speakHome}
         // 탑승구가 바뀌거나, 늦어질 것 같거나, 인터넷이 끊기면 소리 안내를 켠 여객에게 다시 읽어 준다.
         speakKey={`${flight.gate ?? ""}-${guide.pace ?? ""}-${offlineNow}`}
         onHome={reset}
+        cta={
+            <div className="kx-guide-actions">
+              <button
+                className="btn"
+                onClick={() => setView({ kind: "services" })}
+              >
+                <ArrowRight size={22} aria-hidden="true" />
+                {lang === "en" ? "Other services" : "다른 서비스 보기"}
+              </button>
+              <button
+                className="btn"
+                onClick={() => setView({ kind: "saved" })}
+              >
+                <ClipboardList size={22} aria-hidden="true" />
+                {t.savedTitle}
+              </button>
+              <button
+                className="btn finish-btn"
+                onClick={() => setView({ kind: "survey" })}
+              >
+                {t.finish}
+              </button>
+            </div>
+        }
       >
         {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
+        <div className="kc-page kc-directions">
+        <KioskHero title={t.guideHello} lead={`${here} · ${lang === "en" ? "Demo data" : "시연용 모의 자료"}`} />
         <div className="kx-guide">
           <div className="kx-guide-main">
-            <h1 className="kicker">{t.guideHello}</h1>
             {edited && <Banner role="status">{t.editSaved}</Banner>}
             <FlightBoard flight={flight} t={t} lang={lang} />
             {offlineNow ? (
@@ -1114,48 +1139,14 @@ export function GuideKiosk({
             ) : (
               noteText && <Banner role="status">{noteText}</Banner>
             )}
-            <div className="kx-guide-actions">
-              <button
-                className="btn"
-                onClick={() => setView({ kind: "services" })}
-              >
-                <ArrowRight size={22} aria-hidden="true" />
-                {lang === "en" ? "Other services" : "다른 서비스 보기"}
-              </button>
-              <button
-                className="btn"
-                onClick={() => setView({ kind: "saved" })}
-              >
-                <ClipboardList size={22} aria-hidden="true" />
-                {t.savedTitle}
-              </button>
-              <button
-                className="btn finish-btn"
-                onClick={() => setView({ kind: "survey" })}
-              >
-                {t.finish}
-              </button>
-            </div>
+
           </div>
           <div className="kx-guide-side">
-            {chosen.length > 0 && (
-              <>
-                <h2>{otherTerminal ? t.nearHere : t.myPlaces}</h2>
-                <div className="tiles">{chosen.map(tile)}</div>
-              </>
-            )}
-            {others.length > 0 && (
-              <>
-                {/* 고른 시설이 없으면 이 목록은 이 자리에서 종류마다 가장 가까운 곳이다. 영어의 myPlaces 는 "Places you chose"라
-                고르지 않은 여객에게 틀린 말이 되므로, 고른 것이 없을 때는 "가까운 시설"이라고 밝힌다. */}
-                <h2>{chosen.length > 0 ? t.otherPlaces : t.nearHere}</h2>
-                <div className="tiles tiles-small">{others.map(tile)}</div>
-              </>
-            )}
-            <p className="fine">
-              {here} · {t.mock}
-            </p>
+            <KioskPages lang={lang} label={otherTerminal ? t.nearHere : chosen.length ? `${t.myPlaces} · ${t.otherPlaces}` : t.nearHere}>
+              {[...chosen, ...others].map(tile)}
+            </KioskPages>
           </div>
+        </div>
         </div>
       </FlowShell>
       {call}

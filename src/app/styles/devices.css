@@ -8,7 +8,7 @@ html[data-kiosk] .flow-bar { margin-bottom: var(--call-h); }
 html[data-kiosk] .bar-btn { min-height: max(3rem,var(--target-floor)); font-size: var(--text-body); }
 html[data-kiosk] .flow-cta-inner { display: flex; flex-direction: row-reverse; gap: 0.75rem; }
 html[data-kiosk] .flow-cta .btn { margin-top: 0; }
-html[data-kiosk] .choices { grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); }
+html[data-kiosk] .choices { grid-template-columns: var(--choice-columns, repeat(auto-fit, minmax(min(19rem, 100%), 1fr))); }
 .call-dock { position: fixed; top: var(--bar-real, var(--bar-h)); left: 0; right: 0; z-index: 19; background: var(--bg); }
 .call-dock-inner { display: flex; align-items: center; justify-content: flex-start; max-width: var(--col); height: var(--call-h); margin: 0 auto; padding: 0 1.25rem 0.5rem; }
 .call-btn { display: inline-flex; align-items: center; gap: 0.5rem; min-height: max(2.75rem,var(--target-floor)); padding: 0.5rem 1rem; border: 0.125rem solid var(--sun-press); border-radius: var(--radius-pill); background: var(--sun-soft); color: var(--ink); font-size: var(--text-small); font-weight: var(--weight-heading); cursor: pointer; }
@@ -216,8 +216,8 @@ html[data-kiosk] .flow-body .lead { margin-bottom: 0.75rem; font-size: var(--tex
 html[data-kiosk] .choices { gap: 0.5rem; }
 html[data-kiosk] .choice, html[data-kiosk] .flight-opt { min-height: 3.5rem; padding-block: 0.5rem; }
 html[data-kiosk] .lang-pick { margin-bottom: 0.5rem; }
-html[data-kiosk] .flow-cta { padding-top: 0.5rem; padding-bottom: 0.75rem; }
-html[data-kiosk] .flow-cta .btn { min-height: 3.25rem; }
+html[data-kiosk] .flow-cta:not(.kc-cta) { padding-top: 0.5rem; padding-bottom: 0.75rem; }
+html[data-kiosk] .flow-cta .btn { min-height: var(--target-kiosk-floor); }
 }
 @media (orientation: portrait) and (max-height: 1200px) {
 html[data-kiosk] .flow-body .lead { margin-bottom: 0.75rem; }
