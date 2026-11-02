@@ -1,0 +1,946 @@
+[
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 844,
+  "doc": 1235,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   256,
+   256
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 844,
+  "doc": 1046,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   88,
+   88,
+   88
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 844,
+  "doc": 1182,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   88,
+   88,
+   88,
+   88,
+   88,
+   88
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 844,
+  "doc": 1970,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   416,
+   416
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 844,
+  "doc": 1697,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   166,
+   166,
+   166
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 844,
+  "doc": 2073,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   166,
+   166,
+   166,
+   166,
+   166,
+   166
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 633,
+  "doc": 633,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 633,
+  "doc": 633,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 633,
+  "doc": 633,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 633,
+  "doc": 811,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   306,
+   306
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 633,
+  "doc": 674,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 633,
+  "doc": 843,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 750,
+  "doc": 750,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 750,
+  "doc": 750,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 750,
+  "doc": 750,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 750,
+  "doc": 835,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   306,
+   306
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 750,
+  "doc": 750,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 750,
+  "doc": 901,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 657,
+  "doc": 657,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 657,
+  "doc": 657,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 657,
+  "doc": 657,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 657,
+  "doc": 811,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   306,
+   306
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 657,
+  "doc": 674,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 657,
+  "doc": 843,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   306,
+   306
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   306,
+   306
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 768,
+  "doc": 768,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 768,
+  "doc": 768,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 768,
+  "doc": 768,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 768,
+  "doc": 947,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   416,
+   416
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 768,
+  "doc": 977,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 768,
+  "doc": 1088,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   204,
+   204
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   112,
+   112,
+   112,
+   112,
+   112,
+   112
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   384,
+   384
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168
+  ]
+ }
+]

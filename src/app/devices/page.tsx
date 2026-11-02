@@ -3,6 +3,7 @@ import { ArrowRight, Bot, Monitor, Settings2 } from "lucide-react";
 import { PublicShell } from "../components/PublicShell";
 import { Robot } from "../components/Robot";
 
+// 첫 화면(/)과 같은 틀: 위쪽 바와 같은 끝선의 소개 박스 아래, 같은 높이의 기기 카드 두 장.
 export default async function Devices({
   searchParams,
 }: {
@@ -11,82 +12,65 @@ export default async function Devices({
   const en = (await searchParams).lang === "en",
     lang = en ? "en" : "ko",
     q = en ? "?lang=en" : "";
+  const devices = [
+    {
+      id: "robot",
+      use: "entry",
+      Icon: Bot,
+      place: en ? "Entrance" : "공항 입구",
+      name: en ? "Guide robot" : "안내로봇",
+      detail: en ? "Boarding pass → saved needs → assistance" : "탑승권 확인 → 필요한 도움 → 서비스 연결",
+    },
+    {
+      id: "kiosk",
+      use: "guide",
+      Icon: Monitor,
+      place: en ? "Departure area" : "출국심사 뒤",
+      name: en ? "Information kiosk" : "안내 키오스크",
+      detail: en ? "Gate and facility guidance, help requests" : "탑승구·편의시설 안내와 도움 요청",
+    },
+  ] as const;
   return (
     <PublicShell lang={lang}>
-      <main id="public-main" className="portal-main devices-main">
-        <div className="public-page-heading">
-          <span className="public-eyebrow">
-            {en ? "AIRPORT DEVICES" : "공항 현장 기기"}
-          </span>
-          <h1>{en ? "Kiosk & guide robot" : "키오스크 · 안내로봇"}</h1>
-          <p>
-            {en
-              ? "Preview a screen, or set up an airport device."
-              : "화면을 미리 보거나, 현장 기기를 설치하세요."}
-          </p>
-        </div>
-        <div className="device-cards">
-          <article className="device-card">
-            <div className="device-art">
-              <Robot mood="awake" size={200} />
-            </div>
-            <div className="device-card-body">
-              <span className="public-eyebrow">
-                <Bot aria-hidden="true" />
-                {en ? "ENTRANCE" : "공항 입구"}
-              </span>
-              <h2>{en ? "Guide robot" : "안내로봇"}</h2>
-              <p>
-                {en
-                  ? "Boarding pass → saved needs → assistance"
-                  : "탑승권 확인 → 필요한 도움 → 서비스 연결"}
-              </p>
-              <Link className="public-button" href={"/devices/robot" + q}>
-                {en ? "Preview screen" : "화면 미리보기"}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link className="public-text-link" href="/kiosk?use=entry">
-                {en ? "Set up this device" : "이 기기에 설치"}
-              </Link>
-            </div>
-          </article>
-          <article className="device-card">
-            <div className="device-art">
-              <div className="kiosk-illustration" aria-hidden="true">
-                <Monitor />
-                <span>Journey Support Pass</span>
-                <i />
-                <i />
-                <i />
-              </div>
-            </div>
-            <div className="device-card-body">
-              <span className="public-eyebrow">
+      <main id="public-main" className="task-home">
+        <div className="dv-home">
+          <section className="ph-hero" aria-labelledby="devices-title">
+            <div className="ph-hero-copy">
+              <span className="ph-hero-label">
                 <Monitor aria-hidden="true" />
-                {en ? "DEPARTURE AREA" : "출국심사 뒤"}
+                {en ? "Airport devices" : "공항 현장 기기"}
               </span>
-              <h2>{en ? "Information kiosk" : "안내 키오스크"}</h2>
-              <p>
-                {en
-                  ? "Personalised gate and facility guidance"
-                  : "탑승구·편의시설 맞춤 안내와 도움 요청"}
-              </p>
-              <Link className="public-button" href={"/devices/kiosk" + q}>
-                {en ? "Preview screen" : "화면 미리보기"}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link className="public-text-link" href="/kiosk?use=guide">
-                {en ? "Set up this device" : "이 기기에 설치"}
-              </Link>
+              <h1 id="devices-title">{en ? "Kiosk & guide robot" : "키오스크 · 안내로봇"}</h1>
+              <p>{en ? "Preview a screen, or set up an airport device." : "화면을 미리 보거나, 현장 기기에 설치하세요."}</p>
             </div>
-          </article>
+            <div className="ph-hero-art" aria-hidden="true">
+              <span className="ph-hero-orbit" />
+              <Robot mood="awake" size={176} />
+            </div>
+          </section>
+          <div className="dv-cards">
+            {devices.map(({ id, use, Icon, place, name, detail }) => (
+              <article key={id} className="dv-card">
+                <Icon aria-hidden="true" className="task-action-icon" strokeWidth={1.7} />
+                <div className="dv-card-copy">
+                  <span>{place}</span>
+                  <h2>{name}</h2>
+                  <p>{detail}</p>
+                </div>
+                <div className="dv-card-actions">
+                  <Link className="btn btn-primary" href={`/devices/${id}${q}`}>
+                    {en ? "Preview screen" : "화면 미리보기"}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                  <Link className="ph-text-link" href={`/kiosk?use=${use}`}>
+                    <Settings2 aria-hidden="true" />
+                    {en ? "Set up (staff code)" : "이 기기에 설치(직원 코드)"}
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-        <p className="device-install-note">
-          <Settings2 aria-hidden="true" />
-          {en
-            ? "Device setup requires a staff installation code."
-            : "현장 기기 설치에는 직원용 설치 코드가 필요합니다."}
-        </p>
       </main>
     </PublicShell>
   );

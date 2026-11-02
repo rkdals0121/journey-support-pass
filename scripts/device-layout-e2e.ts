@@ -44,30 +44,20 @@ async function main() {
           fullPage: true,
         });
         check(
-          "robot actions stay full-width inside portrait frame " + label,
+          "robot cards stay inside the bar-wide card grid " + label,
           await page.evaluate(() => {
-            const body = document
-              .querySelector(".device-preview-body")!
-              .getBoundingClientRect();
-            return [...document.querySelectorAll(".task-action")].every(
-              (e) => e.getBoundingClientRect().width > body.width * 0.75,
-            );
+            const list = document.querySelector(".ph-list")!.getBoundingClientRect();
+            return [...document.querySelectorAll(".ph-list .task-action")].every((e) => {
+              const r = e.getBoundingClientRect();
+              return r.left >= list.left - 1 && r.right <= list.right + 1;
+            });
           }),
         );
         check(
-          "robot sections stack vertically " + label,
-          await page.evaluate(() => {
-            const elements = [
-              ...document.querySelector(".device-preview-body")!.children,
-            ];
-            return elements
-              .slice(1)
-              .every(
-                (e, i) =>
-                  e.getBoundingClientRect().top >=
-                  elements[i].getBoundingClientRect().bottom - 1,
-              );
-          }),
+          "robot cards share one height " + label,
+          await page.$$eval(".ph-list .task-action", (cards) =>
+            cards.every((e) => Math.abs(e.getBoundingClientRect().height - cards[0].getBoundingClientRect().height) <= 1),
+          ),
         );
         check(
           "robot labels remain readable rather than one character per line " +
@@ -92,20 +82,12 @@ async function main() {
             () => document.documentElement.scrollWidth <= innerWidth,
           ),
         );
-        if (viewport.width === 1080)
-          check(
-            "portrait monitor has appropriately enlarged action text " + lang,
-            await page.$eval(
-              ".task-action-link strong",
-              (e) => parseFloat(getComputedStyle(e).fontSize) >= 28,
-            ),
-          );
         check(
-          "robot retains route and mobility links " + label,
+          "robot retains route, mobility and booking links " + label,
           await page.$$eval(
             ".task-action-link",
             (links) =>
-              links.length === 2 &&
+              links.length === 3 &&
               links.every((e) => !!(e as HTMLAnchorElement).href),
           ),
         );

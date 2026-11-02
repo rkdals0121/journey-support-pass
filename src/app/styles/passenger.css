@@ -109,7 +109,6 @@
 .public-request-layout .place-search-input input[type=search] { padding: 0.75rem 0.5rem; font-size: var(--text-small); }
 .public-request-layout .place-manual { margin-top: 0.5rem; }
 .public-request-layout .place-manual summary { min-height: 2rem; font-size: var(--text-caption); font-weight: var(--weight-body); }
-.devices-main .public-page-heading { padding-bottom: 1.75rem; }
 .service-workspace { width:min(100%,74rem); margin:0 auto; padding:var(--space-5) var(--space-5) var(--space-6); color:var(--text); }
 /* 현장 도움 요청: 위쪽 바와 같은 끝선(docs/ui-guide.md 2절). */
 .request-experience {

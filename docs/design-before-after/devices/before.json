@@ -1,0 +1,806 @@
+[
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 844,
+  "doc": 1488,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[20,370]",
+   "device-cards[20,370]",
+   "device-install-note[20,370]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 844,
+  "doc": 844,
+  "sw": 0,
+  "bar": [
+   0,
+   390
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 844,
+  "doc": 947,
+  "sw": 0,
+  "bar": [
+   0,
+   390
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 844,
+  "doc": 2385,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[30,360]",
+   "device-cards[30,360]",
+   "device-install-note[30,360]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 844,
+  "doc": 844,
+  "sw": 0,
+  "bar": [
+   0,
+   390
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 844,
+  "doc": 947,
+  "sw": 0,
+  "bar": [
+   0,
+   390
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 633,
+  "doc": 930,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[64,800]",
+   "device-cards[64,1216]",
+   "device-install-note[64,1216]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 633,
+  "doc": 991,
+  "sw": 0,
+  "bar": [
+   483,
+   797
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 633,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1280
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[80,1200]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 633,
+  "doc": 1386,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[48,1152]",
+   "device-cards[48,1232]",
+   "device-install-note[48,1232]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 633,
+  "doc": 991,
+  "sw": 0,
+  "bar": [
+   483,
+   797
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 633,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1280
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[80,1200]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 750,
+  "doc": 930,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[91,827]",
+   "device-cards[91,1243]",
+   "device-install-note[91,1243]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 750,
+  "doc": 950,
+  "sw": 0,
+  "bar": [
+   477,
+   856
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 750,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1333
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[107,1227]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 750,
+  "doc": 1386,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[48,1152]",
+   "device-cards[48,1285]",
+   "device-install-note[48,1285]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 750,
+  "doc": 950,
+  "sw": 0,
+  "bar": [
+   477,
+   856
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 750,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1333
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[107,1227]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 657,
+  "doc": 930,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[107,843]",
+   "device-cards[107,1259]",
+   "device-install-note[107,1259]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 657,
+  "doc": 991,
+  "sw": 0,
+  "bar": [
+   519,
+   847
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 657,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1366
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[123,1243]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 657,
+  "doc": 1386,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[48,1152]",
+   "device-cards[48,1318]",
+   "device-install-note[48,1318]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 657,
+  "doc": 991,
+  "sw": 0,
+  "bar": [
+   519,
+   847
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 657,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1366
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[123,1243]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 937,
+  "doc": 948,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[384,1120]",
+   "device-cards[384,1536]",
+   "device-install-note[384,1536]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   718,
+   1202
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   0,
+   1920
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[400,1520]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 937,
+  "doc": 1404,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[96,1200]",
+   "device-cards[96,1824]",
+   "device-install-note[96,1824]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   718,
+   1202
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   0,
+   1920
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[400,1520]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[384,1120]",
+   "device-cards[384,1536]",
+   "device-install-note[384,1536]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   678,
+   1243
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   0,
+   1920
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[400,1520]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 1080,
+  "doc": 1408,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[96,1200]",
+   "device-cards[96,1824]",
+   "device-install-note[96,1824]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   678,
+   1243
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   0,
+   1920
+  ],
+  "edgeOk": false,
+  "off": [
+   "device-preview-body[400,1520]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 768,
+  "doc": 960,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[32,768]",
+   "device-cards[32,992]",
+   "device-install-note[32,992]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 768,
+  "doc": 950,
+  "sw": 0,
+  "bar": [
+   317,
+   707
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 768,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1024
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 768,
+  "doc": 1464,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[48,976]",
+   "device-cards[48,976]",
+   "device-install-note[48,976]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 768,
+  "doc": 950,
+  "sw": 0,
+  "bar": [
+   317,
+   707
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 768,
+  "doc": 813,
+  "sw": 0,
+  "bar": [
+   0,
+   1024
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/devices",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[32,768]",
+   "device-cards[32,1048]",
+   "device-install-note[32,1048]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/devices/robot",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   21,
+   1059
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/devices/kiosk",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   0,
+   1080
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/devices",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": false,
+  "off": [
+   "public-page-heading[48,1032]",
+   "device-cards[48,1032]",
+   "device-install-note[48,1032]"
+  ],
+  "cards": []
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/devices/robot",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   21,
+   1059
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/devices/kiosk",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   0,
+   1080
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": []
+ }
+]
