@@ -176,3 +176,47 @@
   .ph-pass-card, .ph-pass-main > :is(.assist-box, .dx-card) { padding-block: var(--space-3); }
   .ph-pass-card .ready-row { padding-block: var(--space-2); }
 }
+
+/* ── 시연 (/demo/booking, /demo/boarding) ──
+   첫 화면(/)과 같은 틀: .task-home(위쪽 바와 같은 끝선) 안에 소개 박스와 같은 높이의 카드 두 장. */
+.dm-home { display: grid; gap: var(--space-4); }
+.dm-hero { grid-template-columns: minmax(0, 1fr) auto; }
+.dm-hero h1 { display: flex; align-items: center; gap: var(--space-2); max-width: none; }
+.dm-hero h1 svg { flex: none; width: 1.75rem; height: 1.75rem; color: var(--color-primary); }
+.dm-trip { display: grid; grid-template-columns: auto auto; gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--text-small); }
+.dm-trip dt { color: var(--color-muted); }
+.dm-trip dd { margin: 0; font-weight: var(--weight-label); }
+.dm-cards { display: grid; gap: var(--space-4); }
+.dm-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); min-width: 0; margin: 0; padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.dm-card > div { width: 100%; }
+.dm-card h2 { margin: 0 0 var(--space-1); color: var(--color-text); font-size: var(--text-heading); line-height: 1.4; }
+.dm-card p { margin: 0; color: var(--color-muted); font-size: var(--text-small); }
+.dm-card-icon { box-sizing: content-box; flex: none; width: 1.375rem; height: 1.375rem; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
+.dm-card .dm-sms { margin-top: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-medium) var(--radius-medium) var(--radius-medium) var(--radius-small); background: var(--color-primary-faint); color: var(--color-text); white-space: pre-line; }
+.dm-card :is(.dm-card-go, .dm-card-note, .dm-card-actions) { margin-top: auto; }
+.dm-card .dm-card-go { width: auto; }
+.dm-card-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dm-card-actions .btn { width: auto; margin: 0; }
+.dm-search label { margin: 0 0 var(--space-2); }
+.dm-search input { width: 100%; }
+.dm-search .choices { width: 100%; }
+.dm-pass { align-items: center; justify-content: center; }
+.dm-pass .boarding { width: min(100%, 24rem); margin: 0; }
+.dm-pass .pass-qr-code { width: clamp(7rem, 22dvh, 13rem); }
+.dm-pass .pass-qr-no { font-size: var(--text-title); }
+.dm-pass-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); text-align: center; }
+.dm-pass-empty svg { width: 2rem; height: 2rem; color: var(--color-primary); }
+@media (min-width: 761px) {
+  .dm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* 탑승권을 가로로: 왼쪽 편 정보, 오른쪽 QR. 세로 높이를 줄여 한 화면에 든다. */
+  .dm-pass .boarding { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto; width: 100%; max-width: 34rem; }
+  .dm-pass .boarding-top { grid-column: 1; grid-row: 1; align-self: center; }
+  .dm-pass .boarding-badge { grid-column: 1; grid-row: 2; }
+  .dm-pass .ticket { grid-column: 2; grid-row: 1 / 3; }
+}
+@media (max-width: 760px) {
+  .dm-hero { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-height: 700px) {
+  .dm-card { padding-block: var(--space-3); gap: var(--space-2); }
+}

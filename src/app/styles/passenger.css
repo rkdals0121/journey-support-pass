@@ -5,14 +5,6 @@
 .gate-sign b { font-size: var(--text-title); }
 .gate-sign b.num { font-size: var(--text-display); line-height: 1; }
 .gate-sign span { margin-top: 0.25rem; font-size: var(--text-caption); font-weight: var(--weight-label); }
-.booking-demo { max-width: var(--col); margin: 0 auto; }
-.booking-card h2 { margin: 0 0 0.75rem; font-size: var(--text-body); }
-.booking-card dl { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; margin: 0; }
-.booking-card dt { color: var(--muted); }
-.booking-card dd { margin: 0; font-weight: var(--weight-label); }
-.booking-link { margin: 1rem 0; padding: 1.25rem; border: 0.125rem solid var(--green); border-radius: var(--radius-lg); background: var(--mint-2); }
-.booking-link p { margin: 0 0 0.75rem; }
-.booking-sms { margin: 1rem 0; padding: 1rem 1.25rem; border-radius: 1.25rem 1.25rem 1.25rem 0.25rem; background: var(--line); color: var(--text); white-space: pre-line; }
 .dx-request-list { padding:0; list-style:none; }
 .public-site { width:100%; background:var(--surface); color:var(--text); }
 .public-site a, .pretrip-site a { text-underline-offset:.2em; }
@@ -496,7 +488,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .flow-pretrip .flow-desktop-steps { border-right: 0.0625rem solid var(--ui-rule); padding-right: 1.5rem; padding: .5rem 0; background: transparent; border: 0; }
 .flow-pretrip .flow-desktop-summary { border: 0; border-top: 0.125rem solid var(--color-control-line); border-radius: 0; background: transparent; padding: .5rem 0; }
 .gate-sign { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 6.5rem; margin-left: auto; padding: 0.5rem 1rem; border-radius: var(--radius-small); background: var(--color-primary-soft); color: var(--color-primary-hover); line-height: 1.1; border-top: .25rem solid var(--color-accent); box-shadow: none; }
-.booking-card { margin: 1rem 0; padding: 1.25rem; border: 0; border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: none; }
 .booking-result { border-block: 0.0625rem solid var(--color-control-line); padding: 1.75rem 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); box-shadow: none; }
 .service-form-card { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 1.5rem; box-shadow: none; }
 .service-route-result { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 1.5rem; position: sticky; top: 1.5rem; box-shadow: none; }
