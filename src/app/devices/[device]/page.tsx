@@ -9,10 +9,5 @@ export default async function DevicePage({
 }) {
   const [{ device }, q] = await Promise.all([params, searchParams]);
   if (device !== "robot" && device !== "kiosk") notFound();
-  return (
-    <DevicePreview
-      device={device}
-      initialLang={q.lang === "en" ? "en" : "ko"}
-    />
-  );
+  return <DevicePreview device={device} lang={q.lang === "en" ? "en" : "ko"} />;
 }

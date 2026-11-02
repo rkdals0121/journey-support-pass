@@ -1,97 +1,61 @@
-"use client";
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowLeft, MapPin, Ticket, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Monitor, Settings2, Ticket } from "lucide-react";
+import { PublicShell } from "../components/PublicShell";
 import { TaskLauncher } from "../components/TaskLauncher";
-import { Sunflower } from "../components/Sunflower";
 import { Robot } from "../components/Robot";
-export function DevicePreview({
-  device,
-  initialLang,
-}: {
-  device: "robot" | "kiosk";
-  initialLang: "ko" | "en";
-}) {
-  const [lang, setLang] = useState(initialLang);
+
+// 기기 화면 미리보기. 첫 화면(/)과 같은 틀: 소개 박스(기기 이름·질문) 아래 서비스 카드.
+// 서비스를 누르면 실제 웹앱으로 이어진다. 언어·글자 크기는 위쪽 바에 있다.
+export function DevicePreview({ device, lang }: { device: "robot" | "kiosk"; lang: "ko" | "en" }) {
   const en = lang === "en",
     robot = device === "robot",
     q = en ? "?lang=en" : "";
+  const Icon = robot ? Bot : Monitor;
   return (
-    <main
-      className={
-        "device-preview task-device-preview " +
-        (robot ? "robot-preview" : "kiosk-preview")
-      }
-      lang={lang}
-    >
-      <div className="device-preview-status">
-        <Link href={"/devices" + q}>
-          <ArrowLeft aria-hidden="true" />
-          {en ? "Devices" : "기기 목록"}
-        </Link>
-        <span>
-          {en
-            ? "Device preview · service links open the working web app"
-            : "기기 화면 미리보기 · 서비스 선택 시 실제 웹앱으로 연결"}
-        </span>
-      </div>
-      <header className="device-preview-header">
-        <span className="device-brand">
-          <Sunflower />
-          Journey Support Pass
-        </span>
-        <span>
-          {robot
-            ? en
-              ? "Guide robot"
-              : "안내로봇"
-            : en
-              ? "Information kiosk"
-              : "안내 키오스크"}
-        </span>
-        <button onClick={() => setLang(en ? "ko" : "en")}>
-          {en ? "한국어" : "English"}
-        </button>
-      </header>
-      <section className="device-preview-body">
-        {robot && (
-          <div className="task-robot-face">
-            <Robot mood="awake" size={180} />
+    <PublicShell lang={lang}>
+      <main id="public-main" className="task-home">
+        <div className={"dv-home dv-preview" + (robot ? " dv-preview-robot" : "")}>
+          <section className="ph-hero" aria-labelledby="preview-title">
+            <div className="ph-hero-copy">
+              <span className="ph-hero-label">
+                <Icon aria-hidden="true" />
+                {robot ? (en ? "Guide robot" : "안내로봇") : en ? "Information kiosk" : "안내 키오스크"}
+                {en ? " · screen preview" : " · 화면 미리보기"}
+              </span>
+              <h1 id="preview-title">{en ? "What would you like to do?" : "어떤 서비스를 이용하시겠어요?"}</h1>
+              <p className="dv-hero-links">
+                <Link className="ph-text-link" href={"/devices" + q}>
+                  <ArrowLeft aria-hidden="true" />
+                  {en ? "Device list" : "기기 목록"}
+                </Link>
+                <Link className="ph-text-link" href={"/kiosk?use=" + (robot ? "entry" : "guide")}>
+                  <Settings2 aria-hidden="true" />
+                  {en ? "Install on a device" : "현장 기기에 설치"}
+                </Link>
+              </p>
+            </div>
+            {robot && (
+              <div className="ph-hero-art" aria-hidden="true">
+                <span className="ph-hero-orbit" />
+                <Robot mood="awake" size={176} />
+              </div>
+            )}
+          </section>
+          <div className="ph-list">
+            <TaskLauncher en={en} device={device} topics={robot ? ["guidance", "mobility"] : undefined} />
+            <article className="task-action task-action-booking">
+              <Ticket aria-hidden="true" className="task-action-icon" strokeWidth={1.7} />
+              <Link className="task-action-link" href={"/prepare/booking" + q}>
+                <span>
+                  <strong>{en ? "Retrieve flight information" : "예약정보로 항공편 불러오기"}</strong>
+                  <small>{en ? "Demo booking lookup" : "시연 예약 조회"}</small>
+                </span>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </article>
           </div>
-        )}
-        <div className="kiosk-task-heading">
-          <p>
-            <MapPin aria-hidden="true" />
-            {en
-              ? "Location is set when installed"
-              : "설치 시 현재 위치가 연결됩니다"}
-          </p>
-          <h1>
-            {en
-              ? "What would you like to do?"
-              : "어떤 서비스를 이용하시겠어요?"}
-          </h1>
         </div>
-        <TaskLauncher en={en} device={device} field topics={robot ? ["guidance", "mobility"] : undefined} />
-        <Link className="device-booking-entry" href={"/prepare/booking" + q}>
-          <Ticket aria-hidden="true" />
-          <span>
-            {en ? "Retrieve flight information" : "예약정보로 항공편 불러오기"}
-            <small>{en ? "Demo booking lookup" : "시연 예약 조회"}</small>
-          </span>
-          <ArrowRight aria-hidden="true" />
-        </Link>
-      </section>
-      <footer className="device-preview-footer">
-        <Link href={"/devices" + q}>
-          <ArrowLeft aria-hidden="true" />
-          {en ? "Device list" : "기기 목록"}
-        </Link>
-        <Link href={"/kiosk?use=" + (robot ? "entry" : "guide")}>
-          {en ? "Install device" : "현장 기기에 설치"}
-          <ArrowRight aria-hidden="true" />
-        </Link>
-      </footer>
-    </main>
+      </main>
+    </PublicShell>
   );
 }
