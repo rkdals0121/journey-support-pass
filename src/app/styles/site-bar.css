@@ -9,6 +9,7 @@
 .public-site .public-header,
 .pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
+.staff-login-screen .staff-login-brand,
 .flow-pretrip .flow-bar {
   box-sizing: border-box;
   width: calc(100% - 2.5rem);
@@ -24,6 +25,7 @@
 .public-site .public-header { position: relative; top: auto; z-index: 30; }
 .pretrip-site .pretrip-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .field-task-shell .field-task-header { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
+.staff-login-screen .staff-login-brand { display: flex; align-items: center; }
 .field-task-shell .field-task-header > span { margin-left: auto; font-size: var(--text-small); }
 
 /* 바 안의 로고: 같은 크기 */
@@ -66,6 +68,7 @@
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
+  .staff-login-screen .staff-login-brand,
   .flow-pretrip .flow-bar {
     width: calc(100% - 1.5rem);
     border-radius: var(--radius-medium);
@@ -122,6 +125,7 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .public-site .public-header,
 .pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
+.staff-login-screen .staff-login-brand,
 .flow .flow-bar,
 html[data-kiosk] .flow .flow-bar {
   --site-bar-now: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
@@ -146,6 +150,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
+  .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
   html[data-kiosk] .flow .flow-bar { height: var(--site-bar-height); flex-shrink: 0; }
 }
@@ -154,6 +159,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
+  .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
   html[data-kiosk] .flow .flow-bar {
     height: auto; border-radius: var(--radius-medium); padding: var(--space-2) var(--space-3);
@@ -171,12 +177,13 @@ html { scrollbar-gutter: stable; }
 .public-site .public-header,
 .pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
+.staff-login-screen .staff-login-brand,
 .flow .flow-bar,
 html[data-kiosk] .flow .flow-bar {
   font-family: var(--font-body); font-size: calc(14px * var(--scale, 1));
   line-height: 1.5; letter-spacing: 0;
 }
-:is(.public-header, .pretrip-header, .field-task-header) :is(.public-logo, .brand) {
+:is(.public-header, .pretrip-header, .field-task-header, .staff-login-brand) :is(.public-logo, .brand) {
   display: flex; align-items: center; gap: 8px; margin: 0;
   font-size: calc(16px * var(--scale, 1)); font-weight: 700;
   line-height: 1.5; letter-spacing: 0;
@@ -186,7 +193,7 @@ html[data-kiosk] .flow .flow-bar {
   font-size: calc(12px * var(--scale, 1)); font-weight: 400;
   line-height: 1.5; letter-spacing: .01em;
 }
-:is(.public-header, .pretrip-header, .field-task-header) .sunflower { width: 32px; height: 32px; flex: none; }
+:is(.public-header, .pretrip-header, .field-task-header, .staff-login-brand) .sunflower { width: 32px; height: 32px; flex: none; }
 :is(.public-header, .pretrip-header, .field-task-header, .flow-bar) :is(.public-tools, .prepare-tools, .field-task-tools, .flow-bar-right) {
   align-items: center; gap: 8px; margin: 0;
 }
