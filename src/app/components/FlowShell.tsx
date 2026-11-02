@@ -57,6 +57,8 @@ interface Props {
   serviceHome?: boolean;
   headerTools?: React.ReactNode;
   headerRightTools?: React.ReactNode;
+  /** 키오스크 화면 묶음의 배치. 공통 머리와 도움 단추는 그대로 쓴다. */
+  className?: string;
 }
 
 /**
@@ -89,6 +91,7 @@ export function FlowShell({
   serviceHome = false,
   headerTools,
   headerRightTools,
+  className = "",
 }: Props) {
   const t = textOf(lang, prefs.easy);
   const { supported, speaking, speak, stop } = useSpeech(lang, prefs.slow);
@@ -258,7 +261,8 @@ export function FlowShell({
       className={
         (desktopSteps ? "flow flow-pretrip" : "flow") +
         (serviceHome ? " flow-service-home" : "") +
-        (ctaAfterContent ? " flow-reading" : "")
+        (ctaAfterContent ? " flow-reading" : "") +
+        (className ? ` ${className}` : "")
       }
       data-screen={screenKey}
       lang={lang}
@@ -364,7 +368,7 @@ export function FlowShell({
           </div>
 
           {cta && (
-            <div className={`flow-cta ${ctaAfterContent ? "cta-after" : ""}`}>
+            <div className={`flow-cta ${ctaAfterContent ? "cta-after" : ""} ${className === "kiosk-content" ? "kc-cta" : ""}`}>
               <div className="flow-cta-inner">{cta}</div>
             </div>
           )}

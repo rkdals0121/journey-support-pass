@@ -31,9 +31,10 @@ import { IdleGuard } from "../../components/IdleGuard";
 import { Choice, NumPad } from "../../components/Inputs";
 import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
-import { Robot } from "../../components/Robot";
+import { KioskHero } from "../../components/KioskHero";
+import { KioskNeeds } from "../../components/KioskNeeds";
 import { KioskHome } from "../../components/KioskHome";
-import { SavedNeeds, savedNeedsText } from "../../components/SavedNeeds";
+import { savedNeedsText } from "../../components/SavedNeeds";
 import { Scanner } from "../../components/Scanner";
 import { StaffCall } from "../../components/StaffCall";
 import { useRobotTheme } from "../../components/useRobotTheme";
@@ -76,7 +77,7 @@ const EASY = [
 const easyLabel = (e: (typeof EASY)[number], lang: Lang) =>
   labelOf(e.codes[0], lang);
 type EasyKey = (typeof EASY)[number]["key"];
-const TARGETS: Target[] = ["elderly", "infant", "disabled", "pregnant"];
+const TARGETS = ["elderly", "infant", "disabled", "pregnant"] as const satisfies readonly Target[];
 
 interface FlightLite {
   flightNo: string;
@@ -315,6 +316,7 @@ export function EntryKiosk({
       prefs={prefs}
       kiosk
       screenKey={key}
+      className="kiosk-content"
       serviceHome={key === "sleep"}
       headerTools={
         key === "sleep" ? (
@@ -333,20 +335,33 @@ export function EntryKiosk({
       cta={cta}
     >
       {body}
-      {error && !(view.kind === "sleep" && numberOpen) && (
+      {error && !(view.kind === "sleep" && (scanOpen || numberOpen)) && (
         <ErrorNote>{error}</ErrorNote>
       )}
     </FlowShell>
   );
-  const bubble = (mood: "sleep" | "awake" | "happy", text: string) => (
-    <div className="robot-stage">
-      <Robot mood={mood} size={mood === "sleep" ? 200 : 160} />
-      <p className="robot-bubble">{text}</p>
-    </div>
-  );
 
   let screen: React.ReactNode;
-  if (view.kind === "sleep") {
+  if (view.kind === "sleep" && (scanOpen || numberOpen)) {
+    const title = numberOpen ? (lang === "en" ? "Enter your registration number" : "고유 일련 번호를 넣어 주세요") : (lang === "en" ? "Show your boarding pass" : "탑승권을 보여 주세요");
+    screen = shell(numberOpen ? "entry-number" : "entry-scan", title,
+      <div className="kc-page">
+        <KioskHero title={title} lead={error ? undefined : here}>{error && <div id="entry-number-error"><ErrorNote>{error}</ErrorNote></div>}</KioskHero>
+        {numberOpen ? <form id="entry-number-form" className="kc-number" onSubmit={e => { e.preventDefault(); void findNumber(); }}>
+          <div className="kc-number-copy">
+            <label htmlFor="entry-pass-number">{lang === "en" ? "6-digit registration number" : "고유 일련 번호 6자리"}</label>
+            <input id="entry-pass-number" type="text" inputMode="numeric" autoComplete="off" maxLength={6} pattern="[0-9]{6}" value={passNo} disabled={busy} aria-invalid={!!error} aria-describedby={error ? "entry-number-error" : undefined} onChange={e => setPassNo(e.target.value.replace(/\D/g, "").slice(0, 6))} />
+          </div>
+          <fieldset disabled={busy} className="entry-number-pad">
+            <legend className="sr-only">{lang === "en" ? "Number pad" : "숫자 입력판"}</legend>
+            <NumPad onKey={digit => setPassNo(v => (v + digit).slice(0, 6))} onErase={() => setPassNo(v => v.slice(0, -1))} eraseLabel={lang === "en" ? "Delete a digit" : "한 자리 지우기"} />
+          </fieldset>
+        </form> : <div className="kc-scan"><Scanner onScan={value => void onScan(value)} paused={busy} prefer="user" text={{ starting: t.camStarting, ready: t.entrySleepHint, read: t.camRead, none: t.entryCamNone, switchCamera: t.camSwitch }} /></div>}
+      </div>,
+      numberOpen ? <button form="entry-number-form" type="submit" className="btn btn-primary" disabled={busy || passNo.length !== 6}>{busy ? (lang === "en" ? "Checking…" : "확인 중…") : (lang === "en" ? "Retrieve saved needs" : "등록한 도움 불러오기")}</button> : undefined,
+      () => { seq.current++; lookupBusy.current = false; setBusy(false); setNumberOpen(false); setScanOpen(false); setPassNo(""); setError(null); },
+    );
+  } else if (view.kind === "sleep") {
     screen = shell(
       "sleep",
       `${t.entrySleep}. ${lang === "en" ? "Find a gate or request mobility assistance." : "탑승구와 시설을 찾거나 이동 도움을 요청할 수 있어요."} ${scanOpen ? t.entrySleepHint : ""}`,
@@ -356,14 +371,8 @@ export function EntryKiosk({
         title={t.entrySleep}
         lead={
           lang === "en"
-            ? "Find your way or ask for mobility help. If you registered before your trip, show your boarding pass."
-            : "길을 찾거나 이동 도움을 받을 수 있어요. 미리 등록하셨다면 탑승권을 보여 주세요."
-        }
-        figure={
-          <div className="kx-robot" aria-hidden="true">
-            <Robot mood="awake" size={120} />
-            <span>{t.entryTitle}</span>
-          </div>
+            ? "Choose a service or retrieve your saved support."
+            : "서비스를 고르거나 등록한 도움을 불러오세요."
         }
         topics={["guidance", "mobility"]}
         returnTo="/kiosk/entry"
@@ -389,32 +398,17 @@ export function EntryKiosk({
                 <span>
                   <strong>
                     {lang === "en"
-                      ? "Retrieve saved needs with your boarding pass"
-                      : "탑승권으로 등록한 도움 불러오기"}
+                      ? "Find with a boarding pass"
+                      : "탑승권으로 찾기"}
                   </strong>
                   <small>
                     {lang === "en"
-                      ? "For passengers who registered before the trip"
-                      : "여행 전에 미리 등록하신 분"}
+                      ? "Retrieve saved support"
+                      : "등록한 도움 불러오기"}
                   </small>
                 </span>
               </summary>
-              {scanOpen && (
-                <div className="robot-scan kx-pass-body">
-                  <Scanner
-                    onScan={(s) => void onScan(s)}
-                    paused={busy}
-                    prefer="user"
-                    text={{
-                      starting: t.camStarting,
-                      ready: t.entrySleepHint,
-                      read: t.camRead,
-                      none: t.entryCamNone,
-                      switchCamera: t.camSwitch,
-                    }}
-                  />
-                </div>
-              )}
+
             </details>
             <details
               className="robot-number-entry kx-pass-option"
@@ -438,71 +432,12 @@ export function EntryKiosk({
                   </strong>
                   <small>
                     {lang === "en"
-                      ? "The 6 digits shown after registering"
-                      : "등록을 마치면 받은 숫자 6자리"}
+                      ? "6 digits from registration"
+                      : "등록할 때 받은 숫자 6자리"}
                   </small>
                 </span>
               </summary>
-              <form
-                className="kx-pass-body"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void findNumber();
-                }}
-              >
-                <label htmlFor="entry-pass-number">
-                  {lang === "en"
-                    ? "6-digit registration number"
-                    : "고유 일련 번호 6자리"}
-                </label>
-                <input
-                  id="entry-pass-number"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={6}
-                  pattern="[0-9]{6}"
-                  value={passNo}
-                  disabled={busy}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? "entry-number-error" : undefined}
-                  onChange={(e) =>
-                    setPassNo(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                />
-                {error && (
-                  <div id="entry-number-error">
-                    <ErrorNote>{error}</ErrorNote>
-                  </div>
-                )}
-                <fieldset disabled={busy} className="entry-number-pad">
-                  <legend className="sr-only">
-                    {lang === "en" ? "Number pad" : "숫자 입력판"}
-                  </legend>
-                  <NumPad
-                    onKey={(digit) =>
-                      setPassNo((value) => (value + digit).slice(0, 6))
-                    }
-                    onErase={() => setPassNo((value) => value.slice(0, -1))}
-                    eraseLabel={
-                      lang === "en" ? "Delete a digit" : "한 자리 지우기"
-                    }
-                  />
-                </fieldset>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={busy || passNo.length !== 6}
-                >
-                  {busy
-                    ? lang === "en"
-                      ? "Checking…"
-                      : "확인 중…"
-                    : lang === "en"
-                      ? "Retrieve saved needs"
-                      : "등록한 도움 불러오기"}
-                </button>
-              </form>
+
             </details>
             {/* 현장등록: 미리 등록하지 않은 여객이 여기서 바로 등록한다. 항공편은 편명, 예약번호, 탑승권 바코드·QR 로 찾는다. */}
             <button
@@ -518,11 +453,11 @@ export function EntryKiosk({
             >
               <ClipboardPlus aria-hidden="true" className="kx-pass-icon" />
               <span>
-                <strong>{lang === "en" ? "Register the help you need here" : "여기서 도움 새로 등록하기"}</strong>
+                <strong>{lang === "en" ? "Register support here" : "도움 새로 등록하기"}</strong>
                 <small>
                   {lang === "en"
-                    ? "Find your flight by flight number, booking reference or boarding pass"
-                    : "편명, 예약번호, 탑승권 바코드·QR로 항공편을 찾아요"}
+                    ? "Flight, booking or boarding pass"
+                    : "편명·예약번호·탑승권"}
                 </small>
               </span>
             </button>
@@ -541,16 +476,13 @@ export function EntryKiosk({
         t.savedAsk,
       ].join(". "),
       <>
-        {bubble("happy", t.entryWake)}
-        <h1>{t.savedTitle}</h1>
-        <p className="lead">{t.savedAsk}</p>
-        <FlightBoard flight={view.guide.flight} t={t} lang={lang} />
-        <SavedNeeds
-          choices={view.guide.choices}
-          extra={view.guide.extra}
-          lang={lang}
-          t={t}
-        />
+        <div className="kc-page">
+          <KioskHero title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} />
+          <div className="kc-review">
+            <FlightBoard flight={view.guide.flight} t={t} lang={lang} />
+            <KioskNeeds choices={view.guide.choices} extra={view.guide.extra} lang={lang} t={t} />
+          </div>
+        </div>
       </>,
       <>
         <button
@@ -617,16 +549,9 @@ export function EntryKiosk({
         t.entryAskHint,
         ...EASY.map((e) => easyLabel(e, lang)),
       ].join(". "),
-      <>
-        {bubble("awake", t.entryWake)}
-        <h1>{t.entryAskTitle}</h1>
-        <p className="lead">
-          {view.flight.flightNo} · {view.flight.destName} ·{" "}
-          {view.flight.day === "today" ? t.today : t.tomorrow}{" "}
-          {view.flight.time}
-        </p>
-        <p className="muted">{t.entryAskHint}</p>
-        <div className="easy-grid" role="group" aria-label={t.entryAskTitle}>
+      <div className="kc-page">
+        <KioskHero title={t.entryAskTitle} lead={`${view.flight.flightNo} · ${view.flight.destName} · ${view.flight.time}`} />
+        <div className="easy-grid kc-choices" role="group" aria-label={t.entryAskTitle}>
           {EASY.map((e) => (
             <button
               key={e.key}
@@ -646,7 +571,7 @@ export function EntryKiosk({
             </button>
           ))}
         </div>
-      </>,
+      </div>,
       <button
         className="btn btn-primary"
         onClick={() =>
@@ -665,15 +590,16 @@ export function EntryKiosk({
     screen = shell(
       "proof",
       [t.entryProofTitle, t.entryProofHint, t.proofDemo].join(". "),
-      <>
-        <h1>{t.entryProofTitle}</h1>
-        <p className="lead">{t.entryProofHint}</p>
-        <div className="choices" role="radiogroup" aria-label={t.steps.target}>
+      <div className="kc-page">
+        <KioskHero title={t.entryProofTitle} lead={lang === "en" ? "Choose a category, then show your document." : "대상을 고르고 서류를 보여 주세요."} />
+        <div className="kc-proof">
+        <div className="choices kc-proof-choices" role="radiogroup" aria-label={t.steps.target}>
           {TARGETS.map((x) => (
             <Choice
               key={x}
               code={`tg_${x}`}
-              label={`${t.targets[x]} · ${t.proofDocs[x]}`}
+              label={(lang === "en" ? { elderly: "Older adult", infant: "With infant", disabled: "Disability", pregnant: "Pregnancy" } : { elderly: "고령자", infant: "영유아 동반", disabled: "장애인", pregnant: "임산부" })[x]}
+              note={t.proofDocs[x]}
               single
               checked={target === x}
               onToggle={() => {
@@ -692,8 +618,8 @@ export function EntryKiosk({
             onResult={setProofOk}
           />
         )}
-        <p className="fine">{t.proofDemo}</p>
-      </>,
+        </div>
+      </div>,
       <button
         className="btn btn-primary"
         onClick={() =>
@@ -714,10 +640,7 @@ export function EntryKiosk({
     screen = shell(
       "consent",
       `${t.entryConsentTitle}. ${t.entryConsentBody}`,
-      <>
-        <h1>{t.entryConsentTitle}</h1>
-        <p className="lead">{t.entryConsentBody}</p>
-      </>,
+      <div className="kc-page"><KioskHero title={t.entryConsentTitle} /><section className="kc-notice"><p>{t.entryConsentBody}</p></section></div>,
       <>
         <button
           className="btn btn-primary"
@@ -746,10 +669,7 @@ export function EntryKiosk({
     screen = shell(
       "declined",
       t.entryDeclined,
-      <>
-        <h1>{t.entryDecline}</h1>
-        <p className="lead">{t.entryDeclined}</p>
-      </>,
+      <div className="kc-page"><KioskHero title={t.entryDecline} /><section className="kc-notice"><p>{t.entryDeclined}</p></section></div>,
       <button className="btn btn-primary" onClick={reset}>
         {t.entryEnd}
       </button>,
@@ -760,9 +680,9 @@ export function EntryKiosk({
       "services",
       [t.entryServicesTitle, t.svcGuide, t.svcAssist, t.svcStatus].join(". "),
       <>
-        {bubble("happy", t.entryServicesTitle)}
-        <h1 className="sr-only">{t.entryServicesTitle}</h1>
-        <div className="svc-grid">
+        <div className="kc-page">
+        <KioskHero title={t.entryServicesTitle} />
+        <div className="svc-grid kc-menu">
           <button
             className="svc-card"
             onClick={() => setView({ kind: "guide", token: tok, guide })}
@@ -780,8 +700,8 @@ export function EntryKiosk({
             <strong>{t.svcAssist}</strong>
             <span>
               {lang === "en"
-                ? "Confirm your pickup point and assistance needs before sending."
-                : "현재 위치와 필요한 도움을 확인한 뒤 접수합니다."}
+                ? "Confirm the help you need"
+                : "필요한 도움 확인 후 접수"}
             </span>
           </Link>
           <Link
@@ -794,6 +714,7 @@ export function EntryKiosk({
             <span>{t.svcStatusBody}</span>
           </Link>
         </div>
+        </div>
       </>,
       <button className="btn" onClick={reset}>
         {t.entryEnd}
@@ -804,17 +725,10 @@ export function EntryKiosk({
     screen = shell(
       "guide",
       [t.svcGuide, t.noteLandside].join(". "),
-      <>
-        <h1>{t.svcGuide}</h1>
-        <FlightBoard flight={guide.flight} t={t} lang={lang} />
-        <p className="lead">{t.noteLandside}</p>
-        <SavedNeeds
-          choices={guide.choices}
-          extra={guide.extra}
-          lang={lang}
-          t={t}
-        />
-      </>,
+      <div className="kc-page">
+        <KioskHero title={t.svcGuide} lead={t.noteLandside} />
+        <div className="kc-review"><FlightBoard flight={guide.flight} t={t} lang={lang} /><KioskNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} /></div>
+      </div>,
       <button
         className="btn btn-primary"
         onClick={() => setView({ kind: "services", token: tok, guide })}
