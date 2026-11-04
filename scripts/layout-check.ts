@@ -35,7 +35,11 @@ const SIZES = [
   { name: "노트북 1366×657", width: 1366, height: 657 },
   { name: "큰 화면 1920×937", width: 1920, height: 937 },
 ];
+// 실제 기기 해상도: 55인치 가로 키오스크 1920×1080, 19.5인치 장애인 키오스크 1024×768(4:3), 27인치 안내로봇 1080×1920.
+// 키오스크는 글자 기준이 화면 크기에 따라 커지므로 노트북 크기에서 맞아도 실제 해상도에서 따로 본다.
 const KIOSK_SIZES = [
+  { name: "가로 키오스크 1920×1080", width: 1920, height: 1080, hasTouch: true },
+  { name: "장애인 키오스크 1024×768", width: 1024, height: 768, hasTouch: true },
   { name: "가로 키오스크 1280×800", width: 1280, height: 800, hasTouch: true },
   { name: "세로 키오스크 1080×1920", width: 1080, height: 1920, hasTouch: true },
 ];
@@ -58,6 +62,19 @@ async function inspect(page: Page, where: string) {
       && doc.scrollHeight > innerHeight + 1) {
       out.push(`첫 화면에 불필요한 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
     }
+    // 키오스크 첫 화면은 스크롤 없이 한 화면이어야 한다(docs/ui-guide.md 3절). 글자 배율 기본에서만 본다.
+    if (doc.hasAttribute("data-kiosk") && document.querySelector(".haneuli-welcome") && scale === 1
+      && doc.scrollHeight > innerHeight + 1) {
+      out.push(`키오스크 첫 화면에 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
+    }
+    // 찌그러진 단추: 칸이 좁아 글자가 한 글자씩 세로로 쌓인 단추(폭보다 높이가 훨씬 큼)
+    const squeezed = [...document.querySelectorAll("button, a.btn, .listen-start")]
+      .filter((e) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && r.width < 80 && r.height > r.width * 2 && (e.textContent || "").trim().length >= 4;
+      })
+      .slice(0, 2);
+    if (squeezed.length) out.push(`찌그러진 단추 (${squeezed.map((e) => (e.textContent || "").trim().slice(0, 12)).join(", ")})`);
     if (doc.scrollWidth > doc.clientWidth + 1) {
       const wide = [...document.querySelectorAll("body *")]
         .filter((e) => e.getBoundingClientRect().right > doc.clientWidth + 1 && e.getBoundingClientRect().width > 0)
