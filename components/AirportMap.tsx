@@ -15,7 +15,7 @@ export type MapLocation =
 
 export type MapState = {
   building?: 1 | 2 | 3;
-  securityArea?: "LAND" | "AIR";
+  securityArea?: "LAND" | "AIR" | null;
   /** Select a registered entrance checkpoint. Disable after matching. */
   checkpointSelection?: boolean;
   showCheckpoints?: boolean;
