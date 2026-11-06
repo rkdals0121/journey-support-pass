@@ -1,9 +1,9 @@
 /* Shared sunflower finish. Loaded after the device layouts. */
 .flow-bar-right { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
-.registration-language { display: flex; align-items: center; gap: .5rem; margin: 0; white-space: nowrap; font-size: .875rem; color: var(--color-primary); }
-.registration-language select { width: auto; min-width: 7rem; flex: none; min-height: 2.75rem; padding: .5rem .75rem; border-radius: 999px; }
+.registration-language { display: flex; align-items: center; gap: .5rem; margin: 0; white-space: nowrap; font-size: var(--text-small); color: var(--color-primary); }
+.registration-language select { width: auto; min-width: 7rem; flex: none; min-height: 2.75rem; padding: .5rem .75rem; border-radius: var(--radius-pill); }
 .flow-pretrip .bar-listen { gap: .5rem; }
-.flight-search-note { color: var(--color-muted); font-size: .875rem; margin: 0 0 1rem; }
+.flight-search-note { color: var(--color-muted); font-size: var(--text-small); margin: 0 0 1rem; }
 @media (min-width: 80rem) {
   .flow-pretrip { max-width: 84rem; }
   .flow-pretrip .flow-workspace { column-gap: 4.5rem; }
@@ -11,15 +11,15 @@
 .flow-pretrip[data-screen="review"] .review {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem;
 }
-.registration-review-group { min-width: 0; padding: .75rem; border: 1px solid var(--color-line); border-radius: .75rem; }
+.registration-review-group { min-width: 0; padding: .75rem; border: 1px solid var(--color-line); border-radius: var(--radius-small); }
 .flow-pretrip .registration-review-group dt { margin: 0; padding: 0; border: 0; gap: .5rem; }
-.flow-pretrip .registration-review-group dd { font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
+.flow-pretrip .registration-review-group dd { font-size: var(--text-small); line-height: 1.5; overflow-wrap: anywhere; }
 .flow-pretrip .registration-review-group .review-edit { min-height: 2.25rem; padding: .25rem .625rem; }
 .flow-pretrip[data-screen="review"] .flow-body > .panel { padding: 0; border: 0; box-shadow: none; }
 @media (min-width: 60rem) and (max-height: 50rem) {
   .flow-pretrip[data-screen="review"] .review { gap: .5rem; }
   .flow-pretrip .registration-review-group { position: relative; padding: .375rem 3.5rem .375rem .625rem; }
-  .flow-pretrip .registration-review-group dt { font-size: .75rem; line-height: 1.5; }
+  .flow-pretrip .registration-review-group dt { font-size: var(--text-caption); line-height: 1.5; }
   .flow-pretrip .registration-review-group .review-edit {
     position: absolute; right: .25rem; top: 50%; transform: translateY(-50%);
     min-height: 2.75rem; padding-inline: .375rem;
@@ -50,7 +50,7 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 }
 .flow-pretrip .flow-bar {
   margin: .75rem 1.25rem 0; padding: .375rem .625rem;
-  border: 1px solid var(--color-line); border-radius: 999px;
+  border: 1px solid var(--color-line); border-radius: var(--radius-pill);
   background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 45%);
   box-shadow: var(--shadow-1); min-height: 3.5rem;
 }
@@ -61,13 +61,13 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .multi-select-note {
   display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
   margin: 0; padding: 0;
-  color: var(--color-primary); font-size: 1.3125rem;
+  color: var(--color-primary); font-size: var(--text-heading);
   font-weight: 600; letter-spacing: 0; line-height: 1.5;
 }
 .multi-select-note .sunflower { width: 1.25em; height: 1.25em; flex: none; }
 .registration-question-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; }
 .registration-question-heading .multi-select-note { margin-left: auto; margin-bottom: .75rem; }
-.flow-pretrip[data-screen="trouble"] .flow-body h1 { font-size: 2.25rem; }
+.flow-pretrip[data-screen="trouble"] .flow-body h1 { font-size: var(--text-title); }
 .flow-pretrip[data-screen="trouble"] .flow-body { padding-block: 1.25rem; }
 .flow-pretrip[data-screen="trouble"] .ph-step-tools { padding-block: .5rem; margin-bottom: .75rem; }
 .flow-pretrip[data-screen="trouble"] .choice {
@@ -84,7 +84,7 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .flow-pretrip[data-screen="trouble"] .flow-body > .fine { margin-block: .75rem 0; }
 .flow-pretrip .flow-cta { background: transparent; border-top: 0; }
 @media (max-width: 36rem) {
-  .flow-pretrip .flow-bar { margin-inline: .75rem; border-radius: 1.25rem; }
+  .flow-pretrip .flow-bar { margin-inline: .75rem; border-radius: var(--radius-medium); }
   .flow-pretrip .flow-bar .bar-btn { padding-inline: .5rem; }
 }
 /* Keep registration actions in view at every viewport and text scale. */
@@ -104,21 +104,21 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 }
 .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { min-height: 0; overflow-y: auto; }
 .prepare-tools { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.text-size-control { display: inline-flex; padding: 4px; gap: 2px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); }
+.text-size-control { display: inline-flex; padding: 4px; gap: 2px; border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); }
 .text-size-control button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%; color: var(--color-text); background: transparent; cursor: pointer; }
 .text-size-control button[aria-pressed=true] { background: var(--color-accent); }
 .text-size-control button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 :is(.airport-site, .pretrip-site) .public-button,
 html[data-kiosk] .flow-pretrip .btn-primary {
   background: var(--color-accent); color: var(--color-text); border-color: transparent;
-  border-radius: 999px; min-height: 3.5rem; padding-inline: 1.5rem;
-  box-shadow: 0 4px 14px rgb(181 133 0 / 12%);
+  border-radius: var(--radius-pill); min-height: 3.5rem; padding-inline: 1.5rem;
+  box-shadow: var(--shadow-1);
 }
 :is(.airport-site, .pretrip-site) .public-button:hover,
 html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-accent-hover); color: var(--color-text); }
 :is(.airport-site, .pretrip-site) .public-button-secondary { background: var(--color-surface); border-color: var(--color-line); box-shadow: none; }
 .airport-site .public-header { background: var(--color-surface); }
-.airport-site .public-nav > a { border-radius: 999px; }
+.airport-site .public-nav > a { border-radius: var(--radius-pill); }
 .airport-site :is(.request-section, .service-form-card, .request-submit-card, .request-empty-state),
 .flow-pretrip .flow-body { border-radius: var(--radius-medium); }
 .flow-pretrip .choice { border-radius: var(--radius-medium); }
@@ -138,27 +138,27 @@ html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-acce
 .pretrip-site .prepare-intro,
 .pretrip-site .prepare-steps {
   box-sizing: border-box; min-width: 0; padding: var(--space-6) var(--space-6);
-  border: 0.0625rem solid var(--color-line); border-radius: 2rem;
-  box-shadow: var(--shadow-2);
+  border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium);
+  box-shadow: none;
 }
 .pretrip-site .prepare-intro {
   display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
   background: radial-gradient(ellipse at 5% 0%, var(--color-accent-soft) 0%, transparent 60%), var(--color-surface);
 }
-.pretrip-site .prepare-intro .public-eyebrow { display: inline-flex; padding: .5rem .875rem; border-radius: 999px; background: var(--color-accent-soft); }
+.pretrip-site .prepare-intro .public-eyebrow { display: inline-flex; padding: .5rem .875rem; border-radius: var(--radius-pill); background: var(--color-accent-soft); }
 .pretrip-site .prepare-intro h1 { font-size: var(--text-large); line-height: 1.15; letter-spacing: -.055em; margin: var(--space-4) 0; max-width: 8em; white-space: pre-line; text-wrap: balance; }
 .pretrip-site .prepare-intro > p { font-size: var(--text-heading); line-height: 1.7; }
 .pretrip-site .prepare-intro > .public-button { margin: 1.5rem 0 1rem; }
-.pretrip-site .prepare-lookup-link { display: block; width: fit-content; font-size: .875rem; color: var(--color-muted); margin-top: .5rem; }
+.pretrip-site .prepare-lookup-link { display: block; width: fit-content; font-size: var(--text-small); color: var(--color-muted); margin-top: .5rem; }
 /* 오른쪽 박스 안의 세 단계는 박스 속 박스가 아니라 선으로 나눈 줄로 둔다. */
 .pretrip-site .prepare-steps { display: flex; flex-direction: column; justify-content: center; gap: 0; background: var(--color-surface); }
 /* 세 단계가 박스 높이를 나눠 쓴다(줄마다 같은 높이). */
 .pretrip-site .prepare-step { flex: 1 1 0; align-items: center; padding: var(--space-4) 0; margin: 0; border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; background: none; box-shadow: none; }
-.pretrip-site .prepare-step > svg { background: var(--color-accent-soft); box-sizing: content-box; padding: .75rem; border-radius: 1rem; width: 1.5rem; height: 1.5rem; flex: none; }
-.pretrip-site .prepare-step h2 { font-size: 1rem; margin: 0 0 .375rem; }
-.pretrip-site .prepare-step p { font-size: .875rem; line-height: 1.65; margin: 0; }
-.pretrip-site .prepare-benefit { justify-content: flex-start; padding: var(--space-5) 0 0; font-size: .875rem; }
-.pretrip-site .prepare-footer { border: 0; padding: var(--space-4) 1.5rem var(--space-5); font-size: 1rem; }
+.pretrip-site .prepare-step > svg { background: var(--color-accent-soft); box-sizing: content-box; padding: .75rem; border-radius: var(--radius-medium); width: 1.5rem; height: 1.5rem; flex: none; }
+.pretrip-site .prepare-step h2 { font-size: var(--text-body); margin: 0 0 .375rem; }
+.pretrip-site .prepare-step p { font-size: var(--text-small); line-height: 1.65; margin: 0; }
+.pretrip-site .prepare-benefit { justify-content: flex-start; padding: var(--space-5) 0 0; font-size: var(--text-small); }
+.pretrip-site .prepare-footer { border: 0; padding: var(--space-4) 1.5rem var(--space-5); font-size: var(--text-body); }
 /* 넉넉한 노트북 화면(낮은 화면 제외): 박스가 커진 만큼 글자·아이콘도 한 단계 키운다. */
 @media (min-width: 1101px) and (min-height: 701px) {
   .pretrip-site .prepare-intro h1 { font-size: var(--text-display); }
@@ -171,12 +171,12 @@ html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-acce
 @media (max-width: 60rem) {
   .pretrip-site .prepare-layout { grid-template-columns: 1fr; margin: var(--space-4) auto; gap: var(--space-4); }
   .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 2rem; }
-  .pretrip-site .prepare-intro h1 { font-size: 2.75rem; }
+  .pretrip-site .prepare-intro h1 { font-size: var(--text-large); }
 }
 @media (max-width: 36rem) {
   .pretrip-site .pretrip-header { padding: 1rem; flex-wrap: wrap; }
   .prepare-tools { margin-left: auto; gap: .75rem; }
-  .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 1.5rem; border-radius: 1.5rem; }
+  .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 1.5rem; border-radius: var(--radius-medium); }
   .pretrip-site .prepare-intro > .public-button { width: 100%; }
   .pretrip-site .prepare-step { padding: var(--space-3) 0; }
 }
@@ -199,8 +199,8 @@ html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-acce
 .flow-pretrip[data-screen="consent"] .info-row > div { gap: .5rem; }
 .flow-pretrip .registration-review-group .review-edit {
   display: inline-flex; align-items: center; justify-content: center; gap: .375rem;
-  background: transparent; border: 1px solid var(--color-line); border-radius: .5rem;
-  color: var(--color-primary); font-size: .75rem; font-weight: 500;
+  background: transparent; border: 1px solid var(--color-line); border-radius: var(--radius-small);
+  color: var(--color-primary); font-size: var(--text-caption); font-weight: 500;
 }
 .flow-pretrip .registration-review-group .review-edit svg { width: .9375rem; height: .9375rem; }
 .flow-pretrip .registration-review-group .review-edit:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
@@ -208,7 +208,7 @@ html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-acce
 .flow-pretrip[data-screen="note"] .flow-body { display: flex; flex-direction: column; }
 .flow-pretrip[data-screen="note"] #reg-note {
   width: 100%; flex: 1; min-height: 12rem; resize: none;
-  padding: 1.25rem; line-height: 1.8; border-radius: 1rem;
+  padding: 1.25rem; line-height: 1.8; border-radius: var(--radius-medium);
 }
 #reg-note::placeholder { color: var(--color-muted); opacity: 1; }
 #reg-note:focus::placeholder { color: transparent; }
@@ -232,12 +232,12 @@ html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-acce
   position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
   min-height: 2.75rem; padding-inline: .625rem;
 }
-.flow-pretrip .flow-desktop-steps > p { font-size: .875rem; }
-.flow-pretrip .flow-desktop-steps h2 { font-size: 1.125rem; }
-.flow-pretrip .flow-desktop-steps li { font-size: 1rem; }
-.flow-pretrip .flow-desktop-steps li > button small { font-size: .875rem; }
-.flow-pretrip .flow-desktop-summary h2 { font-size: 1.125rem; }
-.flow-pretrip .flow-desktop-summary :is(p, li) { font-size: .875rem; }
+.flow-pretrip .flow-desktop-steps > p { font-size: var(--text-small); }
+.flow-pretrip .flow-desktop-steps h2 { font-size: var(--text-heading); }
+.flow-pretrip .flow-desktop-steps li { font-size: var(--text-body); }
+.flow-pretrip .flow-desktop-steps li > button small { font-size: var(--text-small); }
+.flow-pretrip .flow-desktop-summary h2 { font-size: var(--text-heading); }
+.flow-pretrip .flow-desktop-summary :is(p, li) { font-size: var(--text-small); }
 @media (min-width: 80rem) {
   .flow-pretrip { max-width: 88rem; }
   .flow-pretrip .flow-workspace { grid-template-columns: 13rem minmax(0, 1fr) 16rem; column-gap: 3rem; }
@@ -251,22 +251,22 @@ html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-acce
   gap: .625rem; margin-bottom: 1rem;
 }
 .flow-pretrip .registration-page-heading .kicker {
-  margin: 0; font-size: .875rem; line-height: 1.5; font-weight: 600;
+  margin: 0; font-size: var(--text-small); line-height: 1.5; font-weight: 600;
 }
 .flow-pretrip .registration-question-heading { align-items: center; }
 .flow-pretrip[data-screen] .registration-question-heading h1 {
-  margin: 0; font-size: 2rem; line-height: 1.3; letter-spacing: -.035em;
+  margin: 0; font-size: var(--text-title); line-height: 1.3; letter-spacing: -.035em;
 }
 .flow-pretrip .registration-question-heading .multi-select-note { margin-block: 0; }
 .flow-pretrip .registration-page-heading :is(.lead, .flight-search-note) {
-  margin: 0; font-size: .875rem; line-height: 1.6;
+  margin: 0; font-size: var(--text-small); line-height: 1.6;
 }
 @media (max-width: 59.999rem) {
   .flow-pretrip .flow-body, .flow-pretrip[data-screen] .flow-body { padding: 1.25rem; }
   .flow-pretrip .registration-page-heading { min-height: 7.5rem; }
-  .flow-pretrip[data-screen] .registration-question-heading h1 { font-size: 1.75rem; }
+  .flow-pretrip[data-screen] .registration-question-heading h1 { font-size: var(--text-title); }
   .registration-language > span { display: none; }
-  .flow-pretrip .flow-bar { border-radius: 1.25rem; }
+  .flow-pretrip .flow-bar { border-radius: var(--radius-medium); }
   .flow-bar-right { gap: .375rem; }
 }
 
