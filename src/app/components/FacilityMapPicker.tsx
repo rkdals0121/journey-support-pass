@@ -93,7 +93,7 @@ export function FacilityMapPicker({
   const [nearbyResult, setNearbyResult] = useState<NearbyResult | null>(null);
   useEffect(() => {
     if (!searchResetKey) return;
-    setQueries(previous => ({...previous, destination: ""}));
+    setQueries({start: "", destination: ""});
     setFilter("all");
     setShowResults(false);
     searchInput.current?.focus({preventScroll:true});

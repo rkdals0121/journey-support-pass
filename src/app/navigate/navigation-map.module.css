@@ -24,7 +24,7 @@
 @media(max-width:760px){.planner .endpoints{grid-template-columns:minmax(0,1fr)}.planner .endpoints>.destinationControl{grid-row:auto}}
 .planner[data-kiosk=true] .endpoint,.planner[data-kiosk=true] .current,.planner[data-kiosk=true] .clear{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}
 
-.kioskInputs{min-width:0}.kioskInputs .endpoints{grid-template-columns:minmax(0,1fr) 4rem;gap:var(--space-2)}.kioskInputs .startControl{grid-template-columns:minmax(0,1fr) auto;grid-column:1 / -1}.kioskInputs .endpoint em{display:none}.kioskInputs .endpoint{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}.kioskInputs .swap{width:100%;grid-column:2;grid-row:2;min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}.kioskInputs .instruction{margin:var(--space-3) 0 0}.kioskInputs .current{width:5.5rem;max-width:none;min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));flex-direction:column;font-size:var(--text-body);line-height:1.4}.kioskInputs .endpoints>.destinationControl{grid-column:1;grid-row:2}
+.kioskInputs{min-width:0}.kioskInputs .endpoints{grid-template-columns:minmax(0,1fr) 4rem;gap:var(--space-2)}.kioskInputs .startControl{grid-template-columns:minmax(0,1fr) auto;grid-column:1 / -1}.kioskInputs .endpoint em{display:none}.kioskInputs .endpoint{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}.kioskInputs .swap{align-self:start;width:100%;grid-column:2;grid-row:2;min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}.kioskInputs .instruction{margin:var(--space-3) 0 0}.kioskInputs .current{width:5.5rem;max-width:none;min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));flex-direction:column;font-size:var(--text-body);line-height:1.4}.kioskInputs .endpoints>.destinationControl{grid-column:1;grid-row:2}
 
 .kioskInputs .endpoints:not(:has(.swap)){grid-template-columns:minmax(0,1fr)}
 
@@ -43,19 +43,17 @@
 :global(html[data-kiosk]) .voiceButton,.planner[data-kiosk=true] .voiceButton{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}
 
 .destinationControl {
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
   gap: var(--space-2);
   min-width: 0;
 }
-.destinationControl .endpoint { flex: 1; }
 .destinationChange {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  flex: 0 0 4.5rem;
   min-width: 0;
   min-height: var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));
   padding: var(--space-2);
