@@ -161,17 +161,20 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
         </button>
       </div>
       {destinationEnabled && <>
-        <button type="button" className={styles.swap} disabled={disabled || !start || !end || !!allowedStartIds && !allowedStartIds.some(id=>String(id)===String(end.id))}
-          aria-label={t("출발지와 목적지 바꾸기", "Swap start and destination")}
-          onClick={()=>{const accepted=onEndpointsChange ? onEndpointsChange(end,start) : onStartChange(end) !== false && onDestinationChange(start);if(accepted!==false)invalidate();}}><ArrowLeftRight aria-hidden="true"/></button>
         <div className={styles.destinationControl}>
           <button type="button" className={styles.endpoint} disabled={disabled} aria-pressed={activeMode === "destination"} onClick={()=>setMode("destination")}>
             <Flag size={22} aria-hidden="true"/><span><small>{t("목적지", "Destination")}</small><strong>{end?.name ?? t("목적지 선택", "Choose destination")}</strong>{end && <em>{end.description}</em>}</span>
           </button>
+          <div className={styles.endpointActions}>
           <button type="button" className={styles.destinationChange} disabled={disabled}
             aria-label={t("출발지와 목적지 다시 설정", "Reset start and destination")} onClick={resetEndpoints}>
             <RotateCcw aria-hidden="true"/>{t("다시 설정", "Reset")}
           </button>
+          <button type="button" className={styles.swap} disabled={disabled || !start || !end || !!allowedStartIds && !allowedStartIds.some(id=>String(id)===String(end.id))}
+            aria-label={t("출발지와 목적지 바꾸기", "Swap start and destination")}
+            title={t("출발지와 목적지 바꾸기", "Swap start and destination")}
+            onClick={()=>{const accepted=onEndpointsChange ? onEndpointsChange(end,start) : onStartChange(end) !== false && onDestinationChange(start);if(accepted!==false)invalidate();}}><ArrowLeftRight aria-hidden="true"/></button>
+          </div>
         </div>
       </>}
     </div>
