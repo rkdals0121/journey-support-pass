@@ -48,12 +48,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
   .flow-pretrip[data-screen="consent"] .info-row { padding-block: .625rem; }
   .flow-pretrip .flow-desktop-steps li { padding-block: 0; }
 }
-.flow-pretrip .flow-bar {
-  margin: .75rem 1.25rem 0; padding: .375rem .625rem;
-  border: 1px solid var(--color-line); border-radius: var(--radius-pill);
-  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 45%);
-  box-shadow: var(--shadow-1); min-height: 3.5rem;
-}
 .flow-pretrip .flow-bar-side { gap: .25rem; }
 .flow-pretrip .bar-btn:hover:not(:disabled) { background: var(--color-accent-soft); }
 .flow-pretrip .flow-body { scrollbar-width: none; }
@@ -84,14 +78,13 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .flow-pretrip[data-screen="trouble"] .flow-body > .fine { margin-block: .75rem 0; }
 .flow-pretrip .flow-cta { background: transparent; border-top: 0; }
 @media (max-width: 36rem) {
-  .flow-pretrip .flow-bar { margin-inline: .75rem; border-radius: var(--radius-medium); }
   .flow-pretrip .flow-bar .bar-btn { padding-inline: .5rem; }
 }
 /* Keep registration actions in view at every viewport and text scale. */
 .flow-pretrip {
   height: 100dvh; min-height: 0; flex: 0 0 auto; overflow: hidden;
 }
-.flow-pretrip .flow-bar, .flow-pretrip .flow-progress { flex-shrink: 0; }
+.flow-pretrip .flow-progress { flex-shrink: 0; }
 .flow-pretrip .flow-workspace { flex: 1 1 0; min-height: 0; overflow: hidden; }
 .flow-pretrip .flow-form-area { min-height: 0; overflow: hidden; }
 .flow-pretrip .flow-body {
@@ -257,7 +250,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
   .flow-pretrip .registration-page-heading { min-height: 7.5rem; }
   .flow-pretrip[data-screen] .registration-question-heading h1 { font-size: var(--text-title); }
   .registration-language > span { display: none; }
-  .flow-pretrip .flow-bar { border-radius: var(--radius-medium); }
   .flow-bar-right { gap: .375rem; }
 }
 

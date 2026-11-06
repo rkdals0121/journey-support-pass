@@ -1,10 +1,6 @@
 
 html[data-kiosk] { font-size: calc(clamp(1.125rem, 0.9vw + 1.1vh, 1.625rem) * var(--scale, 1)); --col: min(60rem, 100vw); }
 html[data-kiosk] .flow-body h1.kicker { margin: 0 0 0.5rem; font-size: var(--text-small); line-height: 1.5; letter-spacing: 0.02em; }
-body:has(.call-dock) .flow-bar { margin-bottom: var(--call-h); }
-@supports not selector(:has(*)) {
-html[data-kiosk] .flow-bar { margin-bottom: var(--call-h); }
-}
 html[data-kiosk] .bar-btn { min-height: max(3rem,var(--target-floor)); font-size: var(--text-body); }
 html[data-kiosk] .flow-cta-inner { display: flex; flex-direction: row-reverse; gap: 0.75rem; }
 html[data-kiosk] .flow-cta .btn { margin-top: 0; }
@@ -77,7 +73,6 @@ a.call-btn { text-decoration:none; }
 html[data-kiosk] .call-btn:hover { background: var(--color-primary-faint); }
 html[data-kiosk] .robot-portrait .robot-scan { border-radius: var(--radius-small); box-shadow: none; }
 html[data-kiosk] .robot-bubble::before { display: none; }
-html[data-kiosk] .flow-bar { background: var(--color-surface); border-bottom: 0.0625rem solid var(--color-line); }
 html[data-kiosk]
   :is(.kiosk-scan-camera, .svc-card, .easy-tile, .tile, .choice, .btn) { border-radius: var(--radius-small); box-shadow: none; }
 html[data-kiosk] .kiosk-scan-surface { gap: 2.5rem; align-items: center; }
@@ -151,7 +146,6 @@ html[data-kiosk] .call-dock { background: var(--color-canvas); border-bottom: .0
 html[data-kiosk] .call-btn { border: .0625rem solid var(--color-control-line); background: var(--color-accent-soft); color: var(--color-accent-ink); border-radius: var(--radius-small); font-size: var(--text-small); box-shadow: none; }
 .field-task-header { display: flex; flex-wrap: wrap; align-items: center; gap: 2rem; border-bottom: .0625rem solid var(--color-line); padding: 1rem 1.5rem; background: var(--color-surface); }
 @media (max-width: 480px) {
-html:not([data-kiosk]) .flow-bar { flex-wrap: nowrap; min-height: min(var(--bar-h), 16vw); padding-inline: min(0.75rem, 2.5vw); }
 html:not([data-kiosk]) .flow-bar-side { flex-wrap: nowrap; min-width: 0; }
 html:not([data-kiosk]) .bar-btn { min-height: max(min(2.75rem, 13vw),var(--target-floor)); padding: 0.25rem min(0.75rem, 2.2vw) 0.25rem min(0.5rem, 1.2vw); font-size: min(0.9375rem, 4.3vw); }
 html:not([data-kiosk]) .flow-bar svg.lucide { width: min(1.375rem, 5.6vw); height: min(1.375rem, 5.6vw); }

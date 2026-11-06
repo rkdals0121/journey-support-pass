@@ -13,12 +13,6 @@
    키오스크의 「도움 요청하기」(직원 부르기)는 머리 줄의 오른쪽 끝에 둔다. 어느 화면에서나 같은 자리이고, 따로 한 줄을 차지하지 않는다.
    노랑은 이 버튼에만 쓴다. */
 html[data-kiosk] { --call-h: 0rem; --call-w: 14rem; }
-html[data-kiosk] .flow-bar {
-  border-bottom: 0.0625rem solid var(--color-line);
-  box-shadow: 0 0 0 100vmax var(--color-surface);
-  clip-path: inset(0 -100vmax);
-}
-html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; padding-right: calc(var(--call-w) + 1.25rem); }
 /* 「도움 요청하기」는 위쪽 둥근 바 안쪽 오른쪽 끝에 둔다(바와 같은 끝선 기준). 모든 키오스크 화면에서 같은 자리. */
 html[data-kiosk] .call-dock {
   top: 12px;
