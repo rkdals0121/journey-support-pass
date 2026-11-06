@@ -21,7 +21,7 @@
 .workspace-page-tools { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; justify-content:flex-end; font-size:var(--text-small); }
 .workspace-page-tools .btn { width:auto; min-height:max(2.65rem,var(--target-floor)); font-size:var(--text-small); padding:0.5rem 0.75rem; margin:0; }
 .workspace-page-tools .dx-toolbar { margin:0; }
-.workspace-page-tools>a:last-child { color:var(--color-primary-hover); }
+.workspace-page-tools>a:last-child:not(.btn) { color:var(--color-primary-hover); }
 .work-preferences { border:0.0625rem solid var(--color-line); border-radius:var(--radius-small); background:var(--color-surface); padding:0.75rem 1rem; margin-bottom:1rem; }
 .work-preferences>summary { font-size:var(--text-body); font-weight:var(--weight-label); cursor:pointer; }
 .work-preferences .btn { display:inline-flex; width:auto; margin:0.5rem 0.5rem 0.5rem 0; font-size:var(--text-small); }
@@ -224,7 +224,7 @@
 .staff-workspace.airport-workspace .work-request-ref { font-size: var(--text-caption); }
 .staff-workspace.airport-workspace .work-detail .service-detail-list { padding: 0.5rem 0.75rem; border-radius: var(--radius-small); margin: 1rem 0; }
 .staff-workspace.airport-workspace .work-detail .service-detail-list > div { font-size: var(--text-small); padding: 0.5rem 0; grid-template-columns: 5rem minmax(0, 1fr); }
-.staff-workspace.airport-workspace .work-detail > .btn-primary { min-height: max(3rem,var(--target-floor)); margin: 1.25rem 0 0.25rem; font-size: var(--text-body); border-radius: var(--radius-small); width: 100%; background: var(--color-primary-hover); }
+.staff-workspace.airport-workspace .work-detail > .btn-primary { min-height: max(3rem,var(--target-floor)); margin: 1.25rem 0 0.25rem; font-size: var(--text-body); width: 100%; }
 .airport-workspace .work-detail .business-result-form { padding: 1rem; background: var(--color-primary-faint); border-radius: var(--radius-small); }
 .airport-workspace .work-detail details { margin-top: 1rem; padding-top: 0.75rem; }
 .airport-workspace .work-detail .business-handling > details:first-child { margin-top: 1rem; }

@@ -33,6 +33,16 @@ h1.kicker { margin: 0 0 0.5rem; font-size: var(--text-small); line-height: 1.5; 
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn-primary { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); box-shadow: var(--shadow-1); }
 .btn-primary:active { background: var(--color-primary-hover); }
+/* 노란 주요 버튼: 여객 웹·사전등록 첫 화면의 큰 버튼과 키오스크 사전등록 흐름의 「다음」. 화면마다 한 곳에만 쓴다. */
+:is(.airport-site, .pretrip-site) .public-button,
+html[data-kiosk] .flow-pretrip .btn-primary {
+  background: var(--color-accent); color: var(--color-text); border-color: transparent;
+  border-radius: var(--radius-pill); min-height: 3.5rem; padding-inline: 1.5rem;
+  box-shadow: var(--shadow-1);
+}
+:is(.airport-site, .pretrip-site) .public-button:hover,
+html[data-kiosk] .flow-pretrip .btn-primary:hover { background: var(--color-accent-hover); color: var(--color-text); }
+:is(.airport-site, .pretrip-site) .public-button-secondary { background: var(--color-surface); border-color: var(--color-line); box-shadow: none; }
 .btn-ghost { border-color: transparent; background: transparent; color: var(--color-primary); font-weight: var(--weight-label); text-decoration: underline; text-underline-offset: 0.2em; }
 .btn-danger { border-color: var(--color-error); background: var(--color-error); color: var(--color-surface); }
 .btn-danger-text { color: var(--color-error); }

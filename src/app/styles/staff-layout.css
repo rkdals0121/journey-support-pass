@@ -33,16 +33,15 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
   min-height: 2.75rem;
   margin: 0;
   padding: var(--space-2) var(--space-4);
-  border: 0.0625rem solid var(--color-control-line);
+  border-width: 0.0625rem; border-style: solid;
   border-radius: var(--radius-medium);
-  background: var(--color-surface);
-  color: var(--color-text);
   font-size: var(--text-small);
   font-weight: var(--weight-label);
   text-decoration: none;
   box-shadow: none;
 }
-.staff-workspace .workspace-page-tools > .btn-primary { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
+/* 주요 버튼(.btn-primary)의 색은 components.css 에서 정한다. 나머지 단추만 흰 바탕. */
+.staff-workspace .workspace-page-tools > :is(a, button, .btn):not(.btn-primary) { border-color: var(--color-control-line); background: var(--color-surface); color: var(--color-text); }
 .staff-workspace .workspace-page-tools > * > :is(a, button) { min-height: 2.75rem; margin: 0; }
 
 /* ── 접수·배정 요약 줄: 근무 구역과 오늘 숫자를 한 줄 카드로. 확인 지연이 있으면 그 칸만 노랑.
