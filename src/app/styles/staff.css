@@ -216,7 +216,7 @@
 .staff-workspace.airport-workspace .work-request-table td button { color: var(--airport-ink); }
 .staff-workspace.airport-workspace .work-request-table tr.selected td { background: var(--color-primary-faint); }
 .staff-workspace.airport-workspace .work-detail { border-radius: var(--radius-medium); padding: 1.5rem; border-color: var(--color-primary-soft); box-shadow: var(--shadow-1); font-size: var(--text-body); line-height: 1.65; }
-.airport-workspace .work-detail.is-current { animation: airport-detail-enter var(--motion-normal) ease-out; }
+.airport-workspace .work-detail.is-current { animation: airport-detail-enter var(--motion-normal) var(--ease-out); }
 .staff-workspace.airport-workspace .work-detail > h2 { font-size: var(--text-title); line-height: 1.3; margin: 1rem 0 1.25rem; letter-spacing: -0.04em; }
 .staff-workspace.airport-workspace .work-detail > p { font-size: var(--text-small); margin: 0.75rem 0; line-height: 1.65; }
 .staff-workspace.airport-workspace .work-detail .work-meeting-place { font-size: var(--text-body); padding: 1rem; background: var(--color-primary-faint); border-radius: var(--radius-small); margin: 1.25rem 0; }
@@ -229,9 +229,6 @@
 .airport-workspace .work-detail details { margin-top: 1rem; padding-top: 0.75rem; }
 .airport-workspace .work-detail .business-handling > details:first-child { margin-top: 1rem; }
 .airport-workspace .work-detail select, .airport-workspace .work-detail textarea { min-height: max(2.75rem,var(--target-floor)); font-size: var(--text-body); }
-.airport-workspace .work-detail .btn { transition:
-    background var(--airport-fast),
-    border-color var(--airport-fast); }
 .airport-workspace .workspace-mobile-menu nav a { min-height: max(2.75rem,var(--target-floor)); }
 .airport-workspace .workspace-page-tools .dx-session-btn { border-radius: var(--radius-small); min-height: max(2.75rem,var(--target-floor)); padding: 0.5rem 0.75rem; font-size: var(--text-caption); border-color: var(--color-primary-soft); background: var(--color-surface); color: var(--airport-muted); }
 .staff-workspace.airport-workspace

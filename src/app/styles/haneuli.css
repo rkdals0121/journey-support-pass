@@ -55,11 +55,12 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .haneuli-zzz { position: absolute; top: -4%; right: -8%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
 .is-idle .haneuli-zzz { animation: haneuli-dream 3s ease-in-out infinite; }
 .is-idle .haneuli-character { animation: haneuli-breathe var(--motion-breathe) ease-in-out infinite; }
-.is-awake .haneuli-character { animation: haneuli-bob 3s ease-in-out infinite; }
+/* 깨어날 때 한 번 「통」 튀고(240ms), 그다음부터 둥실 */
+.is-awake .haneuli-character { animation: haneuli-pop var(--motion-slow) var(--ease-out), haneuli-bob 3s ease-in-out var(--motion-slow) infinite; }
 
 /* 확인 방법 카드 세 개: 웹 첫 화면의 서비스 카드와 같은 모양(흰 바탕, 옅은 테두리, 아이콘 칩). 깨우면 테두리를 초록으로 */
 .haneuli-ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4); min-height: 0; }
-.hw-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; transition: border-color var(--motion-normal) var(--ease-out), box-shadow var(--motion-normal) var(--ease-out); }
+.hw-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; }
 .is-awake .hw-card { border-color: var(--color-primary); box-shadow: 0 0 0 0.25rem var(--color-primary-soft); }
 .hw-icon { display: inline-grid; place-items: center; padding: var(--space-3); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
 .hw-icon svg { width: 1.75rem; height: 1.75rem; }
@@ -121,6 +122,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
   .haneuli-ways { grid-template-columns: minmax(0, 1fr); }
 }
 
+@keyframes haneuli-pop { 50% { transform: translateY(-0.75rem) scale(1.04); } 100% { transform: none; } }
 @keyframes haneuli-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.5rem); } }
 @keyframes haneuli-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
 @keyframes haneuli-dream { 0% { opacity: 0; transform: translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-1.5rem); } }
@@ -128,5 +130,4 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 @media (prefers-reduced-motion: reduce) {
   .haneuli-welcome .haneuli-character, .haneuli-welcome .haneuli-zzz, .haneuli-saved-greeting { animation: none; }
   .is-idle .haneuli-zzz { opacity: 1; }
-  .hw-card { transition: none; }
 }
