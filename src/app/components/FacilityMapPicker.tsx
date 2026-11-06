@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Armchair, Baby, Banknote, Bus, Check, ChevronDown, ClipboardCheck, Coffee, DoorOpen, HeartPulse, Info, LayoutGrid, Pill, Plane, Search, ShieldCheck, ShoppingBasket, Smile, Toilet, UtensilsCrossed } from "lucide-react";
+import { Armchair, Baby, Banknote, Bus, Check, ChevronDown, ClipboardCheck, Coffee, DoorOpen, HeartPulse, Info, LayoutGrid, Navigation, Pill, Plane, Search, ShieldCheck, ShoppingBasket, Smile, Toilet, UtensilsCrossed } from "lucide-react";
 import AirportMap, { type MapState, type NearbyResult } from "../../../components/AirportMap";
 import {
   MAP_FACILITIES, facilityId, mapFacilityOf, areaBuilding,
@@ -38,6 +38,7 @@ type Props = {
   kioskBackHref?: string;
   showSelectionTools?: boolean;
   additionalHelp?: ReactNode;
+  selectionInstructions?: ReactNode;
   onKioskClose?: () => void;
   allowedFacilityIds?: readonly (string | number)[];
   pickupSelection?: boolean;
@@ -48,7 +49,7 @@ type Props = {
 export function FacilityMapPicker({
   value, onChange, en = false, disabled = false, pickup, restrictToPickup = false,
   initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, searchResetKey = 0, route, start, destination, selectionRole = "destination",
-  kiosk = false, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskBackHref, showSelectionTools = true, additionalHelp, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
+  kiosk = false, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskBackHref, showSelectionTools = true, additionalHelp, selectionInstructions, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
 }: Props) {
   const id = useId();
   const shell = useRef<HTMLDivElement>(null);
@@ -263,7 +264,7 @@ export function FacilityMapPicker({
   </>;
 
   if (full) return (
-    <div ref={shell} className={styles.fullscreen} data-kiosk="true" data-panel-open={panelOpen} style={{top:headerTop}} aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
+    <div ref={shell} className={styles.fullscreen} data-kiosk={kiosk} data-panel-open={panelOpen} style={{top:headerTop}} aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
       <div className={styles.mapBackground}>{mapView}</div>
       <nav ref={toolbar} className={styles.mapToolbar} aria-label={t("지도 메뉴와 터미널", "Map menu and terminal")}>
         <button type="button" className={styles.panelToggle} aria-expanded={panelOpen} aria-label={panelOpen?t("메뉴 접기", "Hide menu"):t("메뉴 펼치기", "Show menu")} onClick={()=>setPanelOpen(v=>!v)}>
@@ -277,12 +278,18 @@ export function FacilityMapPicker({
       </nav>
       {panelOpen && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
         <div className={styles.panelTop}><header className={styles.panelHeading}>
-          {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")} title={t("뒤로 가기", "Go back")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg></a>}
-          <div className={styles.panelTitle}><span>{t("3층 안내", "3F guide")}</span><h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1></div>
-          {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
+          <div className={styles.panelHeadingTop}>
+            {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg>
+              <span>{t("이전", "Back")}</span>
+            </a>}
+            <span className={styles.headingKicker}><Navigation aria-hidden="true"/>{t("3층 안내", "3F guide")}</span>
+            {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
+          </div>
+          <h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1>
         </header>
         {kioskPanel}</div>
-        <div className={styles.panelContent}>{showSelectionTools && <>{areaControls}{searchControls}{filterControls}{nearbyControls}</>}{errors}
+        <div className={styles.panelContent}>{selectionInstructions}{showSelectionTools && <>{areaControls}{searchControls}{filterControls}{nearbyControls}</>}{errors}
         <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details></div>
         <div className={styles.panelFooter}>{kioskFooter}</div>
       </aside>}

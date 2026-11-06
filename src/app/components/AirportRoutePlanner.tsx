@@ -169,12 +169,10 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
         </div>
       </>}
     </div>
-    {instructions ?? <>
-      <div className={styles.instruction} role="status"><span>{activeMode === "start" ? "1" : "2"}</span>
-        {stepText}
-      </div>
-    </>}
   </>;
+  const selectionInstructions = instructions ?? <div className={styles.instruction} role="status">
+    <span>{activeMode === "start" ? "1" : "2"}</span>{stepText}
+  </div>;
   const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction ?? mapFacilityPlace(facilityId(start)) : null;
   return <div ref={shell} className={styles.planner} data-kiosk={kiosk}>
     <FacilityMapPicker value={(activeMode === "start" ? start : end) ? facilityId((activeMode === "start" ? start : end)!) : ""}
@@ -184,10 +182,12 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       pickup={restriction} restrictToPickup={!!restriction}
       allowedFacilityIds={activeMode === "start" ? allowedStartIds : undefined} pickupSelection={activeMode === "start" && !!allowedStartIds}
       showSelectionTools={showSelectionTools} searchResetKey={searchResetKey}
-      additionalHelp={additionalHelp}
+      selectionInstructions={selectionInstructions}
+      additionalHelp={<>{additionalHelp}{beforeControls && <details className={styles.moreInfo}>
+        <summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}
+      </details>}</>}
       kioskTitle={title} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{voiceControls}{showSelectionTools && controls}</div>}
       kioskFooter={<div aria-label={t("경로와 지원 진행", "Route and assistance actions")}>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
-        {beforeControls && <details className={styles.moreInfo}><summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}</details>}
       </div>}
       onRoute={response=>{if(route)setResult({key:routeKey,distance:response?.distance ?? null,error:response ? "" : t("연결된 통로를 찾지 못했어요. 현장 안내를 요청해 주세요.", "No connected route was found. Please ask staff.")});}}
       onError={message=>setResult({key:routeKey,distance:null,error:message})}/>

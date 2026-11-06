@@ -33,7 +33,7 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo=""}: {en?:
     {title:t("내 신청","My requests"),detail:t("직원·로봇 지원과 예약 확인","Staff, robot & meeting status"),Icon:ClipboardCheck,url:href("/requests")},
   ];
   const menuText=t("무엇을 도와드릴까요? 길 안내, 전동차 타기, 안내로봇 동행, 내 신청 중에서 선택해 주세요.","How can we help? Choose directions, electric cart, guide robot assistance, or my requests.");
-  return <div data-mobility-home className={`pretrip-site ${styles.page}`} lang={en?"en":"ko"}>
+  return <div data-mobility-home data-kiosk={!!place} className={`pretrip-site ${styles.page}`} lang={en?"en":"ko"}>
     <a className="public-skip" href="#public-main">{t("본문 바로가기","Skip to content")}</a>
     <header className="pretrip-header"><nav className={styles.toolbar} aria-label={t("화면 메뉴","Screen menu")}>
       <Link href={homeHref}><ArrowLeft aria-hidden="true"/><span>{t("이전","Back")}</span></Link>

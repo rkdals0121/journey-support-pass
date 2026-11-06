@@ -19,7 +19,7 @@ export default async function ServicesPage({
   return (
     <PublicShell lang={lang}>
       <main id="public-main" className="service-page service-directory-page">
-        <ServiceDirectory lang={lang} portal>
+        <ServiceDirectory lang={lang} portal additionalServiceCount={3}>
           <PortalSupport lang={lang} />
         </ServiceDirectory>
         <details className="business-reference service-business-reference">
