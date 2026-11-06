@@ -259,3 +259,6 @@ html[data-kiosk] .flow .flow-bar {
 @media (max-width: 760px) {
   html[data-kiosk] { --kiosk-bar-reserve: var(--space-3); --kiosk-bar-top: calc(var(--target-kiosk-floor) + var(--space-4)); }
 }
+
+/* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
+.airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }
