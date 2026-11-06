@@ -122,13 +122,13 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .text-size-control button[aria-pressed=true] { background: var(--sun); }
 .text-size-control button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 :is(.airport-site, .pretrip-site) .public-button,
-.flow-pretrip .btn-primary {
+html[data-kiosk] .flow-pretrip .btn-primary {
   background: var(--sun); color: var(--text); border-color: transparent;
   border-radius: 999px; min-height: 3.5rem; padding-inline: 1.5rem;
   box-shadow: 0 4px 14px rgb(181 133 0 / 12%);
 }
 :is(.airport-site, .pretrip-site) .public-button:hover,
-.flow-pretrip .btn-primary:hover { background: #f1bf00; color: var(--text); }
+html[data-kiosk] .flow-pretrip .btn-primary:hover { background: #f1bf00; color: var(--text); }
 :is(.airport-site, .pretrip-site) .public-button-secondary { background: var(--surface); border-color: var(--line); box-shadow: none; }
 .airport-site .public-header { background: var(--surface); }
 .airport-site .public-nav > a { border-radius: 999px; }

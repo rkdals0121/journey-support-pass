@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -54,9 +54,11 @@ function LoginForm() {
 
   return (
     <form onSubmit={submit} className="staff-login-form">
-      <p className="staff-login-eyebrow">지원 운영</p>
-      <h1>직원 로그인</h1>
-      <p className="muted">받은 접속 코드를 입력해 주세요.</p>
+      <div className="staff-login-head">
+        <ShieldCheck aria-hidden="true" strokeWidth={1.7} />
+        <h1>직원 로그인</h1>
+        <p className="muted">받은 접속 코드를 입력해 주세요.</p>
+      </div>
       <label htmlFor="code">접속 코드</label>
       <div className="staff-code-field">
         <input

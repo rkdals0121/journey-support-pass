@@ -6,11 +6,31 @@
   --site-bar-height: clamp(76px, 10vh, 98px);
 }
 .airport-site .airport-portal { padding-inline: clamp(20px, 4vw, 64px); }
-.flow.flow-pretrip { width: 100%; max-width: 96rem; margin-inline: auto; }
+.flow.flow-pretrip { width: 100%; margin-inline: auto; }
+html[data-kiosk] .flow.flow-pretrip { max-width: 96rem; }
+/* 웹: 진행 막대와 작업 칸의 좌우 끝을 위쪽 바와 같게 하고, 단계 목록·요약 칸은 두지 않는다(진행 막대 「n/9」와 확인 화면의 「고치기」가 같은 일을 한다). */
+html:not([data-kiosk]) .flow-pretrip :is(.flow-progress, .flow-workspace) {
+  --w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  box-sizing: border-box; width: var(--w); margin-inline: auto; padding-inline: 0;
+}
+html:not([data-kiosk]) .flow-pretrip .flow-workspace { padding: 0; gap: var(--space-4); }
+html:not([data-kiosk]) .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
+/* 질문 제목은 카드 맨 위의 노란 소개 띠(첫 화면 소개 박스와 같은 그라데이션)로 둔다. */
+html:not([data-kiosk]) .flow-pretrip .registration-page-heading {
+  min-height: 0; gap: var(--space-1);
+  margin: calc(-1 * var(--form-inset)) calc(-1 * var(--form-inset)) var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-line); border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%);
+}
+@media (max-height: 700px) {
+  html:not([data-kiosk]) .flow-pretrip .registration-page-heading { padding-block: var(--space-2); margin-bottom: var(--space-3); }
+  html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .info-row { padding-block: var(--space-1); }
+}
 .flow-pretrip .flow-workspace { gap: var(--page-gap); padding: var(--page-gap); }
 .flow-pretrip .flow-body,
 .flow-pretrip[data-screen] .flow-body { padding: var(--form-inset); min-width: 0; }
-.flow-pretrip .registration-page-heading { min-height: 5.5rem; margin-bottom: .75rem; gap: .5rem; }
+html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; margin-bottom: .75rem; gap: .5rem; }
 .flow-pretrip .registration-question-heading { gap: .5rem 1rem; }
 .flow-pretrip[data-screen] .registration-question-heading h1 {
   font-size: clamp(1.5rem, 2.1vw, 2rem); text-wrap: balance;
@@ -48,10 +68,9 @@
   .flow.flow-pretrip { height: 100dvh; min-height: 0; overflow: hidden; flex: 0 0 auto; }
   .flow-pretrip .flow-bar { flex: 0 0 auto; height: auto; min-height: var(--site-bar-height); }
   .flow-pretrip .flow-progress { flex: 0 0 auto; padding-block: .625rem 0; }
-  .flow-pretrip .flow-workspace {
-    display: grid; grid-template-columns: minmax(11rem, 16fr) minmax(0, 64fr) minmax(13rem, 20fr);
-    flex: 1 1 0; min-height: 0; overflow: hidden;
-  }
+  .flow-pretrip .flow-workspace { display: grid; flex: 1 1 0; min-height: 0; overflow: hidden; }
+  html[data-kiosk] .flow-pretrip .flow-workspace { grid-template-columns: minmax(11rem, 16fr) minmax(0, 64fr) minmax(13rem, 20fr); }
+  html:not([data-kiosk]) .flow-pretrip .flow-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
   .flow-pretrip .flow-form-area { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: hidden; }
   .flow-pretrip .flow-body {
     /* 넘칠 때만 스크롤 막대가 생긴다. 「스크롤 필요 없음」으로 잘라 두면(clip) 큰 글자로 바꾼 뒤 아랫부분이 잘려 닿을 수 없었다. */
@@ -60,23 +79,24 @@
   }
   .flow-pretrip .flow-body::-webkit-scrollbar { display: block; width: 6px; }
   .flow-pretrip .flow-cta { position: relative; flex: 0 0 auto; padding: .75rem 0 0; background: transparent; }
-  .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) {
+  html[data-kiosk] .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) {
     display: block; position: static; min-height: 0; max-height: 100%; overflow-y: auto;
     overscroll-behavior: none; align-self: stretch;
   }
   .flow-pretrip .flow-desktop-steps { scrollbar-width: thin; }
   .flow-pretrip[data-screen="stops"] .flow-body > .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  html:not([data-kiosk]) .flow-pretrip .flow-body > .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem; border-top: 0; }
   .flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: 3rem; }
   .flow-pretrip[data-screen="consent"] .flow-body > .panel { flex: 1 0 auto; }
   .flow-pretrip[data-screen="note"] .note-field { flex: 1; }
 }
 
 @media (min-width: 960px) and (max-width: 1359px) and (min-height: 600px) {
-  .flow-pretrip .flow-workspace { grid-template-columns: minmax(11rem, 22fr) minmax(0, 78fr); }
-  .flow-pretrip .flow-desktop-summary { display: none; }
+  html[data-kiosk] .flow-pretrip .flow-workspace { grid-template-columns: minmax(11rem, 22fr) minmax(0, 78fr); }
+  html[data-kiosk] .flow-pretrip .flow-desktop-summary { display: none; }
 }
 @media (min-width: 960px) and (max-height: 800px) and (min-height: 600px) {
-  .flow-pretrip .registration-page-heading { min-height: 4.75rem; }
+  html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 4.75rem; }
   .flow-pretrip .flow-desktop-steps > p { margin-top: 0; }
   .flow-pretrip .flow-desktop-steps h2 { margin-block: .75rem; }
   .flow-pretrip .flow-desktop-steps ol { gap: 0; }
@@ -96,8 +116,8 @@
 }
 
 @media (min-width: 960px) and (max-width: 1199px) and (min-height: 600px) and (max-height: 699px) {
-  .flow-pretrip .flow-workspace { grid-template-columns: minmax(0, 1fr); }
-  .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
+  html[data-kiosk] .flow-pretrip .flow-workspace { grid-template-columns: minmax(0, 1fr); }
+  html[data-kiosk] .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
   .flow-pretrip .flow-body, .flow-pretrip[data-screen] .flow-body { padding: 16px; }
-  .flow-pretrip .registration-page-heading { min-height: 4.25rem; }
+  html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 4.25rem; }
 }

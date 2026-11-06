@@ -45,13 +45,8 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
 .staff-workspace .workspace-page-tools > .btn-primary { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
 .staff-workspace .workspace-page-tools > * > :is(a, button) { min-height: 2.75rem; margin: 0; }
 
-/* ── 접수·배정 요약 줄: 근무 구역과 오늘 숫자를 한 줄 카드로. 확인 지연이 있으면 그 칸만 노랑 ── */
-.sx-summary {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-4);
-}
+/* ── 접수·배정 요약 줄: 근무 구역과 오늘 숫자를 한 줄 카드로. 확인 지연이 있으면 그 칸만 노랑.
+   .sx-summary 는 감싸기만 하고(display: contents) 칸 배치는 아래 .work-requests 격자가 정한다. ── */
 .sx-summary dl { display: grid; flex: 1; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0; margin: 0; border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); overflow: hidden; }
 .sx-summary dl > div { padding: var(--space-3) var(--space-4); border-left: 0.0625rem solid var(--color-line); }
 .sx-summary dl > div:first-child { border-left: 0; }
@@ -64,7 +59,7 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
   flex: none;
   min-height: 2.75rem;
   padding: 0 var(--space-4);
-  border: 0.0625rem solid var(--color-control-line);
+  border: 1px solid var(--color-control-line);
   border-radius: var(--radius-medium);
   background: var(--color-surface);
   color: var(--color-text);
@@ -73,7 +68,6 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
   cursor: pointer;
 }
 @media (max-width: 40rem) {
-  .sx-summary { flex-direction: column; }
   .sx-summary dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sx-summary dl > div:nth-child(3) { border-left: 0; }
   .sx-summary dl > div:nth-child(n + 3) { border-top: 0.0625rem solid var(--color-line); }
@@ -92,7 +86,6 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
 }
 /* 알림·설정은 요약 줄 아래 오른쪽에 작게 */
 .staff-workspace.airport-workspace .work-requests .work-preferences { position: static; order: 1; align-self: flex-start; margin: 0 0 var(--space-4); inset: auto; }
-.work-requests .work-preferences > summary { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 var(--space-3); border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); font-size: var(--text-small); font-weight: var(--weight-label); cursor: pointer; }
 
 /* 업무 조회: 검색·필터는 한 패널, 처리할 내용은 그 아래 같은 기준선에 둔다. */
 .staff-queue-panel { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: var(--space-5); display: grid; gap: var(--space-4); }
@@ -168,14 +161,20 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
 .resource-console > p > a { color: var(--color-primary); font-size: var(--text-small); text-underline-offset: .2em; }
 .work-master-detail.is-empty .work-request-table thead { display: none; }
 .staff-workspace .work-master-detail.is-empty .work-request-table td { padding: 0; }
+/* 요약 카드는 한 줄 전체 폭. 그 아래 줄: 범위(탭, 휴대전화는 고르기 칸) | 새로고침 | 알림·설정. 그 아래 검색.
+   모든 줄의 좌우 끝이 같다. */
+.staff-workspace.airport-workspace .work-requests { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--space-3); }
+.work-requests > * { grid-column: 1 / -1; }
+.work-requests > .sx-summary { display: contents; }
+.work-requests > .sx-summary > dl { grid-column: 1 / -1; grid-row: 1; }
+.work-requests > .sx-summary > .sx-refresh { grid-column: 2; grid-row: 2; align-self: center; }
+.staff-workspace.airport-workspace .work-requests .work-preferences { grid-column: 3; grid-row: 2; margin: 0; align-self: center; }
+.staff-workspace.airport-workspace .work-requests .work-preferences[open] { grid-column: 1 / -1; grid-row: 3; width: 100%; }
+.staff-workspace.airport-workspace .work-scope-control { grid-row: 2; grid-column: 1; min-width: 0; }
+.staff-workspace.airport-workspace .work-requests > form.work-search { order: 2; }
 @media (min-width: 761px) {
-  .staff-workspace.airport-workspace .work-requests { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); }
-  .work-requests > * { grid-column: 1 / -1; }
-  .staff-workspace.airport-workspace .work-requests .work-preferences { grid-column: 2; grid-row: 2; margin: 0; align-self: start; }
-  .staff-workspace.airport-workspace .work-requests .work-preferences[open] { grid-column: 1 / -1; grid-row: 3; width: 100%; }
-  .staff-workspace.airport-workspace .work-scope-control { grid-row: 2; grid-column: 1; min-width: 0; }
+  .sx-summary dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .staff-workspace.airport-workspace .work-scope-tabs { gap: var(--space-4); margin: 0; }
-  .staff-workspace.airport-workspace .work-requests > form.work-search { order: 2; }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
   .staff-reference-grid, .staff-destination-grid { grid-template-columns: minmax(0, 1fr); }

@@ -40,7 +40,7 @@
 .ph-list .task-action { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); min-height: 7rem; margin: 0; padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); transition: border-color var(--motion-normal) var(--ease-out), box-shadow var(--motion-normal) var(--ease-out), transform var(--motion-normal) var(--ease-out); }
 .ph-list .task-action:hover { border-color: var(--color-primary); box-shadow: var(--shadow-1); transform: translateY(-.125rem); }
 .ph-list .task-action:focus-within { outline: .1875rem solid var(--color-focus); outline-offset: .125rem; }
-.ph-list .task-action-icon { box-sizing: content-box; width: 1.375rem; height: 1.375rem; margin: 0; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
+.ph-list .task-action-icon, .dv-card .task-action-icon { box-sizing: content-box; width: 1.375rem; height: 1.375rem; margin: 0; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
 .ph-list .task-action-link { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; min-height: 2.75rem; }
 .ph-list .task-action-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .ph-list .task-action-link > span { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
@@ -48,8 +48,8 @@
 .ph-list .task-action-link small { display: block; margin-top: var(--space-2); color: var(--color-muted); font-size: var(--text-small); line-height: 1.5; }
 .ph-list .task-action-link > svg { position: absolute; right: var(--space-4); top: var(--space-4); width: 1rem; height: 1rem; color: var(--color-primary); }
 .ph-list .task-action-stamp { background: var(--color-accent-soft); }
-.public-site:has(.ph-home), .public-site:has(.service-short-page) { display: flex; flex-direction: column; min-height: 100dvh; }
-.public-site:has(.ph-home) > main, .public-site:has(.service-short-page) > main { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
+.public-site:has(.ph-home), .public-site:has(.dv-home), .public-site:has(.service-short-page), .public-site:has(.request-experience) { display: flex; flex-direction: column; min-height: 100dvh; }
+.public-site:has(.ph-home) > main, .public-site:has(.dv-home) > main, .public-site:has(.service-short-page) > main, .public-site:has(.request-experience) > main { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
 @media (min-width: 1101px) {
   .ph-home { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
   .ph-hero { grid-column: 1 / -1; }
@@ -75,6 +75,8 @@
   .ph-hero { padding-block: var(--space-2); }
   .ph-hero h1 { font-size: var(--text-title); margin-bottom: var(--space-2); }
   .ph-hero-label { margin-bottom: var(--space-2); }
+  .service-short-page .ph-hero { padding-block: var(--space-1); }
+  .service-short-page .ph-hero-label, .service-short-page .ph-hero h1 { margin-bottom: var(--space-1); }
   .ph-hero-art img { max-height: 10rem; width: auto; max-width: 100%; }
 }
 @media (min-width: 761px) and (max-width: 1100px) and (max-height: 700px) {
@@ -82,10 +84,10 @@
   .ph-list .task-action { min-height: 5.5rem; padding: var(--space-3); }
 }
 @media (min-width: 761px) {
-  .public-site:has(.ph-home) > .task-home { padding-block: var(--space-2); margin-top: var(--space-2); }
-  .public-site:has(.ph-home) > .public-footer { padding-block: var(--space-2); gap: var(--space-4); }
-  .public-site:has(.ph-home) > .public-footer > div:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
-  .public-site:has(.ph-home) > .public-footer .public-caption { margin: 0; }
+  .public-site:is(:has(.ph-home), :has(.dv-home)) > .task-home { padding-block: var(--space-2); margin-top: var(--space-2); }
+  .public-site:is(:has(.ph-home), :has(.dv-home)) > .public-footer { padding-block: var(--space-2); gap: var(--space-4); }
+  .public-site:is(:has(.ph-home), :has(.dv-home)) > .public-footer > div:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+  .public-site:is(:has(.ph-home), :has(.dv-home)) > .public-footer .public-caption { margin: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .ph-list .task-action { transition: none; transform: none; } }
 
@@ -120,15 +122,101 @@
 }
 
 /* ── 내 등록 (/p/…) ──
-   위: 내 등록과 고유 일련 번호를 한 줄에, 그 아래 내 항공편. 그다음 할 수 있는 일 두 가지. 준비 상황과 고른 안내는 그 아래. */
-.ph-pass-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); margin: 0 0 var(--space-4); }
+   첫 화면(/)과 같은 틀: 위쪽 바와 같은 끝선의 소개 박스(내 등록·고유 일련 번호) 아래 두 칸.
+   지금 할 일(내 항공편, 도움 요청, 이동지원) · 준비 상황 · 고른 안내. 노트북은 세 칸, 태블릿은 두 칸, 휴대전화는 한 줄. */
+.ph-pass {
+  --w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  display: grid; gap: var(--space-4);
+  width: var(--w); margin-inline: calc((100% - var(--w)) / 2);
+}
+.ph-pass-main, .ph-pass-more { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.ph-pass-head { grid-template-columns: minmax(0, 1fr) auto; }
+.ph-pass-head .ph-hero-label, .ph-pass-head .success-head { margin: 0 0 var(--space-2); }
 .flow-body .ph-pass-head h1 { margin: 0; }
 .ph-pass-head .pass-reference { flex-direction: column; align-items: flex-end; gap: 0; margin: 0; padding: 0; border: 0; }
 .ph-pass-head .pass-reference dt { color: var(--color-muted); font-size: var(--text-caption); font-weight: var(--weight-label); }
 .ph-pass-head .pass-reference dd { margin: 0; color: var(--color-text); font-size: var(--text-heading); letter-spacing: 0.08em; }
-.ph-pass-actions { display: grid; gap: var(--space-2); margin: var(--space-4) 0 var(--space-5); }
+.ph-pass-main > * { margin: 0; }
+.ph-pass-actions { display: grid; gap: var(--space-2); }
 .flow-body .ph-pass-actions .btn { margin: 0; }
-.flow-body .ph-pass-actions .dx-pass-help { margin: 0; }
+/* 카드: 첫 화면 카드와 같은 흰 바탕·선·모서리. 카드 안의 고른 안내 줄은 상자 없이 선으로만 나눈다(상자 속 상자 금지). */
+.ph-pass-card,
+.ph-pass-main > :is(.assist-box, .dx-card) {
+  margin: 0; padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface);
+}
+.ph-pass-card h2, .ph-pass-main > :is(.assist-box, .dx-card) h2 { margin: 0 0 var(--space-2); }
+.ph-pass-card .ready { margin: 0; }
+.ph-pass-card .ready-row { padding-block: var(--space-3); }
+.ph-pass-card .ready-row .ready-btn { margin: var(--space-2) 0 0; }
+.ph-pass-card .info-row.quiet { padding-block: var(--space-2); }
+.ph-pass-card .saved-needs { gap: 0; margin: 0; }
+.ph-pass-card .saved-row { padding: var(--space-2) 0; border: 0; border-radius: 0; background: none; }
+.ph-pass-card .saved-row + .saved-row { border-top: 1px solid var(--color-line); }
+.ph-pass-card > .fine { margin: var(--space-2) 0 0; }
+.ph-pass-more > .ph-pass-card { flex: 1 0 auto; }
+.ph-pass-more > .btn-danger-text { align-self: flex-start; margin: 0; }
 @media (min-width: 40rem) {
   .ph-pass-actions { grid-template-columns: 3fr 2fr; }
+}
+@media (min-width: 761px) {
+  .ph-pass { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-areas: "head head" "main ready" "main more"; }
+  .ph-pass-head { grid-area: head; }
+  .ph-pass-main { grid-area: main; }
+  .ph-pass-ready { grid-area: ready; }
+  .ph-pass-more { grid-area: more; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .ph-pass-actions { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 1101px) {
+  .ph-pass { grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr); grid-template-areas: "head head head" "main ready more"; }
+}
+@media (max-height: 700px) {
+  .ph-pass-card, .ph-pass-main > :is(.assist-box, .dx-card) { padding-block: var(--space-3); }
+  .ph-pass-card .ready-row { padding-block: var(--space-2); }
+}
+
+/* ── 시연 (/demo/booking, /demo/boarding) ──
+   첫 화면(/)과 같은 틀: .task-home(위쪽 바와 같은 끝선) 안에 소개 박스와 같은 높이의 카드 두 장. */
+.dm-home { display: grid; gap: var(--space-4); }
+.dm-hero { grid-template-columns: minmax(0, 1fr) auto; }
+.dm-hero h1 { display: flex; align-items: center; gap: var(--space-2); max-width: none; }
+.dm-hero h1 svg { flex: none; width: 1.75rem; height: 1.75rem; color: var(--color-primary); }
+.dm-trip { display: grid; grid-template-columns: auto auto; gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--text-small); }
+.dm-trip dt { color: var(--color-muted); }
+.dm-trip dd { margin: 0; font-weight: var(--weight-label); }
+.dm-cards { display: grid; gap: var(--space-4); }
+.dm-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); min-width: 0; margin: 0; padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.dm-card > div { width: 100%; }
+.dm-card h2 { margin: 0 0 var(--space-1); color: var(--color-text); font-size: var(--text-heading); line-height: 1.4; }
+.dm-card p { margin: 0; color: var(--color-muted); font-size: var(--text-small); }
+.dm-card-icon { box-sizing: content-box; flex: none; width: 1.375rem; height: 1.375rem; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
+.dm-card .dm-sms { margin-top: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-medium) var(--radius-medium) var(--radius-medium) var(--radius-small); background: var(--color-primary-faint); color: var(--color-text); white-space: pre-line; }
+.dm-card :is(.dm-card-go, .dm-card-note, .dm-card-actions) { margin-top: auto; }
+.dm-card .dm-card-go { width: auto; }
+.dm-card-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dm-card-actions .btn { width: auto; margin: 0; }
+.dm-search label { margin: 0 0 var(--space-2); }
+.dm-search input { width: 100%; }
+.dm-search .choices { width: 100%; }
+.dm-pass { align-items: center; justify-content: center; }
+.dm-pass .boarding { width: min(100%, 24rem); margin: 0; }
+.dm-pass .pass-qr-code { width: clamp(7rem, 22dvh, 13rem); }
+.dm-pass .pass-qr-no { font-size: var(--text-title); }
+.dm-pass-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); text-align: center; }
+.dm-pass-empty svg { width: 2rem; height: 2rem; color: var(--color-primary); }
+@media (min-width: 761px) {
+  .dm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* 탑승권을 가로로: 왼쪽 편 정보, 오른쪽 QR. 세로 높이를 줄여 한 화면에 든다. */
+  .dm-pass .boarding { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto; width: 100%; max-width: 34rem; }
+  .dm-pass .boarding-top { grid-column: 1; grid-row: 1; align-self: center; }
+  .dm-pass .boarding-badge { grid-column: 1; grid-row: 2; }
+  .dm-pass .ticket { grid-column: 2; grid-row: 1 / 3; }
+}
+@media (max-width: 760px) {
+  .dm-hero { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-height: 700px) {
+  .dm-card { padding-block: var(--space-3); gap: var(--space-2); }
 }

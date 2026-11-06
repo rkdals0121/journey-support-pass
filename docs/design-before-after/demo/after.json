@@ -1,0 +1,578 @@
+[
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 844,
+  "doc": 1245,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   243,
+   259
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 844,
+  "doc": 1357,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   316,
+   482
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 844,
+  "doc": 2273,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   469,
+   559
+  ]
+ },
+ {
+  "size": "390x844",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 844,
+  "doc": 2181,
+  "sw": 0,
+  "bar": [
+   12,
+   378
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   471,
+   714
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 633,
+  "doc": 633,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   227,
+   227
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 633,
+  "doc": 633,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   255,
+   255
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 633,
+  "doc": 876,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   339,
+   339
+  ]
+ },
+ {
+  "size": "1280x633",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 633,
+  "doc": 869,
+  "sw": 0,
+  "bar": [
+   20,
+   1260
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   358,
+   358
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 750,
+  "doc": 750,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   259,
+   259
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 750,
+  "doc": 750,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   304,
+   304
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 750,
+  "doc": 982,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   387,
+   387
+  ]
+ },
+ {
+  "size": "1333x750",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 750,
+  "doc": 964,
+  "sw": 0,
+  "bar": [
+   20,
+   1313
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   394,
+   394
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 657,
+  "doc": 657,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   227,
+   227
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 657,
+  "doc": 657,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   260,
+   260
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 657,
+  "doc": 876,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   339,
+   339
+  ]
+ },
+ {
+  "size": "1366x657",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 657,
+  "doc": 869,
+  "sw": 0,
+  "bar": [
+   20,
+   1346
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   358,
+   358
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   259,
+   259
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 937,
+  "doc": 937,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   346,
+   346
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 937,
+  "doc": 1000,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   387,
+   387
+  ]
+ },
+ {
+  "size": "1920x937",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 937,
+  "doc": 1002,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   414,
+   414
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   259,
+   259
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   347,
+   347
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   387,
+   387
+  ]
+ },
+ {
+  "size": "1920x1080",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 1080,
+  "doc": 1080,
+  "sw": 0,
+  "bar": [
+   288,
+   1632
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   446,
+   446
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 768,
+  "doc": 768,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   259,
+   259
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 768,
+  "doc": 768,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   308,
+   308
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 768,
+  "doc": 1165,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   494,
+   494
+  ]
+ },
+ {
+  "size": "1024x768",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 768,
+  "doc": 1485,
+  "sw": 0,
+  "bar": [
+   20,
+   1004
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   914,
+   914
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/demo/booking",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   259,
+   259
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1,
+  "url": "/demo/boarding",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   347,
+   347
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/demo/booking",
+  "vh": 1920,
+  "doc": 1920,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   452,
+   452
+  ]
+ },
+ {
+  "size": "1080x1920",
+  "scale": 1.5,
+  "url": "/demo/boarding",
+  "vh": 1920,
+  "doc": 2074,
+  "sw": 0,
+  "bar": [
+   20,
+   1060
+  ],
+  "edgeOk": true,
+  "off": [],
+  "cards": [
+   1482,
+   1482
+  ]
+ }
+]

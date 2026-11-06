@@ -1,0 +1,4933 @@
+{
+  "results": [
+    {
+      "name": "entry-home",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "vh": 844,
+      "doc": 2006,
+      "sw": -15,
+      "bar": {
+        "left": 5,
+        "right": 371,
+        "top": 12,
+        "bottom": 380
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 380,
+        "bottom": 2006
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 23,
+          "right": 353,
+          "top": 407,
+          "bottom": 1979
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "vh": 844,
+      "doc": 4057,
+      "sw": 38,
+      "bar": {
+        "left": -53,
+        "right": 428,
+        "top": 12,
+        "bottom": 519
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 519,
+        "bottom": 4057
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 34,
+          "right": 341,
+          "top": 559,
+          "bottom": 4016
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "vh": 633,
+      "doc": 996,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 78,
+        "right": 1187,
+        "top": 88,
+        "bottom": 996
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 101,
+          "right": 1164,
+          "top": 116,
+          "bottom": 982
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1280,
+      "height": 633,
+      "scale": 1.5,
+      "vh": 633,
+      "doc": 1652,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1265,
+        "top": 88,
+        "bottom": 1652
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 35,
+          "right": 1230,
+          "top": 130,
+          "bottom": 1631
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1333,
+      "height": 750,
+      "scale": 1,
+      "vh": 750,
+      "doc": 1070,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 52,
+        "right": 1266,
+        "top": 88,
+        "bottom": 1070
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 77,
+          "right": 1241,
+          "top": 118,
+          "bottom": 1055
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1333,
+      "height": 750,
+      "scale": 1.5,
+      "vh": 750,
+      "doc": 1831,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1318,
+        "top": 88,
+        "bottom": 1831
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 38,
+          "right": 1280,
+          "top": 134,
+          "bottom": 1809
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1366,
+      "height": 657,
+      "scale": 1,
+      "vh": 657,
+      "doc": 1040,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 90,
+        "right": 1261,
+        "top": 88,
+        "bottom": 1040
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 114,
+          "right": 1237,
+          "top": 117,
+          "bottom": 1025
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1366,
+      "height": 657,
+      "scale": 1.5,
+      "vh": 657,
+      "doc": 1733,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1351,
+        "top": 88,
+        "bottom": 1733
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 37,
+          "right": 1314,
+          "top": 132,
+          "bottom": 1711
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "vh": 937,
+      "doc": 1352,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 106,
+        "bottom": 1352
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 205,
+          "right": 1700,
+          "top": 145,
+          "bottom": 1313
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1920,
+      "height": 937,
+      "scale": 1.5,
+      "vh": 937,
+      "doc": 2075,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 106,
+        "bottom": 2075
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 49,
+          "right": 1856,
+          "top": 164,
+          "bottom": 2016
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "vh": 1080,
+      "doc": 1356,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 110,
+        "bottom": 1356
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 205,
+          "right": 1700,
+          "top": 149,
+          "bottom": 1317
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1.5,
+      "vh": 1080,
+      "doc": 2079,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 110,
+        "bottom": 2079
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 49,
+          "right": 1856,
+          "top": 169,
+          "bottom": 2021
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1024,
+      "height": 768,
+      "scale": 1,
+      "vh": 768,
+      "doc": 993,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 993
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 23,
+          "right": 987,
+          "top": 116,
+          "bottom": 980
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1024,
+      "height": 768,
+      "scale": 1.5,
+      "vh": 768,
+      "doc": 1915,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1915
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 34,
+          "right": 975,
+          "top": 129,
+          "bottom": 1895
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1,
+      "vh": 1920,
+      "doc": 2021,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 2021
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 39,
+          "right": 1026,
+          "top": 149,
+          "bottom": 1982
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-home",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1.5,
+      "vh": 1920,
+      "doc": 3199,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 3199
+      },
+      "chunks": [
+        {
+          "name": "kx-home",
+          "left": 59,
+          "right": 1007,
+          "top": 169,
+          "bottom": 3141
+        }
+      ],
+      "clipped": [
+        "sr-only",
+        "sr-only"
+      ],
+      "controls": []
+    },
+    {
+      "name": "entry-confirm",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "vh": 844,
+      "doc": 1587,
+      "sw": -15,
+      "bar": {
+        "left": 5,
+        "right": 371,
+        "top": 12,
+        "bottom": 208
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 208,
+        "bottom": 1492
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 23,
+          "right": 353,
+          "top": 244,
+          "bottom": 402
+        },
+        {
+          "name": "H1",
+          "left": 23,
+          "right": 353,
+          "top": 420,
+          "bottom": 460
+        },
+        {
+          "name": "lead",
+          "left": 23,
+          "right": 353,
+          "top": 474,
+          "bottom": 530
+        },
+        {
+          "name": "board",
+          "left": 23,
+          "right": 353,
+          "top": 543,
+          "bottom": 882
+        },
+        {
+          "name": "saved-needs",
+          "left": 23,
+          "right": 353,
+          "top": 900,
+          "bottom": 1438
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 194,
+          "right": 353,
+          "top": 763,
+          "bottom": 826
+        },
+        {
+          "text": "고치기",
+          "left": 23,
+          "right": 181,
+          "top": 763,
+          "bottom": 826
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "vh": 844,
+      "doc": 2986,
+      "sw": 38,
+      "bar": {
+        "left": -53,
+        "right": 428,
+        "top": 12,
+        "bottom": 254
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 254,
+        "bottom": 2768
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 34,
+          "right": 341,
+          "top": 308,
+          "bottom": 908
+        },
+        {
+          "name": "H1",
+          "left": 34,
+          "right": 341,
+          "top": 935,
+          "bottom": 1058
+        },
+        {
+          "name": "lead",
+          "left": 34,
+          "right": 341,
+          "top": 1078,
+          "bottom": 1204
+        },
+        {
+          "name": "board",
+          "left": 34,
+          "right": 341,
+          "top": 1224,
+          "bottom": 1775
+        },
+        {
+          "name": "saved-needs",
+          "left": 34,
+          "right": 341,
+          "top": 1802,
+          "bottom": 2687
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 196,
+          "right": 341,
+          "top": 647,
+          "bottom": 817
+        },
+        {
+          "text": "고치기",
+          "left": 30,
+          "right": 176,
+          "top": 647,
+          "bottom": 817
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "vh": 633,
+      "doc": 1291,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 78,
+        "right": 1187,
+        "top": 88,
+        "bottom": 1208
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 101,
+          "right": 1164,
+          "top": 125,
+          "bottom": 285
+        },
+        {
+          "name": "H1",
+          "left": 101,
+          "right": 1164,
+          "top": 303,
+          "bottom": 333
+        },
+        {
+          "name": "lead",
+          "left": 101,
+          "right": 1164,
+          "top": 338,
+          "bottom": 367
+        },
+        {
+          "name": "board",
+          "left": 101,
+          "right": 1164,
+          "top": 381,
+          "bottom": 596
+        },
+        {
+          "name": "saved-needs",
+          "left": 101,
+          "right": 1164,
+          "top": 615,
+          "bottom": 1167
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 639,
+          "right": 1164,
+          "top": 559,
+          "bottom": 619
+        },
+        {
+          "text": "고치기",
+          "left": 101,
+          "right": 626,
+          "top": 559,
+          "bottom": 619
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1280,
+      "height": 633,
+      "scale": 1.5,
+      "vh": 633,
+      "doc": 1808,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1265,
+        "top": 88,
+        "bottom": 1683
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 35,
+          "right": 1230,
+          "top": 143,
+          "bottom": 303
+        },
+        {
+          "name": "H1",
+          "left": 35,
+          "right": 1230,
+          "top": 331,
+          "bottom": 376
+        },
+        {
+          "name": "lead",
+          "left": 35,
+          "right": 1230,
+          "top": 383,
+          "bottom": 426
+        },
+        {
+          "name": "board",
+          "left": 35,
+          "right": 1230,
+          "top": 447,
+          "bottom": 770
+        },
+        {
+          "name": "saved-needs",
+          "left": 35,
+          "right": 1230,
+          "top": 798,
+          "bottom": 1621
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 643,
+          "right": 1230,
+          "top": 522,
+          "bottom": 612
+        },
+        {
+          "text": "고치기",
+          "left": 35,
+          "right": 622,
+          "top": 522,
+          "bottom": 612
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1333,
+      "height": 750,
+      "scale": 1,
+      "vh": 750,
+      "doc": 1390,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 52,
+        "right": 1266,
+        "top": 88,
+        "bottom": 1299
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 77,
+          "right": 1241,
+          "top": 128,
+          "bottom": 288
+        },
+        {
+          "name": "H1",
+          "left": 77,
+          "right": 1241,
+          "top": 309,
+          "bottom": 342
+        },
+        {
+          "name": "lead",
+          "left": 77,
+          "right": 1241,
+          "top": 347,
+          "bottom": 378
+        },
+        {
+          "name": "board",
+          "left": 77,
+          "right": 1241,
+          "top": 393,
+          "bottom": 630
+        },
+        {
+          "name": "saved-needs",
+          "left": 77,
+          "right": 1241,
+          "top": 650,
+          "bottom": 1254
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 667,
+          "right": 1241,
+          "top": 669,
+          "bottom": 735
+        },
+        {
+          "text": "고치기",
+          "left": 77,
+          "right": 651,
+          "top": 669,
+          "bottom": 735
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1333,
+      "height": 750,
+      "scale": 1.5,
+      "vh": 750,
+      "doc": 1956,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1318,
+        "top": 88,
+        "bottom": 1820
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 38,
+          "right": 1280,
+          "top": 149,
+          "bottom": 309
+        },
+        {
+          "name": "H1",
+          "left": 38,
+          "right": 1280,
+          "top": 339,
+          "bottom": 388
+        },
+        {
+          "name": "lead",
+          "left": 38,
+          "right": 1280,
+          "top": 396,
+          "bottom": 443
+        },
+        {
+          "name": "board",
+          "left": 38,
+          "right": 1280,
+          "top": 466,
+          "bottom": 821
+        },
+        {
+          "name": "saved-needs",
+          "left": 38,
+          "right": 1280,
+          "top": 851,
+          "bottom": 1751
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 670,
+          "right": 1280,
+          "top": 629,
+          "bottom": 727
+        },
+        {
+          "text": "고치기",
+          "left": 38,
+          "right": 648,
+          "top": 629,
+          "bottom": 727
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1366,
+      "height": 657,
+      "scale": 1,
+      "vh": 657,
+      "doc": 1349,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 90,
+        "right": 1261,
+        "top": 88,
+        "bottom": 1261
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 114,
+          "right": 1237,
+          "top": 127,
+          "bottom": 287
+        },
+        {
+          "name": "H1",
+          "left": 114,
+          "right": 1237,
+          "top": 307,
+          "bottom": 338
+        },
+        {
+          "name": "lead",
+          "left": 114,
+          "right": 1237,
+          "top": 343,
+          "bottom": 373
+        },
+        {
+          "name": "board",
+          "left": 114,
+          "right": 1237,
+          "top": 388,
+          "bottom": 615
+        },
+        {
+          "name": "saved-needs",
+          "left": 114,
+          "right": 1237,
+          "top": 635,
+          "bottom": 1217
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 683,
+          "right": 1237,
+          "top": 579,
+          "bottom": 642
+        },
+        {
+          "text": "고치기",
+          "left": 114,
+          "right": 668,
+          "top": 579,
+          "bottom": 642
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1366,
+      "height": 657,
+      "scale": 1.5,
+      "vh": 657,
+      "doc": 1896,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1351,
+        "top": 88,
+        "bottom": 1764
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 37,
+          "right": 1314,
+          "top": 147,
+          "bottom": 307
+        },
+        {
+          "name": "H1",
+          "left": 37,
+          "right": 1314,
+          "top": 336,
+          "bottom": 383
+        },
+        {
+          "name": "lead",
+          "left": 37,
+          "right": 1314,
+          "top": 391,
+          "bottom": 436
+        },
+        {
+          "name": "board",
+          "left": 37,
+          "right": 1314,
+          "top": 458,
+          "bottom": 800
+        },
+        {
+          "name": "saved-needs",
+          "left": 37,
+          "right": 1314,
+          "top": 830,
+          "bottom": 1698
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 686,
+          "right": 1314,
+          "top": 540,
+          "bottom": 635
+        },
+        {
+          "text": "고치기",
+          "left": 37,
+          "right": 665,
+          "top": 540,
+          "bottom": 635
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "vh": 937,
+      "doc": 1812,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 106,
+        "bottom": 1675
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 205,
+          "right": 1700,
+          "top": 158,
+          "bottom": 318
+        },
+        {
+          "name": "H1",
+          "left": 205,
+          "right": 1700,
+          "top": 344,
+          "bottom": 403
+        },
+        {
+          "name": "lead",
+          "left": 205,
+          "right": 1700,
+          "top": 422,
+          "bottom": 463
+        },
+        {
+          "name": "board",
+          "left": 205,
+          "right": 1700,
+          "top": 495,
+          "bottom": 799
+        },
+        {
+          "name": "saved-needs",
+          "left": 205,
+          "right": 1700,
+          "top": 825,
+          "bottom": 1597
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 962,
+          "right": 1700,
+          "top": 820,
+          "bottom": 911
+        },
+        {
+          "text": "고치기",
+          "left": 205,
+          "right": 943,
+          "top": 820,
+          "bottom": 911
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1920,
+      "height": 937,
+      "scale": 1.5,
+      "vh": 937,
+      "doc": 2590,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 106,
+        "bottom": 2385
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 49,
+          "right": 1856,
+          "top": 184,
+          "bottom": 344
+        },
+        {
+          "name": "H1",
+          "left": 49,
+          "right": 1856,
+          "top": 383,
+          "bottom": 471
+        },
+        {
+          "name": "lead",
+          "left": 49,
+          "right": 1856,
+          "top": 501,
+          "bottom": 561
+        },
+        {
+          "name": "board",
+          "left": 49,
+          "right": 1856,
+          "top": 610,
+          "bottom": 1065
+        },
+        {
+          "name": "saved-needs",
+          "left": 49,
+          "right": 1856,
+          "top": 1104,
+          "bottom": 2268
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 967,
+          "right": 1856,
+          "top": 762,
+          "bottom": 898
+        },
+        {
+          "text": "고치기",
+          "left": 49,
+          "right": 938,
+          "top": 762,
+          "bottom": 898
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "vh": 1080,
+      "doc": 1816,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 110,
+        "bottom": 1680
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 205,
+          "right": 1700,
+          "top": 162,
+          "bottom": 322
+        },
+        {
+          "name": "H1",
+          "left": 205,
+          "right": 1700,
+          "top": 348,
+          "bottom": 407
+        },
+        {
+          "name": "lead",
+          "left": 205,
+          "right": 1700,
+          "top": 427,
+          "bottom": 467
+        },
+        {
+          "name": "board",
+          "left": 205,
+          "right": 1700,
+          "top": 499,
+          "bottom": 803
+        },
+        {
+          "name": "saved-needs",
+          "left": 205,
+          "right": 1700,
+          "top": 829,
+          "bottom": 1602
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 962,
+          "right": 1700,
+          "top": 963,
+          "bottom": 1054
+        },
+        {
+          "text": "고치기",
+          "left": 205,
+          "right": 943,
+          "top": 963,
+          "bottom": 1054
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1.5,
+      "vh": 1080,
+      "doc": 2594,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 110,
+        "bottom": 2390
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 49,
+          "right": 1856,
+          "top": 188,
+          "bottom": 348
+        },
+        {
+          "name": "H1",
+          "left": 49,
+          "right": 1856,
+          "top": 387,
+          "bottom": 476
+        },
+        {
+          "name": "lead",
+          "left": 49,
+          "right": 1856,
+          "top": 505,
+          "bottom": 565
+        },
+        {
+          "name": "board",
+          "left": 49,
+          "right": 1856,
+          "top": 614,
+          "bottom": 1070
+        },
+        {
+          "name": "saved-needs",
+          "left": 49,
+          "right": 1856,
+          "top": 1109,
+          "bottom": 2273
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 967,
+          "right": 1856,
+          "top": 905,
+          "bottom": 1041
+        },
+        {
+          "text": "고치기",
+          "left": 49,
+          "right": 938,
+          "top": 905,
+          "bottom": 1041
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1024,
+      "height": 768,
+      "scale": 1,
+      "vh": 768,
+      "doc": 1265,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1184
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 23,
+          "right": 987,
+          "top": 125,
+          "bottom": 285
+        },
+        {
+          "name": "H1",
+          "left": 23,
+          "right": 987,
+          "top": 303,
+          "bottom": 332
+        },
+        {
+          "name": "lead",
+          "left": 23,
+          "right": 987,
+          "top": 337,
+          "bottom": 364
+        },
+        {
+          "name": "board",
+          "left": 23,
+          "right": 987,
+          "top": 378,
+          "bottom": 588
+        },
+        {
+          "name": "saved-needs",
+          "left": 23,
+          "right": 987,
+          "top": 606,
+          "bottom": 1144
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 511,
+          "right": 987,
+          "top": 696,
+          "bottom": 755
+        },
+        {
+          "text": "고치기",
+          "left": 23,
+          "right": 498,
+          "top": 696,
+          "bottom": 755
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1024,
+      "height": 768,
+      "scale": 1.5,
+      "vh": 768,
+      "doc": 1769,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1647
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 34,
+          "right": 975,
+          "top": 143,
+          "bottom": 303
+        },
+        {
+          "name": "H1",
+          "left": 34,
+          "right": 975,
+          "top": 330,
+          "bottom": 374
+        },
+        {
+          "name": "lead",
+          "left": 34,
+          "right": 975,
+          "top": 380,
+          "bottom": 422
+        },
+        {
+          "name": "board",
+          "left": 34,
+          "right": 975,
+          "top": 443,
+          "bottom": 758
+        },
+        {
+          "name": "saved-needs",
+          "left": 34,
+          "right": 975,
+          "top": 785,
+          "bottom": 1587
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 515,
+          "right": 975,
+          "top": 660,
+          "bottom": 748
+        },
+        {
+          "text": "고치기",
+          "left": 34,
+          "right": 494,
+          "top": 660,
+          "bottom": 748
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1,
+      "vh": 1920,
+      "doc": 1920,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 1784
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 39,
+          "right": 1026,
+          "top": 162,
+          "bottom": 322
+        },
+        {
+          "name": "H1",
+          "left": 39,
+          "right": 1026,
+          "top": 348,
+          "bottom": 407
+        },
+        {
+          "name": "lead",
+          "left": 39,
+          "right": 1026,
+          "top": 427,
+          "bottom": 467
+        },
+        {
+          "name": "board",
+          "left": 39,
+          "right": 1026,
+          "top": 499,
+          "bottom": 803
+        },
+        {
+          "name": "saved-needs",
+          "left": 39,
+          "right": 1026,
+          "top": 829,
+          "bottom": 1602
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 542,
+          "right": 1033,
+          "top": 1803,
+          "bottom": 1894
+        },
+        {
+          "text": "고치기",
+          "left": 33,
+          "right": 523,
+          "top": 1803,
+          "bottom": 1894
+        }
+      ]
+    },
+    {
+      "name": "entry-confirm",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1.5,
+      "vh": 1920,
+      "doc": 2594,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 2390
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 59,
+          "right": 1007,
+          "top": 188,
+          "bottom": 348
+        },
+        {
+          "name": "H1",
+          "left": 59,
+          "right": 1007,
+          "top": 387,
+          "bottom": 476
+        },
+        {
+          "name": "lead",
+          "left": 59,
+          "right": 1007,
+          "top": 505,
+          "bottom": 565
+        },
+        {
+          "name": "board",
+          "left": 59,
+          "right": 1007,
+          "top": 614,
+          "bottom": 1070
+        },
+        {
+          "name": "saved-needs",
+          "left": 59,
+          "right": 1007,
+          "top": 1109,
+          "bottom": 2273
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "맞아요",
+          "left": 547,
+          "right": 1016,
+          "top": 1745,
+          "bottom": 1881
+        },
+        {
+          "text": "고치기",
+          "left": 49,
+          "right": 518,
+          "top": 1745,
+          "bottom": 1881
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "vh": 844,
+      "doc": 1116,
+      "sw": -15,
+      "bar": {
+        "left": 5,
+        "right": 371,
+        "top": 12,
+        "bottom": 208
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 208,
+        "bottom": 1022
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 23,
+          "right": 353,
+          "top": 244,
+          "bottom": 400
+        },
+        {
+          "name": "svc-grid",
+          "left": 23,
+          "right": 353,
+          "top": 418,
+          "bottom": 995
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 23,
+          "right": 353,
+          "top": 763,
+          "bottom": 826
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "vh": 844,
+      "doc": 1968,
+      "sw": 38,
+      "bar": {
+        "left": -53,
+        "right": 428,
+        "top": 12,
+        "bottom": 254
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 254,
+        "bottom": 1826
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 34,
+          "right": 341,
+          "top": 308,
+          "bottom": 772
+        },
+        {
+          "name": "svc-grid",
+          "left": 34,
+          "right": 341,
+          "top": 799,
+          "bottom": 1786
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 34,
+          "right": 341,
+          "top": 723,
+          "bottom": 817
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "vh": 633,
+      "doc": 633,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 78,
+        "right": 1187,
+        "top": 88,
+        "bottom": 550
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 101,
+          "right": 1164,
+          "top": 125,
+          "bottom": 285
+        },
+        {
+          "name": "svc-grid",
+          "left": 101,
+          "right": 1164,
+          "top": 303,
+          "bottom": 498
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 101,
+          "right": 1164,
+          "top": 559,
+          "bottom": 619
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1280,
+      "height": 633,
+      "scale": 1.5,
+      "vh": 633,
+      "doc": 767,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1265,
+        "top": 88,
+        "bottom": 643
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 35,
+          "right": 1230,
+          "top": 143,
+          "bottom": 303
+        },
+        {
+          "name": "svc-grid",
+          "left": 35,
+          "right": 1230,
+          "top": 331,
+          "bottom": 622
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 35,
+          "right": 1230,
+          "top": 522,
+          "bottom": 612
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1333,
+      "height": 750,
+      "scale": 1,
+      "vh": 750,
+      "doc": 750,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 52,
+        "right": 1266,
+        "top": 88,
+        "bottom": 659
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 77,
+          "right": 1241,
+          "top": 128,
+          "bottom": 288
+        },
+        {
+          "name": "svc-grid",
+          "left": 77,
+          "right": 1241,
+          "top": 309,
+          "bottom": 521
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 77,
+          "right": 1241,
+          "top": 669,
+          "bottom": 735
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1333,
+      "height": 750,
+      "scale": 1.5,
+      "vh": 750,
+      "doc": 1120,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1318,
+        "top": 88,
+        "bottom": 984
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 38,
+          "right": 1280,
+          "top": 149,
+          "bottom": 309
+        },
+        {
+          "name": "svc-grid",
+          "left": 38,
+          "right": 1280,
+          "top": 339,
+          "bottom": 961
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 38,
+          "right": 1280,
+          "top": 629,
+          "bottom": 727
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1366,
+      "height": 657,
+      "scale": 1,
+      "vh": 657,
+      "doc": 657,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 90,
+        "right": 1261,
+        "top": 88,
+        "bottom": 569
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 114,
+          "right": 1237,
+          "top": 127,
+          "bottom": 287
+        },
+        {
+          "name": "svc-grid",
+          "left": 114,
+          "right": 1237,
+          "top": 307,
+          "bottom": 512
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 114,
+          "right": 1237,
+          "top": 579,
+          "bottom": 642
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1366,
+      "height": 657,
+      "scale": 1.5,
+      "vh": 657,
+      "doc": 796,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1351,
+        "top": 88,
+        "bottom": 665
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 37,
+          "right": 1314,
+          "top": 147,
+          "bottom": 307
+        },
+        {
+          "name": "svc-grid",
+          "left": 37,
+          "right": 1314,
+          "top": 336,
+          "bottom": 643
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 37,
+          "right": 1314,
+          "top": 540,
+          "bottom": 635
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "vh": 937,
+      "doc": 937,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 106,
+        "bottom": 801
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 205,
+          "right": 1700,
+          "top": 158,
+          "bottom": 318
+        },
+        {
+          "name": "svc-grid",
+          "left": 205,
+          "right": 1700,
+          "top": 344,
+          "bottom": 616
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 205,
+          "right": 1700,
+          "top": 820,
+          "bottom": 911
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1920,
+      "height": 937,
+      "scale": 1.5,
+      "vh": 937,
+      "doc": 1056,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 106,
+        "bottom": 851
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 49,
+          "right": 1856,
+          "top": 184,
+          "bottom": 344
+        },
+        {
+          "name": "svc-grid",
+          "left": 49,
+          "right": 1856,
+          "top": 383,
+          "bottom": 793
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 49,
+          "right": 1856,
+          "top": 762,
+          "bottom": 898
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "vh": 1080,
+      "doc": 1080,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 110,
+        "bottom": 944
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 205,
+          "right": 1700,
+          "top": 162,
+          "bottom": 322
+        },
+        {
+          "name": "svc-grid",
+          "left": 205,
+          "right": 1700,
+          "top": 348,
+          "bottom": 621
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 205,
+          "right": 1700,
+          "top": 963,
+          "bottom": 1054
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1.5,
+      "vh": 1080,
+      "doc": 1080,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 110,
+        "bottom": 875
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 49,
+          "right": 1856,
+          "top": 188,
+          "bottom": 348
+        },
+        {
+          "name": "svc-grid",
+          "left": 49,
+          "right": 1856,
+          "top": 387,
+          "bottom": 797
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 49,
+          "right": 1856,
+          "top": 905,
+          "bottom": 1041
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1024,
+      "height": 768,
+      "scale": 1,
+      "vh": 768,
+      "doc": 768,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 687
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 23,
+          "right": 987,
+          "top": 125,
+          "bottom": 285
+        },
+        {
+          "name": "svc-grid",
+          "left": 23,
+          "right": 987,
+          "top": 303,
+          "bottom": 492
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 23,
+          "right": 987,
+          "top": 696,
+          "bottom": 755
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1024,
+      "height": 768,
+      "scale": 1.5,
+      "vh": 768,
+      "doc": 1065,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 943
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 34,
+          "right": 975,
+          "top": 143,
+          "bottom": 303
+        },
+        {
+          "name": "svc-grid",
+          "left": 34,
+          "right": 975,
+          "top": 330,
+          "bottom": 923
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 34,
+          "right": 975,
+          "top": 660,
+          "bottom": 748
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1,
+      "vh": 1920,
+      "doc": 1920,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 1784
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 39,
+          "right": 1026,
+          "top": 162,
+          "bottom": 322
+        },
+        {
+          "name": "svc-grid",
+          "left": 39,
+          "right": 1026,
+          "top": 348,
+          "bottom": 919
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 33,
+          "right": 1033,
+          "top": 1803,
+          "bottom": 1894
+        }
+      ]
+    },
+    {
+      "name": "entry-services",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1.5,
+      "vh": 1920,
+      "doc": 1920,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 1715
+      },
+      "chunks": [
+        {
+          "name": "robot-stage",
+          "left": 59,
+          "right": 1007,
+          "top": 188,
+          "bottom": 348
+        },
+        {
+          "name": "svc-grid",
+          "left": 59,
+          "right": 1007,
+          "top": 387,
+          "bottom": 1518
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "끝내기",
+          "left": 49,
+          "right": 1016,
+          "top": 1745,
+          "bottom": 1881
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "vh": 844,
+      "doc": 1598,
+      "sw": -15,
+      "bar": {
+        "left": 5,
+        "right": 371,
+        "top": 12,
+        "bottom": 208
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 208,
+        "bottom": 1482
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 23,
+          "right": 353,
+          "top": 235,
+          "bottom": 264
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 23,
+          "right": 353,
+          "top": 273,
+          "bottom": 397
+        },
+        {
+          "name": "H1",
+          "left": 23,
+          "right": 353,
+          "top": 397,
+          "bottom": 519
+        },
+        {
+          "name": "board",
+          "left": 23,
+          "right": 353,
+          "top": 533,
+          "bottom": 872
+        },
+        {
+          "name": "saved-needs",
+          "left": 23,
+          "right": 353,
+          "top": 890,
+          "bottom": 1428
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 194,
+          "right": 353,
+          "top": 741,
+          "bottom": 826
+        },
+        {
+          "text": "고치기",
+          "left": 23,
+          "right": 181,
+          "top": 741,
+          "bottom": 826
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "vh": 844,
+      "doc": 3027,
+      "sw": 38,
+      "bar": {
+        "left": -53,
+        "right": 428,
+        "top": 12,
+        "bottom": 254
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 254,
+        "bottom": 2643
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 34,
+          "right": 341,
+          "top": 294,
+          "bottom": 337
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 34,
+          "right": 341,
+          "top": 351,
+          "bottom": 771
+        },
+        {
+          "name": "H1",
+          "left": 34,
+          "right": 341,
+          "top": 771,
+          "bottom": 1078
+        },
+        {
+          "name": "board",
+          "left": 34,
+          "right": 341,
+          "top": 1098,
+          "bottom": 1649
+        },
+        {
+          "name": "saved-needs",
+          "left": 34,
+          "right": 341,
+          "top": 1676,
+          "bottom": 2562
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 196,
+          "right": 341,
+          "top": 480,
+          "bottom": 817
+        },
+        {
+          "text": "고치기",
+          "left": 30,
+          "right": 176,
+          "top": 480,
+          "bottom": 817
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "vh": 633,
+      "doc": 1178,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 78,
+        "right": 1187,
+        "top": 88,
+        "bottom": 1095
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 101,
+          "right": 1164,
+          "top": 116,
+          "bottom": 145
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 101,
+          "right": 1164,
+          "top": 154,
+          "bottom": 228
+        },
+        {
+          "name": "H1",
+          "left": 101,
+          "right": 1164,
+          "top": 228,
+          "bottom": 258
+        },
+        {
+          "name": "board",
+          "left": 101,
+          "right": 1164,
+          "top": 267,
+          "bottom": 483
+        },
+        {
+          "name": "saved-needs",
+          "left": 101,
+          "right": 1164,
+          "top": 501,
+          "bottom": 1053
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 639,
+          "right": 1164,
+          "top": 559,
+          "bottom": 619
+        },
+        {
+          "text": "고치기",
+          "left": 101,
+          "right": 626,
+          "top": 559,
+          "bottom": 619
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1280,
+      "height": 633,
+      "scale": 1.5,
+      "vh": 633,
+      "doc": 1718,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1265,
+        "top": 88,
+        "bottom": 1593
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 35,
+          "right": 1230,
+          "top": 130,
+          "bottom": 173
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 35,
+          "right": 1230,
+          "top": 187,
+          "bottom": 298
+        },
+        {
+          "name": "H1",
+          "left": 35,
+          "right": 1230,
+          "top": 298,
+          "bottom": 343
+        },
+        {
+          "name": "board",
+          "left": 35,
+          "right": 1230,
+          "top": 357,
+          "bottom": 680
+        },
+        {
+          "name": "saved-needs",
+          "left": 35,
+          "right": 1230,
+          "top": 708,
+          "bottom": 1531
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 643,
+          "right": 1230,
+          "top": 522,
+          "bottom": 612
+        },
+        {
+          "text": "고치기",
+          "left": 35,
+          "right": 622,
+          "top": 522,
+          "bottom": 612
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1333,
+      "height": 750,
+      "scale": 1,
+      "vh": 750,
+      "doc": 1281,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 52,
+        "right": 1266,
+        "top": 88,
+        "bottom": 1190
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 77,
+          "right": 1241,
+          "top": 118,
+          "bottom": 150
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 77,
+          "right": 1241,
+          "top": 160,
+          "bottom": 241
+        },
+        {
+          "name": "H1",
+          "left": 77,
+          "right": 1241,
+          "top": 241,
+          "bottom": 274
+        },
+        {
+          "name": "board",
+          "left": 77,
+          "right": 1241,
+          "top": 284,
+          "bottom": 521
+        },
+        {
+          "name": "saved-needs",
+          "left": 77,
+          "right": 1241,
+          "top": 541,
+          "bottom": 1145
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 667,
+          "right": 1241,
+          "top": 669,
+          "bottom": 735
+        },
+        {
+          "text": "고치기",
+          "left": 77,
+          "right": 651,
+          "top": 669,
+          "bottom": 735
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1333,
+      "height": 750,
+      "scale": 1.5,
+      "vh": 750,
+      "doc": 1873,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1318,
+        "top": 88,
+        "bottom": 1736
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 38,
+          "right": 1280,
+          "top": 134,
+          "bottom": 181
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 38,
+          "right": 1280,
+          "top": 196,
+          "bottom": 318
+        },
+        {
+          "name": "H1",
+          "left": 38,
+          "right": 1280,
+          "top": 318,
+          "bottom": 367
+        },
+        {
+          "name": "board",
+          "left": 38,
+          "right": 1280,
+          "top": 382,
+          "bottom": 737
+        },
+        {
+          "name": "saved-needs",
+          "left": 38,
+          "right": 1280,
+          "top": 767,
+          "bottom": 1668
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 670,
+          "right": 1280,
+          "top": 629,
+          "bottom": 727
+        },
+        {
+          "text": "고치기",
+          "left": 38,
+          "right": 648,
+          "top": 629,
+          "bottom": 727
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1366,
+      "height": 657,
+      "scale": 1,
+      "vh": 657,
+      "doc": 1239,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 90,
+        "right": 1261,
+        "top": 88,
+        "bottom": 1151
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 114,
+          "right": 1237,
+          "top": 117,
+          "bottom": 148
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 114,
+          "right": 1237,
+          "top": 158,
+          "bottom": 236
+        },
+        {
+          "name": "H1",
+          "left": 114,
+          "right": 1237,
+          "top": 236,
+          "bottom": 268
+        },
+        {
+          "name": "board",
+          "left": 114,
+          "right": 1237,
+          "top": 277,
+          "bottom": 505
+        },
+        {
+          "name": "saved-needs",
+          "left": 114,
+          "right": 1237,
+          "top": 524,
+          "bottom": 1107
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 683,
+          "right": 1237,
+          "top": 579,
+          "bottom": 642
+        },
+        {
+          "text": "고치기",
+          "left": 114,
+          "right": 668,
+          "top": 579,
+          "bottom": 642
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1366,
+      "height": 657,
+      "scale": 1.5,
+      "vh": 657,
+      "doc": 1811,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1351,
+        "top": 88,
+        "bottom": 1679
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 37,
+          "right": 1314,
+          "top": 132,
+          "bottom": 179
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 37,
+          "right": 1314,
+          "top": 193,
+          "bottom": 311
+        },
+        {
+          "name": "H1",
+          "left": 37,
+          "right": 1314,
+          "top": 311,
+          "bottom": 358
+        },
+        {
+          "name": "board",
+          "left": 37,
+          "right": 1314,
+          "top": 373,
+          "bottom": 715
+        },
+        {
+          "name": "saved-needs",
+          "left": 37,
+          "right": 1314,
+          "top": 744,
+          "bottom": 1613
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 686,
+          "right": 1314,
+          "top": 540,
+          "bottom": 635
+        },
+        {
+          "text": "고치기",
+          "left": 37,
+          "right": 665,
+          "top": 540,
+          "bottom": 635
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "vh": 937,
+      "doc": 1697,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 106,
+        "bottom": 1561
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 205,
+          "right": 1700,
+          "top": 145,
+          "bottom": 185
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 205,
+          "right": 1700,
+          "top": 198,
+          "bottom": 302
+        },
+        {
+          "name": "H1",
+          "left": 205,
+          "right": 1700,
+          "top": 302,
+          "bottom": 361
+        },
+        {
+          "name": "board",
+          "left": 205,
+          "right": 1700,
+          "top": 381,
+          "bottom": 684
+        },
+        {
+          "name": "saved-needs",
+          "left": 205,
+          "right": 1700,
+          "top": 710,
+          "bottom": 1483
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 962,
+          "right": 1700,
+          "top": 820,
+          "bottom": 911
+        },
+        {
+          "text": "고치기",
+          "left": 205,
+          "right": 943,
+          "top": 820,
+          "bottom": 911
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1920,
+      "height": 937,
+      "scale": 1.5,
+      "vh": 937,
+      "doc": 2499,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 106,
+        "bottom": 2295
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 49,
+          "right": 1856,
+          "top": 164,
+          "bottom": 226
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 49,
+          "right": 1856,
+          "top": 245,
+          "bottom": 401
+        },
+        {
+          "name": "H1",
+          "left": 49,
+          "right": 1856,
+          "top": 401,
+          "bottom": 490
+        },
+        {
+          "name": "board",
+          "left": 49,
+          "right": 1856,
+          "top": 519,
+          "bottom": 975
+        },
+        {
+          "name": "saved-needs",
+          "left": 49,
+          "right": 1856,
+          "top": 1014,
+          "bottom": 2178
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 967,
+          "right": 1856,
+          "top": 762,
+          "bottom": 898
+        },
+        {
+          "text": "고치기",
+          "left": 49,
+          "right": 938,
+          "top": 762,
+          "bottom": 898
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "vh": 1080,
+      "doc": 1702,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 110,
+        "bottom": 1565
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 205,
+          "right": 1700,
+          "top": 149,
+          "bottom": 189
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 205,
+          "right": 1700,
+          "top": 202,
+          "bottom": 306
+        },
+        {
+          "name": "H1",
+          "left": 205,
+          "right": 1700,
+          "top": 306,
+          "bottom": 366
+        },
+        {
+          "name": "board",
+          "left": 205,
+          "right": 1700,
+          "top": 385,
+          "bottom": 689
+        },
+        {
+          "name": "saved-needs",
+          "left": 205,
+          "right": 1700,
+          "top": 715,
+          "bottom": 1487
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 962,
+          "right": 1700,
+          "top": 963,
+          "bottom": 1054
+        },
+        {
+          "text": "고치기",
+          "left": 205,
+          "right": 943,
+          "top": 963,
+          "bottom": 1054
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1.5,
+      "vh": 1080,
+      "doc": 2504,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 110,
+        "bottom": 2299
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 49,
+          "right": 1856,
+          "top": 169,
+          "bottom": 230
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 49,
+          "right": 1856,
+          "top": 250,
+          "bottom": 406
+        },
+        {
+          "name": "H1",
+          "left": 49,
+          "right": 1856,
+          "top": 406,
+          "bottom": 494
+        },
+        {
+          "name": "board",
+          "left": 49,
+          "right": 1856,
+          "top": 524,
+          "bottom": 979
+        },
+        {
+          "name": "saved-needs",
+          "left": 49,
+          "right": 1856,
+          "top": 1018,
+          "bottom": 2182
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 967,
+          "right": 1856,
+          "top": 905,
+          "bottom": 1041
+        },
+        {
+          "text": "고치기",
+          "left": 49,
+          "right": 938,
+          "top": 905,
+          "bottom": 1041
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1024,
+      "height": 768,
+      "scale": 1,
+      "vh": 768,
+      "doc": 1152,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1071
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 23,
+          "right": 987,
+          "top": 116,
+          "bottom": 145
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 23,
+          "right": 987,
+          "top": 154,
+          "bottom": 226
+        },
+        {
+          "name": "H1",
+          "left": 23,
+          "right": 987,
+          "top": 226,
+          "bottom": 255
+        },
+        {
+          "name": "board",
+          "left": 23,
+          "right": 987,
+          "top": 264,
+          "bottom": 474
+        },
+        {
+          "name": "saved-needs",
+          "left": 23,
+          "right": 987,
+          "top": 492,
+          "bottom": 1030
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 511,
+          "right": 987,
+          "top": 696,
+          "bottom": 755
+        },
+        {
+          "text": "고치기",
+          "left": 23,
+          "right": 498,
+          "top": 696,
+          "bottom": 755
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1024,
+      "height": 768,
+      "scale": 1.5,
+      "vh": 768,
+      "doc": 1677,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1556
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 34,
+          "right": 975,
+          "top": 129,
+          "bottom": 172
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 34,
+          "right": 975,
+          "top": 186,
+          "bottom": 294
+        },
+        {
+          "name": "H1",
+          "left": 34,
+          "right": 975,
+          "top": 294,
+          "bottom": 338
+        },
+        {
+          "name": "board",
+          "left": 34,
+          "right": 975,
+          "top": 351,
+          "bottom": 666
+        },
+        {
+          "name": "saved-needs",
+          "left": 34,
+          "right": 975,
+          "top": 693,
+          "bottom": 1495
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 515,
+          "right": 975,
+          "top": 660,
+          "bottom": 748
+        },
+        {
+          "text": "고치기",
+          "left": 34,
+          "right": 494,
+          "top": 660,
+          "bottom": 748
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1,
+      "vh": 1920,
+      "doc": 1920,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 1784
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 39,
+          "right": 1026,
+          "top": 149,
+          "bottom": 189
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 39,
+          "right": 1026,
+          "top": 202,
+          "bottom": 306
+        },
+        {
+          "name": "H1",
+          "left": 39,
+          "right": 1026,
+          "top": 306,
+          "bottom": 425
+        },
+        {
+          "name": "board",
+          "left": 39,
+          "right": 1026,
+          "top": 444,
+          "bottom": 748
+        },
+        {
+          "name": "saved-needs",
+          "left": 39,
+          "right": 1026,
+          "top": 774,
+          "bottom": 1546
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 542,
+          "right": 1033,
+          "top": 1803,
+          "bottom": 1894
+        },
+        {
+          "text": "고치기",
+          "left": 33,
+          "right": 523,
+          "top": 1803,
+          "bottom": 1894
+        }
+      ]
+    },
+    {
+      "name": "guide-saved",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1.5,
+      "vh": 1920,
+      "doc": 2636,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 2431
+      },
+      "chunks": [
+        {
+          "name": "kicker",
+          "left": 59,
+          "right": 1007,
+          "top": 169,
+          "bottom": 230
+        },
+        {
+          "name": "haneuli-says haneuli-says-sm",
+          "left": 59,
+          "right": 1007,
+          "top": 250,
+          "bottom": 449
+        },
+        {
+          "name": "H1",
+          "left": 59,
+          "right": 1007,
+          "top": 449,
+          "bottom": 626
+        },
+        {
+          "name": "board",
+          "left": 59,
+          "right": 1007,
+          "top": 655,
+          "bottom": 1111
+        },
+        {
+          "name": "saved-needs",
+          "left": 59,
+          "right": 1007,
+          "top": 1150,
+          "bottom": 2314
+        }
+      ],
+      "clipped": [],
+      "controls": [
+        {
+          "text": "이대로 안내 받기",
+          "left": 547,
+          "right": 1016,
+          "top": 1745,
+          "bottom": 1881
+        },
+        {
+          "text": "고치기",
+          "left": 49,
+          "right": 518,
+          "top": 1745,
+          "bottom": 1881
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "vh": 844,
+      "doc": 1916,
+      "sw": -15,
+      "bar": {
+        "left": 5,
+        "right": 371,
+        "top": 12,
+        "bottom": 208
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 208,
+        "bottom": 1821
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 23,
+          "right": 353,
+          "top": 235,
+          "bottom": 1794
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 23,
+          "right": 353,
+          "top": 763,
+          "bottom": 826
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "vh": 844,
+      "doc": 3223,
+      "sw": 38,
+      "bar": {
+        "left": -53,
+        "right": 428,
+        "top": 12,
+        "bottom": 254
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 254,
+        "bottom": 3081
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 34,
+          "right": 341,
+          "top": 294,
+          "bottom": 3041
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 34,
+          "right": 341,
+          "top": 723,
+          "bottom": 817
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "vh": 633,
+      "doc": 743,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 78,
+        "right": 1187,
+        "top": 88,
+        "bottom": 660
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 101,
+          "right": 1164,
+          "top": 116,
+          "bottom": 646
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 101,
+          "right": 1164,
+          "top": 559,
+          "bottom": 619
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1280,
+      "height": 633,
+      "scale": 1.5,
+      "vh": 633,
+      "doc": 1163,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1265,
+        "top": 88,
+        "bottom": 1038
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 35,
+          "right": 1230,
+          "top": 130,
+          "bottom": 1017
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 35,
+          "right": 1230,
+          "top": 522,
+          "bottom": 612
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1333,
+      "height": 750,
+      "scale": 1,
+      "vh": 750,
+      "doc": 805,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 52,
+        "right": 1266,
+        "top": 88,
+        "bottom": 714
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 77,
+          "right": 1241,
+          "top": 118,
+          "bottom": 699
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 77,
+          "right": 1241,
+          "top": 669,
+          "bottom": 735
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1333,
+      "height": 750,
+      "scale": 1.5,
+      "vh": 750,
+      "doc": 1312,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1318,
+        "top": 88,
+        "bottom": 1176
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 38,
+          "right": 1280,
+          "top": 134,
+          "bottom": 1153
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 38,
+          "right": 1280,
+          "top": 629,
+          "bottom": 727
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1366,
+      "height": 657,
+      "scale": 1,
+      "vh": 657,
+      "doc": 780,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 90,
+        "right": 1261,
+        "top": 88,
+        "bottom": 692
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 114,
+          "right": 1237,
+          "top": 117,
+          "bottom": 677
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 114,
+          "right": 1237,
+          "top": 579,
+          "bottom": 642
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1366,
+      "height": 657,
+      "scale": 1.5,
+      "vh": 657,
+      "doc": 1223,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1351,
+        "top": 88,
+        "bottom": 1091
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 37,
+          "right": 1314,
+          "top": 132,
+          "bottom": 1069
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 37,
+          "right": 1314,
+          "top": 540,
+          "bottom": 635
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "vh": 937,
+      "doc": 1065,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 106,
+        "bottom": 929
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 205,
+          "right": 1700,
+          "top": 145,
+          "bottom": 890
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 205,
+          "right": 1700,
+          "top": 820,
+          "bottom": 911
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1920,
+      "height": 937,
+      "scale": 1.5,
+      "vh": 937,
+      "doc": 1631,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 106,
+        "bottom": 1426
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 49,
+          "right": 1856,
+          "top": 164,
+          "bottom": 1368
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 49,
+          "right": 1856,
+          "top": 762,
+          "bottom": 898
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "vh": 1080,
+      "doc": 1080,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 110,
+        "bottom": 944
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 205,
+          "right": 1700,
+          "top": 149,
+          "bottom": 894
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 205,
+          "right": 1700,
+          "top": 963,
+          "bottom": 1054
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1.5,
+      "vh": 1080,
+      "doc": 1635,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 110,
+        "bottom": 1430
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 49,
+          "right": 1856,
+          "top": 169,
+          "bottom": 1372
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 49,
+          "right": 1856,
+          "top": 905,
+          "bottom": 1041
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1024,
+      "height": 768,
+      "scale": 1,
+      "vh": 768,
+      "doc": 768,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 687
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 23,
+          "right": 987,
+          "top": 116,
+          "bottom": 643
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 23,
+          "right": 987,
+          "top": 696,
+          "bottom": 755
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1024,
+      "height": 768,
+      "scale": 1.5,
+      "vh": 768,
+      "doc": 1244,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1122
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 34,
+          "right": 975,
+          "top": 129,
+          "bottom": 1102
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 34,
+          "right": 975,
+          "top": 660,
+          "bottom": 748
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1,
+      "vh": 1920,
+      "doc": 1920,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 1784
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 39,
+          "right": 1026,
+          "top": 149,
+          "bottom": 1358
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 33,
+          "right": 1033,
+          "top": 1803,
+          "bottom": 1894
+        }
+      ]
+    },
+    {
+      "name": "guide-services",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1.5,
+      "vh": 1920,
+      "doc": 2402,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 2197
+      },
+      "chunks": [
+        {
+          "name": "guide-services",
+          "left": 59,
+          "right": 1007,
+          "top": 169,
+          "bottom": 2139
+        }
+      ],
+      "clipped": [
+        "sr-only"
+      ],
+      "controls": [
+        {
+          "text": "안내 끝내기",
+          "left": 49,
+          "right": 1016,
+          "top": 1745,
+          "bottom": 1881
+        }
+      ]
+    },
+    {
+      "name": "guide-home",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "vh": 844,
+      "doc": 1964,
+      "sw": -15,
+      "bar": {
+        "left": 5,
+        "right": 371,
+        "top": 12,
+        "bottom": 208
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 208,
+        "bottom": 1964
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 23,
+          "right": 353,
+          "top": 235,
+          "bottom": 1937
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 390,
+      "height": 844,
+      "scale": 1.5,
+      "vh": 844,
+      "doc": 4648,
+      "sw": 38,
+      "bar": {
+        "left": -53,
+        "right": 428,
+        "top": 12,
+        "bottom": 254
+      },
+      "main": {
+        "left": 0,
+        "right": 375,
+        "top": 254,
+        "bottom": 4648
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 34,
+          "right": 341,
+          "top": 294,
+          "bottom": 4608
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1280,
+      "height": 633,
+      "scale": 1,
+      "vh": 633,
+      "doc": 937,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 78,
+        "right": 1187,
+        "top": 88,
+        "bottom": 937
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 101,
+          "right": 1164,
+          "top": 116,
+          "bottom": 923
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1280,
+      "height": 633,
+      "scale": 1.5,
+      "vh": 633,
+      "doc": 1432,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1253,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1265,
+        "top": 88,
+        "bottom": 1432
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 35,
+          "right": 1230,
+          "top": 130,
+          "bottom": 1411
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1333,
+      "height": 750,
+      "scale": 1,
+      "vh": 750,
+      "doc": 1018,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 52,
+        "right": 1266,
+        "top": 88,
+        "bottom": 1018
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 77,
+          "right": 1241,
+          "top": 118,
+          "bottom": 1002
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1333,
+      "height": 750,
+      "scale": 1.5,
+      "vh": 750,
+      "doc": 1598,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1306,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1318,
+        "top": 88,
+        "bottom": 1598
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 38,
+          "right": 1280,
+          "top": 134,
+          "bottom": 1575
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1366,
+      "height": 657,
+      "scale": 1,
+      "vh": 657,
+      "doc": 984,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 90,
+        "right": 1261,
+        "top": 88,
+        "bottom": 984
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 114,
+          "right": 1237,
+          "top": 117,
+          "bottom": 970
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1366,
+      "height": 657,
+      "scale": 1.5,
+      "vh": 657,
+      "doc": 1506,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1339,
+        "top": 12,
+        "bottom": 88
+      },
+      "main": {
+        "left": 0,
+        "right": 1351,
+        "top": 88,
+        "bottom": 1506
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 37,
+          "right": 1314,
+          "top": 132,
+          "bottom": 1484
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1920,
+      "height": 937,
+      "scale": 1,
+      "vh": 937,
+      "doc": 1319,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 106,
+        "bottom": 1319
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 205,
+          "right": 1700,
+          "top": 145,
+          "bottom": 1280
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1920,
+      "height": 937,
+      "scale": 1.5,
+      "vh": 937,
+      "doc": 2024,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 106
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 106,
+        "bottom": 2024
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 49,
+          "right": 1856,
+          "top": 164,
+          "bottom": 1965
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "vh": 1080,
+      "doc": 1324,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 173,
+        "right": 1733,
+        "top": 110,
+        "bottom": 1324
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 205,
+          "right": 1700,
+          "top": 149,
+          "bottom": 1285
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1920,
+      "height": 1080,
+      "scale": 1.5,
+      "vh": 1080,
+      "doc": 2028,
+      "sw": -15,
+      "bar": {
+        "left": 281,
+        "right": 1625,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1905,
+        "top": 110,
+        "bottom": 2028
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 49,
+          "right": 1856,
+          "top": 169,
+          "bottom": 1969
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1024,
+      "height": 768,
+      "scale": 1,
+      "vh": 768,
+      "doc": 923,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 923
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 23,
+          "right": 987,
+          "top": 116,
+          "bottom": 910
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1024,
+      "height": 768,
+      "scale": 1.5,
+      "vh": 768,
+      "doc": 1837,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 997,
+        "top": 12,
+        "bottom": 89
+      },
+      "main": {
+        "left": 0,
+        "right": 1009,
+        "top": 89,
+        "bottom": 1837
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 34,
+          "right": 975,
+          "top": 129,
+          "bottom": 1816
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1,
+      "vh": 1920,
+      "doc": 1954,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 1954
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 39,
+          "right": 1026,
+          "top": 149,
+          "bottom": 1915
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    },
+    {
+      "name": "guide-home",
+      "width": 1080,
+      "height": 1920,
+      "scale": 1.5,
+      "vh": 1920,
+      "doc": 4010,
+      "sw": -15,
+      "bar": {
+        "left": 13,
+        "right": 1053,
+        "top": 12,
+        "bottom": 110
+      },
+      "main": {
+        "left": 0,
+        "right": 1065,
+        "top": 110,
+        "bottom": 4010
+      },
+      "chunks": [
+        {
+          "name": "kx-guide",
+          "left": 59,
+          "right": 1007,
+          "top": 169,
+          "bottom": 3952
+        }
+      ],
+      "clipped": [],
+      "controls": []
+    }
+  ],
+  "errors": []
+}

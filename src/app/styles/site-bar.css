@@ -9,6 +9,7 @@
 .public-site .public-header,
 .pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
+.staff-login-screen .staff-login-brand,
 .flow-pretrip .flow-bar {
   box-sizing: border-box;
   width: calc(100% - 2.5rem);
@@ -24,6 +25,7 @@
 .public-site .public-header { position: relative; top: auto; z-index: 30; }
 .pretrip-site .pretrip-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .field-task-shell .field-task-header { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
+.staff-login-screen .staff-login-brand { display: flex; align-items: center; }
 .field-task-shell .field-task-header > span { margin-left: auto; font-size: var(--text-small); }
 
 /* 바 안의 로고: 같은 크기 */
@@ -66,6 +68,7 @@
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
+  .staff-login-screen .staff-login-brand,
   .flow-pretrip .flow-bar {
     width: calc(100% - 1.5rem);
     border-radius: var(--radius-medium);
@@ -122,6 +125,7 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .public-site .public-header,
 .pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
+.staff-login-screen .staff-login-brand,
 .flow .flow-bar,
 html[data-kiosk] .flow .flow-bar {
   --site-bar-now: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
@@ -146,6 +150,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
+  .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
   html[data-kiosk] .flow .flow-bar { height: var(--site-bar-height); flex-shrink: 0; }
 }
@@ -154,6 +159,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
+  .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
   html[data-kiosk] .flow .flow-bar {
     height: auto; border-radius: var(--radius-medium); padding: var(--space-2) var(--space-3);
@@ -161,7 +167,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
 }
 
 /* 키오스크: 둥근 바 안에서 「도움 요청하기」 자리만큼 오른쪽을 비운다(바의 소리 단추와 겹치던 것). */
-html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: calc(var(--call-w, 14rem) + 3rem); }
+html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: var(--kiosk-bar-reserve, calc(var(--call-w, 14rem) + 3rem)); padding-top: var(--kiosk-bar-top, var(--space-2)); }
 /* 하늘이 첫 화면: 카메라를 쓸 수 없을 때의 안내가 좁은 칸에 갇혀 한 글자씩 줄바꿈되던 것을 위아래로 놓는다. */
 .haneuli-camera .scan { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); }
 .haneuli-camera .scan > .banner { width: 100%; }
@@ -171,12 +177,13 @@ html { scrollbar-gutter: stable; }
 .public-site .public-header,
 .pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
+.staff-login-screen .staff-login-brand,
 .flow .flow-bar,
 html[data-kiosk] .flow .flow-bar {
   font-family: var(--font-body); font-size: calc(14px * var(--scale, 1));
   line-height: 1.5; letter-spacing: 0;
 }
-:is(.public-header, .pretrip-header, .field-task-header) :is(.public-logo, .brand) {
+:is(.public-header, .pretrip-header, .field-task-header, .staff-login-brand) :is(.public-logo, .brand) {
   display: flex; align-items: center; gap: 8px; margin: 0;
   font-size: calc(16px * var(--scale, 1)); font-weight: 700;
   line-height: 1.5; letter-spacing: 0;
@@ -186,7 +193,7 @@ html[data-kiosk] .flow .flow-bar {
   font-size: calc(12px * var(--scale, 1)); font-weight: 400;
   line-height: 1.5; letter-spacing: .01em;
 }
-:is(.public-header, .pretrip-header, .field-task-header) .sunflower { width: 32px; height: 32px; flex: none; }
+:is(.public-header, .pretrip-header, .field-task-header, .staff-login-brand) .sunflower { width: 32px; height: 32px; flex: none; }
 :is(.public-header, .pretrip-header, .field-task-header, .flow-bar) :is(.public-tools, .prepare-tools, .field-task-tools, .flow-bar-right) {
   align-items: center; gap: 8px; margin: 0;
 }
@@ -246,4 +253,9 @@ html[data-kiosk] .flow .flow-bar {
 @media (max-width: 760px) {
   .airport-site .public-footer { display: block; border-radius: calc(var(--radius-medium) * 2); padding: var(--space-4) var(--space-5); }
   .airport-site .public-footer-links { margin-top: var(--space-3); }
+}
+
+/* 좁은 화면에서도 도움 단추는 오른쪽 위에 두고 탐색 단추를 그 아래로 감싼다. */
+@media (max-width: 760px) {
+  html[data-kiosk] { --kiosk-bar-reserve: var(--space-3); --kiosk-bar-top: calc(var(--target-kiosk-floor) + var(--space-4)); }
 }

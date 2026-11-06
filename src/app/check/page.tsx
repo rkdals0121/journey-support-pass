@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PublicShell } from "../components/PublicShell";
 import { DeviceCheck } from "./DeviceCheck";
 
 export const metadata: Metadata = { title: "기기 점검 · Journey Support Pass" };
@@ -7,8 +8,10 @@ export const metadata: Metadata = { title: "기기 점검 · Journey Support Pas
 // 여객 정보나 접속 코드는 다루지 않으므로 누구나 열 수 있다.
 export default function CheckPage() {
   return (
-    <main className="page">
-      <DeviceCheck />
-    </main>
+    <PublicShell>
+      <main id="public-main" className="service-page service-short-page">
+        <DeviceCheck />
+      </main>
+    </PublicShell>
   );
 }
