@@ -1,16 +1,17 @@
 :root {
-  --color-canvas: #F7F6F1;
+  --color-canvas: #F6F7F9;
   --color-surface: #FFFFFF;
-  --color-text: #1E2B25;
-  --color-muted: #5B6A62;
+  --color-text: #202622;
+  --color-muted: #606963;
   --color-line: #E3E6E0;
   --color-control-line: #7C8A80;
-  --color-primary: #2F5D46;
-  --color-primary-hover: #234A38;
+  --color-primary: #24543C;
+  --color-primary-hover: #173D2A;
   --color-primary-soft: #E8EFEA;
   --color-primary-faint: #F0F4F0;
-  --color-accent: #F9C80E;
-  --color-accent-soft: #FFF3C4;
+  --color-accent: #FFCD00;
+  --color-accent-hover: #F1BF00;
+  --color-accent-soft: #FFF5C2;
   --color-accent-ink: #5C4710;
   --color-error: #B23A2B;
   --color-error-soft: #FBECE9;
@@ -34,39 +35,16 @@
   --color-machine-ink: #000000;
   --color-machine-paper: #FFFFFF;
   --color-transparent: transparent;
-  --ink: var(--color-dark);
-  --ink-2: var(--color-primary-hover);
-  --ink-soft: var(--color-primary);
-  --green: var(--color-primary);
-  --green-press: var(--color-primary-hover);
-  --mint: var(--color-primary-soft);
-  --mint-2: var(--color-primary-faint);
-  --sun: var(--color-accent);
-  --sun-press: var(--color-accent);
-  --sun-soft: var(--color-accent-soft);
-  --sun-deep: var(--color-accent-ink);
-  --bg: var(--color-canvas);
-  --surface: var(--color-surface);
-  --line: var(--color-line);
-  --line-strong: var(--color-control-line);
-  --text: var(--color-text);
-  --muted: var(--color-muted);
-  --red: var(--color-error);
-  --red-bg: var(--color-error-soft);
-  --amber: var(--color-accent-ink);
-  --amber-bg: var(--color-accent-soft);
-  --ui-rule: var(--color-line);
-  --ui-muted: var(--color-muted);
   --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-num: var(--font-num-loaded), "Arial Narrow", sans-serif;
   --text-caption: .75rem; --text-small: .875rem; --text-body: 1rem; --text-heading: 1.25rem; --text-title: 1.75rem; --text-large: 2.5rem; --text-display: 3.5rem;
   --weight-body: 400; --weight-label: 600; --weight-heading: 700;
   --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem; --space-8: 4rem;
   --target-floor: 44px; --target-kiosk-floor: 64px;
-  --radius-small: .375rem; --radius-medium: .75rem; --radius-pill: 999rem;
+  --radius-small: .75rem; --radius-medium: 1.25rem; --radius-pill: 999rem;
   --radius: var(--radius-small); --radius-lg: var(--radius-medium);
-  --shadow-1: 0 .125rem .5rem var(--color-shadow); --shadow-2: 0 .5rem 2rem var(--color-shadow);
+  --shadow-1: 0 4px 16px rgb(25 45 32 / 5%); --shadow-2: 0 16px 48px rgb(25 45 32 / 7%);
   --motion-loading: 1.4s; --motion-spin: 1s; --motion-breathe: 4s; --motion-fast: 120ms; --motion-normal: 180ms; --motion-slow: 240ms; --ease-in: cubic-bezier(.4,0,1,1); --ease-out: cubic-bezier(0,0,.2,1);
   --nav-h: 4rem; --bar-h: 3.5rem; --col: 32.5rem;
 }
-@media (forced-colors: active) { :root { --color-primary: ButtonText; --color-text: CanvasText; --color-muted: CanvasText; --color-canvas: Canvas; --color-surface: Canvas; --color-line: CanvasText; --color-control-line: ButtonText; --color-focus: Highlight; --color-primary-hover: CanvasText; --color-primary-soft: Canvas; --color-primary-faint: Canvas; --color-accent: Canvas; --color-accent-soft: Canvas; --color-accent-ink: CanvasText; --color-dark: Canvas; --color-on-dark: CanvasText; --color-on-dark-muted: CanvasText; --color-error: CanvasText; --color-error-soft: Canvas; --color-blue: CanvasText; --color-blue-soft: Canvas; --color-purple: CanvasText; --color-purple-soft: Canvas; --color-rose: CanvasText; --color-rose-soft: Canvas; --ink: CanvasText; } }
+@media (forced-colors: active) { :root { --color-primary: ButtonText; --color-text: CanvasText; --color-muted: CanvasText; --color-canvas: Canvas; --color-surface: Canvas; --color-line: CanvasText; --color-control-line: ButtonText; --color-focus: Highlight; --color-primary-hover: CanvasText; --color-primary-soft: Canvas; --color-primary-faint: Canvas; --color-accent: Canvas; --color-accent-soft: Canvas; --color-accent-ink: CanvasText; --color-dark: Canvas; --color-on-dark: CanvasText; --color-on-dark-muted: CanvasText; --color-error: CanvasText; --color-error-soft: Canvas; --color-blue: CanvasText; --color-blue-soft: Canvas; --color-purple: CanvasText; --color-purple-soft: Canvas; --color-rose: CanvasText; --color-rose-soft: Canvas; } }
