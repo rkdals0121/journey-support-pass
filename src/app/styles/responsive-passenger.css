@@ -3,7 +3,6 @@
 :root {
   --page-gap: clamp(12px, 1.8vw, 32px);
   --form-inset: clamp(16px, 2vw, 32px);
-  --site-bar-height: clamp(76px, 10vh, 98px);
 }
 .airport-site .airport-portal { padding-inline: clamp(20px, 4vw, 64px); }
 .flow.flow-pretrip { width: 100%; margin-inline: auto; }
@@ -54,7 +53,6 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
   .flow-pretrip .flow-workspace { display: flex; flex-direction: column; }
   .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
   .flow-pretrip .flow-body { border: 1px solid var(--color-line); background: var(--color-surface); border-radius: var(--radius-medium); }
-  .flow-pretrip .flow-bar { height: auto; flex-wrap: wrap; gap: .5rem; }
   .flow-pretrip .flow-bar-right { flex-wrap: wrap; }
   .flow-pretrip[data-screen="consent"] .flow-body > .panel { display: block; }
   .flow-pretrip .registration-language > span { display: none; }
@@ -66,7 +64,6 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
     height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none;
   }
   .flow.flow-pretrip { height: 100dvh; min-height: 0; overflow: hidden; flex: 0 0 auto; }
-  .flow-pretrip .flow-bar { flex: 0 0 auto; height: auto; min-height: var(--site-bar-height); }
   .flow-pretrip .flow-progress { flex: 0 0 auto; padding-block: .625rem 0; }
   .flow-pretrip .flow-workspace { display: grid; flex: 1 1 0; min-height: 0; overflow: hidden; }
   html[data-kiosk] .flow-pretrip .flow-workspace { grid-template-columns: minmax(11rem, 16fr) minmax(0, 64fr) minmax(13rem, 20fr); }

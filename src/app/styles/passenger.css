@@ -376,7 +376,6 @@
 .pretrip-site .prepare-benefit { border: 0; background: none; padding-inline: 0; font-size: var(--text-small); }
 .airport-site .request-change-service { margin-left: auto; color: var(--color-primary-hover); font-size: var(--text-caption); font-weight: var(--weight-body); text-underline-offset: 0.3em; }
 .flow-pretrip .read-offer .fine { margin: 0; flex: 1 1 14rem; }
-.flow-pretrip .flow-bar { border-bottom: 0.0625rem solid var(--color-line); background: var(--color-surface); }
 .flow-pretrip .flow-progress .progress { display: none; }
 .flow-pretrip .flow-progress { justify-content: flex-end; padding-block: 1rem; }
 .flow-pretrip .flow-body .lead { font-size: var(--text-body); line-height: 1.65; margin-bottom: 1.5rem; }
@@ -405,7 +404,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .flow-pretrip .flow-desktop-steps li[aria-current="step"] span { background: var(--color-primary); color: var(--color-surface); }
 .flow-service-home .flow-bar > .brand { font-size: var(--text-body); margin: 0; }
 .flow-service-home .flow-bar-side { margin-left: auto; }
-.flow-service-home .flow-bar { gap: 0.75rem; }
 .task-home-intro { color: var(--color-dark); padding: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .task-home-intro > p { margin: 0 0 1.5rem; color: var(--color-primary-hover); font-size: var(--text-caption); letter-spacing: .08em; font-weight: var(--weight-label); }
 .task-home-intro > p span { margin-left: 0.75rem; font-weight: var(--weight-body); color: var(--color-muted); }
@@ -487,7 +485,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 @media (min-width:1100px) {
 .flow-pretrip { max-width:82rem; width:100%; margin:auto; }
 .flow-pretrip .flow-workspace { display:grid; grid-template-columns:13rem minmax(0,1fr) 16rem; gap:1.5rem; padding:1.5rem; }
-.flow-pretrip .flow-bar { max-width:none; }
 .flow-pretrip .flow-body { background:var(--color-surface); border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); padding:2rem; min-height:34rem; }
 .flow-pretrip .flow-progress { padding:1rem 1.5rem 0; }
 .flow-pretrip .flow-cta { padding:1rem 0; }
@@ -707,7 +704,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 }
 @media (min-width: 1000px) {
 .flow-pretrip .flow-workspace { grid-template-columns: 11rem minmax(0, 1fr) 14rem; }
-.flow-pretrip .flow-bar { padding-inline: 1.5rem; }
 .flow-pretrip .flow-cta-inner { max-width: none; }
 }
 @media (max-width: 1100px) {
@@ -752,7 +748,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .pretrip-site .prepare-intro h1 { font-size: var(--text-title); }
 .pretrip-site .prepare-intro > p { font-size: var(--text-body); }
 .pretrip-site .prepare-steps { border-left: 0; border-top: 0.0625rem solid var(--color-line); padding-left: 0; }
-.flow-pretrip .flow-bar { padding-inline: 0.75rem; }
 .flow-pretrip .flow-body h1 { font-size: var(--text-title); }
 .flow-pretrip .flow-progress { padding-inline: 1.25rem; }
 .flow-pretrip .choice { min-height: 3.75rem; padding: 1rem 0.5rem; }
