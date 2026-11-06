@@ -4,8 +4,8 @@
  * 두 곳이 어긋나지 않게 tests/design-theme.test.ts 가 tokens.css 와 견준다.
  */
 export const DESIGN_COLORS = {
-  canvas: "#F7F6F1",
-  primary: "#2F5D46",
+  canvas: "#F6F7F9",
+  primary: "#24543C",
 } as const;
 
 export function designColor(name: keyof typeof DESIGN_COLORS) {
