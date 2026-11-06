@@ -64,15 +64,10 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .flow-pretrip[data-screen="trouble"] .flow-body h1 { font-size: var(--text-title); }
 .flow-pretrip[data-screen="trouble"] .flow-body { padding-block: 1.25rem; }
 .flow-pretrip[data-screen="trouble"] .ph-step-tools { padding-block: .5rem; margin-bottom: .75rem; }
-.flow-pretrip[data-screen="trouble"] .choice {
-  min-height: clamp(4rem, calc(18vh - 4.5rem), 6rem);
-  padding: .875rem 1rem; gap: 1rem;
-}
 .flow-pretrip[data-screen="trouble"] .flow-body > .choices { row-gap: .5rem; }
 .flow-pretrip[data-screen="trouble"] .choice-icon { width: 2.5rem; height: 2.5rem; }
 .flow-pretrip[data-screen="trouble"] .choice-icon svg { width: 2.125rem; height: 2.125rem; }
 @media (min-width: 60rem) and (max-height: 48rem) {
-  .flow-pretrip[data-screen="trouble"] .choice { min-height: 3.5rem; padding-block: .375rem; }
   .flow-pretrip[data-screen="trouble"] .flow-body { padding-block: .75rem; }
 }
 .flow-pretrip[data-screen="trouble"] .flow-body > .fine { margin-block: .75rem 0; }
@@ -105,8 +100,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .airport-site .public-nav > a { border-radius: var(--radius-pill); }
 .airport-site :is(.request-section, .service-form-card, .request-submit-card, .request-empty-state),
 .flow-pretrip .flow-body { border-radius: var(--radius-medium); }
-.flow-pretrip .choice { border-radius: var(--radius-medium); }
-.flow-pretrip .choice[aria-checked=true] { background: var(--color-accent-soft); border-color: var(--color-primary); }
 /* 위쪽 바는 그대로, 두 박스가 남는 높이를 모두 쓰고 아래 안내 줄은 맨 아래에 붙는다. */
 .pretrip-site { display: flex; flex-direction: column; min-height: 100dvh; background: var(--color-canvas); }
 .pretrip-site .pretrip-header { max-width: 76rem; padding: 1.25rem 2rem; border: 0; }

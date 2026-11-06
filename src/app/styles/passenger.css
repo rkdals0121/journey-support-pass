@@ -387,9 +387,6 @@
 .flow-pretrip .flow-desktop-summary h2 { font-size: var(--text-body); margin-top: 0; }
 .flow-pretrip .flow-desktop-summary :is(p, li) { font-size: var(--text-caption); line-height: 1.7; }
 .flow-pretrip .choices { gap: 0; border-top: 0.0625rem solid var(--color-line); }
-.flow-pretrip .choice { border: 0; border-bottom: 0.0625rem solid var(--color-line); border-radius: 0; box-shadow: none; padding: 1rem 0.75rem; min-height: 4rem; font-size: var(--text-body); background: var(--color-surface); }
-.flow-pretrip .choice:hover { background: var(--color-canvas); transform: none; }
-.flow-pretrip .choice.choice-on { background: var(--color-primary-faint); border-bottom-color: var(--color-control-line); box-shadow: inset 0.1875rem 0 var(--color-primary); }
 html[data-kiosk] .flow-pretrip .choice-icon { width: 1.75rem; height: 1.75rem; border-radius: 0; background: none; }
 html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; width: 1.5rem; height: 1.5rem; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
 .flow-pretrip .choice-icon svg { width: 1.5rem; height: 1.5rem; }
@@ -427,7 +424,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .flow-pretrip .flow-desktop-steps li > button:hover { text-decoration: underline; }
 .flow-pretrip .flow-desktop-steps li > button small { margin-left: auto; font-size: var(--text-caption); }
 .flow-pretrip[data-screen="trouble"] .flow-body > .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; border: 0; }
-.flow-pretrip[data-screen="trouble"] .choice { border-top: 0.0625rem solid var(--color-primary-soft); border-bottom: 0; min-height: 5rem; }
 .flow-pretrip[data-screen="trouble"] .choice-text { font-size: var(--text-body); }
 .task-home-status:empty { display: none; }
 .design-gallery .gate-sign { background: var(--color-primary-faint); border-left: .25rem solid var(--color-accent); border-radius: var(--radius-small); align-items: flex-start; }
@@ -750,7 +746,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .pretrip-site .prepare-steps { border-left: 0; border-top: 0.0625rem solid var(--color-line); padding-left: 0; }
 .flow-pretrip .flow-body h1 { font-size: var(--text-title); }
 .flow-pretrip .flow-progress { padding-inline: 1.25rem; }
-.flow-pretrip .choice { min-height: 3.75rem; padding: 1rem 0.5rem; }
 .flow-pretrip .flow-cta-inner { padding: 0; }
 .flow-pretrip .flow-cta.cta-after { position: static; }
 }
@@ -780,7 +775,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .mobile-request-meta svg { width: 0.875rem; height: 0.875rem; flex: none; }
 .mobile-request-meta > svg { margin-left: auto; }
 .flow-pretrip[data-screen="trouble"] .flow-body > .choices { grid-template-columns: 1fr; }
-.flow-pretrip[data-screen="trouble"] .choice { min-height: 4.5rem; }
 }
 @media (min-width: 761px) {
 .task-home-services { padding-top: 1.5rem; }
