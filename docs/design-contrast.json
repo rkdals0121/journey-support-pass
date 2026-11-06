@@ -2,55 +2,55 @@
   {
     "fg": "text",
     "bg": "canvas",
-    "ratio": 13.6,
+    "ratio": 14.39,
     "pass": true
   },
   {
     "fg": "text",
     "bg": "surface",
-    "ratio": 14.71,
+    "ratio": 15.42,
     "pass": true
   },
   {
     "fg": "muted",
     "bg": "canvas",
-    "ratio": 5.27,
+    "ratio": 5.3,
     "pass": true
   },
   {
     "fg": "muted",
     "bg": "surface",
-    "ratio": 5.7,
+    "ratio": 5.68,
     "pass": true
   },
   {
     "fg": "surface",
     "bg": "primary",
-    "ratio": 7.57,
+    "ratio": 8.72,
     "pass": true
   },
   {
     "fg": "surface",
     "bg": "primary-hover",
-    "ratio": 9.96,
+    "ratio": 12.09,
     "pass": true
   },
   {
     "fg": "primary-hover",
     "bg": "primary-soft",
-    "ratio": 8.52,
+    "ratio": 10.34,
     "pass": true
   },
   {
     "fg": "accent-ink",
     "bg": "accent",
-    "ratio": 5.62,
+    "ratio": 5.92,
     "pass": true
   },
   {
     "fg": "accent-ink",
     "bg": "accent-soft",
-    "ratio": 7.98,
+    "ratio": 8.08,
     "pass": true
   },
   {
