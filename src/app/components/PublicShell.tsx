@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import { TextSizeControl } from "./TextSizeControl";
 import { Sunflower } from "./Sunflower";
@@ -32,6 +32,28 @@ export function PublicShell({
       document.documentElement.style.removeProperty("--scale");
     };
   }, [view.scale]);
+  // 메뉴가 바 안에 다 들어가지 않으면(영어·큰 글자 등) 휴대전화처럼 「메뉴」 단추로 접는다.
+  // 펼친 상태로 잠깐 되돌려 재고 같은 틀 안에서 다시 정하므로 화면이 깜빡이지 않는다.
+  const header = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const el = header.current;
+    const nav = el?.querySelector<HTMLElement>(".public-nav");
+    if (!el || !nav) return;
+    const measure = () => {
+      el.removeAttribute("data-compact");
+      const logo = el.querySelector(".public-logo")?.getBoundingClientRect();
+      const first = nav.firstElementChild?.getBoundingClientRect();
+      const tight =
+        nav.scrollWidth > nav.clientWidth + 1 ||
+        (!!logo && !!first && first.width > 0 && first.left < logo.right);
+      if (tight) el.setAttribute("data-compact", "");
+    };
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    document.fonts?.ready.then(measure).catch(() => {});
+    return () => watch.disconnect();
+  }, [view.scale, en]);
   const suffix = en ? "?lang=en" : "";
   const items = [
     ["/services", en ? "Find a service" : "서비스 찾기"],
@@ -45,7 +67,7 @@ export function PublicShell({
       <a className="public-skip" href="#public-main">
         {en ? "Skip to content" : "본문 바로가기"}
       </a>
-      <header className="public-header">
+      <header className="public-header" ref={header}>
         <div className="public-header-inner">
           <Link href={"/" + suffix} className="public-logo">
             <Sunflower />
