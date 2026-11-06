@@ -246,7 +246,7 @@
 .airport-service-filters > summary { cursor: pointer; min-height: max(2.75rem,var(--target-floor)); display: flex; align-items: center; justify-content: center; border: 0.0625rem solid var(--airport-line); border-radius: var(--radius-small); padding: 0.5rem 0.75rem; background: var(--color-surface); list-style: none; }
 .airport-service-filters > summary::-webkit-details-marker { display: none; }
 .airport-service-filters[open] { padding: 0; background: transparent; border: 0; }
-.airport-service-filters[open] .public-filter { display: grid; position: absolute; top: 100%; right: 0; gap: 0.25rem; margin: 0.5rem 0 0; min-width: 12rem; padding: 0.5rem; background: var(--color-surface); border: 0.0625rem solid var(--airport-line); border-radius: var(--radius-small); box-shadow: 0 0.5rem 1.875rem var(--color-dark); }
+.airport-service-filters[open] .public-filter { display: grid; position: absolute; top: 100%; right: 0; gap: 0.25rem; margin: 0.5rem 0 0; min-width: 12rem; padding: 0.5rem; background: var(--color-surface); border: 0.0625rem solid var(--airport-line); border-radius: var(--radius-small); box-shadow: var(--shadow-2); }
 .airport-service-filters .public-filter button { font-size: var(--text-small); min-height: max(2.75rem,var(--target-floor)); }
 .airport-service-grid:empty { display: none; }
 .airport-service-item:nth-child(3n) { border-right: 0; }
