@@ -1,46 +1,25 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Plane, Stamp } from "lucide-react";
 import { MyRequestPanel } from "./MyRequestPanel";
 export function PortalSupport({ lang = "ko", showRequests = true, showPrepare = true }: { lang?: "ko" | "en"; showRequests?: boolean; showPrepare?: boolean }) {
   const en = lang === "en";
   return (
-    <section
-      className="airport-portal-support"
-      aria-label={en ? "Your journey" : "여행과 요청 관리"}
-    >
-      <div className="airport-portal-links">
-        {showPrepare && <Link
-          className="airport-prepare-link"
-          href={"/prepare" + (en ? "?lang=en" : "")}
-        >
-          <div>
-            <h2>
-              {en ? "Prepare before you travel" : "출발 전에 지원을 준비하세요"}
-            </h2>
-            <p>
-              {en
-                ? "Connect your flight and save your support needs."
-                : "항공편 예약 후 필요한 지원을 미리 등록하세요."}
-            </p>
-          </div>
-          <ArrowUpRight size={22} aria-hidden="true" />
-        </Link>}
-        {/* 스탬프북은 한국어 화면만 있다. */}
-        <Link className="airport-prepare-link airport-stamp-link" href="/stamp">
-          <div>
-            <h2>
-              {en ? "Airport stamp book for kids (Korean)" : "아이와 함께라면, 공항 스탬프북"}
-            </h2>
-            <p>
-              {en
-                ? "Scan checkpoint QR codes and collect six stamps."
-                : "체크포인트 QR을 찍어 도장 6개를 모으고 인증 사진을 받아요."}
-            </p>
-          </div>
-          <ArrowUpRight size={22} aria-hidden="true" />
+    <>
+      {showPrepare && <article className="task-action">
+        <Plane className="task-action-icon" aria-hidden="true" />
+        <Link className="task-action-link" href={"/prepare" + (en ? "?lang=en" : "")}>
+          <span><strong>{en ? "Before you travel" : "여행 전 지원 등록"}</strong><small>{en ? "Save your flight and support needs." : "항공편과 필요한 도움을 미리 등록하세요."}</small></span>
+          <ArrowUpRight aria-hidden="true" />
         </Link>
-      </div>
-      {showRequests && <MyRequestPanel lang={lang} />}
-    </section>
+      </article>}
+      <article className="task-action">
+        <Stamp className="task-action-icon" aria-hidden="true" />
+        <Link className="task-action-link" href="/stamp">
+          <span><strong>{en ? "Airport stamp book (Korean)" : "공항 스탬프북"}</strong><small>{en ? "Collect six checkpoint stamps." : "아이와 체크포인트 도장 6개를 모아요."}</small></span>
+          <ArrowUpRight aria-hidden="true" />
+        </Link>
+      </article>
+      {showRequests && <MyRequestPanel lang={lang} appearance="service-card" />}
+    </>
   );
 }

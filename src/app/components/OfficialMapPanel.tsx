@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { OFFICIAL_AIRPORT_MAP } from "@/lib/official-map";
-export function OfficialMapPanel({ en = false }: { en?: boolean }) {
+export function OfficialMapPanel({ en = false, appearance = "standard" }: { en?: boolean; appearance?: "standard" | "service" }) {
   const [open, setOpen] = useState(false);
   return (
     <details
-      className="official-map-panel"
+      className={appearance === "service" ? "service-map-panel" : "official-map-panel"}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
       <summary>

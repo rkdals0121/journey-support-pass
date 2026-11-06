@@ -48,8 +48,8 @@
 .ph-list .task-action-link small { display: block; margin-top: var(--space-2); color: var(--color-muted); font-size: var(--text-small); line-height: 1.5; }
 .ph-list .task-action-link > svg { position: absolute; right: var(--space-4); top: var(--space-4); width: 1rem; height: 1rem; color: var(--color-primary); }
 .ph-list .task-action-stamp { background: var(--color-accent-soft); }
-.public-site:has(.ph-home) { display: flex; flex-direction: column; min-height: 100dvh; }
-.public-site:has(.ph-home) > main { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
+.public-site:has(.ph-home), .public-site:has(.service-short-page) { display: flex; flex-direction: column; min-height: 100dvh; }
+.public-site:has(.ph-home) > main, .public-site:has(.service-short-page) > main { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
 @media (min-width: 1101px) {
   .ph-home { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
   .ph-hero { grid-column: 1 / -1; }
