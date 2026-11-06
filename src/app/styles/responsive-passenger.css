@@ -4,6 +4,16 @@
   --page-gap: clamp(12px, 1.8vw, 32px);
   --form-inset: clamp(16px, 2vw, 32px);
 }
+/* ── 사전등록 선택 칸(.choice): 이 파일 한 곳에서 정한다. 아래 화면 크기별 규칙이 높이·여백을 다시 조정한다. ── */
+.flow-pretrip .choice { border: 0; border-bottom: 0.0625rem solid var(--color-line); box-shadow: none; font-size: var(--text-body); background: var(--color-surface); }
+.flow-pretrip .choice:hover { background: var(--color-canvas); transform: none; }
+.flow-pretrip[data-screen="trouble"] .choice { border-top: 0.0625rem solid var(--color-primary-soft); border-bottom: 0; }
+.flow-pretrip[data-screen="trouble"] .choice { gap: 1rem; }
+.flow-pretrip .choice.choice-on { background: var(--color-primary-faint); border-bottom-color: var(--color-control-line); box-shadow: inset 0.1875rem 0 var(--color-primary); }
+.flow-pretrip .choice { border-radius: var(--radius-medium); }
+.flow-pretrip .choice[aria-checked=true] { background: var(--color-accent-soft); border-color: var(--color-primary); }
+.flow-pretrip[data-screen="trouble"] .choice,
+.flow-pretrip .choice { min-height: 3.5rem; padding: var(--space-3) var(--space-4); }
 .airport-site .airport-portal { padding-inline: clamp(20px, 4vw, 64px); }
 .flow.flow-pretrip { width: 100%; margin-inline: auto; }
 html[data-kiosk] .flow.flow-pretrip { max-width: 96rem; }
