@@ -81,6 +81,7 @@ export function FacilityMapPicker({
   const [queries, setQueries] = useState({start:"",destination:""});
   const query = queries[selectionRole];
   const setQuery = (value: string) => setQueries(previous => ({...previous,[selectionRole]:value}));
+  const [areaChoice, setAreaChoice] = useState<{context: string; area: "LAND" | "AIR"} | null>(null);
   const [filter, setFilter] = useState<FacilityFilter>("all");
   const [showResults, setShowResults] = useState(false);
   const [landmarks, setLandmarks] = useState(true);
@@ -91,11 +92,16 @@ export function FacilityMapPicker({
   const selected = mapFacilityOf(value);
   // Explicit terminal navigation is independent of the previously selected facility.
   const activeBuilding = restrictToPickup && pickup ? areaBuilding(pickup.area) : selectedBuilding ?? building;
+  const fixedArea = restrictToPickup && pickup ? (pickup.landside ? "LAND" : "AIR") : null;
+  const areaAnchor = selectionRole === "destination" ? start : selected;
+  const defaultArea = activeBuilding === 3 ? "AIR" : areaAnchor?.building === activeBuilding ? areaAnchor.area : "LAND";
+  const areaContext = `${activeBuilding}:${selectionRole}:${start?.id ?? ""}:${selected?.id ?? ""}`;
+  const securityArea = fixedArea ?? (areaChoice?.context === areaContext ? areaChoice.area : defaultArea) as "LAND" | "AIR";
   const effectiveFilter = pickupSelection ? "all" : filter;
   const allowedIds = allowedFacilityIds === undefined ? null : new Set(allowedFacilityIds.map(String));
-  const eligible = (p: MapFacility) => (!allowedIds || allowedIds.has(String(p.id))) && (!restrictToPickup || facilityAllowed(pickup ?? null, p));
-  // Pickup eligibility limits selection, never the facilities drawn on the airport map.
-  const displayed = facilitiesForMapDisplay(activeBuilding, effectiveFilter, query);
+  const eligible = (p: MapFacility) => p.area === securityArea && (!allowedIds || allowedIds.has(String(p.id))) && (!restrictToPickup || facilityAllowed(pickup ?? null, p));
+  // Show the chosen security area, independently of pickup-specific eligibility.
+  const displayed = facilitiesForMapDisplay(activeBuilding, effectiveFilter, query, securityArea);
   const filtered = displayed.filter(eligible);
   const filtering = effectiveFilter !== "all" || query.trim().length > 0;
   const t = (ko: string, english: string) => en ? english : ko;
@@ -120,13 +126,14 @@ export function FacilityMapPicker({
     setNotice("");
     setMapError("");
     setShowResults(false);
-    // Category and query deliberately survive a selection and role changes.
+    // Keep each endpoint query, while the next role uses the selected security area.
     onChange(facilityId(p));
     setViewRevision(n => n + 1);
   }
 
   const state: MapState = {
     building: activeBuilding,
+    securityArea,
     checkpointSelection: false,
     showCheckpoints: false,
     selectedPoiId: selected?.building === activeBuilding ? selected.id : null,
@@ -158,13 +165,21 @@ export function FacilityMapPicker({
         <span className={styles.floor}>{t("3층", "3F")}</span>
       </div>
   );
+  const areaControls = <div className={styles.areaTabs} role="group" aria-label={t("보안검색 구역", "Security area")}>
+    {(["LAND", "AIR"] as const).map(area => <button key={area} type="button" aria-pressed={securityArea === area}
+      disabled={disabled || (activeBuilding === 3 && area === "LAND") || (!!fixedArea && fixedArea !== area)}
+      onClick={() => {setAreaChoice({context:areaContext, area});setShowResults(false);setNotice("");setViewRevision(v => v + 1);}}>
+      <strong>{area === "LAND" ? t("보안검색 전", "Before security") : t("보안검색 후", "After security")}</strong>
+      <small>{area === "LAND" ? t("랜드사이드", "Landside") : t("에어사이드", "Airside")}</small>
+    </button>)}
+  </div>;
   const searchControls = (
     <div className={styles.searchWrap}>
         <label htmlFor={id} className={styles.searchLabel}><Search className={styles.searchIcon} aria-hidden="true" />{pickupSelection ? t("만날 탑승구 검색", "Find a meeting gate") : t("시설·탑승구 검색", "Find a facility or gate")}</label>
         <div className={styles.searchRow}>
           <input id={id} type="search" value={query} disabled={disabled} maxLength={100}
             placeholder={pickupSelection ? t("출발할 탑승구 번호", "Starting gate number") : t("예: 화장실, 약국, 25번", "e.g. restroom, pharmacy, gate 25")}
-            onChange={e => { setQuery(e.target.value); setShowResults(true); }} />
+            onChange={e => { setQuery(e.target.value); setFilter("all"); setShowResults(true); }} />
           {(query || filter !== "all") && <button type="button" className={styles.reset} disabled={disabled}
             onClick={() => { setQuery(""); setFilter("all"); setShowResults(false); }}>
             {t("초기화", "Reset")}
@@ -251,17 +266,19 @@ export function FacilityMapPicker({
         </select>
       </nav>
       {panelOpen && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
-        <header className={styles.panelHeading}>
+        <div className={styles.panelTop}><header className={styles.panelHeading}>
           {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")} title={t("뒤로 가기", "Go back")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg></a>}
           <div className={styles.panelTitle}><span>{t("3층 안내", "3F guide")}</span><h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1></div>
           {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
         </header>
-        {kioskPanel}{showSelectionTools && <>{searchControls}{filterControls}{nearbyControls}</>}{errors}{kioskFooter}
-        <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details>
+        {kioskPanel}</div>
+        <div className={styles.panelContent}>{showSelectionTools && <>{areaControls}{searchControls}{filterControls}{nearbyControls}</>}{errors}
+        <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details></div>
+        <div className={styles.panelFooter}>{kioskFooter}</div>
       </aside>}
     </div>
   );
   return <div className={styles.picker} data-kiosk={kiosk}>
-    {terminalControls}{searchControls}{filterControls}{nearbyControls}{metaControls}{mapView}{errors}{notices}
+    {terminalControls}{areaControls}{searchControls}{filterControls}{nearbyControls}{metaControls}{mapView}{errors}{notices}
   </div>;
 }

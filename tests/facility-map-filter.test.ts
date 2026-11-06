@@ -15,6 +15,18 @@ describe("facility map filtering", () => {
     expect(facilitiesForMapDisplay(1, "restroom", "")).toEqual(MAP_FACILITIES.filter(p => p.building === 1 && p.category === 112));
     expect(facilitiesForMapDisplay(2, "all", "").every(p => p.building === 2)).toBe(true);
   });
+  it("keeps facilities in the chosen security area for both terminal maps", () => {
+    for (const building of [1, 2]) {
+      for (const area of ["LAND", "AIR"] as const) {
+        const results = facilitiesForMapDisplay(building, "all", "", area);
+        expect(results.length).toBeGreaterThan(0);
+        expect(results.every(p => p.building === building && p.area === area)).toBe(true);
+        const desks = facilitiesForMapDisplay(building, "all", "안내데스크", area);
+        expect(desks.every(p => p.area === area && p.category === 57)).toBe(true);
+      }
+    }
+    expect(facilitiesForMapDisplay(3, "all", "", "LAND")).toEqual([]);
+  });
   it("shows restroom facilities only, including when searching instead of using the category button", () => {
     for (const p of MAP_FACILITIES) {
       expect(facilityMatches(p, "restroom", "")).toBe(p.category === 112);

@@ -51,7 +51,7 @@ export default async function HelpPage({
       initialBusiness={business?.id}
       mobilityHomeHref={mobility ? "/help?"+new URLSearchParams({topic:"mobility",...(q.lang==="en"?{lang:"en"}:{}),...(q.place?{place:q.place}:{}),...(session?.isKiosk?{returnTo:kioskReturn(q.returnTo)??"/kiosk/guide"}:{})}).toString() : undefined}
       initialTask={mobility && q.task === "mobility-vehicle" ? q.task : undefined}
-      initialMobilityMode={q.flow === "robot" ? "robot" : "staff"}
+      initialMobilityMode={q.flow === "robot" && q.task !== "mobility-vehicle" ? "robot" : "staff"}
       initialNote=""
       returnTo={session?.isKiosk ? kioskReturn(q.returnTo) : undefined}
       freshShared={session?.isKiosk === true && q.fresh === "1"}

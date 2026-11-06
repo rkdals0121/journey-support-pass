@@ -1307,7 +1307,7 @@ export function HelpFlow({
               }}
             >
               <div className="request-form-main">
-                {service === "mobility" && (<MobilityMapPlanner initialSupportMode={initialMobilityMode} placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
+                {service === "mobility" && (<MobilityMapPlanner initialSupportMode={task?.id === "mobility-vehicle" ? "staff" : initialMobilityMode} placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
                         en={en} disabled={busy} kiosk={sharedDevice} destinationEnabled={task?.id !== "mobility-wheelchair"}
                         requestContent={<>{requestDetails}{requestAdditional}{error && <p role="alert">{error}</p>}{requestSummary}</>}
                         backHref={mobilityHomeHref ?? returnTo ?? (en ? "/?lang=en" : "/")}

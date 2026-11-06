@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeftRight, Flag, LocateFixed, MapPin, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { FacilityMapPicker } from "./FacilityMapPicker";
 import { useSpeech } from "./useSpeech";
-import { facilityId, mapFacilityOf, type MapFacility } from "@/lib/map-facilities";
+import { facilityId, mapFacilityOf, mapFacilityPlace, type MapFacility } from "@/lib/map-facilities";
 import type { Place } from "@/lib/airport";
 import type { MapState } from "../../../components/AirportMap";
 import styles from "../navigate/navigation-map.module.css";
@@ -169,7 +169,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       </div>
     </>}
   </>;
-  const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction : null;
+  const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction ?? mapFacilityPlace(facilityId(start)) : null;
   return <div ref={shell} className={styles.planner} data-kiosk={kiosk}>
     <FacilityMapPicker value={(activeMode === "start" ? start : end) ? facilityId((activeMode === "start" ? start : end)!) : ""}
       onChange={choose} en={en} kiosk={kiosk} disabled={disabled} fullscreen hideSelection
@@ -180,9 +180,9 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       showSelectionTools={showSelectionTools}
       additionalHelp={additionalHelp}
       kioskTitle={title} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{voiceControls}{showSelectionTools && controls}</div>}
-      kioskFooter={<>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
+      kioskFooter={<div aria-label={t("경로와 지원 진행", "Route and assistance actions")}>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
         {beforeControls && <details className={styles.moreInfo}><summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}</details>}
-      </>}
+      </div>}
       onRoute={response=>{if(route)setResult({key:routeKey,distance:response?.distance ?? null,error:response ? "" : t("연결된 통로를 찾지 못했어요. 현장 안내를 요청해 주세요.", "No connected route was found. Please ask staff.")});}}
       onError={message=>setResult({key:routeKey,distance:null,error:message})}/>
   </div>;

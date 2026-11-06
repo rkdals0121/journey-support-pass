@@ -11,7 +11,7 @@
 .fullscreen{--panel-width:clamp(22rem,31vw,30rem);position:fixed;inset:0;z-index:25;background:var(--color-canvas);isolation:isolate;color:var(--color-text)}
 .mapBackground{position:absolute;inset:0;z-index:0}.mapBackground>.map{width:100%;height:100%;border:0;border-radius:0;overflow:auto}
 .mapToolbar{position:absolute;top:0;left:var(--panel-width);right:0;z-index:2;display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;background:transparent;padding:var(--space-2);max-height:40%;overflow:auto}.fullscreen[data-panel-open=false] .mapToolbar{left:0}.mapToolbar .tabs,.mapToolbar .filters{gap:var(--space-1)}.mapToolbar .floor{margin-left:0}.mapToolbar button,.panelHeading button,.panelHeading a{min-width:4rem;min-height:4rem;padding:var(--space-2) var(--space-3);border:1px solid var(--color-control-line);border-radius:var(--radius-medium);background:var(--color-surface);color:var(--color-primary);font:inherit;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center}.mapToolbar button[aria-pressed=true]{background:var(--color-primary);color:var(--color-surface)}.mapToolbar button:disabled{opacity:.55}.panelToggle{flex-shrink:0;box-shadow:var(--shadow-1)}.terminalSelect{width:14rem;flex:0 1 14rem;min-width:0;max-width:calc(100% - 5rem);min-height:4rem;padding:var(--space-2) var(--space-4);border:1px solid var(--color-control-line);border-radius:var(--radius-pill);background:var(--color-surface);color:var(--color-primary);font:inherit;box-shadow:var(--shadow-1);cursor:pointer}.terminalSelect:focus-visible{outline:2px solid var(--color-focus);outline-offset:var(--space-1)}.sidePanel .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}.sidePanel .filters button{min-height:4rem;display:flex;align-items:center;justify-content:flex-start;gap:var(--space-2);font-size:var(--text-body);font-weight:var(--weight-label);padding:var(--space-3);min-width:0;white-space:normal;text-align:left}.filters button svg{width:1.5rem;height:1.5rem;flex-shrink:0}.filters button .selectedCheck{margin-left:auto;width:1.25rem;height:1.25rem}.filters button[aria-pressed=true]{border-color:var(--color-primary);box-shadow:inset 0 0 0 1px var(--color-primary)}
-.sidePanel{position:absolute;inset:0 auto 0 0;z-index:3;width:var(--panel-width);overflow:auto;overscroll-behavior:contain;background:var(--color-surface);border-right:1px solid var(--color-line);padding:var(--space-5);display:grid;gap:var(--space-4);align-content:start;min-width:0}.panelHeading{display:flex;align-items:center;gap:var(--space-2);justify-content:space-between}.panelHeading .backButton{flex:0 0 4rem;padding:var(--space-2);border-radius:var(--radius-pill)}.panelHeading h1{flex:1;min-width:0;font-size:var(--text-title);line-height:1.3;margin:0;font-weight:var(--weight-heading)}.sidePanel .results{position:static;box-shadow:none;max-height:18rem}.sidePanel .nearbyCards{grid-template-columns:minmax(0,1fr)}.sidePanel .nearbyCards button{min-height:4rem;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-2)}.sidePanel .nearbyCards strong{font-size:var(--text-body)}.sidePanel .nearbyCards small{grid-column:1 / -1;font-size:var(--text-small)}.sidePanel .mapMeta{display:grid;gap:var(--space-1)}.sidePanel .searchRow{flex-wrap:wrap;position:relative}.searchIcon{width:1.25rem;height:1.25rem;color:var(--color-primary);flex-shrink:0}.sidePanel .searchRow input{min-height:4rem;font-size:var(--text-body);background:var(--color-canvas)}.sidePanel .reset,.sidePanel .selection button{min-height:4rem}.sidePanel .landmarkToggle{min-height:4rem}.sidePanel .nearbyTitle{display:grid}.sidePanel .hint{font-size:var(--text-small)}.sidePanel button:focus-visible,.sidePanel a:focus-visible,.mapToolbar button:focus-visible{outline:2px solid var(--color-focus);outline-offset:var(--space-1)}
+.sidePanel{position:absolute;inset:0 auto 0 0;z-index:3;width:var(--panel-width);overscroll-behavior:contain;background:var(--color-surface);border-right:1px solid var(--color-line);display:grid;grid-template-rows:minmax(0,auto) minmax(4rem,1fr) minmax(0,auto);min-height:0;min-width:0}.panelHeading{display:flex;align-items:center;gap:var(--space-2);justify-content:space-between}.panelHeading .backButton{flex:0 0 4rem;padding:var(--space-2);border-radius:var(--radius-pill)}.panelHeading h1{flex:1;min-width:0;font-size:var(--text-title);line-height:1.3;margin:0;font-weight:var(--weight-heading)}.sidePanel .results{position:static;box-shadow:none;max-height:none;overflow:visible}.sidePanel .nearbyCards{grid-template-columns:minmax(0,1fr)}.sidePanel .nearbyCards button{min-height:4rem;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-2)}.sidePanel .nearbyCards strong{font-size:var(--text-body)}.sidePanel .nearbyCards small{grid-column:1 / -1;font-size:var(--text-small)}.sidePanel .mapMeta{display:grid;gap:var(--space-1)}.sidePanel .searchRow{flex-wrap:wrap;position:relative}.searchIcon{width:1.25rem;height:1.25rem;color:var(--color-primary);flex-shrink:0}.sidePanel .searchRow input{min-height:4rem;font-size:var(--text-body);background:var(--color-canvas)}.sidePanel .reset,.sidePanel .selection button{min-height:4rem}.sidePanel .landmarkToggle{min-height:4rem}.sidePanel .nearbyTitle{display:grid}.sidePanel .hint{font-size:var(--text-small)}.sidePanel button:focus-visible,.sidePanel a:focus-visible,.mapToolbar button:focus-visible{outline:2px solid var(--color-focus);outline-offset:var(--space-1)}
 @media(orientation:portrait){.fullscreen{--panel-width:100%}.sidePanel{top:auto;right:0;bottom:0;width:100%;max-height:54svh;border-top:1px solid var(--color-line);border-right:0}.mapToolbar{left:0;max-height:30%}.sidePanel .nearbyCards{grid-template-columns:minmax(0,1fr)}}
 
 /* Request controls stay in the map workspace rather than another page below it. */
@@ -21,7 +21,7 @@
 .sidePanel :global(.request-submit-card) button{width:100%;min-height:4rem}.sidePanel :global(.request-service-options) label{min-height:4rem;font-size:var(--text-body);padding:var(--space-3)}.sidePanel :global(.request-consent){font-size:var(--text-small);line-height:1.6;padding:var(--space-3) 0}
 
 .mapHelp{border-top:1px solid var(--color-line);padding-top:var(--space-2);min-width:0}.mapHelp summary{min-height:3rem;align-content:center;font-size:var(--text-small);font-weight:var(--weight-label);color:var(--color-primary);cursor:pointer}.mapHelp[open]{display:grid;gap:var(--space-2)}.mapHelp summary:focus-visible{outline:2px solid var(--color-focus);outline-offset:var(--space-1)}
-@media(max-width:760px){.sidePanel{padding:var(--space-4);gap:var(--space-3)}.panelHeading h1{font-size:var(--text-heading)}.sidePanel .filters button{min-height:3.5rem}.sidePanel .filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.panelTop,.panelContent,.panelFooter{padding:var(--space-3)}.panelHeading h1{font-size:var(--text-heading)}.sidePanel .filters button{min-height:3.5rem}.sidePanel .filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .panelTitle{flex:1;min-width:0}.panelTitle>span{display:block;margin-bottom:var(--space-1);font-size:var(--text-small);font-weight:var(--weight-label);color:var(--color-muted)}.moreFacilities{min-width:0;display:grid;gap:var(--space-2)}.moreFacilities summary{display:flex;align-items:center;gap:var(--space-2);list-style:none;min-height:4rem;padding:var(--space-3);border:1px solid var(--color-control-line);border-radius:var(--radius-medium);font-size:var(--text-body);font-weight:var(--weight-label);color:var(--color-primary);background:var(--color-surface);cursor:pointer}.moreFacilities summary:focus-visible{outline:3px solid var(--color-focus);outline-offset:var(--space-1)}.moreFacilities[open]{grid-column:1 / -1}.moreFacilities[open] summary{background:var(--color-primary-faint);margin-bottom:var(--space-2)}
 
@@ -29,3 +29,66 @@
 .facilityCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
 .sidePanel .facilityCards button{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:var(--space-2);min-height:8rem;padding:var(--space-4);border-color:var(--color-line);background:var(--color-surface);color:var(--color-text);font-size:var(--text-body);overflow-wrap:anywhere}
 .sidePanel .facilityCards button>svg{width:2rem;height:2rem;color:var(--color-primary)}.sidePanel .facilityCards button>span{font-size:var(--text-body);font-weight:var(--weight-heading);line-height:1.4}.facilityCards button small{font-size:var(--text-small);font-weight:var(--weight-body);color:var(--color-muted)}.sidePanel .facilityCards button[aria-pressed=true]{background:var(--color-primary);color:var(--color-on-dark);border-color:var(--color-primary)}.sidePanel .facilityCards button[aria-pressed=true]>svg,.facilityCards button[aria-pressed=true] small{color:var(--color-on-dark)}.sidePanel .facilityCards button .selectedCheck{position:absolute;top:var(--space-3);right:var(--space-3);width:1.25rem;height:1.25rem}.facilityCards button:disabled{opacity:.6;cursor:default}
+
+.panelTop,
+.panelContent,
+.panelFooter {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+.panelTop {
+  max-height: 48dvh;
+  border-bottom: 1px solid var(--color-line);
+}
+.panelContent {
+  padding-block: var(--space-3);
+}
+.panelFooter {
+  max-height: 35dvh;
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+.panelFooter:empty { display: none; }
+.panelFooter :global(form) { min-width: 0; }
+
+.areaTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  min-width: 0;
+}
+.areaTabs button {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: 4rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-control-line);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.areaTabs button[aria-pressed=true] {
+  background: var(--color-primary);
+  color: var(--color-on-dark);
+}
+.areaTabs strong { font-size: var(--text-body); }
+.areaTabs small { font-size: var(--text-small); }
+.areaTabs button:disabled { opacity: .55; cursor: default; }
+.areaTabs button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-1);
+}
+@media (orientation: portrait) {
+  .sidePanel { height: 54svh; }
+  .panelTop { max-height: 24svh; }
+  .panelFooter { max-height: 20svh; }
+}

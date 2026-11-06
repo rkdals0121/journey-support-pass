@@ -15,6 +15,7 @@ export type MapLocation =
 
 export type MapState = {
   building?: 1 | 2 | 3;
+  securityArea?: "LAND" | "AIR";
   /** Select a registered entrance checkpoint. Disable after matching. */
   checkpointSelection?: boolean;
   showCheckpoints?: boolean;
@@ -141,7 +142,7 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title="공항 실내지도"
-      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=haneuli-controls-ui-17" : "/airport-map/index.html?v=haneuli-controls-ui-17"}
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=service-area-actions-18" : "/airport-map/index.html?v=service-area-actions-18"}
       loading="eager"
       className={className}
       style={{

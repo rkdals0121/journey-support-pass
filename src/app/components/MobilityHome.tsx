@@ -29,10 +29,10 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo=""}: {en?:
   const cards=[
     {title:t("길 안내","Directions"),detail:t("탑승구 · 화장실 · 쉼터","Gates · restrooms · rest areas"),Icon:Navigation,url:href("/navigate",{entry:"mobility"})},
     {title:t("전동차 타기","Electric cart"),detail:t("직원과 이동할 곳을 정해요","Arrange your ride with staff"),Icon:CarFront,url:href("/help",{topic:"mobility",flow:"staff",task:"mobility-vehicle",fresh:"1"})},
-    {title:t("하늘이 동행","Walk with Haneuli"),detail:t("로봇과 함께 가는 길","Guidance with Journey Bot"),Icon:Bot,url:href("/help",{topic:"mobility",flow:"robot",fresh:"1"})},
-    {title:t("내 신청","My requests"),detail:t("직원이 오는지 확인","Check your request status"),Icon:ClipboardCheck,url:href("/requests")},
+    {title:t("안내로봇 동행","Guide robot assistance"),detail:t("로봇과 함께 가는 길","Walk with a guide robot"),Icon:Bot,url:href("/help",{topic:"mobility",flow:"robot",fresh:"1"})},
+    {title:t("내 신청","My requests"),detail:t("직원·로봇 지원과 예약 확인","Staff, robot & meeting status"),Icon:ClipboardCheck,url:href("/requests")},
   ];
-  const menuText=t("무엇을 도와드릴까요? 길 안내, 전동차 타기, 하늘이 동행, 내 신청 중에서 선택해 주세요.","How can we help? Choose directions, electric cart, walk with Haneuli, or my requests.");
+  const menuText=t("무엇을 도와드릴까요? 길 안내, 전동차 타기, 안내로봇 동행, 내 신청 중에서 선택해 주세요.","How can we help? Choose directions, electric cart, guide robot assistance, or my requests.");
   return <div data-mobility-home className={`pretrip-site ${styles.page}`} lang={en?"en":"ko"}>
     <a className="public-skip" href="#public-main">{t("본문 바로가기","Skip to content")}</a>
     <header className="pretrip-header"><nav className={styles.toolbar} aria-label={t("화면 메뉴","Screen menu")}>

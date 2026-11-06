@@ -31,19 +31,19 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
     <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
     <Link className={styles.primary} href={homeHref}>{t("처음 화면으로", "Back to home")}<ArrowRight size={20} aria-hidden="true" /></Link>
   </> : robotPhase === "guiding" ? <>
-    <p role="status">{t("저니봇이 목적지까지 안내하고 있어요.", "Journey Bot is guiding you to your destination.")}</p>
+    <p role="status">{t("안내로봇이 목적지까지 안내하고 있어요.", "Guide robot is guiding you to your destination.")}</p>
     <button type="button" className={styles.primary} onClick={()=>setRobotPhase("arrived")}>{t("목적지 도착 확인(시연)", "Confirm arrival (demo)")}</button>
     <button type="button" className={styles.clear} onClick={()=>setRobotPhase("idle")}>{t("안내 취소", "Cancel guidance")}</button>
   </> : robotPhase === "arrived" ? <>
     <p role="status">{t(`${target?.name ?? "목적지"}에 도착했어요.`, `You have arrived at ${target?.name ?? "your destination"}.`)}</p>
     <button type="button" className={styles.primary} onClick={()=>setRobotPhase("ended")}>{t("안내 종료", "End guidance")}</button>
   </> : <>
-    {robotPhase === "ended" ? <p role="status">{t("안내가 끝났어요. 저니봇을 이용해 주셔서 감사합니다.", "Guidance has ended. Thank you for using Journey Bot.")}</p> : <button type="button" className={styles.primary} onClick={()=>setRobotPhase("guiding")}>{t("안내 시작", "Start guidance")}</button>}
+    {robotPhase === "ended" ? <p role="status">{t("안내가 끝났어요. 안내로봇을 이용해 주셔서 감사합니다.", "Guidance has ended. Thank you for using Guide robot.")}</p> : <button type="button" className={styles.primary} onClick={()=>setRobotPhase("guiding")}>{t("안내 시작", "Start guidance")}</button>}
     <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
     <Link className={robotPhase === "ended" ? styles.primary : styles.clear} href={homeHref}>{t("처음 화면으로", "Back to home")}</Link>
   </>;
   const resultTitle = isRobotMode && robotPhase !== "idle"
-    ? robotPhase === "guiding" ? t("저니봇 안내 중", "Journey Bot guidance") : robotPhase === "arrived" ? t("목적지 도착", "Destination reached") : t("안내 종료", "Guidance ended")
+    ? robotPhase === "guiding" ? t("안내로봇 안내 중", "Guide robot guidance") : robotPhase === "arrived" ? t("목적지 도착", "Destination reached") : t("안내 종료", "Guidance ended")
     : t("경로 확인 완료", "Route ready");
   const summary = (
 <aside ref={resultRef} className={styles.summary} aria-live="polite" aria-label={t("경로 결과", "Route result")}>
@@ -81,7 +81,7 @@ export function NavigationFlow({ backHref, en, initialGate = "", initialPlace = 
     <legend>{t("이용 기기 · 시연","Device · demo")}</legend>
     {(["kiosk","robot"] as const).map(value=><label key={value}>
       <input type="radio" name={deviceModeName} value={value} checked={deviceMode===value} onChange={()=>{setDeviceMode(value);setRobotPhase("idle");}}/>
-      <span>{value==="robot"?t("저니봇","Journey Bot"):t("키오스크","Kiosk")}</span>
+      <span>{value==="robot"?t("안내로봇","Guide robot"):t("키오스크","Kiosk")}</span>
     </label>)}
   </fieldset>;
   return <main id="public-main" className={styles.workspace} data-kiosk={fixedPlace}>
@@ -89,9 +89,9 @@ export function NavigationFlow({ backHref, en, initialGate = "", initialPlace = 
     <AirportRoutePlanner en={en} kiosk={fixedPlace} disabled={robotActive} start={from} destination={target} currentLocation={currentLocation}
       onStartChange={p=>{setFrom(p);setRobotPhase("idle");}} onDestinationChange={p=>{setTarget(p);setRobotPhase("idle");}}
       initialBuilding={areaBuilding(placeOf(initialPlace)?.area)}
-      title={isRobotMode?t("저니봇 길 안내","Journey Bot guidance"):t("탑승구·시설 찾기","Gates & facilities")}
+      title={isRobotMode?t("안내로봇 길 안내","Guide robot guidance"):t("탑승구·시설 찾기","Gates & facilities")}
       backHref={homeHref} beforeControls={deviceControls}
-      instructions={robotActive?<p className={styles.instruction} role="status">{t("아래에서 저니봇 안내 상태를 확인하세요","Check Journey Bot guidance below")}</p>:undefined}
+      instructions={robotActive?<p className={styles.instruction} role="status">{t("아래에서 안내로봇 안내 상태를 확인하세요","Check Guide robot guidance below")}</p>:undefined}
       footer={result=><>
         {!result.hasResult&&<div className={styles.actions}>
           <button type="button" className={styles.primary} disabled={result.pending||robotActive} onClick={result.findRoute}>{result.pending?t("경로 확인 중…","Finding route…"):t("경로 보기","Show route")}<ArrowRight size={20} aria-hidden="true"/></button>
