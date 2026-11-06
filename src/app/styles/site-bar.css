@@ -24,7 +24,7 @@
 }
 .public-site .public-header { position: relative; top: auto; z-index: 30; }
 .pretrip-site .pretrip-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
-.field-task-shell .field-task-header { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
+.field-task-shell .field-task-header { position: relative; z-index: 30; display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
 .staff-login-screen .staff-login-brand { display: flex; align-items: center; }
 .field-task-shell .field-task-header > span { margin-left: auto; font-size: var(--text-small); }
 
@@ -202,10 +202,10 @@ html[data-kiosk] .flow .flow-bar {
   font-weight: 600; line-height: 1.5; letter-spacing: 0;
 }
 :is(.public-header, .pretrip-header, .field-task-header, .flow-bar) .text-size-control {
-  padding: 4px; gap: 2px; height: 50px; box-sizing: border-box;
+  padding: 4px; gap: 2px; height: calc(var(--site-text-target, 40px) + 10px); box-sizing: border-box;
 }
 :is(.public-header, .pretrip-header, .field-task-header, .flow-bar) .text-size-control button {
-  width: 40px; height: 40px; min-height: 40px; padding: 0;
+  width: var(--site-text-target, 40px); height: var(--site-text-target, 40px); min-height: var(--site-text-target, 40px); padding: 0;
 }
 :is(.public-header, .pretrip-header) :is(.prepare-tools > a, .public-tools > a) {
   min-width: 52px; height: 44px; box-sizing: border-box; padding: 0 16px;
@@ -262,3 +262,30 @@ html[data-kiosk] .flow .flow-bar {
 
 /* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
 .airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }
+
+/* Physical robot: 34 cm wide × 60 cm tall. Laptop previews scroll vertically. */
+html:has(:is([data-device-layout=robot],.dv-preview-robot)){
+  --robot-screen-width:min(calc(100vw - 2 * var(--site-bar-gutter)),67.5rem);
+  --robot-screen-height:calc(var(--robot-screen-width) * 60 / 34);
+}
+:is(.public-site,.field-task-shell):has(:is([data-device-layout=robot],.dv-preview-robot)){min-height:var(--robot-screen-height)}
+:is(.public-site,.field-task-shell):has(:is([data-device-layout=robot],.dv-preview-robot)) > :is(.public-header,.field-task-header){
+  --site-text-target:var(--target-kiosk-floor);
+  width:var(--robot-screen-width);max-width:none;
+  min-height:max(var(--target-kiosk-floor),calc(var(--site-bar-height) * .8));height:auto;
+  padding:var(--space-2) var(--space-3);flex-wrap:wrap;
+}
+:is(.public-site,.field-task-shell):has(:is([data-device-layout=robot],.dv-preview-robot)) > :is(.public-header,.field-task-header) :is(button,a){min-height:var(--target-kiosk-floor)}
+
+:is(.public-site,.field-task-shell):has(:is([data-device-layout=robot],.dv-preview-robot)) > :is(.public-header,.field-task-header) :is(.public-tools,.field-task-tools){flex-wrap:wrap;min-width:0;max-width:100%}
+
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header{display:flex;align-items:center;gap:var(--space-3)}
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header .public-logo{min-width:0;white-space:normal;overflow-wrap:anywhere}
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header .public-nav{flex-basis:100%;width:100%}
+
+/* Robot navigation stays behind the menu, leaving logo and tools in one aligned row. */
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header .public-tools{margin-inline-start:auto;justify-content:flex-end}
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header .public-menu-toggle{display:inline-flex}
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header .public-nav:not(.is-open){display:none}
+.public-site:has(:is([data-device-layout=robot],.dv-preview-robot)) > .public-header .public-nav.is-open{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);padding:var(--space-2) 0}
+.public-site:has(.dv-preview-robot) > .task-home{width:var(--robot-screen-width);max-width:none;margin-inline:auto;padding-inline:0}

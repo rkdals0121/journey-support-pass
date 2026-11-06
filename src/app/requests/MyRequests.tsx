@@ -117,6 +117,7 @@ export function MyRequests({
           <RefreshCw aria-hidden="true" />
         </button>
       </div>
+      <h2>{t("직원·안내로봇 요청", "Staff and guide robot requests")}</h2>
       {loading ? (
         <p role="status">{t("요청을 불러오는 중…", "Loading requests…")}</p>
       ) : rows.length ? (
@@ -130,6 +131,7 @@ export function MyRequests({
               <span className={`request-state-pill state-${r.state}`}>
                 {requestStateLabel(r, en ? "en" : "ko")}
               </span>
+              <p>{r.service === "robot" ? t("안내로봇 요청", "Guide robot request") : t("직원 도움 요청", "Staff assistance request")}</p>
               <h2>
                 {en
                   ? (taskOf(r.serviceDetails?.task)?.en ??

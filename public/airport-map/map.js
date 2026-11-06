@@ -263,7 +263,7 @@
     const extent = view.calculateExtent(map.getSize()), zoom = view.getZoom();
     const cells = new Set(), labelBoxes = [];
     const labelMeasure = document.createElement("canvas").getContext("2d");
-    const candidates = data.pois.map(p => ({p, display: window.airportPoiVisibility(p, zoom, !!visiblePoiIds, !visiblePoiIds || visiblePoiIds.has(String(p.id)), state.showLandmarkLabels, String(selected) === String(p.id), state.facilityFilterActive ?? !!visiblePoiIds)}))
+    const candidates = data.pois.filter(p => !state.securityArea || p.area === state.securityArea).map(p => ({p, display: window.airportPoiVisibility(p, zoom, !!visiblePoiIds, !visiblePoiIds || visiblePoiIds.has(String(p.id)), state.showLandmarkLabels, String(selected) === String(p.id), state.facilityFilterActive ?? !!visiblePoiIds)}))
       .filter(x => x.display).sort((a,b) => a.display.priority - b.display.priority || String(a.p.id).localeCompare(String(b.p.id)));
     pois.clear();
     for (const {p, display} of candidates) {
@@ -342,7 +342,12 @@
       const geometry = f.getGeometry();
       if (geometry) geometries.push(geometry.clone());
     });
-    if (state.overview) add(geometryLayers.get(state.building)?.getSource());
+    if (state.overview) {
+      if (state.securityArea) {
+        data.pois.filter(p => p.building === state.building && p.area === state.securityArea)
+          .forEach(p => geometries.push(new E.Point(E.fromLonLat([p.lon, p.lat]))));
+      } else add(geometryLayers.get(state.building)?.getSource());
+    }
     if (state.showCheckpoints) add(meetingSource);
     add(markers);
     add(routes);
@@ -370,7 +375,7 @@
       view.fit(frame, { padding, maxZoom: 19, duration: 0 });
       // Service entry opens on the central hall at an essential-facility scale.
       // Route fits keep their natural zoom so both endpoints remain visible.
-      if (serviceEntry === true && state.overview && !state.checkpointSelection && !state.route && view.getZoom() < 18.5) {
+      if (serviceEntry === true && state.securityArea !== "AIR" && state.overview && !state.checkpointSelection && !state.route && view.getZoom() < 18.5) {
         view.setZoom(18.5);
         view.centerOn(E.fromLonLat(centers[state.building]), available, [
           padding[3] + (available[0] - padding[3] - padding[1]) / 2,
@@ -392,6 +397,7 @@
     const changed = building !== state.building;
     const merged = {
       building,
+      securityArea: next.securityArea === undefined ? state.securityArea : next.securityArea,
       markers:
         next.markers !== undefined
           ? next.markers
@@ -438,7 +444,7 @@
     redrawRoute();
     rankNearby();
     document.getElementById("checkpoint-hint").hidden = !state.checkpointSelection;
-    const changedView = changed || state.overview !== previous.overview || state.viewRevision !== previous.viewRevision ||
+    const changedView = changed || state.securityArea !== previous.securityArea || state.overview !== previous.overview || state.viewRevision !== previous.viewRevision ||
       JSON.stringify(state.markers) !== JSON.stringify(previous.markers) ||
       JSON.stringify(state.route) !== JSON.stringify(previous.route) ||
       JSON.stringify(state.viewportPadding) !== JSON.stringify(previous.viewportPadding);

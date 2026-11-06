@@ -150,6 +150,8 @@
 .request-selected-service { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.75rem 1rem; border-radius:var(--radius-medium); background:var(--color-primary-faint); font-size:var(--text-body); }
 .request-selected-service>a { font-size:var(--text-caption); color:var(--color-primary-hover); min-height:2rem; display:flex; align-items:center; }
 .service-task-fields { display:grid; gap:0.25rem; }
+.service-task-fields > div { display:flex;flex-direction:column;min-width:0; }
+.service-task-fields > div > :is(input,select) { margin-top:auto;min-height:max(3rem,var(--target-floor)); }
 .request-experience .request-check, .service-form-card .request-check { display:flex; align-items:flex-start; gap:0.75rem; font-size:var(--text-small); font-weight:var(--weight-body); line-height:1.65; margin:0.75rem 0; }
 .request-check input { margin-top:0.25rem!important; }
 .request-needs { border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); padding:0.75rem 1rem; margin:1rem 0; }

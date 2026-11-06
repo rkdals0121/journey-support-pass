@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeftRight, Flag, LocateFixed, MapPin, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { FacilityMapPicker } from "./FacilityMapPicker";
 import { useSpeech } from "./useSpeech";
-import { facilityId, mapFacilityOf, type MapFacility } from "@/lib/map-facilities";
+import { facilityId, mapFacilityOf, mapFacilityPlace, type MapFacility } from "@/lib/map-facilities";
 import type { Place } from "@/lib/airport";
 import type { MapState } from "../../../components/AirportMap";
 import styles from "../navigate/navigation-map.module.css";
@@ -28,6 +28,7 @@ type Props = {
   onEndpointsChange?: (start: MapFacility | null, destination: MapFacility | null) => boolean | void;
   en?: boolean;
   kiosk?: boolean;
+  deviceLayout?: "kiosk" | "robot";
   disabled?: boolean;
   initialBuilding?: 1 | 2 | 3;
   destinationEnabled?: boolean;
@@ -48,7 +49,7 @@ type Props = {
 
 /** One map and endpoint controller for directions and mobility assistance. */
 export function AirportRoutePlanner({start, destination, currentLocation, onStartChange, onDestinationChange, onUseCurrentLocation, onEndpointsChange,
-  en = false, kiosk = false, disabled = false, initialBuilding = 1, destinationEnabled = true,
+  en = false, kiosk = false, deviceLayout, disabled = false, initialBuilding = 1, destinationEnabled = true,
   allowedStartIds, startRestriction, destinationRestriction, startName, startTitle, title, backHref,
   beforeControls, selectionControls, instructions, showSelectionTools = true, additionalHelp, footer}: Props) {
   const t = (ko: string, english: string) => en ? english : ko;
@@ -65,6 +66,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
   const [mode, setMode] = useState<"start" | "destination">(start && destinationEnabled ? "destination" : "start");
   const [building, setBuilding] = useState<1 | 2 | 3>(start?.building as 1 | 2 | 3 ?? initialBuilding);
   const [revision, setRevision] = useState(0);
+  const [searchResetKey, setSearchResetKey] = useState(0);
   const [notice, setNotice] = useState("");
   const [voice, setVoice] = useState(false);
   const {supported, speaking, speak, stop} = useSpeech(en ? "en" : "ko", true);
@@ -100,16 +102,16 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
   useEffect(() => {
     if (voice && supported) speak(spokenText);
   }, [voice, supported, spokenText, speak]);
-  const voiceControls = <div className={styles.voiceControls}>
-    <button type="button" className={styles.voiceButton} disabled={!supported} aria-pressed={voice}
+  const voiceControls = <div className={styles.voiceControls} data-icon-only={deviceLayout === "robot"}>
+    <button type="button" className={styles.voiceButton} disabled={!supported} aria-pressed={voice} aria-label={voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}
       onClick={()=>{if (voice) stop(); setVoice(v=>!v);}}>
       {voice ? <VolumeX aria-hidden="true"/> : <Volume2 aria-hidden="true"/>}
-      {voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}
+      <span className={deviceLayout === "robot" ? "sr-only" : undefined}>{voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}</span>
     </button>
-    {voice && <button type="button" className={styles.voiceButton} onClick={()=>speaking ? stop() : speak(spokenText)}>
-      <RotateCcw aria-hidden="true"/>{speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")}
+    {voice && <button type="button" className={styles.voiceButton} aria-label={speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")} onClick={()=>speaking ? stop() : speak(spokenText)}>
+      <RotateCcw aria-hidden="true"/><span className={deviceLayout === "robot" ? "sr-only" : undefined}>{speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")}</span>
     </button>}
-    {!supported && <small>{t("이 기기는 소리 안내를 지원하지 않아요.", "Voice is unavailable on this device.")}</small>}
+    {!supported && <small className={deviceLayout === "robot" ? "sr-only" : undefined}>{t("이 기기는 소리 안내를 지원하지 않아요.", "Voice is unavailable on this device.")}</small>}
   </div>;
   function invalidate() { setNotice(""); setResult(null); setRevision(n => n + 1); }
   function choose(id: string) {
@@ -132,14 +134,19 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
     if (disabled || onDestinationChange(null) === false) return;
     invalidate(); setMode("destination");
     if (start) setBuilding(start.building as 1 | 2 | 3);
-    const search = shell.current?.querySelector<HTMLInputElement>('input[type="search"]');
-    search?.focus({preventScroll:true}); search?.scrollIntoView({block:"nearest",behavior:"auto"});
+    setSearchResetKey(key => key + 1);
   }
   function reset() {
     if (disabled) return;
     if (onEndpointsChange ? onEndpointsChange(currentLocation,null) === false : (onStartChange(currentLocation) === false || onDestinationChange(null) === false)) return;
     invalidate(); setMode(currentLocation && destinationEnabled ? "destination" : "start");
     setBuilding(currentLocation?.building as 1 | 2 | 3 ?? initialBuilding);
+  }
+  function resetEndpoints() {
+    if (disabled) return;
+    if (onEndpointsChange ? onEndpointsChange(null, null) === false : (onStartChange(null) === false || onDestinationChange(null) === false)) return;
+    invalidate(); setMode("start");
+    setSearchResetKey(key => key + 1);
   }
   const controls = <>
     <div className={styles.endpoints} role="group" aria-label={t("출발지·목적지", "Start and destination")}>
@@ -155,34 +162,43 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
         </button>
       </div>
       {destinationEnabled && <>
-        <button type="button" className={styles.swap} disabled={disabled || !start || !end || !!allowedStartIds && !allowedStartIds.some(id=>String(id)===String(end.id))}
-          aria-label={t("출발지와 목적지 바꾸기", "Swap start and destination")}
-          onClick={()=>{const accepted=onEndpointsChange ? onEndpointsChange(end,start) : onStartChange(end) !== false && onDestinationChange(start);if(accepted!==false)invalidate();}}><ArrowLeftRight aria-hidden="true"/></button>
-        <button type="button" className={styles.endpoint} disabled={disabled} aria-pressed={activeMode === "destination"} onClick={()=>setMode("destination")}>
-          <Flag size={22} aria-hidden="true"/><span><small>{t("목적지", "Destination")}</small><strong>{end?.name ?? t("목적지 선택", "Choose destination")}</strong>{end && <em>{end.description}</em>}</span>
-        </button>
+        <div className={styles.destinationControl}>
+          <button type="button" className={styles.endpoint} disabled={disabled} aria-pressed={activeMode === "destination"} onClick={()=>setMode("destination")}>
+            <Flag size={22} aria-hidden="true"/><span><small>{t("목적지", "Destination")}</small><strong>{end?.name ?? t("목적지 선택", "Choose destination")}</strong>{end && <em>{end.description}</em>}</span>
+          </button>
+          <div className={styles.endpointActions}>
+          <button type="button" className={styles.destinationChange} disabled={disabled}
+            aria-label={t("출발지와 목적지 다시 설정", "Reset start and destination")} onClick={resetEndpoints}>
+            <RotateCcw aria-hidden="true"/>{t("다시 설정", "Reset")}
+          </button>
+          <button type="button" className={styles.swap} disabled={disabled || !start || !end || !!allowedStartIds && !allowedStartIds.some(id=>String(id)===String(end.id))}
+            aria-label={t("출발지와 목적지 바꾸기", "Swap start and destination")}
+            title={t("출발지와 목적지 바꾸기", "Swap start and destination")}
+            onClick={()=>{const accepted=onEndpointsChange ? onEndpointsChange(end,start) : onStartChange(end) !== false && onDestinationChange(start);if(accepted!==false)invalidate();}}><ArrowLeftRight aria-hidden="true"/></button>
+          </div>
+        </div>
       </>}
     </div>
-    {instructions ?? <>
-      <div className={styles.instruction} role="status"><span>{activeMode === "start" ? "1" : "2"}</span>
-        {stepText}
-      </div>
-    </>}
   </>;
-  const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction : null;
-  return <div ref={shell} className={styles.planner} data-kiosk={kiosk}>
+  const selectionInstructions = instructions ?? <div className={styles.instruction} role="status">
+    <span>{activeMode === "start" ? "1" : "2"}</span>{stepText}
+  </div>;
+  const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction ?? mapFacilityPlace(facilityId(start)) : null;
+  return <div ref={shell} className={styles.planner} data-kiosk={kiosk} data-device-layout={deviceLayout}>
     <FacilityMapPicker value={(activeMode === "start" ? start : end) ? facilityId((activeMode === "start" ? start : end)!) : ""}
-      onChange={choose} en={en} kiosk={kiosk} disabled={disabled} fullscreen hideSelection
+      onChange={choose} en={en} kiosk={kiosk} deviceLayout={deviceLayout} disabled={disabled} fullscreen hideSelection
       start={start} destination={end} selectionRole={activeMode} route={route}
       initialBuilding={building} selectedBuilding={building} onBuildingChange={setBuilding} focusKey={revision}
       pickup={restriction} restrictToPickup={!!restriction}
       allowedFacilityIds={activeMode === "start" ? allowedStartIds : undefined} pickupSelection={activeMode === "start" && !!allowedStartIds}
-      showSelectionTools={showSelectionTools}
-      additionalHelp={additionalHelp}
-      kioskTitle={title} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{voiceControls}{showSelectionTools && controls}</div>}
-      kioskFooter={<>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
-        {beforeControls && <details className={styles.moreInfo}><summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}</details>}
-      </>}
+      showSelectionTools={showSelectionTools} searchResetKey={searchResetKey}
+      selectionInstructions={selectionInstructions}
+      additionalHelp={<>{additionalHelp}{beforeControls && <details className={styles.moreInfo}>
+        <summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}
+      </details>}</>}
+      kioskTitle={title} kioskHeadingAction={deviceLayout === "robot" ? voiceControls : undefined} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{deviceLayout !== "robot" && voiceControls}{showSelectionTools && controls}</div>}
+      kioskFooter={<div aria-label={t("경로와 지원 진행", "Route and assistance actions")}>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
+      </div>}
       onRoute={response=>{if(route)setResult({key:routeKey,distance:response?.distance ?? null,error:response ? "" : t("연결된 통로를 찾지 못했어요. 현장 안내를 요청해 주세요.", "No connected route was found. Please ask staff.")});}}
       onError={message=>setResult({key:routeKey,distance:null,error:message})}/>
   </div>;
