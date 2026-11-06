@@ -23,12 +23,10 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
 }) {
   const t = (ko:string,english:string)=>en?english:ko;
   const {distance,hasResult}=result;
-  const chooseAnotherDestination=()=>{setRobotPhase("idle");result.clearDestination();};
   const resultRef=useRef<HTMLElement>(null);
   useEffect(()=>{if(hasResult)resultRef.current?.scrollIntoView({block:"nearest",behavior:"auto"});},[hasResult,robotPhase]);
   if (!hasResult) return null;
   const completionActions = !isRobotMode ? <>
-    <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
     <Link className={styles.primary} href={homeHref}>{t("처음 화면으로", "Back to home")}<ArrowRight size={20} aria-hidden="true" /></Link>
   </> : robotPhase === "guiding" ? <>
     <p role="status">{t("안내로봇이 목적지까지 안내하고 있어요.", "Guide robot is guiding you to your destination.")}</p>
@@ -39,7 +37,6 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
     <button type="button" className={styles.primary} onClick={()=>setRobotPhase("ended")}>{t("안내 종료", "End guidance")}</button>
   </> : <>
     {robotPhase === "ended" ? <p role="status">{t("안내가 끝났어요. 안내로봇을 이용해 주셔서 감사합니다.", "Guidance has ended. Thank you for using Guide robot.")}</p> : <button type="button" className={styles.primary} onClick={()=>setRobotPhase("guiding")}>{t("안내 시작", "Start guidance")}</button>}
-    <button type="button" className={styles.clear} onClick={chooseAnotherDestination}>{t("목적지 다시 선택", "Choose another destination")}</button>
     <Link className={robotPhase === "ended" ? styles.primary : styles.clear} href={homeHref}>{t("처음 화면으로", "Back to home")}</Link>
   </>;
   const resultTitle = isRobotMode && robotPhase !== "idle"
@@ -95,7 +92,6 @@ export function NavigationFlow({ backHref, en, initialGate = "", initialPlace = 
       footer={result=><>
         {!result.hasResult&&<div className={styles.actions}>
           <button type="button" className={styles.primary} disabled={result.pending||robotActive} onClick={result.findRoute}>{result.pending?t("경로 확인 중…","Finding route…"):t("경로 보기","Show route")}<ArrowRight size={20} aria-hidden="true"/></button>
-          <button type="button" className={styles.clear} disabled={robotActive} onClick={result.reset}>{t("다시 선택","Start over")}</button>
         </div>}
         <NavigationResult en={en} from={from} target={target} homeHref={homeHref} helpHref={helpHref} isRobotMode={isRobotMode} robotPhase={robotPhase} setRobotPhase={setRobotPhase} result={result}/>
       </>}/>

@@ -24,6 +24,7 @@ type Props = {
   selectedBuilding?: 1 | 2 | 3;
   onBuildingChange?: (building: 1 | 2 | 3) => void;
   focusKey?: number;
+  searchResetKey?: number;
   route?: MapState["route"];
   start?: MapFacility | null;
   destination?: MapFacility | null;
@@ -46,11 +47,12 @@ type Props = {
 
 export function FacilityMapPicker({
   value, onChange, en = false, disabled = false, pickup, restrictToPickup = false,
-  initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, route, start, destination, selectionRole = "destination",
+  initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, searchResetKey = 0, route, start, destination, selectionRole = "destination",
   kiosk = false, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskBackHref, showSelectionTools = true, additionalHelp, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
 }: Props) {
   const id = useId();
   const shell = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const panel = useRef<HTMLElement>(null);
   const toolbar = useRef<HTMLElement>(null);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -89,6 +91,14 @@ export function FacilityMapPicker({
   const [mapError, setMapError] = useState("");
   const [viewRevision, setViewRevision] = useState(0);
   const [nearbyResult, setNearbyResult] = useState<NearbyResult | null>(null);
+  useEffect(() => {
+    if (!searchResetKey) return;
+    setQueries(previous => ({...previous, destination: ""}));
+    setFilter("all");
+    setShowResults(false);
+    searchInput.current?.focus({preventScroll:true});
+    searchInput.current?.scrollIntoView({block:"nearest", behavior:"auto"});
+  }, [searchResetKey]);
   const selected = mapFacilityOf(value);
   // Explicit terminal navigation is independent of the previously selected facility.
   const activeBuilding = restrictToPickup && pickup ? areaBuilding(pickup.area) : selectedBuilding ?? building;
@@ -177,7 +187,7 @@ export function FacilityMapPicker({
     <div className={styles.searchWrap}>
         <label htmlFor={id} className={styles.searchLabel}><Search className={styles.searchIcon} aria-hidden="true" />{pickupSelection ? t("만날 탑승구 검색", "Find a meeting gate") : t("시설·탑승구 검색", "Find a facility or gate")}</label>
         <div className={styles.searchRow}>
-          <input id={id} type="search" value={query} disabled={disabled} maxLength={100}
+          <input ref={searchInput} id={id} type="search" value={query} disabled={disabled} maxLength={100}
             placeholder={pickupSelection ? t("출발할 탑승구 번호", "Starting gate number") : t("예: 화장실, 약국, 25번", "e.g. restroom, pharmacy, gate 25")}
             onChange={e => { setQuery(e.target.value); setFilter("all"); setShowResults(true); }} />
           {(query || filter !== "all") && <button type="button" className={styles.reset} disabled={disabled}

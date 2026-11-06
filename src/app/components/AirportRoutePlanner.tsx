@@ -65,6 +65,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
   const [mode, setMode] = useState<"start" | "destination">(start && destinationEnabled ? "destination" : "start");
   const [building, setBuilding] = useState<1 | 2 | 3>(start?.building as 1 | 2 | 3 ?? initialBuilding);
   const [revision, setRevision] = useState(0);
+  const [searchResetKey, setSearchResetKey] = useState(0);
   const [notice, setNotice] = useState("");
   const [voice, setVoice] = useState(false);
   const {supported, speaking, speak, stop} = useSpeech(en ? "en" : "ko", true);
@@ -132,8 +133,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
     if (disabled || onDestinationChange(null) === false) return;
     invalidate(); setMode("destination");
     if (start) setBuilding(start.building as 1 | 2 | 3);
-    const search = shell.current?.querySelector<HTMLInputElement>('input[type="search"]');
-    search?.focus({preventScroll:true}); search?.scrollIntoView({block:"nearest",behavior:"auto"});
+    setSearchResetKey(key => key + 1);
   }
   function reset() {
     if (disabled) return;
@@ -158,9 +158,15 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
         <button type="button" className={styles.swap} disabled={disabled || !start || !end || !!allowedStartIds && !allowedStartIds.some(id=>String(id)===String(end.id))}
           aria-label={t("출발지와 목적지 바꾸기", "Swap start and destination")}
           onClick={()=>{const accepted=onEndpointsChange ? onEndpointsChange(end,start) : onStartChange(end) !== false && onDestinationChange(start);if(accepted!==false)invalidate();}}><ArrowLeftRight aria-hidden="true"/></button>
-        <button type="button" className={styles.endpoint} disabled={disabled} aria-pressed={activeMode === "destination"} onClick={()=>setMode("destination")}>
-          <Flag size={22} aria-hidden="true"/><span><small>{t("목적지", "Destination")}</small><strong>{end?.name ?? t("목적지 선택", "Choose destination")}</strong>{end && <em>{end.description}</em>}</span>
-        </button>
+        <div className={styles.destinationControl}>
+          <button type="button" className={styles.endpoint} disabled={disabled} aria-pressed={activeMode === "destination"} onClick={()=>setMode("destination")}>
+            <Flag size={22} aria-hidden="true"/><span><small>{t("목적지", "Destination")}</small><strong>{end?.name ?? t("목적지 선택", "Choose destination")}</strong>{end && <em>{end.description}</em>}</span>
+          </button>
+          {end && <button type="button" className={styles.destinationChange} disabled={disabled}
+            aria-label={t("목적지 다시 선택", "Choose another destination")} onClick={clearDestination}>
+            <RotateCcw aria-hidden="true"/>{t("다시 선택", "Change")}
+          </button>}
+        </div>
       </>}
     </div>
     {instructions ?? <>
@@ -177,7 +183,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       initialBuilding={building} selectedBuilding={building} onBuildingChange={setBuilding} focusKey={revision}
       pickup={restriction} restrictToPickup={!!restriction}
       allowedFacilityIds={activeMode === "start" ? allowedStartIds : undefined} pickupSelection={activeMode === "start" && !!allowedStartIds}
-      showSelectionTools={showSelectionTools}
+      showSelectionTools={showSelectionTools} searchResetKey={searchResetKey}
       additionalHelp={additionalHelp}
       kioskTitle={title} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{voiceControls}{showSelectionTools && controls}</div>}
       kioskFooter={<div aria-label={t("경로와 지원 진행", "Route and assistance actions")}>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
