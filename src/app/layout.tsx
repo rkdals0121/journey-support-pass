@@ -11,7 +11,6 @@ import "./styles/passenger-layout.css";
 import "./styles/staff-layout.css";
 import "./styles/kiosk-layout.css";
 import "./styles/haneuli.css";
-import "./styles/sunflower.css";
 import "./styles/site-bar.css";
 import "./styles/responsive-passenger.css";
 

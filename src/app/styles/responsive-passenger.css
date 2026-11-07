@@ -4,6 +4,152 @@
   --page-gap: clamp(12px, 1.8vw, 32px);
   --form-inset: clamp(16px, 2vw, 32px);
 }
+/* ── 사전등록 화면 안의 부품(제목, 확인 화면, 동의, 남길 말, 단계 목록) ──
+   예전 sunflower.css 에 있던 것을 옮겼다. site-bar.css 의 「페이지 전체가 내려가는」 규칙에 덮여 쓰이지 않던 값은 뺐다.
+   아래 화면 크기별 규칙이 높이·여백을 다시 맞춘다. */
+.flight-search-note { color: var(--color-muted); font-size: var(--text-small); margin: 0 0 1rem; }
+.flow-pretrip[data-screen="review"] .review {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem;
+}
+.registration-review-group { min-width: 0; padding: .75rem; border: 1px solid var(--color-line); border-radius: var(--radius-small); }
+.flow-pretrip .registration-review-group dt { margin: 0; padding: 0; border: 0; gap: .5rem; }
+.flow-pretrip .registration-review-group dd { font-size: var(--text-small); line-height: 1.5; overflow-wrap: anywhere; }
+.flow-pretrip .registration-review-group .review-edit { min-height: 2.25rem; padding: .25rem .625rem; }
+.flow-pretrip[data-screen="review"] .flow-body > .panel { padding: 0; border: 0; box-shadow: none; }
+@media (min-width: 60rem) and (max-height: 50rem) {
+  .flow-pretrip[data-screen="review"] .review { gap: .5rem; }
+  .flow-pretrip .registration-review-group { position: relative; padding: .375rem 3.5rem .375rem .625rem; }
+  .flow-pretrip .registration-review-group dt { font-size: var(--text-caption); line-height: 1.5; }
+  .flow-pretrip .registration-review-group .review-edit {
+    position: absolute; right: .25rem; top: 50%; transform: translateY(-50%);
+    min-height: 2.75rem; padding-inline: .375rem;
+  }
+}
+@media (max-width: 36rem) {
+  .flow-pretrip[data-screen="review"] .review { grid-template-columns: 1fr; }
+}
+.consent-decline { display: flex; justify-content: center; }
+.consent-decline .btn { width: auto; margin: 0; min-height: 2.75rem; padding-block: .5rem; }
+.flow-pretrip .flow-desktop-steps li { padding: 0; }
+.flow-pretrip .flow-desktop-steps li > button { min-height: 2.75rem; padding: 0; }
+.flow-pretrip .flow-desktop-steps { scrollbar-width: none; }
+.flow-pretrip .flow-desktop-steps::-webkit-scrollbar { display: none; }
+.flow-pretrip .input-wrap input:not([type="checkbox"]):not([type="radio"]) {
+  width: 100%; padding-left: 3.25rem;
+}
+.flow-pretrip .flow-desktop-steps,
+.flow-pretrip .flow-desktop-summary { overscroll-behavior: none; }
+@media (min-width: 60rem) and (max-height: 56rem) {
+  .flow-pretrip[data-screen="consent"] .info-row { padding-block: .625rem; }
+  .flow-pretrip .flow-desktop-steps li { padding-block: 0; }
+}
+.multi-select-note {
+  display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
+  margin: 0; padding: 0;
+  color: var(--color-primary); font-size: var(--text-heading);
+  font-weight: 600; letter-spacing: 0; line-height: 1.5;
+}
+.multi-select-note .sunflower { width: 1.25em; height: 1.25em; flex: none; }
+.registration-question-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; }
+.registration-question-heading .multi-select-note { margin-left: auto; margin-bottom: .75rem; }
+.flow-pretrip[data-screen="trouble"] .ph-step-tools { padding-block: .5rem; margin-bottom: .75rem; }
+.flow-pretrip[data-screen="trouble"] .flow-body > .choices { row-gap: .5rem; }
+.flow-pretrip[data-screen="trouble"] .flow-body > .fine { margin-block: .75rem 0; }
+.flow-pretrip .flow-cta { border-top: 0; }
+/* 진행 버튼 줄은 모든 화면 크기·글자 크기에서 닿게 둔다(아래에 붙는 것은 site-bar.css 의 사전등록 규칙). */
+.flow-pretrip { flex: 0 0 auto; }
+.flow-pretrip .flow-progress { flex-shrink: 0; }
+.flow-pretrip .flow-cta {
+  flex: 0 0 auto;
+  padding: .75rem 0 max(.75rem, env(safe-area-inset-bottom));
+}
+.flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { min-height: 0; }
+
+/* 동의 화면의 「동의하지 않습니다」는 다른 화면과 같은 높이의 진행 버튼 줄 바로 위에 둔다. */
+.flow-pretrip[data-screen="consent"] .flow-cta-inner { position: relative; }
+.flow-pretrip[data-screen="consent"] .consent-decline {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + .25rem);
+}
+.flow-pretrip[data-screen="consent"] .flow-form-area { padding-bottom: 0; }
+
+/* 읽는 칸·쓰는 칸은 남는 높이를 나눠 쓴다. */
+.flow-pretrip[data-screen="consent"] .flow-body > .panel {
+  flex: 1 0 auto; display: grid; align-content: space-evenly;
+  padding-inline: 1.25rem;
+}
+.flow-pretrip[data-screen="consent"] .info-row { gap: 1.25rem; }
+.flow-pretrip[data-screen="consent"] .info-row > div { gap: .5rem; }
+.flow-pretrip .registration-review-group .review-edit {
+  display: inline-flex; align-items: center; justify-content: center; gap: .375rem;
+  background: transparent; border: 1px solid var(--color-line); border-radius: var(--radius-small);
+  color: var(--color-primary); font-size: var(--text-caption); font-weight: 500;
+}
+.flow-pretrip .registration-review-group .review-edit svg { width: .9375rem; height: .9375rem; }
+.flow-pretrip .registration-review-group .review-edit:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
+.flow-pretrip[data-screen="note"] .note-field { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.flow-pretrip[data-screen="note"] #reg-note {
+  width: 100%; flex: 1; min-height: 12rem; resize: none;
+  padding: 1.25rem; line-height: 1.8; border-radius: var(--radius-medium);
+}
+#reg-note::placeholder { color: var(--color-muted); opacity: 1; }
+#reg-note:focus::placeholder { color: transparent; }
+.flow-pretrip[data-screen="note"] #reg-note-count { margin: .75rem 0 0; }
+@media (min-width: 60rem) and (max-height: 55rem) {
+  .flow-pretrip[data-screen="consent"] .flow-body > .panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1.25rem;
+    align-content: center; padding-block: .75rem;
+  }
+  .flow-pretrip[data-screen="consent"] .info-row { border: 0; gap: .625rem; }
+  .flow-pretrip[data-screen="consent"] .info-row .bubble { width: 2rem; height: 2rem; }
+}
+
+/* 확인 화면의 「고치기」 자리, 가운데 진행 표시, 옆 칸 글자 크기 */
+.flow-pretrip .flow-progress { justify-content: center; }
+.flow-pretrip .registration-review-group {
+  position: relative; padding-right: 5.25rem;
+}
+.flow-pretrip .registration-review-group dt { color: var(--color-primary-hover); }
+.flow-pretrip .registration-review-group .review-edit {
+  position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+  min-height: 2.75rem; padding-inline: .625rem;
+}
+.flow-pretrip .flow-desktop-steps > p { font-size: var(--text-small); }
+.flow-pretrip .flow-desktop-steps h2 { font-size: var(--text-heading); }
+.flow-pretrip .flow-desktop-steps li { font-size: var(--text-body); }
+.flow-pretrip .flow-desktop-steps li > button small { font-size: var(--text-small); }
+.flow-pretrip .flow-desktop-summary h2 { font-size: var(--text-heading); }
+.flow-pretrip .flow-desktop-summary :is(p, li) { font-size: var(--text-small); }
+@media (min-width: 80rem) {
+  .flow-pretrip { max-width: 88rem; }
+  .flow-pretrip .flow-workspace { grid-template-columns: 13rem minmax(0, 1fr) 16rem; }
+}
+
+/* 사전등록 전체에서 제목과 본문이 같은 줄에서 시작한다. */
+.flow-pretrip .registration-page-heading {
+  flex: 0 0 auto; min-height: 6rem; display: flex; flex-direction: column;
+  gap: .625rem; margin-bottom: 1rem;
+}
+.flow-pretrip .registration-page-heading .kicker {
+  margin: 0; font-size: var(--text-small); line-height: 1.5; font-weight: 600;
+}
+.flow-pretrip .registration-question-heading { align-items: center; }
+.flow-pretrip[data-screen] .registration-question-heading h1 {
+  margin: 0; font-size: var(--text-title); line-height: 1.3; letter-spacing: -.035em;
+}
+.flow-pretrip .registration-question-heading .multi-select-note { margin-block: 0; }
+.flow-pretrip .registration-page-heading :is(.lead, .flight-search-note) {
+  margin: 0; font-size: var(--text-small); line-height: 1.6;
+}
+@media (max-width: 59.999rem) {
+  .flow-pretrip .registration-page-heading { min-height: 7.5rem; }
+  .flow-pretrip[data-screen] .registration-question-heading h1 { font-size: var(--text-title); }
+}
+
+.flow-pretrip[data-screen="consent"] .info-row { padding-block: .75rem; }
+@media (min-width: 60rem) and (max-height: 55rem) {
+  .flow-pretrip[data-screen="consent"] .info-row { padding-block: .5rem; }
+}
+
 /* ── 사전등록 선택 칸(.choice): 이 파일 한 곳에서 정한다. 아래 화면 크기별 규칙이 높이·여백을 다시 조정한다. ── */
 .flow-pretrip .choice { border: 0; border-bottom: 0.0625rem solid var(--color-line); box-shadow: none; font-size: var(--text-body); background: var(--color-surface); }
 .flow-pretrip .choice:hover { background: var(--color-canvas); transform: none; }
