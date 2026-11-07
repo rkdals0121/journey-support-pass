@@ -1,5 +1,5 @@
 /**
- * 화면 배치 빠른 점검 (2~4분). 주요 화면을 여러 화면 크기 × 글자 크기로 열어
+ * 화면 배치 빠른 점검 (10분 안팎). 주요 화면을 여러 화면 크기 × 글자 크기로 열어
  * 「옆으로 넘침」「잘려서 닿을 수 없는 내용」「안 보이는 진행 버튼」「겹친 단추」를 찾는다.
  * 전체 점검(scripts/e2e.ts, 30~40분)과 달리 화면을 누르며 흐름을 따라가지는 않는다. 배치만 본다.
  *
@@ -7,6 +7,7 @@
  *   npx tsx scripts/layout-check.ts                 (http://localhost:3000)
  *   LAYOUT_BASE=http://localhost:3002 npx tsx scripts/layout-check.ts
  * 키오스크 화면은 db/seed-zones.json 의 공개 시연 코드로 설치해 본다. 로컬 DB에 구역이 없으면 건너뛴다.
+ * 직원 화면도 같은 파일의 안내데스크 구역으로 들어가 본다(여객 화면을 직원 화면 안에 띄우는 곳 포함).
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -47,6 +48,8 @@ const KIOSK_SIZES = [
 const SCALES = [1, 1.5];
 const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login"];
 const KIOSK_PAGES = ["/kiosk/guide", "/kiosk/entry", "/kiosk/visits"];
+/** 직원 화면. 도움 요청 대신 접수·지원정보 대신 등록은 여객·키오스크 화면을 왼쪽 메뉴 옆 본문 칸에 띄운다. */
+const STAFF_PAGES = ["/staff", "/staff/requests", "/staff/requests/new", "/staff/desk", "/staff/desk/register", "/staff/overview"];
 
 type Problem = { where: string; what: string };
 const problems: Problem[] = [];
@@ -58,6 +61,11 @@ async function inspect(page: Page, where: string) {
     const out: string[] = [];
     const doc = document.documentElement;
     const scale = Number(getComputedStyle(doc).getPropertyValue("--scale")) || 1;
+    // 닫힌 접기 칸(<details>) 안의 내용은 보이지 않지만 크기는 잡혀 있다. 제목(summary)만 본다.
+    const folded = (e: Element) => {
+      const d = e.closest("details:not([open])");
+      return !!d && !d.querySelector(":scope > summary")?.contains(e);
+    };
     if (document.querySelector(".ph-home") && innerWidth >= 1101 && innerHeight >= 633 && scale === 1
       && doc.scrollHeight > innerHeight + 1) {
       out.push(`첫 화면에 불필요한 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
@@ -71,7 +79,7 @@ async function inspect(page: Page, where: string) {
     const squeezed = [...document.querySelectorAll("button, a.btn, .listen-start")]
       .filter((e) => {
         const r = e.getBoundingClientRect();
-        return r.width > 0 && r.width < 80 && r.height > r.width * 2 && (e.textContent || "").trim().length >= 4;
+        return !folded(e) && r.width > 0 && r.width < 80 && r.height > r.width * 2 && (e.textContent || "").trim().length >= 4;
       })
       .slice(0, 2);
     if (squeezed.length) out.push(`찌그러진 단추 (${squeezed.map((e) => (e.textContent || "").trim().slice(0, 12)).join(", ")})`);
@@ -81,6 +89,15 @@ async function inspect(page: Page, where: string) {
         .slice(0, 2)
         .map((e) => (e.className?.toString() || e.tagName).slice(0, 40));
       out.push(`옆으로 넘침 ${doc.scrollWidth - doc.clientWidth}px (${wide.join(", ")})`);
+    }
+    // 직원 화면: 본문이 왼쪽 메뉴를 덮으면 안 된다(여객 화면의 바·본문이 화면 전체 폭으로 잡히던 일)
+    const side = document.querySelector(".workspace-side")?.getBoundingClientRect();
+    if (side && side.width > 0 && side.height > 0) {
+      const over = [...document.querySelectorAll(".workspace-content *")].find((e) => {
+        const r = e.getBoundingClientRect();
+        return !folded(e) && r.width > 0 && r.height > 0 && r.left < side.right - 1 && r.right > side.left + 1 && r.top < side.bottom && r.bottom > side.top;
+      });
+      if (over) out.push(`본문이 왼쪽 메뉴를 덮음 (${(over.className?.toString() || over.tagName).slice(0, 40)})`);
     }
     // 잘려서 닿을 수 없는 내용: 넘치는데 스크롤도 안 되는 칸
     for (const e of document.querySelectorAll("main, .flow-body, .flow-form-area, .flow-workspace, section")) {
@@ -116,7 +133,7 @@ async function inspect(page: Page, where: string) {
         const r = e.getBoundingClientRect();
         // 라벨 안의 선택 칸은 라벨 전체가 누르는 곳이다. 라벨 크기로 본다.
         const box = (e.matches("input") && e.closest("label")?.getBoundingClientRect()) || r;
-        return r.width > 0 && r.height > 0 && (box.width < 24 || box.height < 24) && !e.closest(".sr-only");
+        return !folded(e) && r.width > 0 && r.height > 0 && (box.width < 24 || box.height < 24) && !e.closest(".sr-only");
       })
       .slice(0, 2);
     if (tiny.length) out.push(`너무 작은 누르는 곳 (${tiny.map((e) => (e.textContent || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 12)).join(", ")})`);
@@ -128,6 +145,8 @@ async function inspect(page: Page, where: string) {
 async function openAt(browser: Browser, size: (typeof SIZES)[number] | (typeof KIOSK_SIZES)[number], scale: number, url: string, cookie?: string) {
   const page = await browser.newPage();
   await page.setViewport(size);
+  // tsx 가 이름 붙은 함수에 __name(...) 을 덧붙이는데, 브라우저 쪽에는 그 함수가 없다.
+  await page.evaluateOnNewDocument("window.__name = (f) => f");
   if (cookie) {
     const [name, ...rest] = cookie.split("=");
     await page.setCookie({ name, value: rest.join("="), url: BASE, httpOnly: true });
@@ -144,6 +163,18 @@ async function openAt(browser: Browser, size: (typeof SIZES)[number] | (typeof K
   // 나타나는 움직임이 끝나기를 잠깐 기다린다(끝없이 도는 움직임은 기다리지 않는다).
   await new Promise((r) => setTimeout(r, 1500));
   return page;
+}
+
+async function staffCookie(): Promise<string | null> {
+  const desk = readSeedZones().find((z) => z.isDesk);
+  if (!desk) return null;
+  const res = await fetch(`${BASE}/api/staff/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: desk.code }),
+  });
+  if (!res.ok) return null;
+  return res.headers.get("set-cookie")?.split(";")[0] ?? null;
 }
 
 async function kioskCookie(placeId: string): Promise<string | null> {
@@ -179,6 +210,16 @@ async function kioskCookie(placeId: string): Promise<string | null> {
         for (const size of KIOSK_SIZES)
           for (const scale of SCALES) {
             const page = await openAt(browser, size, scale, url, url === "/kiosk/entry" ? entry : guide);
+            await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
+            await page.close();
+          }
+    const staff = await staffCookie();
+    if (!staff) console.log("직원 화면은 건너뜀 (로컬 DB에 안내데스크 구역이 없음)");
+    else
+      for (const url of STAFF_PAGES)
+        for (const size of SIZES)
+          for (const scale of SCALES) {
+            const page = await openAt(browser, size, scale, url, staff);
             await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
             await page.close();
           }
