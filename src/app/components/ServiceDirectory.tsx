@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, type ReactElement } from "react";
 import {
   Accessibility,
   Signpost,
@@ -54,20 +54,21 @@ const searchText = (value: string) =>
 export function ServiceDirectory({
   lang = "ko",
   portal = false,
-  children,
+  extraCards = [],
 }: {
   lang?: "ko" | "en";
   portal?: boolean;
-  children?: ReactNode;
+  extraCards?: readonly ReactElement[];
 }) {
   const en = lang === "en";
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const searchTerm = searchText(query.trim());
   const rows = SERVICE_CATALOG.filter(
     (s) =>
       s.id !== "lost-property" &&
       (filter === "all" || s.mode === filter) &&
-      (!query.trim() ||
+      (!searchTerm ||
         searchText(
           s.id +
             " " +
@@ -80,7 +81,7 @@ export function ServiceDirectory({
             s.descriptionEn +
             " " +
             s.keywords,
-        ).includes(searchText(query))),
+        ).includes(searchTerm)),
   ).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   const search = (
     <form
@@ -135,6 +136,8 @@ export function ServiceDirectory({
       </article>
     );
   };
+  const showPortalCards = !searchTerm && filter === "all";
+  const cards = [...rows.map(result), ...(showPortalCards ? extraCards : [])];
   return (
     <section
       className="service-directory"
@@ -185,7 +188,7 @@ export function ServiceDirectory({
           {en ? "Services" : "서비스 안내"}
         </h2>
         <span role="status">
-          {en ? `${rows.length} services` : `서비스 ${rows.length}개`}
+          {en ? `${cards.length} services` : `서비스 ${cards.length}개`}
         </span>
         <details className="service-directory-filter">
           <summary>
@@ -215,7 +218,7 @@ export function ServiceDirectory({
           </div>
         </details>
       </div>
-      {rows.length === 0 && (
+      {cards.length === 0 && (
         <div className="airport-directory-empty" role="status">
           <h3>{en ? "No matching services" : "일치하는 서비스가 없어요"}</h3>
           <button
@@ -235,8 +238,7 @@ export function ServiceDirectory({
         </div>
       )}
       <div className="ph-list service-directory-grid">
-        {rows.map(result)}
-        {children}
+        {cards}
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
-import { Bot, MapPin, UserRound } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { MapPin } from "lucide-react";
 import { requestPlaceOf as placeOf } from "@/lib/service-locations";
 import { facilityForPlace, facilityId, mapFacilityOf, areaBuilding, validMapDestination, type MapFacility } from "@/lib/map-facilities";
 import { mobilityPickupForFacility } from "@/lib/mobility-map-places";
@@ -19,8 +19,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
   const t=(ko:string,english:string)=>en?english:ko;
   const fromPlace=placeOf(placeId),currentPlace=placeOf(initialPlace);
   const from=facilityForPlace(fromPlace),current=facilityForPlace(currentPlace);
-  const modeName=useId();
-  const [supportMode,setSupportMode]=useState<"staff"|"robot">(initialSupportMode);
+  const supportMode = initialSupportMode;
   const [robotPhase,setRobotPhase]=useState<"idle"|"guiding"|"arrived"|"ended">("idle");
   const robotMode=supportMode==="robot";
   const robotActive=robotMode&&(robotPhase==="guiding"||robotPhase==="arrived");
@@ -51,7 +50,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
     {notice&&<p role="alert" className={styles.error}>{notice}</p>}
   </>;
   if (!expanded) return <div className={styles.planner}><p>{fromPlace?(en?fromPlace.labelEn:fromPlace.label):""}{target?` → ${target.name}`:""}</p><button type="button" className={styles.primary} onClick={()=>setExpanded(true)}>{t("전체 화면 지도로 선택","Choose on full-screen map")}</button>{fallback}{alternateFinder}</div>;
-  return <AirportRoutePlanner en={en} kiosk={kiosk} disabled={disabled||robotActive} start={from} destination={target} currentLocation={current}
+  return <AirportRoutePlanner en={en} kiosk={kiosk||robotMode} deviceLayout={robotMode?"robot":undefined} disabled={disabled||robotActive} start={from} destination={target} currentLocation={current}
     onStartChange={updateStart} onDestinationChange={updateDestination}
     onEndpointsChange={(start,end)=>{
       const pickup=start?mobilityPickupForFacility(start.id):null;
@@ -63,18 +62,9 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
     initialBuilding={areaBuilding(fromPlace?.area)} destinationEnabled={allowDestination&&(!fromPlace||!!from)}
     destinationRestriction={fromPlace}
     startName={!from&&fromPlace?(en?fromPlace.labelEn:fromPlace.label):undefined} startTitle={robotMode?t("출발지","Start"):t("만날 곳","Meeting place")}
-    selectionControls={initialSupportMode!=="robot"&&!confirming&&<fieldset className={styles.deviceMode}>
-      <legend>{t("도움받는 방법", "How would you like help?")}</legend>
-      {(["staff","robot"] as const).map(value=><label key={value}>
-        <input type="radio" name={modeName} value={value} checked={supportMode===value} disabled={disabled}
-          onChange={()=>{setSupportMode(value);setRobotPhase("idle");setConfirming(false);}}/>
-        {value==="staff"?<UserRound aria-hidden="true"/>:<Bot aria-hidden="true"/>}
-        <span>{value==="staff"?t("현장 안내","Staff assistance"):t("저니봇","Journey Bot")}</span>
-      </label>)}
-    </fieldset>}
     showSelectionTools={!confirming&&!robotActive}
     additionalHelp={!confirming ? alternateFinder : undefined}
-    title={t("이동 도움받기","Mobility assistance")} backHref={backHref??"/"}
+    title={robotMode ? t("안내로봇 동행", "Guide robot assistance") : t("직원 이동 지원", "Staff mobility assistance")} backHref={backHref??"/"}
     footer={result=><>
       {!confirming&&result.distance!==null&&<p role="status" className={styles.mobilityDistance}>{t(`지도 경로 약 ${Math.round(result.distance)}m`,`Map route about ${Math.round(result.distance)}m`)}</p>}
       {!confirming&&!robotMode&&target&&<button type="button" className={styles.clear} disabled={disabled} onClick={result.clearDestination}>{t("목적지는 직원과 정할게요","Choose the destination with staff")}</button>}

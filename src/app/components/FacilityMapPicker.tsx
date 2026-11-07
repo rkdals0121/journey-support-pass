@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Armchair, Baby, Banknote, Bus, Check, ChevronDown, ClipboardCheck, Coffee, DoorOpen, HeartPulse, Info, LayoutGrid, Pill, Plane, Search, ShieldCheck, ShoppingBasket, Smile, Toilet, UtensilsCrossed } from "lucide-react";
+import { useEffect, useId, useRef, useState, type ReactNode, type CSSProperties } from "react";
+import { Armchair, Baby, Banknote, Bus, Check, ChevronDown, ClipboardCheck, Coffee, DoorOpen, HeartPulse, Info, LayoutGrid, Navigation, Pill, Plane, Search, ShieldCheck, ShoppingBasket, Smile, Toilet, UtensilsCrossed } from "lucide-react";
 import AirportMap, { type MapState, type NearbyResult } from "../../../components/AirportMap";
 import {
   MAP_FACILITIES, facilityId, mapFacilityOf, areaBuilding,
@@ -24,19 +24,23 @@ type Props = {
   selectedBuilding?: 1 | 2 | 3;
   onBuildingChange?: (building: 1 | 2 | 3) => void;
   focusKey?: number;
+  searchResetKey?: number;
   route?: MapState["route"];
   start?: MapFacility | null;
   destination?: MapFacility | null;
   selectionRole?: "start" | "destination";
   kiosk?: boolean;
+  deviceLayout?: "kiosk" | "robot";
   hideSelection?: boolean;
   fullscreen?: boolean;
   kioskPanel?: ReactNode;
   kioskFooter?: ReactNode;
   kioskTitle?: string;
+  kioskHeadingAction?: ReactNode;
   kioskBackHref?: string;
   showSelectionTools?: boolean;
   additionalHelp?: ReactNode;
+  selectionInstructions?: ReactNode;
   onKioskClose?: () => void;
   allowedFacilityIds?: readonly (string | number)[];
   pickupSelection?: boolean;
@@ -46,11 +50,13 @@ type Props = {
 
 export function FacilityMapPicker({
   value, onChange, en = false, disabled = false, pickup, restrictToPickup = false,
-  initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, route, start, destination, selectionRole = "destination",
-  kiosk = false, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskBackHref, showSelectionTools = true, additionalHelp, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
+  initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, searchResetKey = 0, route, start, destination, selectionRole = "destination",
+  kiosk = false, deviceLayout, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskHeadingAction, kioskBackHref, showSelectionTools = true, additionalHelp, selectionInstructions, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
 }: Props) {
   const id = useId();
   const shell = useRef<HTMLDivElement>(null);
+  const mapViewport = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const panel = useRef<HTMLElement>(null);
   const toolbar = useRef<HTMLElement>(null);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -61,10 +67,13 @@ export function FacilityMapPicker({
     if (!full) { setPadding([0,0,0,0]); return; }
     const header = document.querySelector<HTMLElement>(".field-task-header, .flow-bar, .public-header");
     const measure = () => {
-      setHeaderTop(Math.max(0, header?.getBoundingClientRect().bottom ?? 0));
-      const box = shell.current?.getBoundingClientRect();
+      setHeaderTop(Math.max(0, (header?.getBoundingClientRect().bottom ?? 0) + (deviceLayout === "robot" ? window.scrollY : 0)));
+      const box = (deviceLayout === "robot" ? mapViewport.current : shell.current)?.getBoundingClientRect();
       if (!box) return;
-      const side = panelOpen ? panel.current?.getBoundingClientRect() : null;
+      const panelBox = panelOpen ? panel.current?.getBoundingClientRect() : null;
+      // The robot panel is below the map, so it must not count as an overlay.
+      const intersects = panelBox && panelBox.top < box.bottom && panelBox.bottom > box.top && panelBox.left < box.right && panelBox.right > box.left;
+      const side = deviceLayout === "robot" && !intersects ? null : panelBox;
       const tools = toolbar.current?.getBoundingClientRect();
       const bottom = side && side.width > box.width * .8 ? Math.max(0, box.bottom - side.top) : 0;
       const left = side && !bottom ? Math.max(0,side.right-box.left) : 0;
@@ -72,11 +81,12 @@ export function FacilityMapPicker({
       setPadding(previous => previous.every((v,i)=>v===next[i]) ? previous : next);
     };
     const observer = new ResizeObserver(measure);
-    for (const element of [shell.current,panel.current,toolbar.current,header]) if(element) observer.observe(element);
+    for (const element of [shell.current,mapViewport.current,panel.current,toolbar.current,header]) if(element) observer.observe(element);
     window.addEventListener("resize",measure);
     measure();
     return () => { observer.disconnect(); window.removeEventListener("resize",measure); };
-  }, [full,panelOpen]);
+  }, [full,panelOpen,deviceLayout]);
+  useEffect(() => { if (deviceLayout === "robot") setPanelOpen(true); panel.current?.scrollTo({top:0}); }, [deviceLayout]);
   const [building, setBuilding] = useState<1 | 2 | 3>(initialBuilding);
   const [queries, setQueries] = useState({start:"",destination:""});
   const query = queries[selectionRole];
@@ -88,14 +98,24 @@ export function FacilityMapPicker({
   const [mapError, setMapError] = useState("");
   const [viewRevision, setViewRevision] = useState(0);
   const [nearbyResult, setNearbyResult] = useState<NearbyResult | null>(null);
+  useEffect(() => {
+    if (!searchResetKey) return;
+    setQueries({start: "", destination: ""});
+    setFilter("all");
+    setShowResults(false);
+    searchInput.current?.focus({preventScroll:true});
+    searchInput.current?.scrollIntoView({block:"nearest", behavior:"auto"});
+  }, [searchResetKey]);
   const selected = mapFacilityOf(value);
   // Explicit terminal navigation is independent of the previously selected facility.
   const activeBuilding = restrictToPickup && pickup ? areaBuilding(pickup.area) : selectedBuilding ?? building;
+  const fixedArea = restrictToPickup && pickup ? (pickup.landside ? "LAND" : "AIR") : null;
+  const securityArea = fixedArea;
   const effectiveFilter = pickupSelection ? "all" : filter;
   const allowedIds = allowedFacilityIds === undefined ? null : new Set(allowedFacilityIds.map(String));
-  const eligible = (p: MapFacility) => (!allowedIds || allowedIds.has(String(p.id))) && (!restrictToPickup || facilityAllowed(pickup ?? null, p));
-  // Pickup eligibility limits selection, never the facilities drawn on the airport map.
-  const displayed = facilitiesForMapDisplay(activeBuilding, effectiveFilter, query);
+  const eligible = (p: MapFacility) => (!securityArea || p.area === securityArea) && (!allowedIds || allowedIds.has(String(p.id))) && (!restrictToPickup || facilityAllowed(pickup ?? null, p));
+  // Show the chosen security area, independently of pickup-specific eligibility.
+  const displayed = facilitiesForMapDisplay(activeBuilding, effectiveFilter, query, securityArea ?? undefined);
   const filtered = displayed.filter(eligible);
   const filtering = effectiveFilter !== "all" || query.trim().length > 0;
   const t = (ko: string, english: string) => en ? english : ko;
@@ -120,13 +140,14 @@ export function FacilityMapPicker({
     setNotice("");
     setMapError("");
     setShowResults(false);
-    // Category and query deliberately survive a selection and role changes.
+    // Keep each endpoint query, while the next role uses the selected security area.
     onChange(facilityId(p));
     setViewRevision(n => n + 1);
   }
 
   const state: MapState = {
     building: activeBuilding,
+    securityArea,
     checkpointSelection: false,
     showCheckpoints: false,
     selectedPoiId: selected?.building === activeBuilding ? selected.id : null,
@@ -162,9 +183,9 @@ export function FacilityMapPicker({
     <div className={styles.searchWrap}>
         <label htmlFor={id} className={styles.searchLabel}><Search className={styles.searchIcon} aria-hidden="true" />{pickupSelection ? t("만날 탑승구 검색", "Find a meeting gate") : t("시설·탑승구 검색", "Find a facility or gate")}</label>
         <div className={styles.searchRow}>
-          <input id={id} type="search" value={query} disabled={disabled} maxLength={100}
+          <input ref={searchInput} id={id} type="search" value={query} disabled={disabled} maxLength={100}
             placeholder={pickupSelection ? t("출발할 탑승구 번호", "Starting gate number") : t("예: 화장실, 약국, 25번", "e.g. restroom, pharmacy, gate 25")}
-            onChange={e => { setQuery(e.target.value); setShowResults(true); }} />
+            onChange={e => { setQuery(e.target.value); setFilter("all"); setShowResults(true); }} />
           {(query || filter !== "all") && <button type="button" className={styles.reset} disabled={disabled}
             onClick={() => { setQuery(""); setFilter("all"); setShowResults(false); }}>
             {t("초기화", "Reset")}
@@ -238,12 +259,12 @@ export function FacilityMapPicker({
   </>;
 
   if (full) return (
-    <div ref={shell} className={styles.fullscreen} data-kiosk="true" data-panel-open={panelOpen} style={{top:headerTop}} aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
-      <div className={styles.mapBackground}>{mapView}</div>
+    <div ref={shell} className={styles.fullscreen} data-kiosk={kiosk} data-device-layout={deviceLayout} data-panel-open={panelOpen} style={{top:deviceLayout === "robot" ? undefined : headerTop,"--map-header-top":`${headerTop}px`} as CSSProperties} aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
+      <div ref={mapViewport} className={styles.mapBackground}>{mapView}</div>
       <nav ref={toolbar} className={styles.mapToolbar} aria-label={t("지도 메뉴와 터미널", "Map menu and terminal")}>
-        <button type="button" className={styles.panelToggle} aria-expanded={panelOpen} aria-label={panelOpen?t("메뉴 접기", "Hide menu"):t("메뉴 펼치기", "Show menu")} onClick={()=>setPanelOpen(v=>!v)}>
+        {deviceLayout !== "robot" && <button type="button" className={styles.panelToggle} aria-expanded={panelOpen} aria-label={panelOpen?t("메뉴 접기", "Hide menu"):t("메뉴 펼치기", "Show menu")} onClick={()=>setPanelOpen(v=>!v)}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d={panelOpen ? "m14 6-6 6 6 6" : "m10 6 6 6-6 6"} /></svg>
-        </button>
+        </button>}
         <select className={styles.terminalSelect} aria-label={t("터미널 선택", "Choose terminal")} value={activeBuilding} disabled={disabled || (restrictToPickup && !!pickup)} onChange={e=>{const n=Number(e.target.value) as 1|2|3;setBuilding(n);onBuildingChange?.(n);setNotice("");setMapError("");setShowResults(false);setViewRevision(v=>v+1);}}>
           <option value={1}>{t("제1터미널", "Terminal 1")}</option>
           <option value={3}>{t("탑승동", "Concourse")}</option>
@@ -251,13 +272,23 @@ export function FacilityMapPicker({
         </select>
       </nav>
       {panelOpen && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
-        <header className={styles.panelHeading}>
-          {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")} title={t("뒤로 가기", "Go back")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg></a>}
-          <div className={styles.panelTitle}><span>{t("3층 안내", "3F guide")}</span><h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1></div>
-          {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
+        <div className={styles.panelTop}><header className={styles.panelHeading}>
+          <div className={styles.panelHeadingTop}>
+            {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg>
+              <span>{t("이전", "Back")}</span>
+            </a>}
+            <span className={styles.headingKicker}><Navigation aria-hidden="true"/>{t("3층 안내", "3F guide")}</span>
+            {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
+          </div>
+          {kioskHeadingAction ? <div className={styles.headingTitleRow}>
+            <h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1>{kioskHeadingAction}
+          </div> : <h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1>}
         </header>
-        {kioskPanel}{showSelectionTools && <>{searchControls}{filterControls}{nearbyControls}</>}{errors}{kioskFooter}
-        <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details>
+        {kioskPanel}</div>
+        <div className={styles.panelContent}>{selectionInstructions}{showSelectionTools && <>{searchControls}{filterControls}{nearbyControls}</>}{errors}
+        <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details></div>
+        <div className={styles.panelFooter}>{kioskFooter}</div>
       </aside>}
     </div>
   );

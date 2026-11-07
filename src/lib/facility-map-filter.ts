@@ -51,8 +51,8 @@ export function facilityInCategory(p: MapFacility, filter: FacilityFilter): bool
     case "bus": return p.category === 76 || p.category === 82;
   }
 }
-export function facilitiesForMapDisplay(building: number, filter: FacilityFilter, query: string) {
-  return MAP_FACILITIES.filter(p => p.building === building && facilityMatches(p, filter, query));
+export function facilitiesForMapDisplay(building: number, filter: FacilityFilter, query: string, securityArea?: "LAND" | "AIR") {
+  return MAP_FACILITIES.filter(p => p.building === building && (!securityArea || p.area === securityArea) && facilityMatches(p, filter, query));
 }
 export function facilityMatches(p: MapFacility, filter: FacilityFilter, query: string) {
   if (!facilityInCategory(p, filter)) return false;
