@@ -63,11 +63,12 @@ export function ServiceDirectory({
   const en = lang === "en";
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const searchTerm = searchText(query.trim());
   const rows = SERVICE_CATALOG.filter(
     (s) =>
       s.id !== "lost-property" &&
       (filter === "all" || s.mode === filter) &&
-      (!query.trim() ||
+      (!searchTerm ||
         searchText(
           s.id +
             " " +
@@ -80,7 +81,7 @@ export function ServiceDirectory({
             s.descriptionEn +
             " " +
             s.keywords,
-        ).includes(searchText(query))),
+        ).includes(searchTerm)),
   ).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   const search = (
     <form
@@ -135,8 +136,8 @@ export function ServiceDirectory({
       </article>
     );
   };
-  // Render and count the same card array, including the portal cards.
-  const cards = [...rows.map(result), ...extraCards];
+  const showPortalCards = !searchTerm && filter === "all";
+  const cards = [...rows.map(result), ...(showPortalCards ? extraCards : [])];
   return (
     <section
       className="service-directory"

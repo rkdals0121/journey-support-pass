@@ -230,6 +230,15 @@ html[data-kiosk] .flow-body { padding:1rem 1.5rem 1.5rem; }
 html[data-kiosk] .request-experience[data-mobility-map="true"]{width:100%;max-width:none;padding:var(--space-4)}
 html[data-kiosk] .request-experience[data-mobility-map="true"] .request-form{display:grid;grid-template-columns:minmax(0,1fr)}
 
+/* Robot content uses the shared site width and the display's 34:60 proportions. */
+html:has(:is([data-device-layout=robot], .dv-preview-robot)) {
+  --robot-screen-width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  --robot-screen-height: calc(var(--robot-screen-width) * 60 / 34);
+}
+:is(.public-site, .field-task-shell):has(:is([data-device-layout=robot], .dv-preview-robot)) {
+  min-height: var(--robot-screen-height);
+}
+
 /* Robot assistance uses the same continuous map document as navigation. */
 .request-experience[data-mobility-map=true]:has([data-device-layout=robot]){width:var(--robot-screen-width);max-width:none;padding:0;margin:auto}
 .request-experience[data-mobility-map=true]:has([data-device-layout=robot])>:not(.request-form){display:none}
