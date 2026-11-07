@@ -5,23 +5,7 @@
   이 파일은 맨 마지막에 읽힌다.
 */
 
-/* ── 둥근 바 모양 ── */
-.public-site .public-header,
-.pretrip-site .pretrip-header,
-.field-task-shell .field-task-header,
-.staff-login-screen .staff-login-brand,
-.flow-pretrip .flow-bar {
-  box-sizing: border-box;
-  width: calc(100% - 2.5rem);
-  max-width: 84rem;
-  min-height: 4rem;
-  margin: var(--space-3) auto 0;
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
-  border: 0.0625rem solid var(--color-line);
-  border-radius: var(--radius-pill);
-  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 45%);
-  box-shadow: var(--shadow-1);
-}
+/* ── 둥근 바 모양: 아래 「Main-page dimensions」 한 곳에서 정한다 ── */
 .public-site .public-header { position: relative; top: auto; z-index: 30; }
 .pretrip-site .pretrip-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .field-task-shell .field-task-header { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
@@ -65,15 +49,6 @@
 .pretrip-site .pretrip-header ~ main { margin-top: var(--space-4); }
 
 @media (max-width: 40rem) {
-  .public-site .public-header,
-  .pretrip-site .pretrip-header,
-  .field-task-shell .field-task-header,
-  .staff-login-screen .staff-login-brand,
-  .flow-pretrip .flow-bar {
-    width: calc(100% - 1.5rem);
-    border-radius: var(--radius-medium);
-    padding-left: var(--space-3);
-  }
   .field-task-shell .field-task-header { flex-wrap: wrap; }
   .field-task-shell .field-task-header > span { order: 3; width: 100%; margin: 0; }
   :is(.public-header, .pretrip-header) .public-logo small { display: none; }
@@ -87,22 +62,16 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .flow.flow-pretrip { height: auto; min-height: 100dvh; overflow: visible; }
 .flow-pretrip .flow-workspace,
 .flow-pretrip .flow-form-area { flex: 1 0 auto; min-height: 0; overflow: visible; }
-.flow-pretrip .flow-body { flex: 1 0 auto; min-height: 0; overflow: visible; scrollbar-width: auto; }
 .flow-pretrip .flow-cta { position: sticky; bottom: 0; z-index: 15; background: linear-gradient(to bottom, transparent, var(--color-canvas) 1rem); }
 .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { position: sticky; top: var(--space-4); align-self: flex-start; max-height: none; overflow: visible; }
 
 /* ── 사전등록: 전부 커 보이던 크기를 한 단계 줄인다 ── */
 .flow-pretrip .flow-body h1,
 .flow-pretrip[data-screen="trouble"] .flow-body h1 { font-size: var(--text-title); line-height: 1.3; }
-.flow-pretrip[data-screen="trouble"] .choice,
-.flow-pretrip .choice { min-height: 3.5rem; padding: var(--space-3) var(--space-4); }
 .flow-pretrip[data-screen="trouble"] .choice-icon { width: 2rem; height: 2rem; }
 .flow-pretrip[data-screen="trouble"] .choice-icon svg { width: 1.625rem; height: 1.625rem; }
 .flow-pretrip .multi-select-note { font-size: var(--text-small); }
 .flow-pretrip .flow-cta .btn { min-height: 3.5rem; font-size: var(--text-body); }
-@media (min-width: 60rem) {
-  .flow-pretrip .flow-body { padding: var(--space-6); }
-}
 
 /* 좁은 화면: 바를 두 줄로. 윗줄 이전·처음으로·설정, 아랫줄 글자 크기·언어·소리 */
 @media (max-width: 40rem) {
@@ -119,7 +88,7 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 /* Main-page dimensions are shared by every passenger and kiosk header. */
 :root {
   --site-bar-width: 1344px;
-  --site-bar-height: 98px;
+  --site-bar-height: clamp(76px, 10vh, 98px);
   --site-bar-gutter: 20px;
 }
 .public-site .public-header,
@@ -155,7 +124,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
   html[data-kiosk] .flow .flow-bar { height: var(--site-bar-height); flex-shrink: 0; }
 }
 @media (max-width: 40rem) {
-  :root { --site-bar-gutter: 12px; --site-bar-height: 128px; }
+  :root { --site-bar-gutter: 12px; }
   .public-site .public-header,
   .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
@@ -260,5 +229,20 @@ html[data-kiosk] .flow .flow-bar {
   html[data-kiosk] { --kiosk-bar-reserve: var(--space-3); --kiosk-bar-top: calc(var(--target-kiosk-floor) + var(--space-4)); }
 }
 
+/* ── 사전등록·키오스크 흐름의 위쪽 바(.flow-bar): 다른 파일에 흩어져 있던 것을 모았다 ── */
+.flow-pretrip .flow-bar { flex-shrink: 0; }
+@media (max-width: 480px) {
+  html:not([data-kiosk]) .flow-bar { flex-wrap: nowrap; min-height: min(var(--bar-h), 16vw); padding-inline: min(0.75rem, 2.5vw); }
+}
+@media (max-width: 959px), (max-height: 599px) {
+  .flow-pretrip .flow-bar { height: auto; flex-wrap: wrap; gap: .5rem; }
+}
+@media (min-width: 960px) and (min-height: 600px) {
+  .flow-pretrip .flow-bar { flex: 0 0 auto; height: auto; min-height: var(--site-bar-height); }
+}
+/* 「도움 요청하기」가 바 아래에 따로 놓이는 화면에서는 그 높이만큼 띄운다(키오스크에서는 --call-h 가 0). */
+body:has(.call-dock) .flow-bar { margin-bottom: var(--call-h); }
+html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; }
+.flow-service-home .flow-bar { gap: 0.75rem; }
 /* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
 .airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }

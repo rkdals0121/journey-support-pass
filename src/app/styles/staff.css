@@ -21,7 +21,7 @@
 .workspace-page-tools { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; justify-content:flex-end; font-size:var(--text-small); }
 .workspace-page-tools .btn { width:auto; min-height:max(2.65rem,var(--target-floor)); font-size:var(--text-small); padding:0.5rem 0.75rem; margin:0; }
 .workspace-page-tools .dx-toolbar { margin:0; }
-.workspace-page-tools>a:last-child { color:var(--color-primary-hover); }
+.workspace-page-tools>a:last-child:not(.btn) { color:var(--color-primary-hover); }
 .work-preferences { border:0.0625rem solid var(--color-line); border-radius:var(--radius-small); background:var(--color-surface); padding:0.75rem 1rem; margin-bottom:1rem; }
 .work-preferences>summary { font-size:var(--text-body); font-weight:var(--weight-label); cursor:pointer; }
 .work-preferences .btn { display:inline-flex; width:auto; margin:0.5rem 0.5rem 0.5rem 0; font-size:var(--text-small); }
@@ -131,7 +131,7 @@
 .staff-workspace .work-scope-control { order: 2; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0; flex-wrap: wrap; }
 .staff-workspace .work-scope-control > label, .staff-workspace #request-filter { display: none; }
 .staff-workspace .work-scope-tabs button { border: 0; border-radius: var(--radius-small); background: transparent; white-space: nowrap; min-height: max(2.5rem,var(--target-floor)); padding: 0.5rem 1rem; font: inherit; font-size: var(--text-caption); color: var(--color-muted); cursor: pointer; }
-.staff-workspace .work-scope-tabs button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-dark); font-weight: var(--weight-heading); box-shadow: 0 0.0625rem 0.25rem var(--color-dark); }
+.staff-workspace .work-scope-tabs button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-dark); font-weight: var(--weight-heading); box-shadow: var(--shadow-1); }
 .staff-workspace .work-master > h2 { font-size: var(--text-body); padding: 1.25rem; margin: 0; border-bottom: 0.0625rem solid var(--color-line); }
 .staff-workspace .work-request-table { border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); table-layout: fixed; width: 100%; font-size: var(--text-caption); }
 .staff-workspace .work-request-table th { font-size: var(--text-caption); color: var(--color-muted); background: var(--color-primary-faint); padding: 0.75rem; }
@@ -183,7 +183,7 @@
 /* 도구 단추(새로고침·알림·설정·상세 필터·검색)는 한 모양: 1px 선, 카드와 같은 모서리 */
 .staff-workspace.airport-workspace .work-preferences > summary { min-height: max(2.75rem,var(--target-floor)); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--color-control-line); background: var(--color-surface); border-radius: var(--radius-medium); padding: 0 var(--space-4); font-size: var(--text-small); font-weight: var(--weight-label); list-style: none; }
 .airport-workspace .work-preferences > summary::-webkit-details-marker { display: none; }
-.staff-workspace.airport-workspace .work-preferences[open] { width: min(32rem, 100%); background: var(--color-surface); border: 0.0625rem solid var(--airport-line); box-shadow: 0 0.75rem 2.5rem var(--color-dark); padding: 1rem; max-height: 75dvh; overflow: auto; }
+.staff-workspace.airport-workspace .work-preferences[open] { width: min(32rem, 100%); background: var(--color-surface); border: 0.0625rem solid var(--airport-line); box-shadow: var(--shadow-2); padding: 1rem; max-height: 75dvh; overflow: auto; }
 .airport-workspace .work-preferences[open] > summary { margin-bottom: 0.75rem; }
 .airport-workspace .work-preferences .work-metrics { margin-top: 1rem; font-size: var(--text-small); border-top: 0.0625rem solid var(--airport-line); padding-top: 0.75rem; }
 .airport-workspace .work-preferences .work-metrics > summary { cursor: pointer; min-height: max(2.75rem,var(--target-floor)); line-height: 2.75rem; }
@@ -215,8 +215,8 @@
 .staff-workspace.airport-workspace .work-request-table { border: 0; border-radius: 0; font-size: var(--text-small); }
 .staff-workspace.airport-workspace .work-request-table td button { color: var(--airport-ink); }
 .staff-workspace.airport-workspace .work-request-table tr.selected td { background: var(--color-primary-faint); }
-.staff-workspace.airport-workspace .work-detail { border-radius: var(--radius-medium); padding: 1.5rem; border-color: var(--color-primary-soft); box-shadow: 0 0.25rem 0.75rem var(--color-dark); font-size: var(--text-body); line-height: 1.65; }
-.airport-workspace .work-detail.is-current { animation: airport-detail-enter var(--motion-normal) ease-out; }
+.staff-workspace.airport-workspace .work-detail { border-radius: var(--radius-medium); padding: 1.5rem; border-color: var(--color-primary-soft); box-shadow: var(--shadow-1); font-size: var(--text-body); line-height: 1.65; }
+.airport-workspace .work-detail.is-current { animation: airport-detail-enter var(--motion-normal) var(--ease-out); }
 .staff-workspace.airport-workspace .work-detail > h2 { font-size: var(--text-title); line-height: 1.3; margin: 1rem 0 1.25rem; letter-spacing: -0.04em; }
 .staff-workspace.airport-workspace .work-detail > p { font-size: var(--text-small); margin: 0.75rem 0; line-height: 1.65; }
 .staff-workspace.airport-workspace .work-detail .work-meeting-place { font-size: var(--text-body); padding: 1rem; background: var(--color-primary-faint); border-radius: var(--radius-small); margin: 1.25rem 0; }
@@ -224,14 +224,11 @@
 .staff-workspace.airport-workspace .work-request-ref { font-size: var(--text-caption); }
 .staff-workspace.airport-workspace .work-detail .service-detail-list { padding: 0.5rem 0.75rem; border-radius: var(--radius-small); margin: 1rem 0; }
 .staff-workspace.airport-workspace .work-detail .service-detail-list > div { font-size: var(--text-small); padding: 0.5rem 0; grid-template-columns: 5rem minmax(0, 1fr); }
-.staff-workspace.airport-workspace .work-detail > .btn-primary { min-height: max(3rem,var(--target-floor)); margin: 1.25rem 0 0.25rem; font-size: var(--text-body); border-radius: var(--radius-small); width: 100%; background: var(--color-primary-hover); }
+.staff-workspace.airport-workspace .work-detail > .btn-primary { min-height: max(3rem,var(--target-floor)); margin: 1.25rem 0 0.25rem; font-size: var(--text-body); width: 100%; }
 .airport-workspace .work-detail .business-result-form { padding: 1rem; background: var(--color-primary-faint); border-radius: var(--radius-small); }
 .airport-workspace .work-detail details { margin-top: 1rem; padding-top: 0.75rem; }
 .airport-workspace .work-detail .business-handling > details:first-child { margin-top: 1rem; }
 .airport-workspace .work-detail select, .airport-workspace .work-detail textarea { min-height: max(2.75rem,var(--target-floor)); font-size: var(--text-body); }
-.airport-workspace .work-detail .btn { transition:
-    background var(--airport-fast),
-    border-color var(--airport-fast); }
 .airport-workspace .workspace-mobile-menu nav a { min-height: max(2.75rem,var(--target-floor)); }
 .airport-workspace .workspace-page-tools .dx-session-btn { border-radius: var(--radius-small); min-height: max(2.75rem,var(--target-floor)); padding: 0.5rem 0.75rem; font-size: var(--text-caption); border-color: var(--color-primary-soft); background: var(--color-surface); color: var(--airport-muted); }
 .staff-workspace.airport-workspace
@@ -447,7 +444,7 @@
 .staff-workspace h1 { font-size: var(--text-title); }
 .workspace-mobile-menu { display: block; position: relative; font-size: var(--text-caption); }
 .workspace-mobile-menu > summary { padding: 0.75rem; border: 0.0625rem solid var(--color-line); border-radius: var(--radius-small); cursor: pointer; }
-.workspace-mobile-menu nav { position: absolute; z-index: 30; right: 0; top: 2.8125rem; width: 15rem; background: var(--color-surface); border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); box-shadow: 0 0.75rem 1.875rem var(--color-dark); padding: 0.75rem; }
+.workspace-mobile-menu nav { position: absolute; z-index: 30; right: 0; top: 2.8125rem; width: 15rem; background: var(--color-surface); border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); box-shadow: var(--shadow-2); padding: 0.75rem; }
 .workspace-mobile-menu nav a { display: flex; gap: 0.75rem; align-items: center; padding: 0.75rem; font-size: var(--text-small); text-decoration: none; }
 .workspace-mobile-menu nav a[aria-current="page"] { background: var(--color-primary-soft); border-radius: var(--radius-small); }
 .staff-workspace .work-search { grid-template-columns: minmax(0, 1fr) auto; padding: 1rem; }
