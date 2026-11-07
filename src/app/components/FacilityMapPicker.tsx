@@ -60,20 +60,34 @@ export function FacilityMapPicker({
   const panel = useRef<HTMLElement>(null);
   const toolbar = useRef<HTMLElement>(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [phoneViewport, setPhoneViewport] = useState(false);
   const [headerTop, setHeaderTop] = useState(0);
   const [padding, setPadding] = useState<[number,number,number,number]>([0,0,0,0]);
   const full = fullscreen;
+  const compactMobile = full && !kiosk && deviceLayout !== "robot" && phoneViewport;
+  const panelVisible = compactMobile || panelOpen;
+  useEffect(() => {
+    if (!full || kiosk || deviceLayout === "robot") return;
+    const media = window.matchMedia("(max-width: 760px)");
+    const update = () => setPhoneViewport(media.matches);
+    media.addEventListener("change", update);
+    update();
+    return () => media.removeEventListener("change", update);
+  }, [full, kiosk, deviceLayout]);
+
   useEffect(() => {
     if (!full) { setPadding([0,0,0,0]); return; }
     const header = document.querySelector<HTMLElement>(".field-task-header, .flow-bar, .public-header");
     const measure = () => {
-      setHeaderTop(Math.max(0, (header?.getBoundingClientRect().bottom ?? 0) + (deviceLayout === "robot" ? window.scrollY : 0)));
-      const box = (deviceLayout === "robot" ? mapViewport.current : shell.current)?.getBoundingClientRect();
+      if (!compactMobile) {
+        setHeaderTop(Math.max(0, (header?.getBoundingClientRect().bottom ?? 0) + (deviceLayout === "robot" ? window.scrollY : 0)));
+      }
+      const box = mapViewport.current?.getBoundingClientRect();
       if (!box) return;
-      const panelBox = panelOpen ? panel.current?.getBoundingClientRect() : null;
-      // The robot panel is below the map, so it must not count as an overlay.
-      const intersects = panelBox && panelBox.top < box.bottom && panelBox.bottom > box.top && panelBox.left < box.right && panelBox.right > box.left;
-      const side = deviceLayout === "robot" && !intersects ? null : panelBox;
+      const panelBox = panelVisible ? panel.current?.getBoundingClientRect() : null;
+      // Panels below the map should not reduce the available map viewport.
+      const side = panelBox && panelBox.top < box.bottom && panelBox.bottom > box.top
+        && panelBox.left < box.right && panelBox.right > box.left ? panelBox : null;
       const tools = toolbar.current?.getBoundingClientRect();
       const bottom = side && side.width > box.width * .8 ? Math.max(0, box.bottom - side.top) : 0;
       const left = side && !bottom ? Math.max(0,side.right-box.left) : 0;
@@ -85,7 +99,7 @@ export function FacilityMapPicker({
     window.addEventListener("resize",measure);
     measure();
     return () => { observer.disconnect(); window.removeEventListener("resize",measure); };
-  }, [full,panelOpen,deviceLayout]);
+  }, [full, panelVisible, deviceLayout, compactMobile]);
   useEffect(() => { if (deviceLayout === "robot") setPanelOpen(true); panel.current?.scrollTo({top:0}); }, [deviceLayout]);
   const [building, setBuilding] = useState<1 | 2 | 3>(initialBuilding);
   const [queries, setQueries] = useState({start:"",destination:""});
@@ -155,6 +169,7 @@ export function FacilityMapPicker({
     showLandmarkLabels: landmarks,
     facilityFilterActive: filtering,
     touchTargetSize: kiosk ? 18 : 12,
+    compactMobile,
     viewRevision: viewRevision + focusKey,
     viewportPadding: full ? padding : undefined,
     overview: full && !route && !selected,
@@ -259,10 +274,13 @@ export function FacilityMapPicker({
   </>;
 
   if (full) return (
-    <div ref={shell} className={styles.fullscreen} data-kiosk={kiosk} data-device-layout={deviceLayout} data-panel-open={panelOpen} style={{top:deviceLayout === "robot" ? undefined : headerTop,"--map-header-top":`${headerTop}px`} as CSSProperties} aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
+    <div ref={shell} className={styles.fullscreen} data-kiosk={kiosk} data-device-layout={deviceLayout}
+      data-compact-mobile={compactMobile} data-panel-open={panelVisible}
+      style={{top:deviceLayout === "robot" || compactMobile ? undefined : headerTop,"--map-header-top":`${headerTop}px`} as CSSProperties}
+      aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
       <div ref={mapViewport} className={styles.mapBackground}>{mapView}</div>
       <nav ref={toolbar} className={styles.mapToolbar} aria-label={t("지도 메뉴와 터미널", "Map menu and terminal")}>
-        {deviceLayout !== "robot" && <button type="button" className={styles.panelToggle} aria-expanded={panelOpen} aria-label={panelOpen?t("메뉴 접기", "Hide menu"):t("메뉴 펼치기", "Show menu")} onClick={()=>setPanelOpen(v=>!v)}>
+        {deviceLayout !== "robot" && !compactMobile && <button type="button" className={styles.panelToggle} aria-expanded={panelOpen} aria-label={panelOpen?t("메뉴 접기", "Hide menu"):t("메뉴 펼치기", "Show menu")} onClick={()=>setPanelOpen(v=>!v)}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d={panelOpen ? "m14 6-6 6 6 6" : "m10 6 6 6-6 6"} /></svg>
         </button>}
         <select className={styles.terminalSelect} aria-label={t("터미널 선택", "Choose terminal")} value={activeBuilding} disabled={disabled || (restrictToPickup && !!pickup)} onChange={e=>{const n=Number(e.target.value) as 1|2|3;setBuilding(n);onBuildingChange?.(n);setNotice("");setMapError("");setShowResults(false);setViewRevision(v=>v+1);}}>
@@ -271,7 +289,7 @@ export function FacilityMapPicker({
           <option value={2}>{t("제2터미널", "Terminal 2")}</option>
         </select>
       </nav>
-      {panelOpen && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
+      {panelVisible && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
         <div className={styles.panelTop}><header className={styles.panelHeading}>
           <div className={styles.panelHeadingTop}>
             {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")}>

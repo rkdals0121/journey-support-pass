@@ -202,6 +202,52 @@ html[data-kiosk] .flow .flow-bar {
   width: 32px; height: 32px; flex: 0 0 32px;
 }
 
+@media (max-width: 760px) {
+  html:not([data-kiosk]) .public-site .public-header {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 0;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-medium);
+  }
+  html:not([data-kiosk]) .public-site .public-header .public-logo {
+    flex: 1 0 min-content;
+    min-height: var(--target-floor);
+    gap: var(--space-1);
+    white-space: normal;
+    font-size: var(--text-small);
+    line-height: 1.2;
+  }
+  html:not([data-kiosk]) .public-site .public-header .public-logo .sunflower {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-basis: 1.25rem;
+  }
+  html:not([data-kiosk]) .public-site .public-header .public-tools {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+  }
+  html:not([data-kiosk]) .public-site .public-header .text-size-control {
+    height: auto;
+    padding: 0;
+    gap: 0;
+  }
+  html:not([data-kiosk]) .public-site .public-header .text-size-control button {
+    width: var(--target-floor);
+    height: var(--target-floor);
+    min-height: var(--target-floor);
+  }
+  html:not([data-kiosk]) .public-site .public-tools > :is(a, button) {
+    min-width: var(--target-floor);
+    min-height: var(--target-floor);
+    padding-inline: var(--space-1);
+  }
+}
+
 /* 아래쪽 바: 위쪽 바와 같은 너비·같은 끝선의 둥근 바. 그라데이션 없이 흰 단색. */
 .airport-site .public-footer {
   box-sizing: border-box;

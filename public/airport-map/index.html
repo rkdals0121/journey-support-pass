@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>공항 실내지도</title>
-    <link rel="stylesheet" href="map.css" />
+    <link rel="stylesheet" href="map.css?v=mobile-service-map" />
   </head>
   <body>
     <div id="map" role="region" aria-label="공항 실내지도"></div>
@@ -12,7 +12,11 @@
     <nav class="map-controls" aria-label="지도 조작">
       <button id="zoom-in" aria-label="지도 확대">＋</button>
       <button id="zoom-out" aria-label="지도 축소">−</button>
-      <button id="fit" aria-label="표시한 위치 전체 보기">⛶</button>
+      <button id="fit" aria-label="표시한 위치 전체 보기">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3m0 8v3a2 2 0 0 1-2 2h-3m-8 0H5a2 2 0 0 1-2-2v-3" />
+        </svg>
+      </button>
     </nav>
     <div id="status" class="map-status" role="status">지도를 불러오는 중…</div>
     <section id="checkpoint-panel" aria-label="만날 곳 선택">
@@ -25,6 +29,6 @@
     <script src="assets/airport-engine.js"></script>
     <script src="graph.js?v=service-area-actions-18"></script>
     <script src="poi-visibility.js?v=service-area-actions-18"></script>
-    <script src="map.js?v=service-area-actions-18"></script>
+    <script src="map.js?v=mobile-service-map"></script>
   </body>
 </html>

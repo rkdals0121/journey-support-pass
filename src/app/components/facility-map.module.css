@@ -22,6 +22,32 @@
 .sidePanel .results{position:static;box-shadow:none;max-height:none;overflow:visible}.sidePanel .nearbyCards{grid-template-columns:minmax(0,1fr)}.sidePanel .nearbyCards button{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-2)}.sidePanel .nearbyCards strong{font-size:var(--text-body)}.sidePanel .nearbyCards small{grid-column:1 / -1;font-size:var(--text-small)}.sidePanel .mapMeta{display:grid;gap:var(--space-1)}.sidePanel .searchRow{flex-wrap:wrap;position:relative}.searchIcon{width:1.25rem;height:1.25rem;color:var(--color-primary);flex-shrink:0}.sidePanel .searchRow input{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));font-size:var(--text-body);background:var(--color-canvas)}.sidePanel .reset,.sidePanel .selection button{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}.sidePanel .landmarkToggle{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}.sidePanel .nearbyTitle{display:grid}.sidePanel .hint{font-size:var(--text-small)}.sidePanel button:focus-visible,.sidePanel a:focus-visible,.mapToolbar button:focus-visible{outline:2px solid var(--color-focus);outline-offset:var(--space-1)}
 @media(orientation:portrait){.fullscreen{--map-control-height:max(2.75rem,var(--target-floor));--panel-width:100%}.sidePanel{top:auto;right:0;bottom:0;width:100%;max-height:54svh;border-top:1px solid var(--color-line);border-right:0;border-radius:0 0 var(--radius-medium) var(--radius-medium)}.mapToolbar{left:0;max-height:30%}.sidePanel .nearbyCards{grid-template-columns:minmax(0,1fr)}}
 
+/* Phone browsers scroll the map and its controls together. */
+.fullscreen[data-compact-mobile=true] {
+  position: relative;
+  inset: auto;
+  margin-inline: calc((100% - var(--w)) / 2);
+}
+.fullscreen[data-compact-mobile=true] .mapBackground {
+  position: relative;
+  inset: auto;
+  height: clamp(calc(17.5rem / var(--scale, 1)), 43svh, 25rem);
+}
+.fullscreen[data-compact-mobile=true] .mapBackground > .map {
+  border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+}
+.fullscreen[data-compact-mobile=true] .mapToolbar { left: 0; }
+.fullscreen[data-compact-mobile=true] .sidePanel {
+  position: static;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  border-top: 1px solid var(--color-line);
+  border-right: 0;
+  border-radius: 0 0 var(--radius-medium) var(--radius-medium);
+}
+
 /* Request controls stay in the map workspace rather than another page below it. */
 .sidePanel :global(.request-section),.sidePanel :global(.request-submit-card){display:block!important;position:static;width:100%;min-width:0;padding:var(--space-3);margin:0;box-shadow:none}
 .sidePanel :global(.request-task-options),.sidePanel :global(.request-service-options),.sidePanel :global(.service-task-fields){display:grid;grid-template-columns:minmax(0,1fr);min-width:0}
@@ -92,8 +118,8 @@
 .fullscreen[data-device-layout=robot] .sidePanel summary{min-height:var(--map-control-height);align-content:center}
 .fullscreen[data-device-layout=robot] .sidePanel :is(button,input[type=search]){min-height:var(--map-control-height)}
 .fullscreen[data-device-layout=robot][data-panel-open=false] .mapBackground{min-height:var(--robot-screen-height)}
-.fullscreen:not([data-device-layout=robot]) .sidePanel .filters .moreFacilities:not([open]){grid-column:auto;align-self:stretch}
-.fullscreen:not([data-device-layout=robot]) .moreFacilities:not([open])>summary{height:100%}
+.fullscreen:not([data-device-layout=robot], [data-compact-mobile=true]) .sidePanel .filters .moreFacilities:not([open]){grid-column:auto;align-self:stretch}
+.fullscreen:not([data-device-layout=robot], [data-compact-mobile=true]) .moreFacilities:not([open])>summary{height:100%}
 @media(min-width:761px){
   .fullscreen[data-device-layout=robot] .sidePanel .filters{grid-template-columns:repeat(3,minmax(0,1fr))}
   .fullscreen[data-device-layout=robot] .panelTop{grid-template-columns:minmax(0,1fr);align-items:center}
