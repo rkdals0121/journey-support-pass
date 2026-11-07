@@ -244,3 +244,5 @@ html[data-kiosk] .flow .flow-bar {
 body:has(.call-dock) .flow-bar { margin-bottom: var(--call-h); }
 html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; }
 .flow-service-home .flow-bar { gap: 0.75rem; }
+/* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
+.airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }
