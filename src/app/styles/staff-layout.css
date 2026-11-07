@@ -20,6 +20,12 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
 .workspace-nav-group > summary { cursor: pointer; min-height: 2.75rem; align-content: center; padding: var(--space-2) var(--space-3); color: var(--color-muted); font-size: var(--text-caption); font-weight: var(--weight-label); }
 .workspace-nav-group[open] > summary { color: var(--color-primary); }
 
+/* ── 직원 화면 안에 여객 화면(도움 요청 대신 접수·지원정보 대신 등록)을 띄울 때 ──
+   여객 화면의 위쪽 바와 본문은 폭을 「브라우저 전체 폭 − 양옆 여백」으로 잡는다. 직원 화면에서는 왼쪽 메뉴만큼 좁으므로
+   그대로 두면 왼쪽 메뉴를 덮고 오른쪽으로 넘친다. 여기서는 그 기준 폭(--site-bar-room, site-bar.css)을 본문 칸 폭으로 바꾼다.
+   변수 안의 100% 는 쓰이는 자리에서 풀리므로 바·본문을 감싼 칸의 폭이 된다. */
+.workspace-content { --site-bar-room: 100%; --site-bar-gutter: 0px; }
+
 /* ── 화면 머리: 제목 왼쪽, 주요 버튼 하나와 보조 버튼은 오른쪽에 같은 높이로 ── */
 .staff-workspace .workspace-page-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin: 0 0 var(--space-5); }
 .staff-workspace .workspace-page-head h1 { margin: 0; font-size: var(--text-title); letter-spacing: -0.03em; }

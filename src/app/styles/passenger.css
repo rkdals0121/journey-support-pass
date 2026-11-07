@@ -104,7 +104,7 @@
 .service-workspace { width:min(100%,74rem); margin:0 auto; padding:var(--space-5) var(--space-5) var(--space-6); color:var(--color-text); }
 /* 현장 도움 요청: 위쪽 바와 같은 끝선(docs/ui-guide.md 2절). */
 .request-experience {
-  --w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  --w: min(var(--site-bar-width), calc(var(--site-bar-room) - 2 * var(--site-bar-gutter)));
   box-sizing: border-box; width: var(--w); margin-inline: calc((100% - var(--w)) / 2); padding: var(--space-4) 0 var(--space-5); color: var(--color-text);
 }
 .service-heading { margin-bottom:var(--space-4); position:relative; }

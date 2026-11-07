@@ -90,6 +90,8 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
   --site-bar-width: 1344px;
   --site-bar-height: clamp(76px, 10vh, 98px);
   --site-bar-gutter: 20px;
+  /* 바가 놓이는 자리의 폭. 보통은 화면 전체(100vw). 직원 화면처럼 옆에 메뉴가 있는 틀은 이 값만 본문 칸 폭으로 바꾼다. */
+  --site-bar-room: 100vw;
 }
 .public-site .public-header,
 .pretrip-site .pretrip-header,
@@ -97,7 +99,7 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .staff-login-screen .staff-login-brand,
 .flow .flow-bar,
 html[data-kiosk] .flow .flow-bar {
-  --site-bar-now: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  --site-bar-now: min(var(--site-bar-width), calc(var(--site-bar-room) - 2 * var(--site-bar-gutter)));
   box-sizing: border-box;
   width: var(--site-bar-now);
   max-width: var(--site-bar-width);
