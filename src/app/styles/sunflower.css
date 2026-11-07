@@ -41,7 +41,6 @@
 html:has(.flow-pretrip), body:has(.flow-pretrip) {
   height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none;
 }
-.flow-pretrip .flow-body,
 .flow-pretrip .flow-desktop-steps,
 .flow-pretrip .flow-desktop-summary { overscroll-behavior: none; }
 @media (min-width: 60rem) and (max-height: 56rem) {
@@ -50,8 +49,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 }
 .flow-pretrip .flow-bar-side { gap: .25rem; }
 .flow-pretrip .bar-btn:hover:not(:disabled) { background: var(--color-accent-soft); }
-.flow-pretrip .flow-body { scrollbar-width: none; }
-.flow-pretrip .flow-body::-webkit-scrollbar { display: none; }
 .multi-select-note {
   display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
   margin: 0; padding: 0;
@@ -62,14 +59,10 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .registration-question-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; }
 .registration-question-heading .multi-select-note { margin-left: auto; margin-bottom: .75rem; }
 .flow-pretrip[data-screen="trouble"] .flow-body h1 { font-size: var(--text-title); }
-.flow-pretrip[data-screen="trouble"] .flow-body { padding-block: 1.25rem; }
 .flow-pretrip[data-screen="trouble"] .ph-step-tools { padding-block: .5rem; margin-bottom: .75rem; }
 .flow-pretrip[data-screen="trouble"] .flow-body > .choices { row-gap: .5rem; }
 .flow-pretrip[data-screen="trouble"] .choice-icon { width: 2.5rem; height: 2.5rem; }
 .flow-pretrip[data-screen="trouble"] .choice-icon svg { width: 2.125rem; height: 2.125rem; }
-@media (min-width: 60rem) and (max-height: 48rem) {
-  .flow-pretrip[data-screen="trouble"] .flow-body { padding-block: .75rem; }
-}
 .flow-pretrip[data-screen="trouble"] .flow-body > .fine { margin-block: .75rem 0; }
 .flow-pretrip .flow-cta { background: transparent; border-top: 0; }
 @media (max-width: 36rem) {
@@ -82,10 +75,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .flow-pretrip .flow-progress { flex-shrink: 0; }
 .flow-pretrip .flow-workspace { flex: 1 1 0; min-height: 0; overflow: hidden; }
 .flow-pretrip .flow-form-area { min-height: 0; overflow: hidden; }
-.flow-pretrip .flow-body {
-  flex: 1 1 0; min-height: 0; overflow-y: auto;
-  overscroll-behavior: contain; scroll-padding-block: 1rem;
-}
 .flow-pretrip .flow-cta {
   position: static; flex: 0 0 auto; z-index: 5;
   padding: .75rem 0 max(.75rem, env(safe-area-inset-bottom));
@@ -98,8 +87,7 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .text-size-control button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .airport-site .public-header { background: var(--color-surface); }
 .airport-site .public-nav > a { border-radius: var(--radius-pill); }
-.airport-site :is(.request-section, .service-form-card, .request-submit-card, .request-empty-state),
-.flow-pretrip .flow-body { border-radius: var(--radius-medium); }
+.airport-site :is(.request-section, .service-form-card, .request-submit-card, .request-empty-state) { border-radius: var(--radius-medium); }
 /* 위쪽 바는 그대로, 두 박스가 남는 높이를 모두 쓰고 아래 안내 줄은 맨 아래에 붙는다. */
 .pretrip-site { display: flex; flex-direction: column; min-height: 100dvh; background: var(--color-canvas); }
 .pretrip-site .pretrip-header { max-width: 76rem; padding: 1.25rem 2rem; border: 0; }
@@ -164,10 +152,8 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
   position: absolute; left: 0; right: 0; bottom: calc(100% + .25rem);
 }
 .flow-pretrip[data-screen="consent"] .flow-form-area { padding-bottom: 0; }
-.flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: 3rem; }
 
 /* Reading and writing areas use the available space instead of bunching up. */
-.flow-pretrip[data-screen="consent"] .flow-body { display: flex; flex-direction: column; }
 .flow-pretrip[data-screen="consent"] .flow-body > .panel {
   flex: 1 0 auto; display: grid; align-content: space-evenly;
   padding-inline: 1.25rem;
@@ -182,7 +168,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 .flow-pretrip .registration-review-group .review-edit svg { width: .9375rem; height: .9375rem; }
 .flow-pretrip .registration-review-group .review-edit:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
 .flow-pretrip[data-screen="note"] .note-field { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.flow-pretrip[data-screen="note"] .flow-body { display: flex; flex-direction: column; }
 .flow-pretrip[data-screen="note"] #reg-note {
   width: 100%; flex: 1; min-height: 12rem; resize: none;
   padding: 1.25rem; line-height: 1.8; border-radius: var(--radius-medium);
@@ -221,8 +206,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
 }
 
 /* One heading and content baseline across the complete registration flow. */
-.flow-pretrip .flow-body,
-.flow-pretrip[data-screen] .flow-body { padding: 2rem; }
 .flow-pretrip .registration-page-heading {
   flex: 0 0 auto; min-height: 6rem; display: flex; flex-direction: column;
   gap: .625rem; margin-bottom: 1rem;
@@ -239,7 +222,6 @@ html:has(.flow-pretrip), body:has(.flow-pretrip) {
   margin: 0; font-size: var(--text-small); line-height: 1.6;
 }
 @media (max-width: 59.999rem) {
-  .flow-pretrip .flow-body, .flow-pretrip[data-screen] .flow-body { padding: 1.25rem; }
   .flow-pretrip .registration-page-heading { min-height: 7.5rem; }
   .flow-pretrip[data-screen] .registration-question-heading h1 { font-size: var(--text-title); }
   .registration-language > span { display: none; }

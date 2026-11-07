@@ -469,7 +469,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .prepare-steps { background: var(--color-surface); padding: 2rem; border-radius: var(--radius-medium); }
 .flow-pretrip { background: var(--color-canvas); max-width: 78rem; }
 .flow-pretrip .flow-workspace { gap: 2rem; padding: 2rem; grid-template-columns: 12rem minmax(0,1fr) 14rem; }
-.flow-pretrip .flow-body { border: 0; border-radius: var(--radius-medium); padding: 2rem; min-height: 30rem; background: var(--color-surface); }
 .flow-pretrip .flow-body h1 { font-size: var(--text-title); letter-spacing: -0.035em; line-height: 1.35; }
 .flow-pretrip .flow-desktop-steps { border-right: 0.0625rem solid var(--color-line); padding-right: 1.5rem; padding: .5rem 0; background: transparent; border: 0; }
 .flow-pretrip .flow-desktop-summary { border: 0; border-top: 0.125rem solid var(--color-control-line); border-radius: 0; background: transparent; padding: .5rem 0; }
@@ -481,7 +480,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 @media (min-width:1100px) {
 .flow-pretrip { max-width:82rem; width:100%; margin:auto; }
 .flow-pretrip .flow-workspace { display:grid; grid-template-columns:13rem minmax(0,1fr) 16rem; gap:1.5rem; padding:1.5rem; }
-.flow-pretrip .flow-body { background:var(--color-surface); border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); padding:2rem; min-height:34rem; }
 .flow-pretrip .flow-progress { padding:1rem 1.5rem 0; }
 .flow-pretrip .flow-cta { padding:1rem 0; }
 }
@@ -580,12 +578,10 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .pretrip-site .prepare-layout { gap: 2.5rem; padding-top: 2rem; display: block; padding: 2rem 1.25rem; margin: 0; }
 .prepare-intro h1 { font-size: var(--text-title); }
 .flow-pretrip .flow-workspace { padding: 0 1.25rem; display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: hidden; }
-.flow-pretrip .flow-body { padding: 1.5rem 0; background: transparent; flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 1rem; }
 .flow-pretrip .flow-cta { bottom: 0; z-index: 5; position: static; flex-shrink: 0; background: var(--color-canvas); padding: 1rem 0 max(1rem,env(safe-area-inset-bottom)); }
 .flow-pretrip { height: 100dvh; min-height: 0; overflow: hidden; flex: 0 0 auto; }
 .flow-pretrip .flow-form-area { flex: 1 1 0; min-height: 0; overflow: hidden; }
 .flow-pretrip.flow-reading .flow-form-area { overflow-y: auto; }
-.flow-pretrip.flow-reading .flow-body { flex: 1 0 auto; overflow: visible; }
 }
 @media (max-width: 370px) {
 .public-header-inner { padding-inline: 0.75rem; }

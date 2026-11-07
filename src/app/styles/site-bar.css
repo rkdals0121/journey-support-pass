@@ -62,7 +62,6 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .flow.flow-pretrip { height: auto; min-height: 100dvh; overflow: visible; }
 .flow-pretrip .flow-workspace,
 .flow-pretrip .flow-form-area { flex: 1 0 auto; min-height: 0; overflow: visible; }
-.flow-pretrip .flow-body { flex: 1 0 auto; min-height: 0; overflow: visible; scrollbar-width: auto; }
 .flow-pretrip .flow-cta { position: sticky; bottom: 0; z-index: 15; background: linear-gradient(to bottom, transparent, var(--color-canvas) 1rem); }
 .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { position: sticky; top: var(--space-4); align-self: flex-start; max-height: none; overflow: visible; }
 
@@ -73,9 +72,6 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
 .flow-pretrip[data-screen="trouble"] .choice-icon svg { width: 1.625rem; height: 1.625rem; }
 .flow-pretrip .multi-select-note { font-size: var(--text-small); }
 .flow-pretrip .flow-cta .btn { min-height: 3.5rem; font-size: var(--text-body); }
-@media (min-width: 60rem) {
-  .flow-pretrip .flow-body { padding: var(--space-6); }
-}
 
 /* 좁은 화면: 바를 두 줄로. 윗줄 이전·처음으로·설정, 아랫줄 글자 크기·언어·소리 */
 @media (max-width: 40rem) {

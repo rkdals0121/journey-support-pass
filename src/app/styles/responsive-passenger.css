@@ -37,8 +37,18 @@ html:not([data-kiosk]) .flow-pretrip .registration-page-heading {
   html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .info-row { padding-block: var(--space-1); }
 }
 .flow-pretrip .flow-workspace { gap: var(--page-gap); padding: var(--page-gap); }
+/* ── 사전등록 본문 칸(.flow-body): 이 파일 한 곳에서 정한다. 기본은 페이지 전체가 내려가고, 넓고 높은 화면(960×600 이상)만 아래 @media 에서 칸 안 스크롤로 바꾼다. ── */
+.flow-pretrip .flow-body {
+  flex: 1 0 auto; min-height: 0; overflow: visible;
+  overscroll-behavior: contain; scroll-padding-block: 1rem; scrollbar-width: auto;
+  border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface);
+}
+.flow-pretrip .flow-body::-webkit-scrollbar { display: none; }
 .flow-pretrip .flow-body,
 .flow-pretrip[data-screen] .flow-body { padding: var(--form-inset); min-width: 0; }
+.flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: 3rem; }
+.flow-pretrip[data-screen="consent"] .flow-body,
+.flow-pretrip[data-screen="note"] .flow-body { display: flex; flex-direction: column; }
 html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; margin-bottom: .75rem; gap: .5rem; }
 .flow-pretrip .registration-question-heading { gap: .5rem 1rem; }
 .flow-pretrip[data-screen] .registration-question-heading h1 {
@@ -62,7 +72,6 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
 @media (max-width: 959px), (max-height: 599px) {
   .flow-pretrip .flow-workspace { display: flex; flex-direction: column; }
   .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) { display: none; }
-  .flow-pretrip .flow-body { border: 1px solid var(--color-line); background: var(--color-surface); border-radius: var(--radius-medium); }
   .flow-pretrip .flow-bar-right { flex-wrap: wrap; }
   .flow-pretrip[data-screen="consent"] .flow-body > .panel { display: block; }
   .flow-pretrip .registration-language > span { display: none; }
@@ -82,7 +91,7 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
   .flow-pretrip .flow-body {
     /* 넘칠 때만 스크롤 막대가 생긴다. 「스크롤 필요 없음」으로 잘라 두면(clip) 큰 글자로 바꾼 뒤 아랫부분이 잘려 닿을 수 없었다. */
     flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: none;
-    scrollbar-width: thin; background: var(--color-surface); border: 1px solid var(--color-line);
+    scrollbar-width: thin;
   }
   .flow-pretrip .flow-body::-webkit-scrollbar { display: block; width: 6px; }
   .flow-pretrip .flow-cta { position: relative; flex: 0 0 auto; padding: .75rem 0 0; background: transparent; }
@@ -93,7 +102,6 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
   .flow-pretrip .flow-desktop-steps { scrollbar-width: thin; }
   .flow-pretrip[data-screen="stops"] .flow-body > .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
   html:not([data-kiosk]) .flow-pretrip .flow-body > .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem; border-top: 0; }
-  .flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: 3rem; }
   .flow-pretrip[data-screen="consent"] .flow-body > .panel { flex: 1 0 auto; }
   .flow-pretrip[data-screen="note"] .note-field { flex: 1; }
 }
