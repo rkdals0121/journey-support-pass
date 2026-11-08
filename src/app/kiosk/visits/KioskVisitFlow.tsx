@@ -12,6 +12,8 @@ import { hubOf, VISIT_STATES, type VisitView } from "@/lib/service-hubs";
 import { VISIT_STATE_EN, visitError } from "@/lib/visit-labels";
 import { HubMap } from "../../components/HubMap";
 import { MapPin, ArrowRight, Delete } from "lucide-react";
+import type { KioskReturn } from "@/lib/help-entry";
+import { StaffCall } from "../../components/StaffCall";
 import { FlowShell } from "../../components/FlowShell";
 import { IdleGuard } from "../../components/IdleGuard";
 import { SharedVisitPrivacy } from "../../components/SharedVisitPrivacy";
@@ -28,7 +30,7 @@ export function KioskVisitFlow({
   en: boolean;
   hubId?: string;
   place: string;
-  returnTo: string;
+  returnTo: KioskReturn;
   askSec: number;
   answerSec: number;
 }) {
@@ -153,6 +155,7 @@ export function KioskVisitFlow({
       controller.current?.abort();
     };
   }, [reset]);
+  const prefs = prefsOf(visit?.choices ?? []);
   const title = visit
     ? en
       ? VISIT_STATE_EN[visit.state]
@@ -161,9 +164,10 @@ export function KioskVisitFlow({
       ? t("예약한 만남 장소", "Your booked meeting point")
       : t("예약 확인번호 입력", "Enter appointment reference");
   return (
+    <>
     <FlowShell
       lang={en ? "en" : "ko"}
-      prefs={prefsOf(visit?.choices ?? [])}
+      prefs={prefs}
       kiosk
       screenKey={
         "visit-" + (visit?.state ?? (meetingPoint ? "destination" : "lookup"))
@@ -455,5 +459,18 @@ export function KioskVisitFlow({
         onTimeout={reset}
       />
     </FlowShell>
+    <div className="call-dock">
+      <div className="call-dock-inner">
+        <StaffCall
+          lang={en ? "en" : "ko"}
+          t={textOf(en ? "en" : "ko")}
+          big={prefs.wantsStaff}
+          token={null}
+          screen="guide"
+          returnTo={returnTo}
+        />
+      </div>
+    </div>
+    </>
   );
 }
