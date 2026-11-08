@@ -226,7 +226,7 @@
 }
 .sb-title {
   margin: 0.75rem 0 0;
-  font-size: var(--text-title);
+  font-size: var(--text-page-title);
   font-weight: var(--weight-heading);
   letter-spacing: -0.03em;
 }
@@ -362,7 +362,7 @@
 }
 .sb-head h1 {
   margin: 0;
-  font-size: var(--text-heading);
+  font-size: var(--text-page-title);
   font-weight: var(--weight-heading);
 }
 .sb-badge {
@@ -719,7 +719,7 @@
 }
 .sb-sheet h1 {
   margin: 0.5rem 0 0;
-  font-size: var(--text-title);
+  font-size: var(--text-page-title);
   font-weight: var(--weight-heading);
 }
 .sb-sub-ink {
@@ -806,7 +806,7 @@
 }
 .sb-camera-title {
   margin: 0;
-  font-size: var(--text-heading);
+  font-size: var(--text-page-title);
   text-align: center;
 }
 .sb-camera {
@@ -886,7 +886,7 @@
 /* 테마 고르기 */
 .sb-pick-title {
   margin: 1rem 0 0;
-  font-size: var(--text-title);
+  font-size: var(--text-page-title);
   font-weight: var(--weight-heading);
   line-height: 1.3;
 }

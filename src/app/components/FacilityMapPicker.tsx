@@ -30,6 +30,7 @@ type Props = {
   destination?: MapFacility | null;
   selectionRole?: "start" | "destination";
   kiosk?: boolean;
+  compactMobile?: boolean;
   deviceLayout?: "kiosk" | "robot";
   hideSelection?: boolean;
   fullscreen?: boolean;
@@ -51,7 +52,7 @@ type Props = {
 export function FacilityMapPicker({
   value, onChange, en = false, disabled = false, pickup, restrictToPickup = false,
   initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, searchResetKey = 0, route, start, destination, selectionRole = "destination",
-  kiosk = false, deviceLayout, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskHeadingAction, kioskBackHref, showSelectionTools = true, additionalHelp, selectionInstructions, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
+  kiosk = false, compactMobile = false, deviceLayout, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskHeadingAction, kioskBackHref, showSelectionTools = true, additionalHelp, selectionInstructions, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
 }: Props) {
   const id = useId();
   const shell = useRef<HTMLDivElement>(null);
@@ -60,20 +61,10 @@ export function FacilityMapPicker({
   const panel = useRef<HTMLElement>(null);
   const toolbar = useRef<HTMLElement>(null);
   const [panelOpen, setPanelOpen] = useState(true);
-  const [phoneViewport, setPhoneViewport] = useState(false);
   const [headerTop, setHeaderTop] = useState(0);
   const [padding, setPadding] = useState<[number,number,number,number]>([0,0,0,0]);
   const full = fullscreen;
-  const compactMobile = full && !kiosk && deviceLayout !== "robot" && phoneViewport;
   const panelVisible = compactMobile || panelOpen;
-  useEffect(() => {
-    if (!full || kiosk || deviceLayout === "robot") return;
-    const media = window.matchMedia("(max-width: 760px)");
-    const update = () => setPhoneViewport(media.matches);
-    media.addEventListener("change", update);
-    update();
-    return () => media.removeEventListener("change", update);
-  }, [full, kiosk, deviceLayout]);
 
   useEffect(() => {
     if (!full) { setPadding([0,0,0,0]); return; }

@@ -38,6 +38,7 @@
   --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-num: var(--font-num-loaded), "Arial Narrow", sans-serif;
   --text-caption: .75rem; --text-small: .875rem; --text-body: 1rem; --text-heading: 1.25rem; --text-title: 1.75rem; --text-large: 2.5rem; --text-display: 3.5rem;
+  --text-page-title: var(--text-title);
   --weight-body: 400; --weight-label: 600; --weight-heading: 700;
   --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem; --space-8: 4rem;
   --target-floor: 44px; --target-kiosk-floor: 64px;
@@ -47,4 +48,8 @@
   --motion-loading: 1.4s; --motion-spin: 1s; --motion-breathe: 4s; --motion-fast: 120ms; --motion-normal: 180ms; --motion-slow: 240ms; --ease-in: cubic-bezier(.4,0,1,1); --ease-out: cubic-bezier(0,0,.2,1);
   --nav-h: 4rem; --bar-h: 3.5rem; --col: 32.5rem;
 }
+/* 쪽 제목: 작은 화면은 기본 크기, 넓고 높은 웹 화면은 한 단계 크게 쓴다. */
+@media (min-width: 1101px) { :root { --text-page-title: var(--text-large); } }
+@media (max-height: 700px) { :root { --text-page-title: var(--text-title); } }
+html[data-kiosk] { --text-page-title: var(--text-title); }
 @media (forced-colors: active) { :root { --color-primary: ButtonText; --color-text: CanvasText; --color-muted: CanvasText; --color-canvas: Canvas; --color-surface: Canvas; --color-line: CanvasText; --color-control-line: ButtonText; --color-focus: Highlight; --color-primary-hover: CanvasText; --color-primary-soft: Canvas; --color-primary-faint: Canvas; --color-accent: Canvas; --color-accent-soft: Canvas; --color-accent-ink: CanvasText; --color-dark: Canvas; --color-on-dark: CanvasText; --color-on-dark-muted: CanvasText; --color-error: CanvasText; --color-error-soft: Canvas; --color-blue: CanvasText; --color-blue-soft: Canvas; --color-purple: CanvasText; --color-purple-soft: Canvas; --color-rose: CanvasText; --color-rose-soft: Canvas; } }

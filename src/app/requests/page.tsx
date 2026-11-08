@@ -7,9 +7,10 @@ import { redirect } from "next/navigation";
 export default async function Requests({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; entry?: string }>;
 }) {
-  const en = (await searchParams).lang === "en";
+  const { lang, entry } = await searchParams;
+  const en = lang === "en";
   const session = await currentSession();
   if (session?.isKiosk)
     redirect(
@@ -17,7 +18,7 @@ export default async function Requests({
     );
   return (
     <PublicShell lang={en ? "en" : "ko"}>
-      <MyRequests en={en}>
+      <MyRequests en={en} backHref={entry === "mobility" ? "/help?topic=mobility" + (en ? "&lang=en" : "") : undefined}>
         <SavedVisits en={en} />
       </MyRequests>
     </PublicShell>
