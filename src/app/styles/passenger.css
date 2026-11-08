@@ -19,9 +19,6 @@
 .public-eyebrow { display:flex; align-items:center; gap:0.5rem; font-size:var(--text-small); letter-spacing:.02em; font-weight:var(--weight-label); color:var(--color-primary-hover); }
 .prepare-intro h1 em { font-style:normal; color:var(--color-primary); }
 .prepare-intro>p { max-width:37rem; color:var(--color-muted); line-height:1.85; }
-.public-button:hover { background:var(--color-primary-hover); color:var(--color-surface); }
-.public-button-secondary { background:var(--color-surface); color:var(--color-primary-hover); border-color:var(--color-control-line); }
-.public-button-secondary:hover { background:var(--color-primary-soft); color:var(--color-primary-hover); }
 .public-text-link { display:inline-flex; align-items:center; gap:0.25rem; color:var(--color-primary-hover); font-weight:var(--weight-label); }
 .my-request-panel p { margin:0.25rem 0; }
 .public-caption { font-size:var(--text-small); color:var(--color-muted); line-height:1.7; }
@@ -65,6 +62,9 @@
 .public-nav a { font-weight:var(--weight-label); text-decoration:none; color:var(--color-dark); padding:0.25rem 0; font-size: var(--text-small); min-height: 2rem; display: inline-flex; align-items: center; }
 .public-nav a[aria-current=page] { color:var(--color-primary); text-decoration:underline; text-decoration-thickness:0.1875rem; text-underline-offset: .85rem; }
 .public-button { display:inline-flex; align-items:center; justify-content:center; gap:1rem; min-height: 3.1rem; padding: 0.75rem 1.25rem; border:0.0625rem solid var(--color-primary); border-radius: var(--radius-medium); background:var(--color-primary); color:var(--color-surface); font-weight:var(--weight-heading); text-decoration:none; font-size: var(--text-body); }
+.public-button:hover { background:var(--color-primary-hover); color:var(--color-surface); }
+.public-button-secondary { background:var(--color-surface); color:var(--color-primary-hover); border-color:var(--color-control-line); }
+.public-button-secondary:hover { background:var(--color-primary-soft); color:var(--color-primary-hover); }
 .my-request-panel { padding: 1.5rem; border:0.0625rem solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); display:flex; flex-direction:column; gap: 0.75rem; min-width: 0; }
 .my-request-panel h2 { font-size: var(--text-heading); margin: 0.25rem 0; }
 .my-request-panel>p { font-size: var(--text-small); line-height: 1.65; }
@@ -279,7 +279,7 @@
 .airport-site .request-section > h2, .airport-site .service-form-card h2 { font-size: var(--text-heading); letter-spacing: -0.03em; }
 .airport-site .request-section label:not(.dx-option), .airport-site .service-form-card > label { font-size: var(--text-body); }
 .airport-site .request-state-pill { transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out); }
-.booking-lookup { width:min(100% - 3rem,46rem); margin:var(--space-4) auto var(--space-5); color:var(--color-dark); }
+.booking-lookup { width:min(var(--site-bar-width),calc(100vw - 2 * var(--site-bar-gutter))); margin:var(--space-4) auto var(--space-5); color:var(--color-dark); }
 .booking-back { font-size:var(--text-small); color:var(--color-muted); text-decoration:underline; text-underline-offset:0.25rem; }
 .booking-lookup h1 { font-size:var(--text-page-title); letter-spacing:-.04em; margin:var(--space-2) 0; }
 .booking-demo-note { color:var(--color-muted); line-height:1.65; margin-bottom:var(--space-4); max-width:40rem; }
@@ -291,7 +291,14 @@
 .booking-fields { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); margin-top:var(--space-4); }
 .booking-actions { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:var(--space-4); }
 .booking-sample { border:0; background:none; padding:0.75rem 0; font:inherit; color:var(--color-primary-hover); text-decoration:underline; text-underline-offset:0.25rem; cursor:pointer; }
-.booking-manual { display:flex; align-items:center; justify-content:space-between; padding:1.25rem 0; color:var(--color-primary-hover); gap:1rem; }
+.booking-manual { min-height:max(2.75rem,var(--target-floor)); display:flex; align-items:center; justify-content:space-between; padding:1.25rem 0; color:var(--color-primary-hover); gap:1rem; }
+@media (max-height: 700px) {
+.booking-lookup { margin-bottom:var(--space-2); }
+.booking-lookup form { padding-block:var(--space-2); }
+.booking-fields { margin-top:var(--space-2); }
+.booking-actions { margin-top:var(--space-2); }
+.booking-manual { padding-block:var(--space-2); }
+}
 .booking-result h2 { font-size:var(--text-heading); margin:0 0 1.5rem; }
 .booking-itinerary { display:flex; align-items:center; gap:1rem; font-size:var(--text-title); font-weight:var(--weight-heading); }
 .booking-itinerary span { font-size:var(--text-body); font-weight:var(--weight-body); }
@@ -338,7 +345,7 @@
 .airport-site .public-footer-links a { color: var(--color-muted); text-decoration: none; }
 .airport-site .public-footer-links a:hover { text-decoration: underline; }
 .airport-site .public-button, .pretrip-site .public-button { font-weight: var(--weight-label); }
-.airport-site :is(.service-workspace, .booking-lookup) { max-width: 72rem; }
+.airport-site .service-workspace { max-width: 72rem; }
 .airport-site :is(.service-heading, .public-page-heading) h1 { font-size: var(--text-page-title); line-height: 1.35; letter-spacing: -0.035em; }
 .airport-site :is(.service-heading, .public-page-heading) > p { color: var(--color-muted); font-size: var(--text-body); }
 .airport-site :is(.service-kicker, .public-eyebrow) { font-size: var(--text-caption); font-weight: var(--weight-label); letter-spacing: 0; }
@@ -700,8 +707,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .airport-site .request-experience .request-section { padding: 1.25rem; }
 .airport-site .request-section .service-detail-list > div { grid-template-columns: 5rem minmax(0, 1fr); }
 }
-@media (max-width:600px) {
-.booking-lookup { width:calc(100% - 2rem); margin:1.5rem auto 3rem; }
+@media (max-width:760px) {
 .booking-fields { grid-template-columns:1fr; gap:1rem; }
 .booking-actions { align-items:stretch; flex-direction:column-reverse; }
 .booking-result dl { gap:0.75rem 1rem; }

@@ -1,0 +1,133 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "scale": "1",
+    "doc": 1077,
+    "sw": -15,
+    "bar": {
+      "left": 4.5,
+      "right": 370.5,
+      "top": 12,
+      "bottom": 132
+    },
+    "main": {
+      "left": 16,
+      "right": 359,
+      "top": 148,
+      "bottom": 872.734375
+    },
+    "form": {
+      "left": 16,
+      "right": 359,
+      "top": 293.96875,
+      "bottom": 807.9375
+    }
+  },
+  {
+    "width": 1333,
+    "height": 750,
+    "scale": "1",
+    "doc": 750,
+    "sw": -15,
+    "bar": {
+      "left": 12.5,
+      "right": 1305.5,
+      "top": 12,
+      "bottom": 88
+    },
+    "main": {
+      "left": 291,
+      "right": 1027,
+      "top": 104,
+      "bottom": 617.953125
+    },
+    "form": {
+      "left": 291,
+      "right": 1027,
+      "top": 223.578125,
+      "bottom": 553.15625
+    }
+  },
+  {
+    "width": 1920,
+    "height": 937,
+    "scale": "1",
+    "doc": 937,
+    "sw": -15,
+    "bar": {
+      "left": 280.5,
+      "right": 1624.5,
+      "top": 12,
+      "bottom": 105.6875
+    },
+    "main": {
+      "left": 584.5,
+      "right": 1320.5,
+      "top": 121.6875,
+      "bottom": 635.640625
+    },
+    "form": {
+      "left": 584.5,
+      "right": 1320.5,
+      "top": 241.265625,
+      "bottom": 570.84375
+    }
+  },
+  {
+    "width": 1280,
+    "height": 633,
+    "scale": "1",
+    "doc": 694,
+    "sw": -15,
+    "bar": {
+      "left": 12.5,
+      "right": 1252.5,
+      "top": 12,
+      "bottom": 88
+    },
+    "main": {
+      "left": 264.5,
+      "right": 1000.5,
+      "top": 104,
+      "bottom": 617.953125
+    },
+    "form": {
+      "left": 264.5,
+      "right": 1000.5,
+      "top": 223.578125,
+      "bottom": 553.15625
+    }
+  },
+  {
+    "width": 1333,
+    "height": 750,
+    "scale": "1.5",
+    "doc": 1033,
+    "sw": -15,
+    "bar": {
+      "left": 12.5,
+      "right": 1305.5,
+      "top": 12,
+      "bottom": 88
+    },
+    "main": {
+      "left": 107,
+      "right": 1211,
+      "top": 112,
+      "bottom": 880.921875
+    },
+    "form": {
+      "left": 107,
+      "right": 1211,
+      "top": 291.375,
+      "bottom": 783.734375
+    }
+  },
+  {
+    "flow": {
+      "demoFlightFound": true,
+      "registrationOpened": true
+    }
+  }
+]
