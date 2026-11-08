@@ -1610,6 +1610,22 @@ async function resetFlights(clearLocks = false) {
   check("로컬 거점의 시험용 운영시간을 원래 기준으로 돌린다",restoredMobilityRule.status === 200);
   fs.rmSync(bpFile, { force: true });
 
+  section("키오스크 방문 기록: 도움 요청");
+  const visitHelpBrowser = await launch();
+  const visitHelpPage = await open(visitHelpBrowser, KIOSK_WIDE);
+  await useCookie(visitHelpPage, await kioskCookie("cc-center"));
+  await visitHelpPage.goto(`${BASE}/kiosk/visits`, { waitUntil: "load", timeout: WAIT });
+  await waitText(visitHelpPage, "예약 확인번호 입력");
+  check("방문 기록에도 공용 도움 요청 버튼이 한 개 있다", (await count(visitHelpPage, ".call-btn")) === 1);
+  await clickText(visitHelpPage, ".call-btn", "도움 요청하기");
+  await visitHelpPage.waitForSelector(".field-task-shell", { timeout: WAIT });
+  check("방문 기록의 도움 요청은 안내 기기의 공용 접수 화면으로 연결된다", await visitHelpPage.evaluate(() => location.pathname === "/help" && new URL(location.href).searchParams.get("returnTo") === "/kiosk/guide"));
+  await shot(visitHelpPage, "방문기록-도움요청");
+  await visitHelpPage.click(".field-task-back");
+  await visitHelpPage.waitForSelector(".haneuli-welcome", { timeout: WAIT });
+  check("도움 접수 전 돌아가면 안내 기기의 서비스 화면이 열린다", true);
+  await visitHelpBrowser.close();
+
   browser = await launch();
   page = await open(browser, KIOSK_WIDE);
   await useCookie(page, desk);
