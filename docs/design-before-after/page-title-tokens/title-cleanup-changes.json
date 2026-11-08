@@ -1,0 +1,72 @@
+[
+  {
+    "file": "passenger.css",
+    "selector": ".flow-pretrip .flow-body h1",
+    "action": "중복 등록 제목 규칙 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".flow-pretrip .flow-body h1",
+    "action": "중복 등록 제목 규칙 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".public-page-heading h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".public-request-layout .dx-page>h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".public-request-layout .dx-page>h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".task-home-intro h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".airport-entry-copy h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".service-heading h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".service-heading h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".request-empty-state h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "passenger.css",
+    "selector": ".airport-site :is(.service-heading, .public-page-heading) h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "site-bar.css",
+    "selector": ".flow-pretrip .flow-body h1,\n.flow-pretrip[data-screen=\"trouble\"] .flow-body h1",
+    "action": "중복 등록 제목 규칙 제거"
+  },
+  {
+    "file": "kiosk-layout.css",
+    "selector": "html[data-kiosk] .flow-body .kiosk-appointment-page h1",
+    "action": "같은 토큰 재선언 제거"
+  },
+  {
+    "file": "kiosk-layout.css",
+    "selector": ".kc-hero h1",
+    "action": "같은 토큰 재선언 제거"
+  }
+]

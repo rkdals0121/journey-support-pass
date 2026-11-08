@@ -479,7 +479,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .prepare-steps { background: var(--color-surface); padding: 2rem; border-radius: var(--radius-medium); }
 .flow-pretrip { background: var(--color-canvas); max-width: 78rem; }
 .flow-pretrip .flow-workspace { gap: 2rem; padding: 2rem; grid-template-columns: 12rem minmax(0,1fr) 14rem; }
-.flow-pretrip .flow-body h1 { font-size: var(--text-page-title); letter-spacing: -0.035em; line-height: 1.35; }
 .flow-pretrip .flow-desktop-steps { border-right: 0.0625rem solid var(--color-line); padding-right: 1.5rem; padding: .5rem 0; background: transparent; border: 0; }
 .flow-pretrip .flow-desktop-summary { border: 0; border-top: 0.125rem solid var(--color-control-line); border-radius: 0; background: transparent; padding: .5rem 0; }
 .gate-sign { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 6.5rem; margin-left: auto; padding: 0.5rem 1rem; border-radius: var(--radius-small); background: var(--color-primary-soft); color: var(--color-primary-hover); line-height: 1.1; border-top: .25rem solid var(--color-accent); box-shadow: none; }
@@ -523,7 +522,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .public-footer { display:block; padding:2rem 1rem; font-size:var(--text-small); }
 .public-footer-links { margin-top:1.5rem; gap:1rem; }
 .public-page-heading { padding-bottom:1rem; }
-.public-page-heading h1 { font-size:var(--text-page-title); }
 .pretrip-header { padding:1rem 1rem; }
 .prepare-layout { display:flex; flex-direction:column; gap:2rem; padding:1rem 1.25rem; margin:1rem auto 2rem; }
 .prepare-intro h1 { font-size:var(--text-title); }
@@ -534,7 +532,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .public-request-layout { display:block; margin:0; padding:0; }
 .public-request-layout>.page { border:0; border-radius:0; padding:1.25rem 1rem 2rem; }
 .public-request-layout>.my-request-panel { display:none; }
-.public-request-layout .dx-page>h1 { font-size:var(--text-page-title); }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
 .public-request-layout { grid-template-columns: minmax(0,1fr); max-width: 50rem; }
@@ -562,7 +559,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .public-footer-links { margin-top: 1rem; font-size: var(--text-caption); gap: 0.75rem 1rem; }
 .public-request-layout { margin: 0; padding: 0; display: block; }
 .public-request-layout>.page { padding: 1.25rem; border: 0; border-radius: 0; }
-.public-request-layout .dx-page>h1 { font-size: var(--text-page-title); margin-bottom: 0.5rem; }
+.public-request-layout .dx-page>h1 { margin-bottom: 0.5rem; }
 .public-request-layout .dx-page>.dx-notice { font-size: var(--text-caption); margin-bottom: 1.25rem; }
 .public-request-layout .place-finder { padding: 1rem; }
 .public-request-layout .place-finder>label { font-size: var(--text-body); }
@@ -574,16 +571,15 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .public-request-layout .dx-page .place-area-filter label { font-size: var(--text-caption); min-height: max(2.5rem,var(--target-floor)); padding: 0.5rem 0.5rem; }
 .task-home { padding-block: var(--space-5) var(--space-6); }
 .task-home-hero { display: block; border: 0; border-radius: 0; padding: 0; }
-.task-home-intro h1 { font-size: var(--text-page-title); margin-bottom: 0.5rem; margin: 0 0 1rem; }
+.task-home-intro h1 { margin-bottom: 0.5rem; margin: 0 0 1rem; }
 .task-home .home-gate-form { padding: 1.5rem; margin: .5rem 0 0; }
 .task-home-services .task-launcher { grid-template-columns: 1fr; padding: 0 1.25rem; }
 .task-home-services .task-action { padding: 1.25rem 0; }
 .airport-entry-hero { display: block; margin-bottom: 1.75rem; padding-bottom: 2rem; padding: 0 0 1.5rem; margin: 0 0 1.5rem; }
-.airport-entry-copy h1 { font-size: var(--text-page-title); line-height: 1.28; letter-spacing: -0.045em; }
+.airport-entry-copy h1 { line-height: 1.28; letter-spacing: -0.045em; }
 .airport-service-grid { border-radius: var(--radius-medium); grid-template-columns: 1fr; gap: 0; padding: 0 1.25rem; }
 .airport-portal { padding: 1.5rem 1.25rem 2rem; }
 .airport-site .service-workspace { padding: 1.5rem 1.25rem 2rem; }
-.service-heading h1 { font-size: var(--text-page-title); }
 .request-section { padding: 1.5rem 1.25rem; }
 .pretrip-site .prepare-layout { gap: 2.5rem; padding-top: 2rem; display: block; padding: 2rem 1.25rem; margin: 0; }
 .prepare-intro h1 { font-size: var(--text-title); }
@@ -606,7 +602,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 @media (max-width:760px) {
 .service-workspace { padding:1.5rem 1rem 2.5rem; }
 .service-heading { margin-bottom:1.5rem; }
-.service-heading h1 { font-size:var(--text-page-title); margin:0.5rem 0 0.75rem; }
+.service-heading h1 { margin:0.5rem 0 0.75rem; }
 .service-heading>p { font-size:var(--text-small); }
 .service-kicker { font-size:var(--text-caption); }
 .service-demo-label { font-size:var(--text-caption); }
@@ -641,7 +637,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .request-reference { font-size:var(--text-caption); }
 .request-order-summary .service-detail-list>div { grid-template-columns:5.5rem minmax(0,1fr); font-size:var(--text-small); }
 .request-empty-state { padding:3rem 1.25rem; }
-.request-empty-state h1 { font-size:var(--text-page-title); }
 .request-empty-state h2 { font-size:var(--text-heading); }
 .request-local-tools { gap:0.75rem; font-size:var(--text-caption); flex-wrap:wrap; }
 .request-local-tools button { font-size:var(--text-caption); }
@@ -745,7 +740,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .airport-portal-support { grid-template-columns: 1fr; gap: 0; margin-top: 1.25rem; padding-top: 1.5rem; }
 .airport-site .public-footer { display: block; padding: 1.5rem 1.25rem; }
 .airport-site .public-footer-links { display: flex; gap: 0.75rem 1.25rem; margin-top: 1rem; align-items: flex-start; }
-.airport-site :is(.service-heading, .public-page-heading) h1 { font-size: var(--text-page-title); }
 .airport-site :is(.service-heading, .public-page-heading) > p { font-size: var(--text-small); line-height: 1.65; }
 .airport-site .request-stepbar { gap: 0.5rem; }
 .airport-site .request-stepbar li { font-size: var(--text-caption); }
@@ -759,7 +753,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .pretrip-site .prepare-intro h1 { font-size: var(--text-title); }
 .pretrip-site .prepare-intro > p { font-size: var(--text-body); }
 .pretrip-site .prepare-steps { border-left: 0; border-top: 0.0625rem solid var(--color-line); padding-left: 0; }
-.flow-pretrip .flow-body h1 { font-size: var(--text-page-title); }
 .flow-pretrip .flow-progress { padding-inline: 1.25rem; }
 .flow-pretrip .flow-cta-inner { padding: 0; }
 .flow-pretrip .flow-cta.cta-after { position: static; }

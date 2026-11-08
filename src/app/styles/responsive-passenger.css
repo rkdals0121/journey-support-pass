@@ -134,7 +134,7 @@
 }
 .flow-pretrip .registration-question-heading { align-items: center; }
 .flow-pretrip[data-screen] .registration-question-heading h1 {
-  margin: 0; font-size: var(--text-page-title); line-height: 1.3; letter-spacing: -.035em;
+  margin: 0; font-size: var(--text-page-title); line-height: 1.3; letter-spacing: -.035em; text-wrap: balance;
 }
 .flow-pretrip .registration-question-heading .multi-select-note { margin-block: 0; }
 .flow-pretrip .registration-page-heading :is(.lead, .flight-search-note) {
@@ -142,7 +142,6 @@
 }
 @media (max-width: 59.999rem) {
   .flow-pretrip .registration-page-heading { min-height: 7.5rem; }
-  .flow-pretrip[data-screen] .registration-question-heading h1 { font-size: var(--text-page-title); }
 }
 
 .flow-pretrip[data-screen="consent"] .info-row { padding-block: .75rem; }
@@ -197,9 +196,6 @@ html:not([data-kiosk]) .flow-pretrip .registration-page-heading {
 .flow-pretrip[data-screen="note"] .flow-body { display: flex; flex-direction: column; }
 html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; margin-bottom: .75rem; gap: .5rem; }
 .flow-pretrip .registration-question-heading { gap: .5rem 1rem; }
-.flow-pretrip[data-screen] .registration-question-heading h1 {
-  font-size: var(--text-page-title); text-wrap: balance;
-}
 .flow-pretrip .multi-select-note { flex-shrink: 0; }
 .flow-pretrip .choice,
 .flow-pretrip[data-screen="trouble"] .choice {

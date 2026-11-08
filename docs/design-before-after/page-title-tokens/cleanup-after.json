@@ -1,0 +1,1766 @@
+[
+  {
+    "kiosk": false,
+    "w": 390,
+    "h": 844,
+    "scale": 1,
+    "screen": "trouble",
+    "doc": 1022,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "28px",
+          "fontWeight": "700",
+          "lineHeight": "36.4px",
+          "letterSpacing": "-0.98px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          37.5,
+          216.6875,
+          234.046875,
+          36.390625
+        ],
+        "client": 36,
+        "scroll": 36
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-16px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          5.5,
+          175.6875,
+          364,
+          123.390625
+        ],
+        "client": 122,
+        "scroll": 122
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          4.5,
+          174.6875,
+          366,
+          767.078125
+        ],
+        "client": 765,
+        "scroll": 765
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "12px"
+        },
+        "rect": [
+          4.5,
+          764,
+          366,
+          80
+        ],
+        "client": 80,
+        "scroll": 80
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 390,
+    "h": 844,
+    "scale": 1,
+    "screen": "consent",
+    "doc": 1127,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "28px",
+          "fontWeight": "700",
+          "lineHeight": "36.4px",
+          "letterSpacing": "-0.98px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          37.5,
+          216.6875,
+          248.65625,
+          36.390625
+        ],
+        "client": 36,
+        "scroll": 36
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-16px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          5.5,
+          175.6875,
+          364,
+          94.390625
+        ],
+        "client": 93,
+        "scroll": 93
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "48px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          4.5,
+          174.6875,
+          366,
+          812.640625
+        ],
+        "client": 811,
+        "scroll": 811
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "12px"
+        },
+        "rect": [
+          4.5,
+          752,
+          366,
+          92
+        ],
+        "client": 92,
+        "scroll": 92
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 390,
+    "h": 844,
+    "scale": 1.5,
+    "screen": "trouble",
+    "doc": 1530,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "42px",
+          "fontWeight": "700",
+          "lineHeight": "54.6px",
+          "letterSpacing": "-1.47px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          53.5,
+          273.546875,
+          268,
+          109.1875
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "-16px",
+          "marginBottom": "24px",
+          "paddingTop": "24px",
+          "paddingBottom": "24px"
+        },
+        "rect": [
+          5.5,
+          212.046875,
+          364,
+          239.1875
+        ],
+        "client": 238,
+        "scroll": 238
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          4.5,
+          211.046875,
+          366,
+          1198.921875
+        ],
+        "client": 1197,
+        "scroll": 1197
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "18px"
+        },
+        "rect": [
+          4.5,
+          724,
+          366,
+          120
+        ],
+        "client": 120,
+        "scroll": 120
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 390,
+    "h": 844,
+    "scale": 1.5,
+    "screen": "consent",
+    "doc": 2171,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "42px",
+          "fontWeight": "700",
+          "lineHeight": "54.6px",
+          "letterSpacing": "-1.47px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          53.5,
+          273.546875,
+          268,
+          109.1875
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "-16px",
+          "marginBottom": "24px",
+          "paddingTop": "24px",
+          "paddingBottom": "24px"
+        },
+        "rect": [
+          5.5,
+          212.046875,
+          364,
+          195.6875
+        ],
+        "client": 195,
+        "scroll": 195
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "72px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          4.5,
+          211.046875,
+          366,
+          1750.03125
+        ],
+        "client": 1748,
+        "scroll": 1748
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "18px"
+        },
+        "rect": [
+          4.5,
+          706,
+          366,
+          138
+        ],
+        "client": 138,
+        "scroll": 138
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1333,
+    "h": 750,
+    "scale": 1,
+    "screen": "trouble",
+    "doc": 750,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "40px",
+          "fontWeight": "700",
+          "lineHeight": "52px",
+          "letterSpacing": "-1.4px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          45.5,
+          161.6875,
+          334.34375,
+          52
+        ],
+        "client": 52,
+        "scroll": 52
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-26.66px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          13.5,
+          120.6875,
+          1291,
+          110
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "26.66px",
+          "paddingBottom": "26.66px"
+        },
+        "rect": [
+          12.5,
+          119.6875,
+          1293,
+          562.3125
+        ],
+        "client": 560,
+        "scroll": 560
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          12.5,
+          682,
+          1293,
+          68
+        ],
+        "client": 68,
+        "scroll": 68
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1333,
+    "h": 750,
+    "scale": 1,
+    "screen": "consent",
+    "doc": 750,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "40px",
+          "fontWeight": "700",
+          "lineHeight": "52px",
+          "letterSpacing": "-1.4px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          45.5,
+          161.6875,
+          355.21875,
+          52
+        ],
+        "client": 52,
+        "scroll": 52
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-26.66px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          13.5,
+          120.6875,
+          1291,
+          110
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "48px",
+          "paddingTop": "26.66px",
+          "paddingBottom": "26.66px"
+        },
+        "rect": [
+          12.5,
+          119.6875,
+          1293,
+          502.3125
+        ],
+        "client": 500,
+        "scroll": 500
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          12.5,
+          670,
+          1293,
+          80
+        ],
+        "client": 80,
+        "scroll": 80
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1333,
+    "h": 750,
+    "scale": 1.5,
+    "screen": "trouble",
+    "doc": 750,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "60px",
+          "fontWeight": "700",
+          "lineHeight": "78px",
+          "letterSpacing": "-2.1px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          61.5,
+          198.046875,
+          501.5,
+          78
+        ],
+        "client": 78,
+        "scroll": 78
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "-26.66px",
+          "marginBottom": "24px",
+          "paddingTop": "24px",
+          "paddingBottom": "24px"
+        },
+        "rect": [
+          13.5,
+          136.546875,
+          1291,
+          164.5
+        ],
+        "client": 164,
+        "scroll": 164
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "26.66px",
+          "paddingBottom": "26.66px"
+        },
+        "rect": [
+          12.5,
+          135.546875,
+          1293,
+          512.453125
+        ],
+        "client": 510,
+        "scroll": 642
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          12.5,
+          648,
+          1293,
+          102
+        ],
+        "client": 102,
+        "scroll": 102
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1333,
+    "h": 750,
+    "scale": 1.5,
+    "screen": "consent",
+    "doc": 750,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "60px",
+          "fontWeight": "700",
+          "lineHeight": "78px",
+          "letterSpacing": "-2.1px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          61.5,
+          198.046875,
+          532.828125,
+          78
+        ],
+        "client": 78,
+        "scroll": 78
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "-26.66px",
+          "marginBottom": "24px",
+          "paddingTop": "24px",
+          "paddingBottom": "24px"
+        },
+        "rect": [
+          13.5,
+          136.546875,
+          1291,
+          164.5
+        ],
+        "client": 164,
+        "scroll": 164
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "72px",
+          "paddingTop": "26.66px",
+          "paddingBottom": "26.66px"
+        },
+        "rect": [
+          12.5,
+          135.546875,
+          1293,
+          422.453125
+        ],
+        "client": 420,
+        "scroll": 687
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          12.5,
+          630,
+          1293,
+          120
+        ],
+        "client": 120,
+        "scroll": 120
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1920,
+    "h": 937,
+    "scale": 1.5,
+    "screen": "trouble",
+    "doc": 937,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "40px",
+          "fontWeight": "700",
+          "lineHeight": "52px",
+          "letterSpacing": "-1.4px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          313.5,
+          179.375,
+          334.34375,
+          52
+        ],
+        "client": 52,
+        "scroll": 52
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-32px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          281.5,
+          138.375,
+          1342,
+          110
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "32px",
+          "paddingBottom": "32px"
+        },
+        "rect": [
+          280.5,
+          137.375,
+          1344,
+          731.625
+        ],
+        "client": 730,
+        "scroll": 730
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          280.5,
+          869,
+          1344,
+          68
+        ],
+        "client": 68,
+        "scroll": 68
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1920,
+    "h": 937,
+    "scale": 1.5,
+    "screen": "consent",
+    "doc": 937,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "60px",
+          "fontWeight": "700",
+          "lineHeight": "78px",
+          "letterSpacing": "-2.1px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          329.5,
+          215.734375,
+          532.828125,
+          78
+        ],
+        "client": 78,
+        "scroll": 78
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "-32px",
+          "marginBottom": "24px",
+          "paddingTop": "24px",
+          "paddingBottom": "24px"
+        },
+        "rect": [
+          281.5,
+          154.234375,
+          1342,
+          164.5
+        ],
+        "client": 164,
+        "scroll": 164
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "72px",
+          "paddingTop": "32px",
+          "paddingBottom": "32px"
+        },
+        "rect": [
+          280.5,
+          153.234375,
+          1344,
+          591.765625
+        ],
+        "client": 590,
+        "scroll": 854
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          280.5,
+          817,
+          1344,
+          120
+        ],
+        "client": 120,
+        "scroll": 120
+      }
+    ]
+  },
+  {
+    "kiosk": true,
+    "w": 1920,
+    "h": 1080,
+    "scale": 1,
+    "screen": "trouble",
+    "doc": 1080,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "28px",
+          "fontWeight": "700",
+          "lineHeight": "36.4px",
+          "letterSpacing": "-0.98px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          506.765625,
+          235.6875,
+          234.046875,
+          36.390625
+        ],
+        "client": 36,
+        "scroll": 36
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "12px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          506.765625,
+          206.6875,
+          835.125,
+          88
+        ],
+        "client": 88,
+        "scroll": 88
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "32px",
+          "paddingBottom": "32px"
+        },
+        "rect": [
+          473.765625,
+          173.6875,
+          901.125,
+          806.3125
+        ],
+        "client": 804,
+        "scroll": 804
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          473.765625,
+          980,
+          901.125,
+          68
+        ],
+        "client": 68,
+        "scroll": 68
+      }
+    ]
+  },
+  {
+    "kiosk": true,
+    "w": 1920,
+    "h": 1080,
+    "scale": 1.5,
+    "screen": "trouble",
+    "doc": 1080,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "42px",
+          "fontWeight": "700",
+          "lineHeight": "54.6px",
+          "letterSpacing": "-1.47px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          381.3125,
+          266.046875,
+          351.0625,
+          54.59375
+        ],
+        "client": 55,
+        "scroll": 55
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "18px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          381.3125,
+          222.546875,
+          1071.28125,
+          132
+        ],
+        "client": 132,
+        "scroll": 132
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "32px",
+          "paddingBottom": "32px"
+        },
+        "rect": [
+          348.3125,
+          189.546875,
+          1137.28125,
+          756.453125
+        ],
+        "client": 754,
+        "scroll": 754
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          348.3125,
+          946,
+          1137.28125,
+          102
+        ],
+        "client": 102,
+        "scroll": 102
+      }
+    ]
+  },
+  {
+    "kiosk": true,
+    "w": 1024,
+    "h": 768,
+    "scale": 1,
+    "screen": "trouble",
+    "doc": 768,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "28px",
+          "fontWeight": "700",
+          "lineHeight": "36.4px",
+          "letterSpacing": "-0.98px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          268.125,
+          189.375,
+          234.046875,
+          36.390625
+        ],
+        "client": 36,
+        "scroll": 36
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "12px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          268.125,
+          160.375,
+          700.984375,
+          76
+        ],
+        "client": 76,
+        "scroll": 76
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "20.48px",
+          "paddingBottom": "20.48px"
+        },
+        "rect": [
+          246.65625,
+          138.90625,
+          743.921875,
+          526.671875
+        ],
+        "client": 525,
+        "scroll": 525
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "8px",
+          "paddingBottom": "12px"
+        },
+        "rect": [
+          246.65625,
+          665.578125,
+          743.921875,
+          84
+        ],
+        "client": 84,
+        "scroll": 84
+      }
+    ]
+  },
+  {
+    "kiosk": true,
+    "w": 1024,
+    "h": 768,
+    "scale": 1.5,
+    "screen": "trouble",
+    "doc": 768,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "42px",
+          "fontWeight": "700",
+          "lineHeight": "54.6px",
+          "letterSpacing": "-1.47px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          322.3125,
+          219.734375,
+          351.0625,
+          54.59375
+        ],
+        "client": 55,
+        "scroll": 55
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "18px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          322.3125,
+          176.234375,
+          646.796875,
+          114
+        ],
+        "client": 114,
+        "scroll": 114
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "20.48px",
+          "paddingBottom": "20.48px"
+        },
+        "rect": [
+          300.84375,
+          154.765625,
+          689.734375,
+          487.625
+        ],
+        "client": 486,
+        "scroll": 553
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "18px"
+        },
+        "rect": [
+          300.84375,
+          642.390625,
+          689.734375,
+          107.1875
+        ],
+        "client": 107,
+        "scroll": 107
+      }
+    ]
+  },
+  {
+    "kiosk": true,
+    "w": 1080,
+    "h": 1920,
+    "scale": 1,
+    "screen": "trouble",
+    "doc": 1920,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "28px",
+          "fontWeight": "700",
+          "lineHeight": "36.4px",
+          "letterSpacing": "-0.98px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          282.9375,
+          212.71875,
+          234.046875,
+          36.390625
+        ],
+        "client": 36,
+        "scroll": 36
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "12px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          282.9375,
+          183.71875,
+          740.03125,
+          88
+        ],
+        "client": 88,
+        "scroll": 88
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "21.6px",
+          "paddingBottom": "21.6px"
+        },
+        "rect": [
+          260.34375,
+          161.125,
+          785.21875,
+          1671.4375
+        ],
+        "client": 1669,
+        "scroll": 1669
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          260.34375,
+          1832.5625,
+          785.21875,
+          68
+        ],
+        "client": 68,
+        "scroll": 68
+      }
+    ]
+  },
+  {
+    "kiosk": true,
+    "w": 1080,
+    "h": 1920,
+    "scale": 1.5,
+    "screen": "trouble",
+    "doc": 1920,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "42px",
+          "fontWeight": "700",
+          "lineHeight": "54.6px",
+          "letterSpacing": "-1.47px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          325.46875,
+          243.078125,
+          351.0625,
+          54.59375
+        ],
+        "client": 55,
+        "scroll": 55
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "18px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          325.46875,
+          199.578125,
+          697.5,
+          132
+        ],
+        "client": 132,
+        "scroll": 132
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "21.6px",
+          "paddingBottom": "21.6px"
+        },
+        "rect": [
+          302.875,
+          176.984375,
+          742.6875,
+          1621.578125
+        ],
+        "client": 1620,
+        "scroll": 1620
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "24px",
+          "fontWeight": "400",
+          "lineHeight": "37.2px",
+          "letterSpacing": "-0.24px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "18px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          302.875,
+          1798.5625,
+          742.6875,
+          102
+        ],
+        "client": 102,
+        "scroll": 102
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1920,
+    "h": 937,
+    "scale": 1,
+    "screen": "trouble",
+    "doc": 937,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "40px",
+          "fontWeight": "700",
+          "lineHeight": "52px",
+          "letterSpacing": "-1.4px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          313.5,
+          179.375,
+          334.34375,
+          52
+        ],
+        "client": 52,
+        "scroll": 52
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-32px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          281.5,
+          138.375,
+          1342,
+          110
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "32px",
+          "paddingBottom": "32px"
+        },
+        "rect": [
+          280.5,
+          137.375,
+          1344,
+          731.625
+        ],
+        "client": 730,
+        "scroll": 730
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          280.5,
+          869,
+          1344,
+          68
+        ],
+        "client": 68,
+        "scroll": 68
+      }
+    ]
+  },
+  {
+    "kiosk": false,
+    "w": 1920,
+    "h": 937,
+    "scale": 1,
+    "screen": "consent",
+    "doc": 937,
+    "values": [
+      {
+        "sel": ".registration-question-heading h1",
+        "style": {
+          "fontSize": "40px",
+          "fontWeight": "700",
+          "lineHeight": "52px",
+          "letterSpacing": "-1.4px",
+          "textWrap": "balance",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "0px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          313.5,
+          179.375,
+          355.21875,
+          52
+        ],
+        "client": 52,
+        "scroll": 52
+      },
+      {
+        "sel": ".registration-page-heading",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "-32px",
+          "marginBottom": "16px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px"
+        },
+        "rect": [
+          281.5,
+          138.375,
+          1342,
+          110
+        ],
+        "client": 109,
+        "scroll": 109
+      },
+      {
+        "sel": ".flow-body",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "48px",
+          "paddingTop": "32px",
+          "paddingBottom": "32px"
+        },
+        "rect": [
+          280.5,
+          137.375,
+          1344,
+          671.625
+        ],
+        "client": 670,
+        "scroll": 670
+      },
+      {
+        "sel": ".flow-cta",
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24.8px",
+          "letterSpacing": "-0.16px",
+          "textWrap": "wrap",
+          "marginTop": "0px",
+          "marginBottom": "0px",
+          "paddingTop": "12px",
+          "paddingBottom": "0px"
+        },
+        "rect": [
+          280.5,
+          857,
+          1344,
+          80
+        ],
+        "client": 80,
+        "scroll": 80
+      }
+    ]
+  }
+]

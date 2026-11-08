@@ -280,7 +280,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family:
 @media (max-height: 700px) {
   html[data-kiosk] .kiosk-appointment-page { padding-top: var(--space-2); }
   .kx-code { gap: var(--space-5); padding: var(--space-5); }
-  html[data-kiosk] .flow-body .kiosk-appointment-page h1 { margin-bottom: var(--space-2); font-size: var(--text-page-title); }
+  html[data-kiosk] .flow-body .kiosk-appointment-page h1 { margin-bottom: var(--space-2); }
   .kx-code-entry .kx-here { margin-bottom: var(--space-2); }
   .kx-code-entry .kx-lead { margin-bottom: var(--space-3); font-size: var(--text-small); }
   .kx-code-slot { height: 3.5rem; }
@@ -474,7 +474,6 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 @media (max-height: 700px) {
   .flow.kiosk-content, .kc-page { gap: var(--space-1); }
   .kc-hero { padding-block: var(--space-1); }
-  .kc-hero h1 { font-size: var(--text-page-title); }
   .kc-hero p { font-size: var(--text-caption); }
   .kc-directions .kx-guide { gap: var(--space-1); }
   .kc-directions .gate-go { padding-block: var(--space-2); }

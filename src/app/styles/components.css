@@ -275,7 +275,7 @@ html[data-picture] .route > li::before { left: 2rem; top: 4rem; }
 .scan-dot.on { background: var(--color-primary); box-shadow: 0 0 0 0.25rem var(--color-overlay); }
 .brand { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: var(--weight-heading); letter-spacing: -0.02em; }
 .sunflower { width: 1.75rem; height: 1.75rem; }
-.hero h1 { font-size: var(--text-page-title); }
+.hero h1 { font-size: var(--text-title); }
 .hero h1 em { color: var(--color-primary); font-style: normal; }
 .hero p { color: var(--color-muted); }
 .pass-art { display: flex; justify-content: center; margin: 1.5rem 0; }
