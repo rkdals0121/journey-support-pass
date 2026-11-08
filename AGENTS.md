@@ -53,7 +53,7 @@
 - 누르는 것은 최소 44×44px(휴대전화), 키오스크는 64px 높이 이상. 라벨이 있는 선택 칸은 라벨 전체가 눌려야 한다.
 
 ## 4. 스타일 파일 구조: 덧칠 금지
-- **`src/app/layout.tsx` 맨 끝에 「앞 파일을 덮는 새 CSS 파일」을 더하지 않는다.** 지금 이렇게 쌓인 파일들(`kiosk-layout`, `haneuli`, `sunflower`, `site-bar`, `responsive-passenger`)이 서로를 덮어 화면이 흔들렸다. 고칠 곳이 이미 있는 파일에서 고친다.
+- **`src/app/layout.tsx` 맨 끝에 「앞 파일을 덮는 새 CSS 파일」을 더하지 않는다.** 이렇게 쌓인 파일들(`kiosk-layout`, `haneuli`, `site-bar`, `responsive-passenger`, 지금은 지운 `sunflower`)이 서로를 덮어 화면이 흔들렸다. 고칠 곳이 이미 있는 파일에서 고친다.
 - 어디를 고치나
   - 공통 부품(버튼, 입력, 칸): `components.css`
   - 여객 화면(휴대전화·웹, 사전등록): `passenger.css` / 사전등록 배치는 `responsive-passenger.css`
