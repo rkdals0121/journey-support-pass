@@ -22,7 +22,8 @@ html[data-kiosk] .call-dock {
   border: 0;
   background: transparent;
 }
-html[data-kiosk] .call-dock-inner { height: var(--bar-real, var(--bar-h)); padding: 0 calc(1.25rem / var(--scale, 1)); }
+/* 메뉴가 여러 줄이어도 도움 단추는 공용 바의 첫 줄을 기준으로 정렬한다. */
+html[data-kiosk] .call-dock-inner { height: var(--site-bar-height); padding: 0 calc(1.25rem / var(--scale, 1)); }
 /* 크기를 고정한다. 여객이 큰 글씨(--scale)를 골라도 이 단추는 커지지 않는다(모든 화면 같은 자리·같은 크기).
    글자 배율로 나눠 화면 위 실제 크기를 그대로 둔다. */
 html[data-kiosk] .call-btn {

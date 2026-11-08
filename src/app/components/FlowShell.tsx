@@ -178,7 +178,7 @@ export function FlowShell({
   }, [prefs]);
 
   // 글자 크기와 그림 크기는 문서 전체에 건다. 화면의 모든 치수가 글자 크기를 따라 함께 커진다.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.toggleAttribute("data-kiosk", kiosk);
     root.toggleAttribute("data-picture", picture);
@@ -256,6 +256,14 @@ export function FlowShell({
   const changed =
     view.scale !== null || view.picture !== null || view.voice !== null;
 
+  // 키오스크 표시를 effect까지 늦추면 초기 HTML에 웹용 도움 줄이 그려진다.
+  // 바와 도움 줄을 그리기 전에 공용 표시와 검증된 기기 배율만 먼저 적용한다.
+  const earlyKiosk = [
+    'document.documentElement.setAttribute("data-kiosk","")',
+    `document.documentElement.style.setProperty("--scale","${prefs.large ? 1.25 : 1}")`,
+    `try{const v=JSON.parse(sessionStorage.getItem("jsp:view")||"{}");if(${JSON.stringify(SCALES)}.includes(v?.scale))document.documentElement.style.setProperty("--scale",String(v.scale))}catch{}`,
+    `document.documentElement.lang=${JSON.stringify(lang)}`,
+  ].join(";");
   return (
     <div
       className={
@@ -268,6 +276,7 @@ export function FlowShell({
       lang={lang}
       onClickCapture={swallowEarly}
     >
+      {kiosk ? <script dangerouslySetInnerHTML={{ __html: earlyKiosk }} /> : null}
       <header className="flow-bar" ref={barRef}>
         {kiosk && <SharedVisitPrivacy />}
         {serviceHome && <Brand />}

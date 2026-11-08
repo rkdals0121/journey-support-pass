@@ -1612,6 +1612,46 @@ async function resetFlights(clearLocks = false) {
 
   section("키오스크 방문 기록: 도움 요청");
   const visitHelpBrowser = await launch();
+  // 외부 JS를 늦춰도 초기 HTML부터 공용 키오스크 바의 도움 자리 예약이 적용되어야 한다.
+  const visitInitialPage = await open(visitHelpBrowser, { width: 1024, height: 768, hasTouch: true });
+  await useCookie(visitInitialPage, await kioskCookie("cc-center"));
+  await visitInitialPage.evaluateOnNewDocument(() => sessionStorage.setItem("jsp:view", JSON.stringify({ scale: 1.5, voice: null, picture: null })));
+  let releaseVisitScripts!: () => void;
+  const visitScriptGate = new Promise<void>((resolve) => { releaseVisitScripts = resolve; });
+  let heldVisitScripts = 0;
+  await visitInitialPage.setRequestInterception(true);
+  visitInitialPage.on("request", (request) => {
+    void (async () => {
+      if (request.resourceType() === "script" && request.url().includes("/_next/static/")) {
+        heldVisitScripts++;
+        await visitScriptGate;
+      }
+      try { await request.continue(); } catch { /* 닫힌 페이지의 요청은 이어 보내지 않는다. */ }
+    })();
+  });
+  const visitInitialLoad = visitInitialPage.goto(`${BASE}/kiosk/visits`, { waitUntil: "load", timeout: WAIT }).catch(() => null);
+  try {
+    await visitInitialPage.waitForSelector(".call-btn", { timeout: WAIT });
+    await visitInitialPage.evaluate(() => document.fonts.ready);
+    const initialVisitBar = await visitInitialPage.evaluate(() => {
+      const bar = document.querySelector(".flow-bar")!;
+      const call = document.querySelector(".call-btn")!.getBoundingClientRect();
+      return {
+        reserved: bar.matches("html[data-kiosk] body:has(.call-dock) .flow .flow-bar"),
+        scale: getComputedStyle(document.documentElement).getPropertyValue("--scale").trim(),
+        overlaps: [...bar.querySelectorAll("button,a")].filter((node) => {
+          const box = node.getBoundingClientRect();
+          return Math.min(box.right, call.right) > Math.max(box.left, call.left) && Math.min(box.bottom, call.bottom) > Math.max(box.top, call.top);
+        }).length,
+      };
+    });
+    check("외부 JS가 늦어도 방문 기록의 초기 도움 버튼은 큰 글자 바 메뉴를 가리지 않는다", heldVisitScripts > 0 && initialVisitBar.reserved && initialVisitBar.scale === "1.5" && initialVisitBar.overlaps === 0);
+    await shot(visitInitialPage, "방문기록-초기키오스크바");
+  } finally {
+    releaseVisitScripts();
+    await visitInitialLoad;
+    await visitInitialPage.close();
+  }
   const visitHelpPage = await open(visitHelpBrowser, KIOSK_WIDE);
   await useCookie(visitHelpPage, await kioskCookie("cc-center"));
   await visitHelpPage.goto(`${BASE}/kiosk/visits`, { waitUntil: "load", timeout: WAIT });
