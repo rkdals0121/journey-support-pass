@@ -63,7 +63,7 @@ html[data-kiosk] .call-btn svg { width: calc(1.375rem / var(--scale, 1)); height
 .kx-here svg { width: 1.125rem; height: 1.125rem; flex: none; }
 html[data-kiosk] .flow-body .kx-home-intro h1 {
   margin: 0 0 var(--space-3);
-  font-size: var(--text-title);
+  font-size: var(--text-page-title);
   font-weight: var(--weight-heading);
   line-height: 1.3;
   letter-spacing: -0.03em;
@@ -179,7 +179,7 @@ html[data-kiosk] .flow-body:has(> .kiosk-appointment-page > .kx-code) { display:
 html[data-kiosk] .kiosk-appointment-page:has(> .kx-code) { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; }
 html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
   margin: 0 0 var(--space-3);
-  font-size: var(--text-title);
+  font-size: var(--text-page-title);
   font-weight: var(--weight-heading);
   line-height: 1.3;
   letter-spacing: -0.03em;
@@ -280,7 +280,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family:
 @media (max-height: 700px) {
   html[data-kiosk] .kiosk-appointment-page { padding-top: var(--space-2); }
   .kx-code { gap: var(--space-5); padding: var(--space-5); }
-  html[data-kiosk] .flow-body .kiosk-appointment-page h1 { margin-bottom: var(--space-2); font-size: var(--text-heading); }
+  html[data-kiosk] .flow-body .kiosk-appointment-page h1 { margin-bottom: var(--space-2); font-size: var(--text-page-title); }
   .kx-code-entry .kx-here { margin-bottom: var(--space-2); }
   .kx-code-entry .kx-lead { margin-bottom: var(--space-3); font-size: var(--text-small); }
   .kx-code-slot { height: 3.5rem; }
@@ -293,7 +293,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family:
 
 /* ── 고유 일련 번호 넣는 화면 ── 같은 틀: 왼쪽 번호 칸, 오른쪽 숫자판 */
 html[data-kiosk] .flow-body .kx-number { padding: var(--space-5) var(--space-6); align-items: center; }
-html[data-kiosk] .flow-body .kx-number h1 { margin: 0; font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.3; letter-spacing: -0.03em; }
+html[data-kiosk] .flow-body .kx-number h1 { margin: 0; font-size: var(--text-page-title); font-weight: var(--weight-heading); line-height: 1.3; letter-spacing: -0.03em; }
 html[data-kiosk] .flow-body .kx-number .kx-here { align-self: flex-start; margin-bottom: var(--space-2); }
 html[data-kiosk] .flow-body .kx-number .code-boxes { justify-content: flex-start; margin: var(--space-2) 0 0; }
 html[data-kiosk] .flow-body .kx-number .code-boxes span { width: 3.5rem; height: 4.5rem; background: var(--color-surface); }
@@ -384,7 +384,7 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kiosk-content .flow-cta .btn { flex: 1; min-height: var(--target-kiosk-floor); padding: var(--space-2) var(--space-3); font-size: var(--text-small); }
 .kc-page { min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-2); }
 .kc-hero { min-height: 0; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-3) var(--space-5); }
-.kc-hero h1 { max-width: none; margin: 0; font-size: var(--text-heading); line-height: 1.25; }
+.kc-hero h1 { max-width: none; margin: 0; font-size: var(--text-page-title); line-height: 1.25; }
 .kc-hero p { margin: var(--space-1) 0 0; font-size: var(--text-small); line-height: 1.4; }
 .kc-hero .ph-hero-art { width: clamp(3rem, 10dvh, 6rem); }
 .kc-hero .ph-hero-art img { width: 100%; max-height: 10dvh; }
@@ -474,7 +474,7 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 @media (max-height: 700px) {
   .flow.kiosk-content, .kc-page { gap: var(--space-1); }
   .kc-hero { padding-block: var(--space-1); }
-  .kc-hero h1 { font-size: var(--text-body); }
+  .kc-hero h1 { font-size: var(--text-page-title); }
   .kc-hero p { font-size: var(--text-caption); }
   .kc-directions .kx-guide { gap: var(--space-1); }
   .kc-directions .gate-go { padding-block: var(--space-2); }

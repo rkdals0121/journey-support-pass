@@ -1,0 +1,1523 @@
+[
+  {
+    "name": "/",
+    "width": 390,
+    "height": 844,
+    "doc": 1630,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "공항에서 무엇을 도와드릴까요?",
+        "size": "28px",
+        "lines": 2
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services",
+    "width": 390,
+    "height": 844,
+    "doc": 1772,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "서비스 찾기",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services/desks",
+    "width": 390,
+    "height": 844,
+    "doc": 1242,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "안내데스크 위치",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services/lost-property",
+    "width": 390,
+    "height": 844,
+    "doc": 909,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "분실물 안내",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/prepare",
+    "width": 390,
+    "height": 844,
+    "doc": 959,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "출발 전, 더 편안하게.",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/prepare/booking",
+    "width": 390,
+    "height": 844,
+    "doc": 1077,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "예약정보 불러오기",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/register",
+    "width": 390,
+    "height": 844,
+    "doc": 1017,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "24px",
+        "lines": 0.999599358974359
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 842,
+        "scroll": 842
+      },
+      {
+        "class": "flow-body",
+        "client": 760,
+        "scroll": 760
+      }
+    ]
+  },
+  {
+    "name": "/help",
+    "width": 390,
+    "height": 844,
+    "doc": 1232,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 도움이 필요하세요?",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/navigate",
+    "width": 390,
+    "height": 844,
+    "doc": 844,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "탑승구·시설 찾기",
+        "size": "20px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/requests",
+    "width": 390,
+    "height": 844,
+    "doc": 895,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "내 요청",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/visits",
+    "width": 390,
+    "height": 844,
+    "doc": 1489,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "로봇·이동지원 예약",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/devices",
+    "width": 390,
+    "height": 844,
+    "doc": 1235,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "키오스크 · 안내로봇",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/check",
+    "width": 390,
+    "height": 844,
+    "doc": 1798,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "기기 점검",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/points",
+    "width": 390,
+    "height": 844,
+    "doc": 1162,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "만남 장소 찾기",
+        "size": "28px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/stamp",
+    "width": 390,
+    "height": 844,
+    "doc": 844,
+    "sw": -15,
+    "root": "16px",
+    "scale": "",
+    "h1": [
+      {
+        "text": "어떤 수첩으로공항을 여행할까요?",
+        "size": "28px",
+        "lines": 1.9994848901098903
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/kiosk",
+    "width": 390,
+    "height": 844,
+    "doc": 844,
+    "sw": -15,
+    "root": "16px",
+    "scale": "",
+    "h1": [
+      {
+        "text": "현장 기기 설치",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "공항에서 무엇을 도와드릴까요?",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services",
+    "width": 1333,
+    "height": 750,
+    "doc": 819,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "서비스 찾기",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services/desks",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "안내데스크 위치",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services/lost-property",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "분실물 안내",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/prepare",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "출발 전, 더 편안하게.",
+        "size": "56px",
+        "lines": 0.9998544254658385
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/prepare/booking",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "예약정보 불러오기",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/register",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "27.993px",
+        "lines": 0.9999924431657364
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 630,
+        "scroll": 630
+      },
+      {
+        "class": "flow-body",
+        "client": 560,
+        "scroll": 560
+      }
+    ]
+  },
+  {
+    "name": "/help",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 도움이 필요하세요?",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/navigate",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "탑승구·시설 찾기",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/requests",
+    "width": 1333,
+    "height": 750,
+    "doc": 761,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "내 요청",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/visits",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "로봇·이동지원 예약",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/devices",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "키오스크 · 안내로봇",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/check",
+    "width": 1333,
+    "height": 750,
+    "doc": 810,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "기기 점검",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/points",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "만남 장소 찾기",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/stamp",
+    "width": 1333,
+    "height": 750,
+    "doc": 750,
+    "sw": -15,
+    "root": "16px",
+    "scale": "",
+    "h1": [
+      {
+        "text": "어떤 수첩으로공항을 여행할까요?",
+        "size": "28px",
+        "lines": 1.9994848901098903
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/kiosk",
+    "width": 1333,
+    "height": 750,
+    "doc": 898,
+    "sw": -15,
+    "root": "16px",
+    "scale": "",
+    "h1": [
+      {
+        "text": "현장 기기 설치",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "공항에서 무엇을 도와드릴까요?",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "서비스 찾기",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services/desks",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "안내데스크 위치",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/services/lost-property",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "분실물 안내",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/prepare",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "출발 전, 더 편안하게.",
+        "size": "56px",
+        "lines": 0.9998544254658385
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/prepare/booking",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "예약정보 불러오기",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/register",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "32px",
+        "lines": 0.9998497596153846
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 800,
+        "scroll": 800
+      },
+      {
+        "class": "flow-body",
+        "client": 730,
+        "scroll": 730
+      }
+    ]
+  },
+  {
+    "name": "/help",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 도움이 필요하세요?",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/navigate",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "탑승구·시설 찾기",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/requests",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "내 요청",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/visits",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "로봇·이동지원 예약",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/devices",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "키오스크 · 안내로봇",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/check",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "기기 점검",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/points",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "만남 장소 찾기",
+        "size": "40px",
+        "lines": 1
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/stamp",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "",
+    "h1": [
+      {
+        "text": "어떤 수첩으로공항을 여행할까요?",
+        "size": "28px",
+        "lines": 1.9994848901098903
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/kiosk",
+    "width": 1920,
+    "height": 937,
+    "doc": 937,
+    "sw": -15,
+    "root": "16px",
+    "scale": "",
+    "h1": [
+      {
+        "text": "현장 기기 설치",
+        "size": "28px",
+        "lines": 0.9997424450549451
+      }
+    ],
+    "scrolls": []
+  },
+  {
+    "name": "/kiosk/guide",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "교통약자 전용 키오스크",
+        "size": "65px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 970,
+        "scroll": 970
+      },
+      {
+        "class": "flow-body",
+        "client": 970,
+        "scroll": 970
+      }
+    ]
+  },
+  {
+    "name": "guide-register",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "32px",
+        "lines": 0.9998497596153846
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 874,
+        "scroll": 874
+      },
+      {
+        "class": "flow-body",
+        "client": 804,
+        "scroll": 804
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/entry",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "필요한 서비스를 골라 주세요",
+        "size": "32.5px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 944,
+        "scroll": 944
+      },
+      {
+        "class": "flow-body",
+        "client": 931,
+        "scroll": 931
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/visits",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "예약 확인번호 입력",
+        "size": "45.5px",
+        "lines": 0.999841504649197
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 970,
+        "scroll": 970
+      },
+      {
+        "class": "flow-body",
+        "client": 970,
+        "scroll": 970
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/guide",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "교통약자 전용 키오스크",
+        "size": "65px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 970,
+        "scroll": 970
+      },
+      {
+        "class": "flow-body",
+        "client": 970,
+        "scroll": 970
+      }
+    ]
+  },
+  {
+    "name": "guide-register",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "32px",
+        "lines": 0.9998497596153846
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 874,
+        "scroll": 874
+      },
+      {
+        "class": "flow-body",
+        "client": 804,
+        "scroll": 804
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/entry",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1080,
+    "sw": -15,
+    "root": "39px",
+    "scale": "1.5",
+    "h1": [
+      {
+        "text": "필요한 서비스를 골라 주세요",
+        "size": "48.75px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 931,
+        "scroll": 931
+      },
+      {
+        "class": "flow-body",
+        "client": 912,
+        "scroll": 912
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/visits",
+    "width": 1920,
+    "height": 1080,
+    "doc": 1293,
+    "sw": -15,
+    "root": "39px",
+    "scale": "1.5",
+    "h1": [
+      {
+        "text": "예약 확인번호 입력",
+        "size": "68.25px",
+        "lines": 0.9999295576218654
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1183,
+        "scroll": 1183
+      },
+      {
+        "class": "flow-body",
+        "client": 1183,
+        "scroll": 1183
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/guide",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "18px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "교통약자 전용 키오스크",
+        "size": "31.5px",
+        "lines": 0.9999173280423281
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 679,
+        "scroll": 679
+      },
+      {
+        "class": "flow-body",
+        "client": 679,
+        "scroll": 679
+      }
+    ]
+  },
+  {
+    "name": "guide-register",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "24px",
+        "lines": 0.999599358974359
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 611,
+        "scroll": 611
+      },
+      {
+        "class": "flow-body",
+        "client": 525,
+        "scroll": 525
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/entry",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "18px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "필요한 서비스를 골라 주세요",
+        "size": "22.5px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 661,
+        "scroll": 661
+      },
+      {
+        "class": "flow-body",
+        "client": 652,
+        "scroll": 652
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/visits",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "18px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "예약 확인번호 입력",
+        "size": "31.5px",
+        "lines": 0.9996947496947496
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 679,
+        "scroll": 679
+      },
+      {
+        "class": "flow-body",
+        "client": 679,
+        "scroll": 679
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/guide",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "18px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "교통약자 전용 키오스크",
+        "size": "31.5px",
+        "lines": 0.9999173280423281
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 679,
+        "scroll": 679
+      },
+      {
+        "class": "flow-body",
+        "client": 679,
+        "scroll": 679
+      }
+    ]
+  },
+  {
+    "name": "guide-register",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "24px",
+        "lines": 0.999599358974359
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 611,
+        "scroll": 611
+      },
+      {
+        "class": "flow-body",
+        "client": 525,
+        "scroll": 525
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/entry",
+    "width": 1024,
+    "height": 768,
+    "doc": 768,
+    "sw": -15,
+    "root": "27px",
+    "scale": "1.5",
+    "h1": [
+      {
+        "text": "필요한 서비스를 골라 주세요",
+        "size": "33.75px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 652,
+        "scroll": 652
+      },
+      {
+        "class": "flow-body",
+        "client": 639,
+        "scroll": 639
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/visits",
+    "width": 1024,
+    "height": 768,
+    "doc": 887,
+    "sw": -15,
+    "root": "27px",
+    "scale": "1.5",
+    "h1": [
+      {
+        "text": "예약 확인번호 입력",
+        "size": "47.25px",
+        "lines": 0.999949124949125
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 799,
+        "scroll": 799
+      },
+      {
+        "class": "flow-body",
+        "client": 799,
+        "scroll": 799
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/guide",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "교통약자 전용 키오스크",
+        "size": "65px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1810,
+        "scroll": 1810
+      },
+      {
+        "class": "flow-body",
+        "client": 1810,
+        "scroll": 1810
+      }
+    ]
+  },
+  {
+    "name": "guide-register",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "24px",
+        "lines": 0.999599358974359
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1739,
+        "scroll": 1739
+      },
+      {
+        "class": "flow-body",
+        "client": 1669,
+        "scroll": 1669
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/entry",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "필요한 서비스를 골라 주세요",
+        "size": "32.5px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1784,
+        "scroll": 1784
+      },
+      {
+        "class": "flow-body",
+        "client": 1771,
+        "scroll": 1771
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/visits",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "예약 확인번호 입력",
+        "size": "45.5px",
+        "lines": 0.999841504649197
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1810,
+        "scroll": 1810
+      },
+      {
+        "class": "flow-body",
+        "client": 1810,
+        "scroll": 1810
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/guide",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "26px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "교통약자 전용 키오스크",
+        "size": "65px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1810,
+        "scroll": 1810
+      },
+      {
+        "class": "flow-body",
+        "client": 1810,
+        "scroll": 1810
+      }
+    ]
+  },
+  {
+    "name": "guide-register",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "16px",
+    "scale": "1",
+    "h1": [
+      {
+        "text": "어떤 점이 불편하세요?",
+        "size": "24px",
+        "lines": 0.999599358974359
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1739,
+        "scroll": 1739
+      },
+      {
+        "class": "flow-body",
+        "client": 1669,
+        "scroll": 1669
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/entry",
+    "width": 1080,
+    "height": 1920,
+    "doc": 1920,
+    "sw": -15,
+    "root": "39px",
+    "scale": "1.5",
+    "h1": [
+      {
+        "text": "필요한 서비스를 골라 주세요",
+        "size": "48.75px",
+        "lines": 1
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1771,
+        "scroll": 1771
+      },
+      {
+        "class": "flow-body",
+        "client": 1752,
+        "scroll": 1752
+      }
+    ]
+  },
+  {
+    "name": "/kiosk/visits",
+    "width": 1080,
+    "height": 1920,
+    "doc": 2103,
+    "sw": -15,
+    "root": "39px",
+    "scale": "1.5",
+    "h1": [
+      {
+        "text": "예약 확인번호 입력",
+        "size": "68.25px",
+        "lines": 0.9999295576218654
+      }
+    ],
+    "scrolls": [
+      {
+        "class": "flow-form-area",
+        "client": 1993,
+        "scroll": 1993
+      },
+      {
+        "class": "flow-body",
+        "client": 1993,
+        "scroll": 1993
+      }
+    ]
+  }
+]
