@@ -343,6 +343,7 @@ export function FlowShell({
       <div className="flow-workspace">
         {desktopSteps && (
           <aside className="flow-desktop-steps">
+            <RegistrationPanel folded={kiosk} label={lang === "en" ? "Registration steps" : "등록 단계 보기"}>
             <p>{stepsHeading?.kicker ?? (lang === "en" ? "PRE-REGISTRATION" : "여행 전 사전등록")}</p>
             <h2>
               {stepsHeading?.title ?? (lang === "en" ? "Your registration" : "필요한 도움 미리 등록")}
@@ -369,6 +370,7 @@ export function FlowShell({
                 </li>
               ))}
             </ol>
+            </RegistrationPanel>
           </aside>
         )}
         <div className="flow-form-area">
@@ -383,7 +385,9 @@ export function FlowShell({
           )}
         </div>
         {desktopSummary && (
-          <aside className="flow-desktop-summary">{desktopSummary}</aside>
+          <aside className="flow-desktop-summary">
+            <RegistrationPanel folded={kiosk} label={lang === "en" ? "Your selections" : "선택 내용 보기"}>{desktopSummary}</RegistrationPanel>
+          </aside>
         )}
       </div>
 
@@ -479,4 +483,9 @@ export function FlowShell({
       )}
     </div>
   );
+}
+
+/** 보조 정보는 먼저 접되, 단계 수정과 선택 내용은 언제든 펼쳐 확인한다. */
+function RegistrationPanel({ folded, label, children }: { folded: boolean; label: string; children: React.ReactNode }) {
+  return folded ? <details className="flow-secondary"><summary>{label}</summary>{children}</details> : children;
 }

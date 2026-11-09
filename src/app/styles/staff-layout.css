@@ -26,6 +26,29 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
    변수 안의 100% 는 쓰이는 자리에서 풀리므로 바·본문을 감싼 칸의 폭이 된다. */
 .workspace-content { --site-bar-room: 100%; --site-bar-gutter: 0px; }
 
+/* 대신 등록 중에는 옆 목록을 기존 업무 메뉴로 접고, 입력 칸에 남는 높이와 폭을 준다. */
+.staff-workspace:has(.flow-registration) {
+  height: 100dvh; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+}
+.staff-workspace:has(.flow-registration) .workspace-grid { display: contents; }
+.staff-workspace:has(.flow-registration) .workspace-side { display: none; }
+.staff-workspace:has(.flow-registration) .workspace-header {
+  grid-column: 1; min-height: var(--target-kiosk-floor); padding: var(--space-1) var(--space-3); flex-wrap: wrap;
+}
+.staff-workspace:has(.flow-registration) .workspace-mobile-menu { display: block; position: relative; }
+.staff-workspace:has(.flow-registration) .workspace-mobile-menu > summary {
+  min-height: var(--target-kiosk-floor); align-content: center; padding: var(--space-1) var(--space-2);
+}
+.staff-workspace:has(.flow-registration) .workspace-mobile-menu nav {
+  position: absolute; z-index: 30; right: 0; top: 100%;
+  width: min(24rem, calc(100vw - var(--space-6))); max-height: 50dvh; overflow: auto;
+  padding: var(--space-3); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium);
+}
+.staff-workspace:has(.flow-registration) .workspace-content {
+  --registration-height: 100%; display: grid; grid-template-rows: minmax(0, 1fr);
+  grid-column: 1; grid-row: 2; min-height: 0; padding: var(--space-1);
+}
+
 /* ── 화면 머리: 제목 왼쪽, 주요 버튼 하나와 보조 버튼은 오른쪽에 같은 높이로 ── */
 .staff-workspace .workspace-page-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin: 0 0 var(--space-5); }
 .staff-workspace .workspace-page-head h1 { margin: 0; font-size: var(--text-title); letter-spacing: -0.03em; }

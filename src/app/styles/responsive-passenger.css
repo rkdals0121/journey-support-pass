@@ -278,3 +278,61 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
   .flow-pretrip .flow-body, .flow-pretrip[data-screen] .flow-body { padding: 16px; }
   html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 4.25rem; }
 }
+
+/* 현장 등록: 제목 배율은 기기 공통값을 쓰고, 진행 줄과 읽는 칸이 남는 높이를 나눈다.
+   보조 칸은 접어 두며, 긴 질문·펼친 내용은 막대를 보이는 스크롤로 끝까지 읽는다. */
+html[data-kiosk] .flow-registration {
+  height: var(--registration-height, 100dvh); min-height: 0; max-width: none; flex: 0 0 auto; overflow: visible;
+}
+html[data-kiosk] .flow-registration .flow-workspace {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr); flex: 1 1 0; min-height: 0;
+  gap: var(--space-2); padding: var(--space-2); overflow: visible;
+}
+html[data-kiosk] .flow-registration .flow-form-area {
+  grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0; overflow: visible;
+}
+html[data-kiosk] .flow-registration .flow-body {
+  min-width: 0; min-height: 0; padding: var(--space-3); margin: 0;
+  overflow: auto; scrollbar-width: auto; border-radius: var(--radius-medium);
+}
+html[data-kiosk] .flow-registration .flow-body::-webkit-scrollbar { display: block; width: var(--space-2); }
+html[data-kiosk] .flow-registration .flow-cta {
+  position: static; padding: var(--space-2) 0 0; background: var(--color-canvas);
+}
+html[data-kiosk] .flow-registration .flow-cta-inner { flex-direction: column; gap: var(--space-1); }
+html[data-kiosk] .flow-registration .consent-decline { position: static; }
+html[data-kiosk] .flow-registration :is(.flow-desktop-steps, .flow-desktop-summary) {
+  display: block; position: static; grid-row: 1; min-width: 0; max-height: 25dvh;
+  overflow: auto; padding: 0; border: 0; align-self: start;
+}
+html[data-kiosk] .flow-registration .flow-desktop-steps { grid-column: 1; }
+html[data-kiosk] .flow-registration .flow-desktop-summary { grid-column: 2; }
+.flow-secondary > summary {
+  min-height: var(--target-kiosk-floor); align-content: center; cursor: pointer;
+  padding: var(--space-2); color: var(--color-primary); font-size: var(--text-small);
+}
+html[data-kiosk] .flow-registration .registration-page-heading {
+  min-height: 0; margin-bottom: var(--space-3); gap: var(--space-1);
+}
+html[data-kiosk] .flow-registration .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+html[data-kiosk] .flow-registration .choice { min-height: var(--target-kiosk-floor); padding: var(--space-2); }
+html[data-kiosk] .flow-registration .steppers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html[data-kiosk] .flow-registration .stepper { min-width: 0; padding: var(--space-2); }
+html[data-kiosk] .flow-registration .review { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+html[data-kiosk] .flow-registration .registration-review-group { min-width: 0; padding: var(--space-2); }
+html[data-kiosk] .flow-registration .review-edit { position: static; transform: none; min-height: var(--target-kiosk-floor); }
+html[data-kiosk] .flow-registration .pad-row { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: var(--space-1); }
+html[data-kiosk] .flow-registration .pad-key { min-width: 0; min-height: var(--target-kiosk-floor); padding: var(--space-1); font-size: var(--text-heading); }
+html[data-kiosk] .flow-registration .flight-layout { grid-template-columns: minmax(0, 1fr); }
+html[data-kiosk] .flow-registration .flight-layout > * { min-width: 0; }
+html[data-kiosk] .flow-registration .panel { padding: var(--space-2); }
+html[data-kiosk] .flow-registration[data-screen="consent"] .panel {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); align-content: start;
+}
+html[data-kiosk] .flow-registration .info-row { padding-block: var(--space-2); gap: var(--space-2); }
+@media (max-width: 760px) {
+  html[data-kiosk] .flow-registration :is(.choices, .steppers, .review) { grid-template-columns: minmax(0, 1fr); }
+  html[data-kiosk] .flow-registration[data-screen="consent"] .panel { grid-template-columns: minmax(0, 1fr); }
+}

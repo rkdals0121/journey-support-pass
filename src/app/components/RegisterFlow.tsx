@@ -746,6 +746,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
 
   return (
     <FlowShell
+      className={kiosk ? "flow-registration" : undefined}
       lang={lang}
       prefs={prefs}
       kiosk={kiosk}
@@ -802,8 +803,8 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
           </>
         ) : undefined
       }
-      // 키오스크의 항공편 화면에서는 편을 고를 때까지 「다음」을 치워 둔다. 화면 글자판과 도시 목록이 버튼에 가려지지 않는다.
-      cta={kiosk && kind === "flight" && !flight ? undefined : cta}
+      // 항공편을 고르기 전에도 진행 줄은 같은 자리에 둔다. 선택 전에는 「다음」만 비활성이다.
+      cta={cta}
     >
       <div className="registration-page-heading">
       {kicker && <p className="kicker">{kicker}</p>}

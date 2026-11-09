@@ -1,8 +1,5 @@
 /* 안내 키오스크(/kiosk/guide)의 모양. GuideKiosk 가 body 에 kiosk-guide 를 걸어 이 화면에서만 쓰이게 한다.
    색·간격·모서리·움직임은 tokens.css 의 값만 쓰고, 크기는 rem 으로 둔다. */
-/* 현장 등록(옆에 단계 목록이 붙는 화면)은 /register 와 같은 크기로 보여 준다: 키오스크의 글자 키우기와 넓은 폭을 이 화면에서만 푼다.
-   키오스크 「글자 크기」 설정(--scale)은 그대로 곱한다. */
-html[data-kiosk]:has(body.kiosk-guide .flow-pretrip) { font-size: calc(100% * var(--scale, 1)); --col: min(97.5rem, 100vw); }
 html[data-kiosk] body.kiosk-guide .kx-guide .tile,
 html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }
 
