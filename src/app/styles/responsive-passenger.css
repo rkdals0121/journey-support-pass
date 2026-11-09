@@ -282,12 +282,15 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
 /* 현장 등록: 제목 배율은 기기 공통값을 쓰고, 진행 줄과 읽는 칸이 남는 높이를 나눈다.
    보조 칸은 접어 두며, 긴 질문·펼친 내용은 막대를 보이는 스크롤로 끝까지 읽는다. */
 html[data-kiosk] .flow-registration {
+  --flow-bar-height: auto;
   height: var(--registration-height, 100dvh); min-height: 0; max-width: none; flex: 0 0 auto; overflow: visible;
 }
 html[data-kiosk] .flow-registration .flow-workspace {
+  width: min(var(--site-bar-width), calc(var(--site-bar-room) - 2 * var(--site-bar-gutter)));
+  margin-inline: auto;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: auto minmax(0, 1fr); flex: 1 1 0; min-height: 0;
-  gap: var(--space-2); padding: var(--space-2); overflow: visible;
+  gap: var(--space-2); padding: var(--space-2) 0; overflow: visible;
 }
 html[data-kiosk] .flow-registration .flow-form-area {
   grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-rows: minmax(0, 1fr) auto;

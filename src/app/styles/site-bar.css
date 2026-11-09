@@ -146,7 +146,8 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
   .field-task-shell .field-task-header,
   .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
-  html[data-kiosk] .flow .flow-bar { height: var(--site-bar-height); flex-shrink: 0; }
+  /* 기본 높이는 유지하고, 등록 흐름만 내용에 맞는 높이를 넘겨 쓴다. */
+  html[data-kiosk] .flow .flow-bar { height: var(--flow-bar-height, var(--site-bar-height)); flex-shrink: 0; }
 }
 @media (max-width: 40rem) {
   :root { --site-bar-gutter: 12px; }
