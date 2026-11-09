@@ -71,7 +71,6 @@
   .ph-home .ph-hero-copy { flex: 1 0 min(100%, 12rem); }
   .ph-home .ph-hero h1 {
     max-width: none;
-    font-size: var(--text-heading);
     word-break: keep-all;
   }
   .ph-home .ph-hero h1 span { display: inline-block; max-width: 100%; }
