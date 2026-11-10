@@ -92,7 +92,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .kx-passport-go { min-height: 4.5rem; font-size: var(--text-heading); }
 .kx-passport-camera .scanner { width: 100%; max-width: none; margin: 0; }
 
-/* 하늘이가 한마디 하는 줄(서비스 고르기, 등록 내용, 끝 인사) */
+/* 사랑이가 한마디 하는 줄(서비스 고르기, 등록 내용, 끝 인사) */
 .haneuli-says { display: flex; align-items: center; gap: var(--space-4); }
 .haneuli-says-face { flex: none; width: 6rem; height: 6rem; object-fit: contain; }
 .haneuli-says-sm .haneuli-says-face { width: 4rem; height: 4rem; }

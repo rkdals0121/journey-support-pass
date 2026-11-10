@@ -4,14 +4,14 @@ import Image from "next/image";
 import { ArrowRight, BookUser, Keyboard, MapPin, ScanLine } from "lucide-react";
 import { type ReactNode } from "react";
 
-/** 새 하늘이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
+/** 새 사랑이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
 const POSES = {
   front: "/stamp/haneul.webp",
   left: "/stamp/haneul-left.webp",
   right: "/stamp/haneul-right.webp",
 } as const;
 
-/** 하늘이가 한마디 한다. 안내 키오스크의 여러 화면에서 같은 모습으로 쓴다. */
+/** 사랑이가 한마디 한다. 안내 키오스크의 여러 화면에서 같은 모습으로 쓴다. */
 export function HaneuliSays({ text, size = "md", pose = "front" }: { text: string; size?: "sm" | "md" | "lg"; pose?: keyof typeof POSES }) {
   return (
     <div className={`haneuli-says haneuli-says-${size}`}>

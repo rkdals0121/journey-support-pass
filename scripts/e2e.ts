@@ -103,7 +103,7 @@ async function audit(page: Page, name: string) {
   // Next streams the root metadata during navigation; audit the settled document.
   await page.waitForFunction(() => document.title.trim().length > 0, { timeout: WAIT });
   // 나타나는 움직임(흐리게 시작해 또렷해지는 것)이 끝난 뒤에 본다. 도중에 보면 글자 대비가 낮게 잡힌다.
-  // 끝없이 도는 움직임(하늘이 걷기 등)은 끝나지 않으니 빼고, 그래도 2초가 넘으면 기다리지 않는다.
+  // 끝없이 도는 움직임(사랑이 걷기 등)은 끝나지 않으니 빼고, 그래도 2초가 넘으면 기다리지 않는다.
   await page.evaluate(() =>
     Promise.race([
       Promise.all(
@@ -129,10 +129,10 @@ async function audit(page: Page, name: string) {
   await page.evaluate((y) => window.scrollTo(0, y), scrolled);
 }
 
-/** 키오스크 처음 화면(하늘이). 대기 중이면 하늘이를 눌러 깨워 확인 방법(탑승권·여권·예약번호)을 연다. */
+/** 키오스크 처음 화면(사랑이). 대기 중이면 사랑이를 눌러 깨워 확인 방법(탑승권·여권·예약번호)을 연다. */
 async function kioskServices(page: Page) {
   await page.waitForSelector(".haneuli-welcome", { timeout: WAIT });
-  // 교통약자 전용 첫 화면: 하늘이(화면)를 누르면 깨어 확인 방법을 안내한다.
+  // 교통약자 전용 첫 화면: 사랑이(화면)를 누르면 깨어 확인 방법을 안내한다.
   // 화면이 준비되기(React 연결) 전에 누르면 아무 일도 없다. 깨어날 때까지 잠깐씩 기다리며 다시 누른다.
   for (let i = 0; i < 30 && !(await page.$(".haneuli-welcome.is-awake")); i++) {
     await page.click(".haneuli-character").catch(() => undefined);
@@ -563,7 +563,7 @@ async function resetFlights(clearLocks = false) {
     return !!services && !services.querySelector(".ph-section-head, .ph-gate, #home-gate")
       && services.querySelectorAll(".task-action").length === 6;
   }));
-  check("첫 화면은 하늘이 소개와 같은 크기의 서비스 카드 여섯 개를 보여 준다", await page.evaluate(() => {
+  check("첫 화면은 사랑이 소개와 같은 크기의 서비스 카드 여섯 개를 보여 준다", await page.evaluate(() => {
     const image = document.querySelector<HTMLImageElement>(".ph-hero-art img");
     const cards = [...document.querySelectorAll(".ph-services .task-action")].map((e) => e.getBoundingClientRect());
     return !!image && image.complete && image.naturalWidth > 0 && cards.length === 6

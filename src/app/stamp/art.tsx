@@ -1,7 +1,7 @@
 // 스탬프북 그림. 문장·도장·장식은 손으로 그린 SVG 다.
-// 「하늘이」는 팀이 디자인한 인천공항 마스코트 시안 그림(public/stamp/haneul.webp)을 그대로 쓰고,
+// 「사랑이」는 팀이 디자인한 인천공항 마스코트 시안 그림(public/stamp/haneul.webp)을 그대로 쓰고,
 // 기장·승무원·탐험가 필터 옷은 팀이 준 옷 사진(public/stamp/costume-*.webp, 배경·얼굴 자리를 투명하게 다듬은 것)을 쓴다.
-// 하늘이 친구 필터는 옷을 입히지 않고, 시안의 여러 방향 하늘이(public/stamp/haneul-*.webp)가 사진 곳곳에 함께 선다.
+// 사랑이 친구 필터는 옷을 입히지 않고, 시안의 여러 방향 사랑이(public/stamp/haneul-*.webp)가 사진 곳곳에 함께 선다.
 import Image from "next/image";
 import type { ThemeId } from "@/lib/stamp-book";
 
@@ -38,8 +38,8 @@ export function costumeLayout(p: (typeof COSTUME_PHOTO)[string]) {
 }
 
 /**
- * 하늘이 친구 필터: 인증 사진(600×800) 곳곳에 함께 서는 하늘이들. 가운데(얼굴 자리)는 비우고,
- * 아래 양옆 하늘이는 가운데를 바라보고, 위 하늘이는 귀퉁이에서 인사한다. 아래 글자 띠(56px)에는 걸치지 않는다.
+ * 사랑이 친구 필터: 인증 사진(600×800) 곳곳에 함께 서는 사랑이들. 가운데(얼굴 자리)는 비우고,
+ * 아래 양옆 사랑이는 가운데를 바라보고, 위 사랑이는 귀퉁이에서 인사한다. 아래 글자 띠(56px)에는 걸치지 않는다.
  * rotate 는 도(°), 그림 가운데를 축으로 돌린다.
  */
 export const FRIENDS = [
@@ -98,7 +98,7 @@ export function StampMark({ theme, size = 56 }: { theme: ThemeId; size?: number 
 
 /**
  * 사진을 찍기 전 완성 화면에 보여 줄 그림. 인증 사진과 같은 배치다.
- * 옷 필터는 옷만(얼굴 자리는 비움), 하늘이 친구 필터는 가운데를 비우고 둘레의 하늘이들만.
+ * 옷 필터는 옷만(얼굴 자리는 비움), 사랑이 친구 필터는 가운데를 비우고 둘레의 사랑이들만.
  */
 export function Portrait({ role }: { role: string }) {
   const photo = COSTUME_PHOTO[role];
