@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Navigation,
   Accessibility,
+  CarFront,
   Wrench,
   Bus,
   Bot,
@@ -67,12 +68,14 @@ export function TaskLauncher({
   field = false,
   topics,
   device,
+  kioskCards = false,
 }: {
   en?: boolean;
   returnTo?: KioskReturn;
   field?: boolean;
   topics?: readonly string[];
   device?: "robot" | "kiosk";
+  kioskCards?: boolean;
 }) {
   return (
     <div className={"task-launcher" + (field ? " task-launcher-field" : "")}>
@@ -86,6 +89,15 @@ export function TaskLauncher({
           if (returnTo) href.searchParams.set("returnTo", returnTo);
           if (id === "guidance" && (device === "robot" || returnTo === "/kiosk/entry")) href.searchParams.set("device", "robot");
           if (id !== "guidance") href.searchParams.set("fresh", "1");
+          // 서비스 이동과 순서는 유지하고 기기에서는 공용 서비스 카드 모양을 쓴다.
+          const KioskIcon = id === "mobility" ? CarFront : Icon;
+          if (kioskCards) return (
+            <Link key={id} href={href.pathname + href.search} className="svc-card" data-service-topic={id}>
+              <KioskIcon aria-hidden="true" />
+              <strong>{en ? english : ko}</strong>
+              <span>{en ? detailEn : detail}</span>
+            </Link>
+          );
           return (
             <article
               key={id}

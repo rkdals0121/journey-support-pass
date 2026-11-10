@@ -408,11 +408,6 @@ margin: 0;
 .easy-tile svg.lucide, .easy-tile svg { width: 3rem; height: 3rem; color: var(--color-primary); }
 .easy-tile.on { border-color: var(--color-primary); background: var(--color-primary-soft); }
 .svc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr)); gap: 1rem; }
-.svc-card { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; min-height: 10rem; padding: 1.25rem; border: 0.125rem solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-dark); text-align: left; cursor: pointer; box-shadow: var(--shadow-2); }
-.svc-card svg { color: var(--color-primary); }
-.svc-card strong { font-size: var(--text-heading); }
-.svc-card span { color: var(--color-muted); }
-.svc-card:disabled { opacity: 0.6; }
 .assist-state { display: grid; gap: 0.25rem; margin: 0.5rem 0; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--color-primary-soft); }
 .assist-state strong { color: var(--color-dark); font-size: var(--text-heading); }
 .assist-box { margin: 1rem 0 1.5rem; }
