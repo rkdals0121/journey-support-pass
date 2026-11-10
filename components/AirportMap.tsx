@@ -25,6 +25,7 @@ export type MapState = {
   showLandmarkLabels?: boolean;
   facilityFilterActive?: boolean;
   touchTargetSize?: number;
+  compactMobile?: boolean;
   viewRevision?: number;
   viewportPadding?: [number, number, number, number];
   overview?: boolean;
@@ -142,14 +143,14 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title="공항 실내지도"
-      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=service-area-actions-18" : "/airport-map/index.html?v=service-area-actions-18"}
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=mobile-service-map" : "/airport-map/index.html?v=mobile-service-map"}
       loading="eager"
       className={className}
       style={{
         display: "block",
         width: "100%",
         height,
-        minHeight: "17.5rem",
+        minHeight: state.compactMobile ? 0 : "17.5rem",
         border: 0,
         borderRadius: "var(--radius-medium, .75rem)",
       }}

@@ -40,8 +40,13 @@ body {
   font-size: 1.75rem;
   cursor: pointer;
 }
+html[data-compact-mobile="true"] :is(#zoom-in, #zoom-out) {
+  display: none;
+}
 .map-controls button:last-child {
   border-bottom: 0;
+  display: grid;
+  place-items: center;
 }
 .map-controls button:hover {
   background: #eef5f0;

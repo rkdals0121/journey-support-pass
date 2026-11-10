@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, ClipboardList, MapPin, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardList, MapPin, RefreshCw } from "lucide-react";
 import { readRequestReceipts } from "@/lib/request-receipts";
 import {
   type ServiceRequestView,
@@ -12,9 +12,11 @@ import { taskOf } from "@/lib/service-tasks";
 import { supportTopic } from "@/lib/service-catalog";
 export function MyRequests({
   en,
+  backHref,
   children,
 }: {
   en: boolean;
+  backHref?: string;
   children?: React.ReactNode;
 }) {
   const [rows, setRows] = useState<
@@ -88,10 +90,17 @@ export function MyRequests({
     <main id="public-main" className="service-page service-short-page">
       <section className="ph-hero" aria-labelledby="requests-title">
         <div className="ph-hero-copy service-intro-copy">
-          <span className="ph-hero-label">
-            <ClipboardList aria-hidden="true" />
-            {t("서비스 이용 내역", "My requests")}
-          </span>
+          {backHref ? (
+            <Link href={backHref} className="ph-text-link">
+              <ArrowLeft aria-hidden="true" />
+              {t("이동 도움받기", "Mobility assistance")}
+            </Link>
+          ) : (
+            <span className="ph-hero-label">
+              <ClipboardList aria-hidden="true" />
+              {t("서비스 이용 내역", "My requests")}
+            </span>
+          )}
           <h1 id="requests-title">{t("내 요청", "My requests")}</h1>
           <p>
             {t(

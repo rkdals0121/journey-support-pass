@@ -375,8 +375,9 @@
       view.fit(frame, { padding, maxZoom: 19, duration: 0 });
       // Service entry opens on the central hall at an essential-facility scale.
       // Route fits keep their natural zoom so both endpoints remain visible.
-      if (serviceEntry === true && state.securityArea !== "AIR" && state.overview && !state.checkpointSelection && !state.route && view.getZoom() < 18.5) {
-        view.setZoom(18.5);
+      const overviewZoom = state.compactMobile ? 18.25 : 18.5;
+      if (serviceEntry === true && state.securityArea !== "AIR" && state.overview && !state.checkpointSelection && !state.route && view.getZoom() < overviewZoom) {
+        view.setZoom(overviewZoom);
         view.centerOn(E.fromLonLat(centers[state.building]), available, [
           padding[3] + (available[0] - padding[3] - padding[1]) / 2,
           padding[0] + (available[1] - padding[0] - padding[2]) / 2,
@@ -414,6 +415,7 @@
       facilityFilterActive: next.facilityFilterActive ?? state.facilityFilterActive,
       showLandmarkLabels: next.showLandmarkLabels ?? state.showLandmarkLabels ?? true,
       touchTargetSize: next.touchTargetSize ?? state.touchTargetSize ?? 12,
+      compactMobile: next.compactMobile === true,
       viewRevision: next.viewRevision ?? state.viewRevision ?? 0,
       nearby: next.nearby ?? null,
       viewportPadding: next.viewportPadding ?? [0,0,0,0],
@@ -431,6 +433,7 @@
       throw error;
     }
     state.markers = state.markers || {};
+    document.documentElement.dataset.compactMobile = String(state.compactMobile);
     document.documentElement.dataset.kiosk = state.touchTargetSize >= 18 ? "true" : "false";
     document.querySelector(".map-controls").style.bottom = ((state.viewportPadding?.[2] || 0) + 12) + "px";
     selected = state.selectedPoiId;
@@ -444,7 +447,7 @@
     redrawRoute();
     rankNearby();
     document.getElementById("checkpoint-hint").hidden = !state.checkpointSelection;
-    const changedView = changed || state.securityArea !== previous.securityArea || state.overview !== previous.overview || state.viewRevision !== previous.viewRevision ||
+    const changedView = changed || state.compactMobile !== previous.compactMobile || state.securityArea !== previous.securityArea || state.overview !== previous.overview || state.viewRevision !== previous.viewRevision ||
       JSON.stringify(state.markers) !== JSON.stringify(previous.markers) ||
       JSON.stringify(state.route) !== JSON.stringify(previous.route) ||
       JSON.stringify(state.viewportPadding) !== JSON.stringify(previous.viewportPadding);

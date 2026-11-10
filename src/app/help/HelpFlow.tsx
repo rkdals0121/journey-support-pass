@@ -205,6 +205,8 @@ export function HelpFlow({
   const freshConsumed = useRef(false);
   const speech = useSpeech(lang);
   const tr = (ko: string, english: string) => (en ? english : ko);
+  const cartTitle = service === "mobility" && task?.id === "mobility-vehicle"
+    ? tr("전동차 타기", "Electric cart") : undefined;
   const registrationHome =
     registrationToken && !sharedDevice && !registrationError
       ? `/p/${registrationToken}`
@@ -1094,11 +1096,11 @@ export function HelpFlow({
                 <h1>
                   {review
                     ? tr("이 내용으로 접수할까요?", "Ready to submit?")
-                    : topic
+                    : cartTitle ?? (topic
                       ? en
                         ? topic.en
                         : topic.label
-                      : tr("어떤 도움이 필요하세요?", "How can we help?")}
+                      : tr("어떤 도움이 필요하세요?", "How can we help?"))}
                 </h1>
                 {speech.supported && (
                   <button
@@ -1315,7 +1317,7 @@ export function HelpFlow({
             >
               <div className="request-form-main">
                 {service === "mobility" && (<MobilityMapPlanner initialSupportMode={task?.id === "mobility-vehicle" ? "staff" : initialMobilityMode} placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
-                        en={en} disabled={busy} kiosk={sharedDevice} destinationEnabled={task?.id !== "mobility-wheelchair"}
+                        en={en} disabled={busy} kiosk={sharedDevice} title={cartTitle} destinationEnabled={task?.id !== "mobility-wheelchair"}
                         requestContent={<>{requestDetails}{requestAdditional}{error && <p role="alert">{error}</p>}{requestSummary}</>}
                         backHref={mobilityHomeHref ?? returnTo ?? (en ? "/?lang=en" : "/")}
                         onChange={(nextPlace, nextDestination) => { setPlaceId(nextPlace); setDestinationId(nextDestination); setError(""); }} />)}

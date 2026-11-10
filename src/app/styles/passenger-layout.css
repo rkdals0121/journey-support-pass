@@ -67,8 +67,29 @@
   .ph-hero-art img { width: 9rem; }
   .ph-hero-art::before { width: 8rem; }
   .ph-hero-orbit { width: 10rem; }
+  .ph-home .ph-hero { display: flex; flex-wrap: wrap; padding: var(--space-4); }
+  .ph-home .ph-hero-copy { flex: 1 0 min(100%, 12rem); }
+  .ph-home .ph-hero h1 {
+    max-width: none;
+    word-break: keep-all;
+  }
+  .ph-home .ph-hero h1 span { display: inline-block; max-width: 100%; }
+  .ph-home .ph-hero p { word-break: keep-all; }
+  .ph-home .ph-hero-art { flex: 0 0 auto; width: clamp(4rem, 20vw, 7.5rem); margin-inline: auto; }
+  .ph-home .ph-hero-art img { width: 100%; }
   .ph-list { grid-template-columns: minmax(0, 1fr); }
   .ph-list .task-action { min-height: 5.5rem; align-items: center; }
+  .ph-home .ph-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+  .ph-home .ph-list .task-action {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+  .ph-home .ph-list .task-action-link strong { padding-right: 0; }
+  .ph-home .ph-list .task-action-link small { margin-top: var(--space-1); }
+  .ph-home .ph-list .task-action-link > svg { inset: var(--space-3) var(--space-3) auto auto; }
 }
 @media (max-height: 700px) {
   .ph-hero { padding-block: var(--space-2); }

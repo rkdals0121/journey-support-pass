@@ -13,9 +13,9 @@ import styles from "../navigate/navigation-map.module.css";
 type Props = {
   initialSupportMode?:"staff"|"robot";
   placeId:string;destinationId:string;initialPlace:string;onChange:(placeId:string,destinationId:string)=>void;
-  requestContent?:ReactNode;backHref?:string;en?:boolean;disabled?:boolean;kiosk?:boolean;destinationEnabled?:boolean;
+  requestContent?:ReactNode;backHref?:string;title?:string;en?:boolean;disabled?:boolean;kiosk?:boolean;destinationEnabled?:boolean;
 };
-export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinationId,initialPlace,onChange,en=false,disabled=false,kiosk=false,destinationEnabled=true,requestContent,backHref}:Props) {
+export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinationId,initialPlace,onChange,en=false,disabled=false,kiosk=false,destinationEnabled=true,requestContent,backHref,title}:Props) {
   const t=(ko:string,english:string)=>en?english:ko;
   const fromPlace=placeOf(placeId),currentPlace=placeOf(initialPlace);
   const from=facilityForPlace(fromPlace),current=facilityForPlace(currentPlace);
@@ -50,7 +50,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
     {notice&&<p role="alert" className={styles.error}>{notice}</p>}
   </>;
   if (!expanded) return <div className={styles.planner}><p>{fromPlace?(en?fromPlace.labelEn:fromPlace.label):""}{target?` → ${target.name}`:""}</p><button type="button" className={styles.primary} onClick={()=>setExpanded(true)}>{t("전체 화면 지도로 선택","Choose on full-screen map")}</button>{fallback}{alternateFinder}</div>;
-  return <AirportRoutePlanner en={en} kiosk={kiosk||robotMode} deviceLayout={robotMode?"robot":undefined} disabled={disabled||robotActive} start={from} destination={target} currentLocation={current}
+  return <AirportRoutePlanner en={en} kiosk={kiosk} deviceLayout={robotMode?"robot":undefined} disabled={disabled||robotActive} start={from} destination={target} currentLocation={current}
     onStartChange={updateStart} onDestinationChange={updateDestination}
     onEndpointsChange={(start,end)=>{
       const pickup=start?mobilityPickupForFacility(start.id):null;
@@ -64,7 +64,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
     startName={!from&&fromPlace?(en?fromPlace.labelEn:fromPlace.label):undefined} startTitle={robotMode?t("출발지","Start"):t("만날 곳","Meeting place")}
     showSelectionTools={!confirming&&!robotActive}
     additionalHelp={!confirming ? alternateFinder : undefined}
-    title={robotMode ? t("안내로봇 동행", "Guide robot assistance") : t("직원 이동 지원", "Staff mobility assistance")} backHref={backHref??"/"}
+    title={title ?? (robotMode ? t("안내로봇 동행", "Guide robot assistance") : t("직원 이동 지원", "Staff mobility assistance"))} backHref={backHref??"/"}
     footer={result=><>
       {!confirming&&result.distance!==null&&<p role="status" className={styles.mobilityDistance}>{t(`지도 경로 약 ${Math.round(result.distance)}m`,`Map route about ${Math.round(result.distance)}m`)}</p>}
       {!confirming&&!robotMode&&target&&<button type="button" className={styles.clear} disabled={disabled} onClick={result.clearDestination}>{t("목적지는 직원과 정할게요","Choose the destination with staff")}</button>}

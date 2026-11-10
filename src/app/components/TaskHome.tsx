@@ -17,7 +17,9 @@ export function TaskHome({ en = false }: { en?: boolean }) {
       <section className="ph-hero" aria-labelledby="home-title">
         <div className="ph-hero-copy">
           <span className="ph-hero-label"><Plane aria-hidden="true" />{en ? "A little help for your journey" : "더 편안한 공항 여정"}</span>
-          <h1 id="home-title">{en ? "How can we help at the airport?" : "공항에서 무엇을 도와드릴까요?"}</h1>
+          <h1 id="home-title">{en
+            ? "How can we help at the airport?"
+            : <><span>공항에서 무엇을</span>{" "}<span>도와드릴까요?</span></>}</h1>
           <p>{en
             ? "Directions, mobility help and on-site requests for passengers who need a little more support."
             : "도움이 조금 더 필요한 여객을 위한 길 안내, 이동 도움, 현장 요청을 한곳에서."}</p>

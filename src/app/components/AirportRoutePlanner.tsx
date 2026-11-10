@@ -49,11 +49,25 @@ type Props = {
 
 /** One map and endpoint controller for directions and mobility assistance. */
 export function AirportRoutePlanner({start, destination, currentLocation, onStartChange, onDestinationChange, onUseCurrentLocation, onEndpointsChange,
-  en = false, kiosk = false, deviceLayout, disabled = false, initialBuilding = 1, destinationEnabled = true,
+  en = false, kiosk = false, deviceLayout: requestedLayout, disabled = false, initialBuilding = 1, destinationEnabled = true,
   allowedStartIds, startRestriction, destinationRestriction, startName, startTitle, title, backHref,
   beforeControls, selectionControls, instructions, showSelectionTools = true, additionalHelp, footer}: Props) {
   const t = (ko: string, english: string) => en ? english : ko;
   const shell = useRef<HTMLDivElement>(null);
+  const [phoneViewport, setPhoneViewport] = useState(false);
+  useEffect(() => {
+    if (kiosk) return;
+    const media = window.matchMedia("(max-width: 760px)");
+    const update = () => setPhoneViewport(media.matches);
+    media.addEventListener("change", update);
+    update();
+    return () => media.removeEventListener("change", update);
+  }, [kiosk]);
+
+  const compactMobile = !kiosk && phoneViewport;
+  // Robot assistance can run on a phone without using the robot display layout.
+  const deviceLayout = compactMobile && requestedLayout === "robot" ? undefined : requestedLayout;
+  const deviceControls = kiosk || deviceLayout === "robot";
   const previousTools = useRef(showSelectionTools);
   useEffect(() => {
     if (previousTools.current !== showSelectionTools) {
@@ -184,9 +198,9 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
     <span>{activeMode === "start" ? "1" : "2"}</span>{stepText}
   </div>;
   const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction ?? mapFacilityPlace(facilityId(start)) : null;
-  return <div ref={shell} className={styles.planner} data-kiosk={kiosk} data-device-layout={deviceLayout}>
+  return <div ref={shell} className={styles.planner} data-kiosk={deviceControls} data-device-layout={deviceLayout}>
     <FacilityMapPicker value={(activeMode === "start" ? start : end) ? facilityId((activeMode === "start" ? start : end)!) : ""}
-      onChange={choose} en={en} kiosk={kiosk} deviceLayout={deviceLayout} disabled={disabled} fullscreen hideSelection
+      onChange={choose} en={en} kiosk={deviceControls} compactMobile={compactMobile} deviceLayout={deviceLayout} disabled={disabled} fullscreen hideSelection
       start={start} destination={end} selectionRole={activeMode} route={route}
       initialBuilding={building} selectedBuilding={building} onBuildingChange={setBuilding} focusKey={revision}
       pickup={restriction} restrictToPickup={!!restriction}
