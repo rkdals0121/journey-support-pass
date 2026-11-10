@@ -6,9 +6,9 @@ html[data-kiosk]:has(body.kiosk-guide .flow-pretrip) { font-size: calc(100% * va
 html[data-kiosk] body.kiosk-guide .kx-guide .tile,
 html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }
 
-/* ── 처음 화면: 왼쪽에 큰 사랑이, 오른쪽에 확인 방법 카드 ──
-   위쪽 바(둥근 바)와 같은 너비·끝선. 왼쪽 상자(노란 그라데이션)는 사랑이가 화면 높이의 거의 절반을 차지하고, 오른쪽에는 카드 세 개를 쌓는다.
-   16:9 키오스크에서 스크롤 없이 한 화면: 사랑이 크기(--hw-art)만 화면 높이에 맞춰 달라진다. */
+/* ── 처음 화면: 왼쪽에 큰 나랑이, 오른쪽에 확인 방법 카드 ──
+   위쪽 바(둥근 바)와 같은 너비·끝선. 왼쪽 상자(노란 그라데이션)는 나랑이가 화면 높이의 거의 절반을 차지하고, 오른쪽에는 카드 세 개를 쌓는다.
+   16:9 키오스크에서 스크롤 없이 한 화면: 나랑이 크기(--hw-art)만 화면 높이에 맞춰 달라진다. */
 .haneuli-welcome {
   --hw-w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
   --hw-art: 40dvh;
@@ -35,7 +35,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .hw-actions .listen-start { width: auto; min-height: 3.5rem; margin: 0; white-space: nowrap; }
 .hw-rest { min-height: 3.5rem; padding: 0 var(--space-5); border: 1px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-body); font-weight: var(--weight-label); cursor: pointer; }
 
-/* 사랑이: 위에 말풍선(꼬리가 아래로), 그 아래에 원 안의 큰 사랑이 */
+/* 나랑이: 위에 말풍선(꼬리가 아래로), 그 아래에 원 안의 큰 나랑이 */
 .haneuli-center { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); min-width: 0; min-height: 0; }
 .haneuli-bubble { position: relative; margin: 0; padding: var(--space-3) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: 1.35; text-align: center; white-space: pre-line; max-width: 100%; box-shadow: var(--shadow-1); }
 .haneuli-bubble::after { content: ""; position: absolute; left: 50%; bottom: -0.5625rem; width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: translateX(-50%) rotate(45deg); }
@@ -92,7 +92,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .kx-passport-go { min-height: 4.5rem; font-size: var(--text-heading); }
 .kx-passport-camera .scanner { width: 100%; max-width: none; margin: 0; }
 
-/* 사랑이가 한마디 하는 줄(서비스 고르기, 등록 내용, 끝 인사) */
+/* 나랑이가 한마디 하는 줄(서비스 고르기, 등록 내용, 끝 인사) */
 .haneuli-says { display: flex; align-items: center; gap: var(--space-4); }
 .haneuli-says-face { flex: none; width: 6rem; height: 6rem; object-fit: contain; }
 .haneuli-says-sm .haneuli-says-face { width: 4rem; height: 4rem; }
@@ -102,7 +102,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 
 /* ── 서비스 고르기(등록 내용을 확인한 뒤) ── */
 
-/* 4:3 장애인 키오스크(1024×768 등 가로 화면): 같은 틀에서 사랑이·카메라·카드만 줄인다 */
+/* 4:3 장애인 키오스크(1024×768 등 가로 화면): 같은 틀에서 나랑이·카메라·카드만 줄인다 */
 @media (orientation: landscape) and (max-width: 1100px) {
   .haneuli-welcome { --hw-art: 38dvh; }
   .hw-hero { padding: var(--space-4); gap: var(--space-2); }
@@ -110,7 +110,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
   .haneuli-way { padding-right: calc(var(--space-4) + 2rem); }
   .haneuli-camera .scanner { max-height: 20dvh; }
 }
-/* 세로 화면(안내로봇 1080×1920)과 좁은 화면: 위에 사랑이 상자, 아래에 카드를 한 줄로 쌓는다 */
+/* 세로 화면(안내로봇 1080×1920)과 좁은 화면: 위에 나랑이 상자, 아래에 카드를 한 줄로 쌓는다 */
 @media (orientation: portrait), (max-width: 760px) {
   .haneuli-welcome { --hw-art: 30dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
   .haneuli-ways { grid-template-rows: auto; }

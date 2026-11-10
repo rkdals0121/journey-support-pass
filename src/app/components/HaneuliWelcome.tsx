@@ -4,14 +4,14 @@ import Image from "next/image";
 import { ArrowRight, BookUser, Keyboard, MapPin, ScanLine } from "lucide-react";
 import { type ReactNode } from "react";
 
-/** 새 사랑이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
+/** 새 나랑이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
 const POSES = {
   front: "/stamp/haneul.webp",
   left: "/stamp/haneul-left.webp",
   right: "/stamp/haneul-right.webp",
 } as const;
 
-/** 사랑이가 한마디 한다. 안내 키오스크의 여러 화면에서 같은 모습으로 쓴다. */
+/** 나랑이가 한마디 한다. 안내 키오스크의 여러 화면에서 같은 모습으로 쓴다. */
 export function HaneuliSays({ text, size = "md", pose = "front" }: { text: string; size?: "sm" | "md" | "lg"; pose?: keyof typeof POSES }) {
   return (
     <div className={`haneuli-says haneuli-says-${size}`}>
@@ -22,9 +22,9 @@ export function HaneuliSays({ text, size = "md", pose = "front" }: { text: strin
 }
 
 /**
- * 안내 키오스크 첫 장면. 왼쪽에 큰 사랑이(말풍선과 함께), 오른쪽에 확인 방법 카드 세 개.
+ * 안내 키오스크 첫 장면. 왼쪽에 큰 나랑이(말풍선과 함께), 오른쪽에 확인 방법 카드 세 개.
  * 교통약자 전용 키오스크라 본인 확인을 먼저 한다. 카드: 탑승권 스캔(카메라), 여권 스캔, 예약번호 입력.
- * 사랑이는 건드리지 않으면 자고 있다. 탑승권을 바로 비추면 깨며 다음 화면으로 가고, 화면만 누르면 깨어 카드 중 하나를 고르라고 알려 준다.
+ * 나랑이는 건드리지 않으면 자고 있다. 탑승권을 바로 비추면 깨며 다음 화면으로 가고, 화면만 누르면 깨어 카드 중 하나를 고르라고 알려 준다.
  * The camera stays mounted across sleep and wake.
  */
 export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onPassport, scanner, error, listen }: {
@@ -35,7 +35,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
   const bubble = busy
     ? (en ? "Finding your registration!" : "찾고 있어요!")
     : !awake
-      ? (en ? "Scan your boarding pass to wake me up!" : "탑승권을 스캔해서\n사랑이를 깨워 주세요!")
+      ? (en ? "Scan your boarding pass to wake me up!" : "탑승권을 스캔해서\n나랑이를 깨워 주세요!")
       : (en ? "Choose one way to check in!" : "확인 방법을\n하나 골라 주세요!");
 
   return (
