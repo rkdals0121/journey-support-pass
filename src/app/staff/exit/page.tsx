@@ -1,6 +1,9 @@
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { ExitCheck } from "./ExitCheck";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("교통약자 우대출구");
 
 export const dynamic = "force-dynamic";
 

@@ -5,7 +5,7 @@ import { SERVICE_HUBS } from "@/lib/service-hubs";
 import { config } from "@/lib/config";
 import { KioskVisitFlow } from "./KioskVisitFlow";
 export const dynamic = "force-dynamic";
-export const metadata = { robots: { index: false, follow: false } };
+export const metadata = { title: "만남 예약 확인 (키오스크) · Journey Support Pass", robots: { index: false, follow: false } };
 export default async function KioskVisits({
   searchParams,
 }: {

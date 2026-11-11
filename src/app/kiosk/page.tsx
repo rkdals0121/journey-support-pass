@@ -1,6 +1,9 @@
 import { PLACES, placeOf } from "@/lib/airport";
 import { currentSession } from "@/lib/session-server";
 import { KioskSetup } from "./KioskSetup";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("키오스크 설치");
 
 export const dynamic = "force-dynamic";
 

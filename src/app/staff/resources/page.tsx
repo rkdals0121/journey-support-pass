@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { ResourceBoard } from "./ResourceBoard";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("장비 현황·배차");
 export const dynamic = "force-dynamic";
 export default async function ResourcesPage() {
   const s = await requireStaff();

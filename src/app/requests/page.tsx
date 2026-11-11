@@ -4,6 +4,9 @@ import { MyRequests } from "./MyRequests";
 import { currentSession } from "@/lib/session-server";
 import { placeOf } from "@/lib/airport";
 import { redirect } from "next/navigation";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("내 요청", "My requests");
 export default async function Requests({
   searchParams,
 }: {

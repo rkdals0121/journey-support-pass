@@ -5,6 +5,9 @@ import { getDb } from "@/lib/db";
 import { businessOverview } from "@/lib/business-overview";
 import { StaffNav } from "@/app/components/StaffNav";
 import { OverviewDashboard } from "./OverviewDashboard";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("통합 운영 현황");
 export const dynamic = "force-dynamic";
 export default async function OverviewPage() {
   const s = await requireStaff();

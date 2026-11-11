@@ -16,6 +16,9 @@ import { getDb } from "@/lib/db";
 import { expireServiceRequests } from "@/lib/request-retention";
 import { StaffNav } from "../../components/StaffNav";
 import { StaffReferenceTabs } from "../../components/StaffReferenceTabs";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("운영 기준·담당 업무");
 export const dynamic = "force-dynamic";
 export default async function OperationsPage() {
   const s = await requireStaff();
