@@ -35,7 +35,7 @@
 .ph-home .task-home-status { margin: 0; border: 0; }
 .ph-home .task-home-status:empty { display: none; }
 .ph-services { min-width: 0; }
-.ph-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); height: 100%; }
+.ph-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); height: 100%; }
 .ph-list .task-launcher { display: contents; }
 .ph-list .task-action { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); min-height: 7rem; margin: 0; padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
 .ph-list .task-action:focus-within { outline: .1875rem solid var(--color-focus); outline-offset: .125rem; }
@@ -78,6 +78,7 @@
   .ph-home .ph-hero-art { flex: 0 0 auto; width: clamp(4rem, 20vw, 7.5rem); margin-inline: auto; }
   .ph-home .ph-hero-art img { width: 100%; }
   .ph-list { grid-template-columns: minmax(0, 1fr); }
+  .task-home { padding-block: 0; }
   .ph-list .task-action { min-height: 5.5rem; align-items: center; }
   .ph-home .ph-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
   .ph-home .ph-list .task-action {
@@ -104,7 +105,7 @@
   .ph-list .task-action { min-height: 5.5rem; padding: var(--space-3); }
 }
 @media (min-width: 761px) {
-  .public-site:is(:has(.ph-home), :has(.dv-home)) > .task-home { padding-block: var(--space-2); margin-top: var(--space-2); }
+  .public-site:is(:has(.ph-home), :has(.dv-home)) > .task-home { padding-block: 0; margin-top: var(--space-4); }
   .public-site:is(:has(.ph-home), :has(.dv-home)) > .public-footer { padding-block: var(--space-2); gap: var(--space-4); }
   .public-site:is(:has(.ph-home), :has(.dv-home)) > .public-footer > div:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
   .public-site:is(:has(.ph-home), :has(.dv-home)) > .public-footer .public-caption { margin: 0; }

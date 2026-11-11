@@ -45,7 +45,10 @@ const KIOSK_SIZES = [
   { name: "세로 키오스크 1080×1920", width: 1080, height: 1920, hasTouch: true },
 ];
 /** 글자 배율. 1.5 는 설정의 「아주 크게」다. 이 서비스는 큰 글자를 쓰는 사람이 주 이용자다. */
-const SCALES = [1, 1.5];
+const SCALES = process.env.LAYOUT_SCALES ? process.env.LAYOUT_SCALES.split(",").map(Number) : [1, 1.5];
+// 빨리 돌려 볼 때: LAYOUT_PAGES=/,/help LAYOUT_WIDTHS=390,1333 LAYOUT_SCALES=1 npx tsx scripts/layout-check.ts
+const ONLY_PAGES = process.env.LAYOUT_PAGES?.split(",");
+const ONLY_WIDTHS = process.env.LAYOUT_WIDTHS?.split(",").map(Number);
 const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login", "/devices", "/devices/kiosk", "/devices/robot"];
 const KIOSK_PAGES = ["/kiosk/guide", "/kiosk/entry", "/kiosk/visits"];
 /** 직원 화면. 도움 요청 대신 접수·지원정보 대신 등록은 여객·키오스크 화면을 왼쪽 메뉴 옆 본문 칸에 띄운다. */
@@ -57,6 +60,8 @@ let checked = 0;
 
 async function inspect(page: Page, where: string) {
   checked++;
+  // 키오스크는 글자 1배에서 한 화면에 맞추는 기기라서(AGENTS.md), 키오스크 박스 간격은 글자 1배에서만 본다.
+  await page.evaluate((skip) => { (window as unknown as { __skipGap: boolean }).__skipGap = skip; }, /×1\.5/.test(where));
   const found = (await page.evaluate(() => {
     const out: string[] = [];
     const doc = document.documentElement;
@@ -98,6 +103,55 @@ async function inspect(page: Page, where: string) {
         return !folded(e) && r.width > 0 && r.height > 0 && r.left < side.right - 1 && r.right > side.left + 1 && r.top < side.bottom && r.bottom > side.top;
       });
       if (over) out.push(`본문이 왼쪽 메뉴를 덮음 (${(over.className?.toString() || over.tagName).slice(0, 40)})`);
+    }
+    // 박스 간격: 바깥 박스(테두리나 배경이 있는 칸)끼리의 간격은 --space-4 하나다(키오스크는 rem 이 커서 그만큼 커진다).
+    // 휴대전화·낮은 화면은 더 좁게 줄일 수 있다(아래). 기준의 3배 이상 떨어진 것은 구역을 나눈 것으로 보고 보지 않는다.
+    // 두 박스 사이에 글자·그림·단추가 있으면(제목, 진행 표시 줄 등) 구역을 나눈 것으로 보고 뺀다. 직원 화면은 틀이 달라 보지 않는다.
+    if (!document.querySelector(".workspace-side, .staff-login-screen") && !(doc.hasAttribute("data-kiosk") && (window as unknown as { __skipGap?: boolean }).__skipGap)) {
+      const rem = parseFloat(getComputedStyle(doc).fontSize);
+      const std = rem * (parseFloat(getComputedStyle(doc).getPropertyValue("--space-4")) || 1);
+      const bodyBg = getComputedStyle(document.body).backgroundColor;
+      const seen = (e: Element) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none"; };
+      const boxes: { e: Element; l: number; t: number; r: number; b: number; name: string }[] = [];
+      for (const e of document.querySelectorAll("body *")) {
+        if (!seen(e)) continue;
+        const r = e.getBoundingClientRect();
+        if (r.width < 160 || r.height < 64) continue;
+        const cs = getComputedStyle(e);
+        const border = parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== "none";
+        const fill = (cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== bodyBg) || cs.backgroundImage !== "none";
+        if (!border && !fill) continue;
+        // 단추·링크·접기 칸 안의 것은 칸의 부품이다. 카드로 쓰는 단추·링크는 카드로 본다.
+        if (e.closest("svg, button, a, label, summary, input, select, textarea") && !e.matches(".svc-card, .hw-card, .dv-card, .task-action")) continue;
+        boxes.push({ e, l: r.left, t: r.top, r: r.right, b: r.bottom, name: ((e.className + "").split(" ")[0] || e.tagName.toLowerCase()).slice(0, 28) });
+      }
+      const outer = boxes.filter((x) => !boxes.some((y) => y !== x && y.e.contains(x.e)));
+      // 휴대전화는 --space-2 ~ --space-4, 낮은 화면(높이 700px 이하)은 여백부터 줄이므로 --space-1 ~ --space-4 까지 본다.
+      const lowest = innerHeight <= 700 ? std * 0.25 - 1.5 : innerWidth <= 760 ? std * 0.5 - 1.5 : std - 1.5;
+      const bad: string[] = [];
+      for (const a of outer) for (const c of outer) {
+        if (a === c) continue;
+        const ox = Math.min(a.r, c.r) - Math.max(a.l, c.l), oy = Math.min(a.b, c.b) - Math.max(a.t, c.t);
+        let g = -1;
+        if (ox > 0.5 * Math.min(a.r - a.l, c.r - c.l) && c.t >= a.b - 0.5) g = c.t - a.b;
+        else if (oy > 0.5 * Math.min(a.b - a.t, c.b - c.t) && c.l >= a.r - 0.5) g = c.l - a.r;
+        if (g < 2 || g >= std * 3) continue;
+        const gap = { l: Math.max(a.l, c.l), r: Math.min(a.r, c.r), t: Math.min(a.b, c.t), b: Math.max(a.b, c.t) };
+        const horizontal = !(ox > 0.5 * Math.min(a.r - a.l, c.r - c.l) && c.t >= a.b - 0.5);
+        if (horizontal) { gap.l = Math.min(a.r, c.l); gap.r = Math.max(a.r, c.l); gap.t = Math.max(a.t, c.t); gap.b = Math.min(a.b, c.b); }
+        const between = [...document.querySelectorAll("body *")].some((el) => {
+          if (el.contains(a.e) || el.contains(c.e) || a.e.contains(el) || c.e.contains(el) || !seen(el)) return false;
+          const r = el.getBoundingClientRect();
+          const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+          if (cx < gap.l || cx > gap.r || cy < gap.t || cy > gap.b) return false;
+          return el.matches("img, svg, button, a, input") || [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? "").trim() !== "");
+        });
+        if (between) continue;
+        const ok = g >= lowest && g <= std + 1.5;
+        if (!ok) bad.push(`${a.name} → ${c.name} ${Math.round(g * 10) / 10}px`);
+      }
+      const uniq = [...new Set(bad)];
+      if (uniq.length) out.push(`박스 간격이 기준(${Math.round(std * 10) / 10}px = --space-4)과 다름: ${uniq.slice(0, 3).join(", ")}${uniq.length > 3 ? ` 외 ${uniq.length - 3}곳` : ""}`);
     }
     // 잘려서 닿을 수 없는 내용: 넘치는데 스크롤도 안 되는 칸
     for (const e of document.querySelectorAll("main, .flow-body, .flow-form-area, .flow-workspace, section")) {
@@ -216,8 +270,8 @@ async function kioskCookie(placeId: string): Promise<string | null> {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "jsp-layout-"));
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, userDataDir: profile, args: ["--no-first-run", "--lang=ko-KR"] });
   try {
-    for (const url of PAGES)
-      for (const size of SIZES)
+    for (const url of PAGES.filter((u) => !ONLY_PAGES || ONLY_PAGES.includes(u)))
+      for (const size of SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
         for (const scale of SCALES) {
           const page = await openAt(browser, size, scale, url);
           await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
@@ -227,8 +281,8 @@ async function kioskCookie(placeId: string): Promise<string | null> {
     const entry = await kioskCookie("t1-info");
     if (!guide || !entry) console.log("키오스크 화면은 건너뜀 (로컬 DB에 구역이 없음. /api/admin/setup 으로 시연 구역을 넣으세요)");
     else
-      for (const url of KIOSK_PAGES)
-        for (const size of KIOSK_SIZES)
+      for (const url of KIOSK_PAGES.filter((u) => !ONLY_PAGES || ONLY_PAGES.includes(u)))
+        for (const size of KIOSK_SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
           for (const scale of SCALES) {
             const page = await openAt(browser, size, scale, url, url === "/kiosk/entry" ? entry : guide);
             await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
@@ -238,8 +292,8 @@ async function kioskCookie(placeId: string): Promise<string | null> {
     const staff = await staffCookie();
     if (!staff) console.log("직원 화면은 건너뜀 (로컬 DB에 안내데스크 구역이 없음)");
     else
-      for (const url of STAFF_PAGES)
-        for (const size of SIZES)
+      for (const url of STAFF_PAGES.filter((u) => !ONLY_PAGES || ONLY_PAGES.includes(u)))
+        for (const size of SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
           for (const scale of SCALES) {
             const page = await openAt(browser, size, scale, url, staff);
             await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
