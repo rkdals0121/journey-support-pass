@@ -204,7 +204,7 @@ export function KioskVisitFlow({
               <h1>{title}</h1>
               <p className="kx-lead">
                 {t(
-                  "예약할 때 받은 확인번호 8자리를 오른쪽 자판으로 눌러 주세요.",
+                  "예약할 때 받은 확인번호 8자리를 자판으로 눌러 주세요.",
                   "Use the keypad to enter the 8-character reference from your booking.",
                 )}
               </p>

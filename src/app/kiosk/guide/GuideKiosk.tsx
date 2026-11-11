@@ -1056,9 +1056,12 @@ export function GuideKiosk({
             t.routeSummary(route.minutes, route.meters),
             ...routeLines(route, target, t),
           ].join(". ")}
+          className="kiosk-route"
           onBack={() => setView({ kind: "home" })}
           onHome={reset}
         >
+          <section className="kc-route">
+          <div className="kc-route-info">
           <h1>{title}</h1>
           <p className="lead">
             <RouteSummary route={route} t={t} />
@@ -1071,7 +1074,9 @@ export function GuideKiosk({
               {closeText(flight, t)} · {paceText(guide.pace, t)}
             </p>
           )}
+          </div>
           <RouteSteps route={route} target={target} from={here} t={t} />
+          <div className="kc-route-foot">
           <button
             className="btn finish-btn"
             onClick={() => setView({ kind: "home" })}
@@ -1079,6 +1084,8 @@ export function GuideKiosk({
             {t.guideBack}
           </button>
           <p className="fine">{t.mock}</p>
+          </div>
+          </section>
         </FlowShell>
         {call}
         {idle}
