@@ -6,6 +6,9 @@ import { config } from "@/lib/config";
 import { availableDemoFlight } from "@/lib/demo-flight";
 import { StaffNav } from "@/app/components/StaffNav";
 import { PrepareDemo } from "./PrepareDemo";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("전체 흐름 시연 준비");
 export const dynamic = "force-dynamic";
 export default async function DemoPreparation() {
   const s = await requireStaff();

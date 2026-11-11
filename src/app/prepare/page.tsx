@@ -10,6 +10,9 @@ import {
 import { Sunflower } from "../components/Sunflower";
 import { TextSizeControl } from "../components/TextSizeControl";
 import { ViewScale } from "../components/ViewScale";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("여행 전 지원 등록", "Register before your trip");
 export default async function PreparePage({
   searchParams,
 }: {
