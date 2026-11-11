@@ -248,3 +248,11 @@ html:has([data-device-layout=robot]) {
 .dv-frame-screen { position: relative; border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-canvas); box-shadow: var(--shadow-2); }
 .dv-frame-screen iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: top left; }
 .dv-frame-note { margin: 0; max-width: 40rem; color: var(--color-muted); font-size: var(--text-small); line-height: 1.6; text-align: center; }
+
+/* 안내로봇 시연 전환: 「PC 버전」 ↔ 「실제 키오스크 버전」 */
+.view-switch { display: inline-flex; gap: var(--space-1); padding: var(--space-1); border: 1px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); }
+.view-switch .bar-btn { padding-inline: var(--space-3); }
+.view-switch .bar-btn[aria-pressed="true"] { background: var(--color-primary); color: var(--color-surface); }
+.robot-stage { position: fixed; inset: 0; display: grid; place-items: center; background: var(--color-canvas); }
+.robot-stage-screen { position: relative; border: 1px solid var(--color-line); box-shadow: var(--shadow-2); background: var(--color-canvas); }
+.robot-stage-screen iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: top left; }
