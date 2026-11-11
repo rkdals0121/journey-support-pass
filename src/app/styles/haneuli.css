@@ -64,8 +64,7 @@ html[data-kiosk] .hw-welcome-title h1 { margin: 0; font-size: var(--text-heading
 .hw-welcome-stage .hw-art { justify-self: end; }
 .hw-welcome-side { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); min-width: 0; align-self: start; padding-top: var(--space-6); }
 .hw-welcome-bubble { position: relative; top: auto; right: auto; display: grid; gap: var(--space-2); max-width: 100%; padding: var(--space-5) var(--space-6); border-radius: calc(var(--radius-medium) * 2); box-shadow: var(--shadow-1); }
-.hw-welcome-bubble strong { font-size: var(--text-page-title); font-weight: var(--weight-heading); line-height: 1.25; letter-spacing: -0.03em; }
-.hw-welcome-bubble span { color: var(--color-muted); font-size: var(--text-body); font-weight: var(--weight-body); line-height: 1.5; white-space: pre-line; }
+.hw-welcome-bubble strong { font-size: var(--text-page-title); font-weight: var(--weight-heading); line-height: 1.3; letter-spacing: -0.03em; white-space: pre-line; }
 /* 꼬리: 말풍선 왼쪽 아래에서 나랑이 쪽으로 */
 .hw-welcome-bubble::after { left: auto; right: auto; inset-inline-start: calc(-0.5625rem); bottom: var(--space-6); transform: rotate(135deg); }
 .hw-welcome-side .haneuli-status { width: 100%; }

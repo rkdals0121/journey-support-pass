@@ -65,11 +65,12 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPass
   onWake: () => void; onNumber: () => void; onPassport: () => void;
   scanner: ReactNode; error: ReactNode; listen: ReactNode;
 }) {
-  const say = busy
-    ? { big: en ? "Finding your registration!" : "찾고 있어요!", small: en ? "Please wait a moment." : "잠시만 기다려 주세요." }
+  // 말풍선 문구는 정해진 그대로 둔다(바꾸지 않는다).
+  const bubble = busy
+    ? (en ? "Finding your registration!" : "찾고 있어요!")
     : !awake
-      ? { big: en ? "Scan your boarding pass" : "탑승권을 스캔해 주세요", small: en ? "Show the barcode to the camera and I'll wake up!" : "카메라에 바코드를 보여 주시면\n나랑이가 깨어나요!" }
-      : { big: en ? "Scan your boarding pass" : "탑승권을 스캔해 주세요", small: en ? "No boarding pass? Choose a way below." : "탑승권이 없으면\n아래에서 골라 주세요!" };
+      ? (en ? "Scan your boarding pass to wake me up!" : "탑승권을 스캔해서\n나랑이를 깨워 주세요!")
+      : (en ? "Choose one way to check in!" : "확인 방법을\n하나 골라 주세요!");
 
   return (
     <div className={`haneuli-welcome ${awake ? "is-awake" : "is-idle"}`} onClickCapture={(event) => {
@@ -94,8 +95,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPass
           </div>
           <div className="hw-welcome-side">
             <p className="haneuli-bubble hw-welcome-bubble" aria-live="polite">
-              <strong>{say.big}</strong>
-              <span>{say.small}</span>
+              <strong>{bubble}</strong>
             </p>
             {/* 탑승권 읽기(카메라)는 칸 없이 켜 두고, 못 쓸 때만 안내가 보인다. 찾는 중·오류도 여기에 */}
             <div className="haneuli-status" aria-live="polite">
