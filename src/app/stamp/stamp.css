@@ -64,7 +64,7 @@
 }
 .sb[data-theme="friend"],
 .sb-pick [data-theme="friend"] {
-  /* 하늘이 팔레트: Deep Blue · Yellow · White · Sky Blue */
+  /* 나랑이 팔레트: Deep Blue · Yellow · White · Sky Blue */
   --bg: var(--color-blue-soft);
   --ink: var(--color-blue);
   --muted: var(--color-blue);
@@ -1200,7 +1200,7 @@
   cursor: pointer;
 }
 
-/* 하늘이 그림(시안 이미지) */
+/* 나랑이 그림(시안 이미지) */
 .sb-haneul {
   display: block;
   height: auto;

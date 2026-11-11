@@ -712,7 +712,7 @@ export function GuideKiosk({
               </button>
             </>
           }
-          speakText={awake ? (lang === "en" ? "Hello, I am Haneuli. Please check in by entering your booking number, scanning your boarding pass, or scanning your passport." : "안녕하세요, 저는 하늘이예요. 예약번호 입력, 탑승권 스캔, 여권 스캔 중 하나로 확인해 주세요.") : (lang === "en" ? "This kiosk is for passengers who need assistance. Scan your boarding pass to wake Haneuli." : "교통약자 전용 키오스크입니다. 탑승권을 스캔해 하늘이를 깨워 주세요.")}
+          speakText={awake ? (lang === "en" ? "Hello, I am Narangi. Please check in by entering your booking number, scanning your boarding pass, or scanning your passport." : "안녕하세요, 저는 나랑이예요. 예약번호 입력, 탑승권 스캔, 여권 스캔 중 하나로 확인해 주세요.") : (lang === "en" ? "This kiosk is for passengers who need assistance. Scan your boarding pass to wake Narangi." : "교통약자 전용 키오스크입니다. 탑승권을 스캔해 나랑이를 깨워 주세요.")}
           speakKey={awake ? "services" : "welcome"}
         >
           <HaneuliWelcome

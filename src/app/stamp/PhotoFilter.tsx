@@ -26,7 +26,7 @@ const HOLD_MS = 600;
 /** 찾은 얼굴: 두 눈 사이 가운데, 얼굴 폭(w), 기울기(a). 모두 캔버스 좌표. */
 interface Pose { x: number; y: number; w: number; a: number }
 type Detector = { detectForVideo(src: CanvasImageSource, ts: number): { detections: { boundingBox?: { width: number }; keypoints: { x: number; y: number }[] }[] }; close(): void };
-/** 옷 필터는 옷 사진과 그 자리, 하늘이 친구 필터는 사진 둘레에 설 하늘이 그림들. */
+/** 옷 필터는 옷 사진과 그 자리, 나랑이 친구 필터는 사진 둘레에 설 나랑이 그림들. */
 type Art = { deco: HTMLImageElement } & (
   | { costume: HTMLImageElement; layout: ReturnType<typeof costumeLayout> }
   | { friends: HTMLImageElement[] }
@@ -34,7 +34,7 @@ type Art = { deco: HTMLImageElement } & (
 
 // 옷 필터: 앞 카메라 영상에서 얼굴을 찾아, 얼굴이 옷의 얼굴 자리에 오도록 화면을 옮겨 그리고 옷을 입힌다.
 // 얼굴 인식을 못 불러오면(인터넷이 약하거나 기기가 못 돌리면) 점선 동그라미에 얼굴을 맞추는 고정 틀로 돈다.
-// 하늘이 친구 필터: 옷도 얼굴 인식도 없이, 카메라 화면 그대로에 하늘이들이 함께 선다.
+// 나랑이 친구 필터: 옷도 얼굴 인식도 없이, 카메라 화면 그대로에 나랑이들이 함께 선다.
 export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,7 +51,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
 
   const photo = COSTUME_PHOTO[role];
 
-  // 옷 사진(또는 하늘이들)과 장식을 그림으로 준비해 둔다. 캔버스에 매 장면 그려 넣는다.
+  // 옷 사진(또는 나랑이들)과 장식을 그림으로 준비해 둔다. 캔버스에 매 장면 그려 넣는다.
   useEffect(() => {
     let alive = true;
     const p = COSTUME_PHOTO[role];
@@ -186,7 +186,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
 
   const hint =
     cam === "none" ? "" :
-    !photo ? "하늘이 친구들 사이에서 활짝 웃어요!" :
+    !photo ? "나랑이 친구들 사이에서 활짝 웃어요!" :
     ai === "loading" ? "얼굴 인식을 준비하고 있어요…" :
     ai === "off" ? "점선 동그라미에 얼굴을 맞춰 주세요" :
     face ? "좋아요! 찰칵 버튼을 눌러요" : "얼굴이 화면에 보이게 해 주세요";
@@ -270,7 +270,7 @@ function findFace(d: Detector, src: CanvasImageSource, sw: number, sh: number, m
 const mix = (a: Pose, b: Pose, t: number): Pose => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, w: a.w + (b.w - a.w) * t, a: a.a + (b.a - a.a) * t });
 
 /**
- * 사진 + 옷(또는 하늘이들) + 장식을 그린다. 옷은 늘 같은 자리(가운데)에 그리고, 얼굴을 찾았으면 사진을 옮기고 키우고 돌려
+ * 사진 + 옷(또는 나랑이들) + 장식을 그린다. 옷은 늘 같은 자리(가운데)에 그리고, 얼굴을 찾았으면 사진을 옮기고 키우고 돌려
  * 두 눈 사이 가운데가 SLOT 에, 얼굴 폭이 옷의 얼굴 자리 폭에 맞게 한다. 사진이 못 채운 곳은 하늘색으로 둔다.
  */
 function draw(ctx: CanvasRenderingContext2D, src: CanvasImageSource, sw: number, sh: number, mirror: boolean, pose: Pose | null, art: Art | null) {
