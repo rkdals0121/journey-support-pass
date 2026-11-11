@@ -721,7 +721,6 @@ export function GuideKiosk({
             awake={awake}
             busy={busy}
             onWake={() => setAwake(true)}
-            onRest={reset}
             onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
             onPassport={() => { setAwake(true); setError(null); setView({ kind: "passport" }); }}
             listen={<ListenStart t={t} />}

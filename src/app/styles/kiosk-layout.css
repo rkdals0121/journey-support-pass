@@ -421,12 +421,12 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .svc-card:disabled { opacity: 0.6; }
 .kc-menu, .kc-entry-services { --svc-card-min: calc(var(--target-kiosk-floor) * 1.5); grid-auto-rows: minmax(var(--svc-card-min), 9rem); align-content: start; }
 .kc-menu { min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
-.kc-entry-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); min-height: 0; gap: var(--space-3); }
+/* 입구·안내로봇 처음 화면: 왼쪽(세로에서는 위)에 큰 나랑이 상자(안내 키오스크 첫 화면과 같은 모양, haneuli.css), 오른쪽(아래)에 불러오기 카드와 바로 쓰는 서비스 */
+.kc-entry { --hw-art: max(7rem, calc(100dvh - var(--site-bar-height) - 17rem)); grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4); }
+.kc-entry-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); min-height: 0; gap: var(--space-3); }
 .kc-entry-grid .kx-home-intro { gap: var(--space-2); min-height: 0; }
 .kc-entry-grid .kx-here { margin: 0; padding: 0; background: transparent; font-size: var(--text-caption); }
 .kc-entry-grid .kx-pass { flex: 1; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
-.kc-entry-grid .kx-listen { width: 100%; margin: 0; }
-.kc-entry-grid .listen-start { min-height: var(--target-kiosk-floor); padding: var(--space-2) var(--space-3); margin: 0; font-size: var(--text-small); }
 .kc-entry-services { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
 .kc-entry-services .task-launcher { display: contents; }
 .kc-entry-grid .kx-home-services { min-height: 0; display: flex; flex-direction: column; }
@@ -465,6 +465,7 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 }
 @media (orientation: portrait) {
   .kc-review, .kc-entry-grid, .kc-directions .kx-guide { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .kc-entry { --hw-art: 26dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
   .kc-directions .kx-guide-side { grid-column: 1; grid-row: 2; }
   .kc-directions .gate-go { grid-row: 3; }
   .kc-review .board-main { flex-wrap: nowrap; }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CalendarCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { KioskReturn } from "@/lib/help-entry";
-import { KioskHero } from "./KioskHero";
+import { HaneuliStage } from "./HaneuliWelcome";
 import { TaskLauncher } from "./TaskLauncher";
 
 /**
@@ -15,6 +15,7 @@ export function KioskHome({
   en,
   here,
   title,
+  lead,
   pass,
   listen,
   topics,
@@ -35,13 +36,11 @@ export function KioskHome({
   appointmentLabel: string;
 }) {
   return (
-    <div className="kc-page kc-entry">
-      <KioskHero title={title} lead={here} />
+    <div className="kc-page kc-entry is-awake">
+      <HaneuliStage title={title} here={here} listen={listen} bubble={lead} />
       <div className="kc-entry-grid">
       <section className="kx-home-intro">
-
         <div className="kx-pass">{pass}</div>
-        <div className="kx-listen">{listen}</div>
       </section>
       <section className="kx-home-services" aria-labelledby="kx-services-title">
         <h2 id="kx-services-title">
