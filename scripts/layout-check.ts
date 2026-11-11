@@ -46,7 +46,7 @@ const KIOSK_SIZES = [
 ];
 /** 글자 배율. 1.5 는 설정의 「아주 크게」다. 이 서비스는 큰 글자를 쓰는 사람이 주 이용자다. */
 const SCALES = [1, 1.5];
-const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login"];
+const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login", "/devices", "/devices/kiosk", "/devices/robot"];
 const KIOSK_PAGES = ["/kiosk/guide", "/kiosk/entry", "/kiosk/visits"];
 /** 직원 화면. 도움 요청 대신 접수·지원정보 대신 등록은 여객·키오스크 화면을 왼쪽 메뉴 옆 본문 칸에 띄운다. */
 const STAFF_PAGES = ["/staff", "/staff/requests", "/staff/requests/new", "/staff/desk", "/staff/desk/register", "/staff/overview"];

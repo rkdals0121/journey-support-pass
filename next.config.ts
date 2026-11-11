@@ -36,6 +36,11 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
         ],
       },
+      // 기기 화면 미리보기(/devices)가 실제 키오스크 화면을 틀에 넣는다. 같은 사이트의 화면만 넣을 수 있고, 다른 사이트는 여전히 못 넣는다.
+      {
+        source: "/kiosk/:page(guide|entry)",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
       // The embedded map may be framed only by pages on this same origin.
       // Keep DENY on all other application pages.
       {
