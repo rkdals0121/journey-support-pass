@@ -91,7 +91,7 @@
 .public-request-layout .dx-page .fine { font-size: var(--text-caption); line-height: 1.65; margin: 0.5rem 0 1rem; }
 .public-request-layout .dx-page form>.btn-primary { margin-top: 1.25rem; font-size: var(--text-body); }
 .public-request-layout .place-finder { background: var(--color-primary-faint); border: 0.0625rem solid var(--color-line); border-radius: var(--radius-medium); padding: 1.25rem; margin: 0; }
-.public-request-layout .place-area-filter { border: 0!important; padding: 0!important; margin: 1rem 0!important; }
+.public-request-layout .place-area-filter { border: 0; padding: 0; margin: 1rem 0; }
 .public-request-layout .place-area-filter legend { font-size: var(--text-caption); color: var(--color-muted); }
 .public-request-layout .place-area-filter label { font-size: var(--text-caption); padding: 0.5rem 0.75rem; font-weight: var(--weight-body); }
 .public-request-layout .place-area-filter label:has(input:checked) { border-color: var(--color-primary); color: var(--color-primary-hover); background: var(--color-primary-soft); }
@@ -138,7 +138,7 @@
 .request-experience .place-finder .place-search-input input[type=search], .service-workspace .place-finder .place-search-input input[type=search] { border:0; padding:0.75rem 0.5rem; box-shadow:none; }
 .request-section .place-photo-button, .service-workspace .place-photo-button { border:0.0625rem solid var(--color-control-line); border-radius:var(--radius-small); font-size:var(--text-small); padding:0.75rem; min-height:max(3rem,var(--target-floor)); }
 .request-section .place-area-filter { border:0; padding:0; margin:1rem 0; }
-.request-section .place-area-filter label { display:flex; font-size:var(--text-caption); margin:0!important; font-weight:var(--weight-body); }
+.request-section .place-area-filter label { display:flex; font-size:var(--text-caption); margin:0; font-weight:var(--weight-body); }
 .request-section .place-area-filter legend { font-size:var(--text-caption); }
 .request-experience .place-manual { font-size:var(--text-caption); margin-top:0.5rem; }
 .request-section .place-confirmed { background:var(--color-primary-faint); }
@@ -153,7 +153,8 @@
 .service-task-fields > div { display:flex;flex-direction:column;min-width:0; }
 .service-task-fields > div > :is(input,select) { margin-top:auto;min-height:max(3rem,var(--target-floor)); }
 .request-experience .request-check, .service-form-card .request-check { display:flex; align-items:flex-start; gap:0.75rem; font-size:var(--text-small); font-weight:var(--weight-body); line-height:1.65; margin:0.75rem 0; }
-.request-check input { margin-top:0.25rem!important; }
+/* 동의 체크박스는 글 첫 줄에 맞춰 조금 내린다. 위의 입력칸 공통 규칙(margin:0)과 같은 구체성으로 뒤에 둔다 */
+.request-experience .request-check input, .service-form-card .request-check input, .service-workspace .request-check input { margin-top:0.25rem; }
 .request-needs { border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); padding:0.75rem 1rem; margin:1rem 0; }
 .request-needs summary { font-size:var(--text-small); font-weight:var(--weight-label); color:var(--color-primary-hover); cursor:pointer; min-height:2rem; line-height:2rem; }
 .request-needs-options { display:grid; grid-template-columns:1fr 1fr; gap:0.25rem 0.75rem; }
@@ -320,7 +321,7 @@
     border-color var(--airport-fast),
     box-shadow var(--airport-fast); margin: 0; }
 .airport-service-search > svg { flex: none; color: var(--airport-green); display: none; }
-.airport-service-search input { width: auto; flex: 1; min-width: 0; border: 0 !important; padding: 0.75rem; margin: 0; background: transparent; box-shadow: none !important; outline: none; font-size: var(--text-body); min-height: max(2.75rem,var(--target-floor)); color: var(--airport-ink); }
+.airport-service-search input { width: auto; flex: 1; min-width: 0; border: 0 !important; padding: 0.75rem; margin: 0; background: transparent; box-shadow: none; outline: none; font-size: var(--text-body); min-height: max(2.75rem,var(--target-floor)); color: var(--airport-ink); }
 .airport-service-search > button { display: grid; place-items: center; flex: none; width: 3rem; height: 3rem; border: 0; border-radius: var(--radius-small); background: var(--airport-green); color: var(--color-surface); cursor: pointer; padding: 0; transition: background-color var(--motion-fast) var(--ease-out); }
 .airport-popular { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; font-size: var(--text-caption); color: var(--airport-muted); }
 .airport-popular > span { color: var(--color-muted); }
@@ -628,9 +629,10 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .request-status-card { padding:1.25rem; border-radius:var(--radius-medium); }
 .request-progress-track { flex-direction:column; gap:0; margin:1.25rem 0; }
 .request-progress-track li { flex-direction:row; text-align:left; gap:0.75rem; min-height:3.15rem; font-size:var(--text-small); }
-.request-progress-track li:before { left:.9rem!important; right:auto!important; top:0; bottom:0; width:0.125rem; height:auto; }
-.request-progress-track li:first-child:before { top:50%; }
-.request-progress-track li:last-child:before { bottom:50%; }
+.request-progress-track li:before { left:.9rem; right:auto; top:0; bottom:0; width:0.125rem; height:auto; }
+/* 가로 배치의 첫·끝 줄 규칙(left·right 50%)이 더 구체적이라, 세로 배치에서는 같은 구체성으로 다시 정한다 */
+.request-progress-track li:first-child:before { top:50%; left:.9rem; right:auto; }
+.request-progress-track li:last-child:before { bottom:50%; left:.9rem; right:auto; }
 .request-progress-track li>span { width:1.9rem; height:1.9rem; flex:none; }
 .request-progress-track .is-current strong { font-size:var(--text-body); }
 .request-next-action { font-size:var(--text-small); padding:1rem; }
