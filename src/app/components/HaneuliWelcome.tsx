@@ -90,7 +90,7 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPass
           <span className="hw-icon"><BookUser aria-hidden="true" /></span>
           <span className="hw-way-text">
             <strong>{en ? "Scan passport" : "여권 스캔"}</strong>
-            <small>{en ? "Photo page, Korean passport" : "한국 여권 사진면을 카메라에"}</small>
+            <small>{en ? "Photo page, Korean passport" : "여권 사진면을 카메라에 대 주세요"}</small>
           </span>
           <ArrowRight aria-hidden="true" className="hw-arrow" />
         </button>

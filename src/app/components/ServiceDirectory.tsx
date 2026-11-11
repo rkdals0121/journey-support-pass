@@ -13,7 +13,7 @@ import {
   Search,
   ArrowRight,
 } from "lucide-react";
-import { SERVICE_CATALOG, topicLink } from "@/lib/service-catalog";
+import { SERVICE_CATALOG, passengerLabel, topicLink } from "@/lib/service-catalog";
 const icons = {
   accessibility: Accessibility,
   signpost: Signpost,
@@ -74,6 +74,8 @@ export function ServiceDirectory({
             " " +
             s.label +
             " " +
+            passengerLabel(s) +
+            " " +
             s.en +
             " " +
             s.description +
@@ -125,10 +127,10 @@ export function ServiceDirectory({
         <Link
           className="task-action-link"
           href={topicLink(s.id, lang)}
-          aria-label={`${en ? s.en : s.label} · ${en ? "Use service" : "서비스 이용"}`}
+          aria-label={`${en ? s.en : passengerLabel(s)} · ${en ? "Use service" : "서비스 이용"}`}
         >
           <span>
-            <strong>{en ? s.en : s.label}</strong>
+            <strong>{en ? s.en : passengerLabel(s)}</strong>
             <small>{descriptions[s.id]?.[en ? 1 : 0] ?? (en ? s.descriptionEn : s.description)}{s.mode === "simulation" && <em className="service-mode-label">{en ? "Simulation" : "모의 시연"}</em>}</small>
           </span>
           <ArrowUpRight size={19} aria-hidden="true" />

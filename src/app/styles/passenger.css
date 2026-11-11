@@ -884,6 +884,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .service-map-panel iframe { display: block; width: 100%; height: clamp(16rem, 50dvh, 34rem); border: 1px solid var(--color-line); border-radius: var(--radius-small); }
 .service-business-reference { margin-top: 0; border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding-inline: var(--space-4); padding-block: 0; background: var(--color-surface); }
 .service-business-reference summary { cursor: pointer; min-height: 2.75rem; align-content: center; }
+.service-business-reference details > a { display: inline-flex; align-items: center; min-height: max(2.75rem, var(--target-floor)); }
 @media (min-width: 1101px) {
   .service-page-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

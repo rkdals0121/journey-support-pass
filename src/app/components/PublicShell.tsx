@@ -22,6 +22,13 @@ export function PublicShell({
   const languageHref =
     path + (languageParams.size ? "?" + languageParams.toString() : "");
   const [menu, setMenu] = useState(false);
+  // 페이지 전체의 언어 표시도 맞춘다. 화면 읽기 프로그램이 영어 화면을 영어 발음으로 읽는다.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    return () => {
+      document.documentElement.lang = "ko";
+    };
+  }, [lang]);
   const view = useViewSettings();
   useEffect(() => {
     document.documentElement.style.setProperty(
