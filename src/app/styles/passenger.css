@@ -105,7 +105,7 @@
 /* 현장 도움 요청: 위쪽 바와 같은 끝선(docs/ui-guide.md 2절). */
 .request-experience {
   --w: min(var(--site-bar-width), calc(var(--site-bar-room) - 2 * var(--site-bar-gutter)));
-  box-sizing: border-box; width: var(--w); margin-inline: calc((100% - var(--w)) / 2); padding: var(--space-4) 0 var(--space-5); color: var(--color-text);
+  box-sizing: border-box; width: var(--w); margin-inline: calc((100% - var(--w)) / 2); padding: 0 0 var(--space-5); color: var(--color-text);
 }
 .service-heading { margin-bottom:var(--space-4); position:relative; }
 .service-kicker { display:flex; align-items:center; gap:0.5rem; color:var(--color-primary); font-size:var(--text-caption); font-weight:var(--weight-heading); letter-spacing:.04em; }
@@ -835,7 +835,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) .service-task-fields label { margin-top:0; }
 }
 @media (max-height: 700px) and (min-width: 761px) {
- .service-workspace,.request-experience { padding-block:var(--space-3); }
+ .service-workspace,.request-experience { padding-block:0 var(--space-3); }
  .service-heading { margin-bottom:var(--space-3); }
  .request-experience { padding-top:var(--space-2); }
  .request-heading { margin-bottom:var(--space-2); }
