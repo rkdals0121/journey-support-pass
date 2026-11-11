@@ -26,6 +26,7 @@ import { textOf, type Lang } from "@/lib/i18n";
 import { ErrorNote } from "../../components/Alert";
 import { DocScan } from "../../components/DocScan";
 import { FlowShell } from "../../components/FlowShell";
+import { ViewSwitch } from "./ViewSwitch";
 import { FlightBoard } from "../../components/GuideParts";
 import { IdleGuard } from "../../components/IdleGuard";
 import { Choice, NumPad } from "../../components/Inputs";
@@ -99,6 +100,7 @@ type View =
   | { kind: "guide"; token: string; guide: GuideDto };
 
 interface Props {
+  switchMode?: "pc" | "device";
   initialLang?: Lang;
   placeLabel: string;
   placeLabelEn: string;
@@ -126,6 +128,7 @@ async function post(
 }
 
 export function EntryKiosk({
+  switchMode,
   initialLang = "ko",
   placeLabel,
   placeLabelEn,
@@ -319,15 +322,18 @@ export function EntryKiosk({
       className="kiosk-content"
       serviceHome={key === "sleep"}
       headerTools={
-        key === "sleep" ? (
-          <button
-            className="bar-btn"
-            onClick={() => setLang((l) => (l === "en" ? "ko" : "en"))}
-            lang={lang === "en" ? "ko" : "en"}
-          >
-            {t.otherLang}
-          </button>
-        ) : undefined
+        <>
+          {key === "sleep" && (
+            <button
+              className="bar-btn"
+              onClick={() => setLang((l) => (l === "en" ? "ko" : "en"))}
+              lang={lang === "en" ? "ko" : "en"}
+            >
+              {t.otherLang}
+            </button>
+          )}
+          {switchMode && <ViewSwitch mode={switchMode} lang={lang} />}
+        </>
       }
       speakText={speakText}
       onBack={onBack ?? reset}
