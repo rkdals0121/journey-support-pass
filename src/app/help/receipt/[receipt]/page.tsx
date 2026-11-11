@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { HelpFlow } from "../../HelpFlow";
 import { PublicShell } from "@/app/components/PublicShell";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("요청 접수증", "Request receipt");
 export default async function ReceiptPage({
   params,
   searchParams,

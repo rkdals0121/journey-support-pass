@@ -5,6 +5,9 @@ import { placeOf } from "@/lib/airport";
 import { kioskReturn } from "@/lib/help-entry";
 import { FieldTaskShell } from "../components/FieldTaskShell";
 import { config } from "@/lib/config";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("탑승구·시설 찾기", "Find gates and facilities");
 export default async function Navigate({
   searchParams,
 }: {

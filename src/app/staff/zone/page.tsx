@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { currentSession } from "@/lib/session-server";
 import { ZonePicker } from "./ZonePicker";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("근무 구역");
 
 export const dynamic = "force-dynamic";
 
