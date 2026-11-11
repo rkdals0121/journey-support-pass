@@ -1,0 +1,56 @@
+{
+ "counts": {
+  "important": {
+   "src/app/components/facility-map.module.css": 1,
+   "src/app/components/support-journey.module.css": 1,
+   "src/app/stamp/stamp.css": 1,
+   "src/app/styles/components.css": 19,
+   "src/app/styles/passenger.css": 11,
+   "src/app/styles/staff.css": 12
+  },
+  "breakpoint": {
+   "src/app/components/support-journey.module.css": 2,
+   "src/app/styles/components.css": 3,
+   "src/app/styles/devices.css": 5,
+   "src/app/styles/kiosk-layout.css": 5,
+   "src/app/styles/passenger-layout.css": 4,
+   "src/app/styles/passenger.css": 4,
+   "src/app/styles/responsive-passenger.css": 13,
+   "src/app/styles/site-bar.css": 10,
+   "src/app/styles/staff-layout.css": 1,
+   "src/app/styles/staff.css": 6
+  },
+  "overflow": {
+   "src/app/stamp/stamp.css": 5,
+   "src/app/styles/components.css": 7,
+   "src/app/styles/passenger-layout.css": 2,
+   "src/app/styles/passenger.css": 3,
+   "src/app/styles/responsive-passenger.css": 4,
+   "src/app/styles/staff-layout.css": 1,
+   "src/app/styles/staff.css": 5
+  },
+  "fontVw": {
+   "src/app/styles/devices.css": 3
+  },
+  "fixedPx": {
+   "src/app/styles/responsive-passenger.css": 4,
+   "src/app/styles/site-bar.css": 12
+  },
+  "fontPx": {
+   "src/app/styles/site-bar.css": 6
+  }
+ },
+ "imports": [
+  "tokens.css",
+  "components.css",
+  "passenger.css",
+  "devices.css",
+  "staff.css",
+  "passenger-layout.css",
+  "staff-layout.css",
+  "kiosk-layout.css",
+  "haneuli.css",
+  "site-bar.css",
+  "responsive-passenger.css"
+ ]
+}

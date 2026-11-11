@@ -70,10 +70,10 @@ async function inspect(page: Page, where: string) {
       && doc.scrollHeight > innerHeight + 1) {
       out.push(`첫 화면에 불필요한 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
     }
-    // 키오스크 첫 화면은 스크롤 없이 한 화면이어야 한다(docs/ui-guide.md 3절). 글자 배율 기본에서만 본다.
-    if (doc.hasAttribute("data-kiosk") && document.querySelector(".haneuli-welcome") && scale === 1
-      && doc.scrollHeight > innerHeight + 1) {
-      out.push(`키오스크 첫 화면에 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
+    // 키오스크·안내로봇 화면은 스크롤 없이 한 화면이어야 한다(AGENTS.md 「키오스크·안내로봇 화면」, docs/ui-guide.md 3절).
+    // 글자 1배에서만 본다. 1.5배에서는 넘치면 페이지가 내려가도 된다.
+    if (doc.hasAttribute("data-kiosk") && scale === 1 && doc.scrollHeight > innerHeight + 1) {
+      out.push(`키오스크 화면에 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
     }
     // 찌그러진 단추: 칸이 좁아 글자가 한 글자씩 세로로 쌓인 단추(폭보다 높이가 훨씬 큼)
     const squeezed = [...document.querySelectorAll("button, a.btn, .listen-start")]
@@ -177,6 +177,27 @@ async function staffCookie(): Promise<string | null> {
   return res.headers.get("set-cookie")?.split(";")[0] ?? null;
 }
 
+/** 안내 키오스크 첫 화면에서 깨운 뒤 → 숫자판 → 여권 화면까지 차례로 열어 각각 본다. */
+async function guideSteps(page: Page, where: string) {
+  const click = async (selector: string) => {
+    const ok = await page.evaluate((sel) => {
+      const el = document.querySelector(sel) as HTMLElement | null;
+      if (!el) return false;
+      el.click();
+      return true;
+    }, selector);
+    await new Promise((r) => setTimeout(r, 1000));
+    return ok;
+  };
+  // 화면만 눌러 깨운다(나랑이를 누르면 깨어난다).
+  if (await click(".haneuli-character")) await inspect(page, where + " · 깨운 뒤");
+  if (await click(".haneuli-number")) await inspect(page, where + " · 예약번호 숫자판");
+  await page.goto(page.url(), { waitUntil: "networkidle2", timeout: 120_000 });
+  await new Promise((r) => setTimeout(r, 1200));
+  await click(".haneuli-character");
+  if (await click(".haneuli-passport")) await inspect(page, where + " · 여권 화면");
+}
+
 async function kioskCookie(placeId: string): Promise<string | null> {
   const kiosk = readSeedZones().find((z) => z.isKiosk);
   if (!kiosk) return null;
@@ -211,6 +232,7 @@ async function kioskCookie(placeId: string): Promise<string | null> {
           for (const scale of SCALES) {
             const page = await openAt(browser, size, scale, url, url === "/kiosk/entry" ? entry : guide);
             await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
+            if (url === "/kiosk/guide" && scale === 1) await guideSteps(page, `${url} · ${size.name} · 글자 ×${scale}`);
             await page.close();
           }
     const staff = await staffCookie();
