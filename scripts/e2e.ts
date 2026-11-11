@@ -1352,6 +1352,8 @@ async function resetFlights(clearLocks = false) {
   check("현장 첫 화면에서 별도 지원 QR이나 스티커를 발급하지 않는다",(await count(page,".pass-qr-code,.sticker"))===0);
   await shot(page,"현장등록-기존탑승권");
   const desk=await staffCookie(DESK_CODE);
+  // 로컬 DB 에는 앞선 점검 기록이 쌓여 있다. 통계는 이 점검 시작 때의 값을 빼고 늘어난 만큼으로 본다.
+  const baseCheckins=((await get("/api/desk/summary",desk)).body.summary as {checkins:number}).checkins;
   const kioskReg=await register("MK501",["tr_walk","mov_wheelchair_need","gd_picture"],"ko",regKiosk);
   const kioskNo=kioskReg.passNo,kioskQr=passUrl(BASE,kioskReg.token);
   check("기존 키오스크 등록 API의 고유 일련 번호 조회 호환성을 유지한다",/^\d{6}$/.test(kioskNo));
@@ -1682,7 +1684,7 @@ async function resetFlights(clearLocks = false) {
   check("현황에는 항공편이나 고른 항목이 없다 (건수와 시간뿐)", !JSON.stringify(summary).includes("MK") && !stats.includes("MK1"));
   check(
     "예매 링크 등록 완료율·증빙·모의 체크인 2건·우대출구 확인이 세어진다",
-    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins === 2 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1,
+    summary.booking.done >= 1 && summary.proofDone >= 2 && summary.checkins - baseCheckins === 2 && summary.exit.ok >= 1 && summary.exit.notOk >= 1 && summary.onsite >= 1,
     JSON.stringify({ booking: summary.booking, proofDone: summary.proofDone, checkins: summary.checkins, exit: summary.exit }),
   );
   const unifiedSummary=await get("/api/staff/requests?scope=all",desk);
