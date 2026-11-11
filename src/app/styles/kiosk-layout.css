@@ -550,3 +550,31 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 @media (orientation: portrait) {
   .kc-robot { --hw-art: 36dvh; grid-template-rows: minmax(0, 1fr); }
 }
+
+/* 길 안내(탑승구·시설 가는 길): 위쪽 바와 같은 너비·같은 끝선의 카드 하나에 담는다(바보다 넓게 나오던 것). */
+.flow.kiosk-route {
+  --kc-width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
+  width: var(--kc-width); max-width: none; box-sizing: border-box;
+}
+.flow.kiosk-route .flow-body { padding: var(--space-4) 0; }
+.kc-route {
+  padding: var(--space-4) var(--space-6);
+  border: 0.0625rem solid var(--color-line);
+  border-radius: calc(var(--radius-medium) * 2);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+}
+/* 가로 키오스크: 왼쪽에 제목·걸리는 시간·마감과 「안내 첫 화면으로」, 오른쪽에 가는 길 단계. 단계가 많아도(셔틀·엘리베이터) 스크롤 없이 한 화면. */
+@media (orientation: landscape) {
+  .kc-route { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "info steps" "foot steps"; column-gap: var(--space-6); }
+  .kc-route-info { grid-area: info; }
+  .kc-route > .route { grid-area: steps; margin: 0; }
+  .kc-route-foot { grid-area: foot; align-self: end; }
+}
+
+/* 세로 안내로봇의 예약 확인번호 화면: 카드를 바 바로 아래부터 아래 끝까지 채우고, 남는 높이는 자판 단추를 키우는 데 쓴다(위·아래로 크게 비던 것). */
+@media (orientation: portrait) {
+  html[data-kiosk] .flow-body:has(> .kiosk-appointment-page > .kx-code) { padding-top: var(--space-4); }
+  html[data-kiosk] .kiosk-appointment-page:has(> .kx-code) { justify-content: flex-start; padding-top: 0; }
+  html[data-kiosk] .kiosk-appointment-page > .kx-code { flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); }
+}
