@@ -312,7 +312,9 @@ async function launch(extra: string[] = []) {
     // 느린 컴퓨터에서 개발 서버와 함께 돌면 화면 하나를 묻는 데도 오래 걸린다.
     protocolTimeout: 900_000,
     userDataDir: tempProfile("jsp-e2e-"),
-    args: ["--no-first-run", "--no-default-browser-check", "--lang=ko-KR", ...extra],
+    // --disable-gpu: Chrome 157(2026-11) 에서 컴퓨터가 바쁠 때 가짜 카메라 영상이 반씩 밀려 나와 QR 을 못 읽는 일이 있었다.
+    // GPU 를 끄면 영상을 소프트웨어로 그려 밀리지 않는다. 화면 점검(axe·모양)에는 영향이 없다.
+    args: ["--no-first-run", "--no-default-browser-check", "--lang=ko-KR", "--disable-gpu", ...extra],
   });
 }
 
