@@ -5,6 +5,6 @@ import type { ReactNode } from "react";
 export function KioskHero({ title, lead, children }: { title: string; lead?: string; children?: ReactNode }) {
   return <section className="ph-hero kc-hero">
     <div className="ph-hero-copy"><h1>{title}</h1>{lead && <p>{lead}</p>}{children}</div>
-    <div className="ph-hero-art" aria-hidden="true"><span className="ph-hero-orbit" /><Image src="/images/haneuli/friend.webp" alt="" width={1280} height={1280} sizes="20vh" /></div>
+    <div className="ph-hero-art" aria-hidden="true"><span className="ph-hero-orbit" /><Image src="/images/haneuli/narangi.webp" alt="" width={1280} height={1280} sizes="20vh" /></div>
   </section>;
 }

@@ -6,9 +6,9 @@ import { type ReactNode } from "react";
 
 /** 새 나랑이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
 const POSES = {
-  front: "/stamp/haneul.webp",
-  left: "/stamp/haneul-left.webp",
-  right: "/stamp/haneul-right.webp",
+  front: "/stamp/narangi.webp",
+  left: "/stamp/narangi-left.webp",
+  right: "/stamp/narangi-right.webp",
 } as const;
 
 /** 나랑이가 한마디 한다. 안내 키오스크의 여러 화면에서 같은 모습으로 쓴다. */
@@ -43,9 +43,8 @@ export function HaneuliStage({ title, here, listen, bubble }: { title: string; h
           <span className="hw-orbit" />
           <div className="haneuli-character">
             <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
-            {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
-            <span className="haneuli-lid haneuli-lid-l" />
-            <span className="haneuli-lid haneuli-lid-r" />
+            {/* 잠든 모습: 자는 동안에는 잠든 그림으로 바꿔 보여 준다(haneuli.css 의 .is-idle). */}
+            <Image className="haneuli-sleep" src="/images/haneuli/narangi-sleep.webp" alt="" width={640} height={640} />
             <span className="haneuli-zzz">z Z Z</span>
           </div>
         </div>
