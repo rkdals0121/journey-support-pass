@@ -253,20 +253,67 @@ async function guideSteps(page: Page, where: string) {
 }
 
 /** 시연용 등록을 하나 만들어 고유 일련 번호를 받는다. 모의 운항(MK501)이 없으면 null. */
-async function demoPassNo(): Promise<string | null> {
+async function demoPassNo(flightNo = "MK501", choices: string[] = ["tr_walk"]): Promise<string | null> {
   try {
-    const found = (await (await fetch(`${BASE}/api/flights/search?q=MK501`)).json()) as { flights?: { flightDate: string; flightNo: string }[] };
-    const flight = found.flights?.find((f) => f.flightNo === "MK501");
+    const found = (await (await fetch(`${BASE}/api/flights/search?q=${flightNo}`)).json()) as { flights?: { flightDate: string; flightNo: string }[] };
+    const flight = found.flights?.find((f) => f.flightNo === flightNo);
     if (!flight) return null;
     const res = await fetch(`${BASE}/api/registrations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ flightDate: flight.flightDate, flightNo: "MK501", choices: ["tr_walk"], lang: "ko", consent: true, startedAt: new Date(Date.now() - 60_000).toISOString(), editCount: 0 }),
+      body: JSON.stringify({ flightDate: flight.flightDate, flightNo, choices, lang: "ko", consent: true, startedAt: new Date(Date.now() - 60_000).toISOString(), editCount: 0 }),
     });
     if (!res.ok) return null;
     return ((await res.json()) as { passNo?: string }).passNo ?? null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * 안내 키오스크의 「탑승구 가는 길」 화면을 본다. 제1터미널 면세구역 키오스크에서 탑승동 끝 탑승구(MK101, 휠체어)로
+ * 가는 가장 긴 길(엘리베이터·셔틀트레인·엘리베이터·걷기)이라 단계가 가장 많다. 이 길도 스크롤 없이 한 화면이어야 한다.
+ */
+async function routeSteps(browser: Browser, size: (typeof KIOSK_SIZES)[number], cookie: string, passNo: string, where: string) {
+  const page = await browser.newPage();
+  await page.setViewport(size);
+  await page.evaluateOnNewDocument("window.__name = (f) => f");
+  const [name, ...rest] = cookie.split("=");
+  await page.setCookie({ name, value: rest.join("="), url: BASE, httpOnly: true });
+  await page.setRequestInterception(true);
+  page.on("request", (rq) =>
+    rq.url().includes("/api/kiosk/robot-status")
+      ? rq.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) })
+      : rq.continue(),
+  );
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const click = (sel: string) => page.evaluate((q) => (document.querySelector(q) as HTMLElement | null)?.click(), sel);
+  try {
+    await page.goto(BASE + "/kiosk/guide", { waitUntil: "networkidle2", timeout: 120_000 });
+    await wait(1200);
+    await click(".haneuli-character");
+    await wait(1000);
+    await click(".haneuli-number");
+    await wait(1000);
+    for (const d of passNo) {
+      await page.evaluate((x) => Array.from(document.querySelectorAll<HTMLButtonElement>(".pad-num .pad-key")).find((e) => e.innerText.trim() === x)?.click(), d);
+      await wait(120);
+    }
+    await page.waitForSelector('[data-screen="saved"]', { timeout: 30_000 });
+    await page.evaluate(() => (document.querySelector(".flow-cta .btn-primary") as HTMLElement | null)?.click());
+    await page.waitForSelector('[data-screen="robotWait"]', { timeout: 30_000 });
+    await page.evaluate(() => ([...document.querySelectorAll(".flow-cta button")].find((e) => /둘러보기/.test((e as HTMLElement).innerText)) as HTMLElement | undefined)?.click());
+    await page.waitForSelector(".svc-card.is-main", { timeout: 30_000 });
+    await click(".svc-card.is-main");
+    await page.waitForSelector(".gate-go", { timeout: 30_000 });
+    await click(".gate-go");
+    await page.waitForSelector(".route > li", { timeout: 30_000 });
+    await wait(800);
+    await inspect(page, where + " · 탑승구 가는 길(가장 긴 길)");
+  } catch (e) {
+    problems.push({ where, what: `탑승구 가는 길 화면을 열지 못했습니다: ${String(e).slice(0, 120)}` });
+  } finally {
+    await page.close();
   }
 }
 
@@ -366,6 +413,15 @@ async function kioskCookie(placeId: string): Promise<string | null> {
       else
         for (const size of KIOSK_SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
           await robotSteps(browser, size, guide, passNo, `/kiosk/guide · ${size.name} · 글자 ×1`);
+    }
+    // 탑승구 가는 길(가장 긴 길): 제1터미널 면세구역 키오스크, 탑승동 끝 탑승구, 휠체어.
+    const t1 = await kioskCookie("t1-center");
+    if (t1 && (!ONLY_PAGES || ONLY_PAGES.includes("/kiosk/guide")) && SCALES.includes(1)) {
+      const passNo = await demoPassNo("MK101", ["mov_wheelchair_need"]);
+      if (!passNo) console.log("탑승구 가는 길 화면은 건너뜀 (모의 운항 MK101 이 없어 시연 등록을 만들지 못함)");
+      else
+        for (const size of KIOSK_SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
+          await routeSteps(browser, size, t1, passNo, `/kiosk/guide · ${size.name} · 글자 ×1`);
     }
     const staff = await staffCookie();
     if (!staff) console.log("직원 화면은 건너뜀 (로컬 DB에 안내데스크 구역이 없음)");
