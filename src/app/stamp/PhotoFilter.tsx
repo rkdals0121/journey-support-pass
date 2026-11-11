@@ -219,7 +219,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
         type="file"
         accept="image/*"
         capture="user"
-        className="sr-only"
+        hidden
         aria-label="사진 고르기"
         onChange={(e) => {
           const f = e.target.files?.[0];
