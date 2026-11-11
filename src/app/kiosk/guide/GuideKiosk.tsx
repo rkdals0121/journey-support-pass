@@ -765,7 +765,7 @@ export function GuideKiosk({
             onWake={() => setAwake(true)}
             onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
             onPassport={() => { setAwake(true); setError(null); setView({ kind: "passport" }); }}
-            listen={<ListenStart t={t} />}
+            listen={<ListenStart t={t} compact />}
             error={error ? <ErrorNote>{error}</ErrorNote> : null}
             scanner={<Scanner onScan={onScan} paused={busy} prefer="user" text={{
               starting: t.camStarting, ready: t.camReady, read: t.camRead,

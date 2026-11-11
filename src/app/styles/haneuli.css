@@ -6,19 +6,17 @@ html[data-kiosk]:has(body.kiosk-guide .flow-pretrip) { font-size: calc(100% * va
 html[data-kiosk] body.kiosk-guide .kx-guide .tile,
 html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; border-radius: var(--radius-medium); box-shadow: none; }
 
-/* ── 처음 화면: 왼쪽에 큰 나랑이, 오른쪽에 확인 방법 카드 ──
-   위쪽 바(둥근 바)와 같은 너비·끝선. 왼쪽 상자(노란 그라데이션)는 나랑이가 화면 높이의 거의 절반을 차지하고, 오른쪽에는 카드 세 개를 쌓는다.
-   16:9 키오스크에서 스크롤 없이 한 화면: 나랑이 크기(--hw-art)만 화면 높이에 맞춰 달라진다. */
+/* ── 처음 화면(2026-11 스케치): 위에 큰 나랑이와 오른쪽 말풍선, 아래 한 줄에 「탑승권이 없으신가요?」 단추들 ──
+   위쪽 바(둥근 바)와 같은 너비·끝선. 나랑이 크기(--hw-art)는 화면 높이에서 바·제목·아래 줄 몫을 뺀 값이라 스크롤이 생기지 않는다. */
 .haneuli-welcome {
   --hw-w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
-  /* 나랑이 크기 = 화면 높이 − 위쪽 바 − 제목 줄·여백 몫(12.5rem). 글자(rem)가 커지는 기기에서는 그만큼 나랑이가 줄어 스크롤이 생기지 않는다. */
-  --hw-art: max(7rem, calc(100dvh - var(--site-bar-height) - 12.5rem));
+  --hw-row: max(var(--target-kiosk-floor), 4.5rem);
+  --hw-art: max(8rem, calc(100dvh - var(--site-bar-height) - var(--hw-row) - 12rem));
   box-sizing: border-box; width: var(--hw-w); margin-inline: calc((100% - var(--hw-w)) / 2);
-  display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4);
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4);
   min-height: calc(100dvh - var(--site-bar-height) - 4rem); padding-block: 0;
   color: var(--color-text);
 }
-/* 위쪽 바와 첫 상자 사이, 상자와 화면 아래 사이는 모두 --space-4 하나. 본문 칸의 기본 여백(--space-5)을 이 화면에서는 이 값으로 맞춘다. */
 html[data-kiosk] .flow-body:has(.haneuli-welcome) { padding-block: var(--space-4); }
 .hw-hero {
   display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; min-height: 0;
@@ -57,22 +55,37 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 /* 깨어날 때 한 번 「통」 튀고(240ms), 그다음부터 둥실 */
 .is-awake .haneuli-character { animation: haneuli-pop var(--motion-slow) var(--ease-out), haneuli-bob 3s ease-in-out var(--motion-slow) infinite; }
 
-/* 확인 방법 카드 세 개(오른쪽에 쌓는다): 흰 바탕, 옅은 테두리, 아이콘 칩. 깨우면 테두리를 초록으로 */
-.haneuli-ways { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--space-4); min-height: 0; }
-.hw-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; }
+/* 첫 화면의 큰 나랑이 상자: 왼쪽 위에 제목·위치(작게), 가운데 큰 나랑이, 오른쪽에 말풍선(꼬리가 나랑이 쪽) */
+.hw-welcome-hero { gap: var(--space-2); }
+.hw-welcome-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4); min-width: 0; }
+html[data-kiosk] .hw-welcome-title h1 { margin: 0; font-size: var(--text-heading); line-height: 1.3; font-weight: var(--weight-heading); letter-spacing: -0.02em; }
+.hw-welcome-title .hw-here { font-size: var(--text-small); }
+.hw-welcome-stage { flex: 1 1 0; display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); align-items: center; gap: var(--space-4); min-height: 0; }
+.hw-welcome-stage .hw-art { justify-self: end; }
+.hw-welcome-side { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); min-width: 0; align-self: start; padding-top: var(--space-6); }
+.hw-welcome-bubble { position: relative; top: auto; right: auto; display: grid; gap: var(--space-2); max-width: 100%; padding: var(--space-5) var(--space-6); border-radius: calc(var(--radius-medium) * 2); box-shadow: var(--shadow-1); }
+.hw-welcome-bubble strong { font-size: var(--text-page-title); font-weight: var(--weight-heading); line-height: 1.25; letter-spacing: -0.03em; }
+.hw-welcome-bubble span { color: var(--color-muted); font-size: var(--text-body); font-weight: var(--weight-body); line-height: 1.5; white-space: pre-line; }
+/* 꼬리: 말풍선 왼쪽 아래에서 나랑이 쪽으로 */
+.hw-welcome-bubble::after { left: auto; right: auto; inset-inline-start: calc(-0.5625rem); bottom: var(--space-6); transform: rotate(135deg); }
+.hw-welcome-side .haneuli-status { width: 100%; }
+
+/* 아래 줄: 「탑승권이 없으신가요?」 다음에 여권 스캔·예약번호 입력(같은 너비)과 둥근 소리 단추. 단추 높이·끝선이 한 줄로 맞는다 */
+.haneuli-ways { display: grid; gap: var(--space-2); min-width: 0; }
+html[data-kiosk] .hw-ways-title { margin: 0; padding-inline: var(--space-2); color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
+.hw-ways-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--hw-row); gap: var(--space-4); align-items: stretch; }
+.hw-card { position: relative; display: flex; align-items: center; justify-content: center; gap: var(--space-3); min-width: 0; min-height: var(--hw-row); padding: var(--space-2) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-1); font: inherit; cursor: pointer; }
 .is-awake .hw-card { border-color: var(--color-primary); box-shadow: 0 0 0 0.25rem var(--color-primary-soft); }
-.hw-icon { display: inline-grid; place-items: center; padding: var(--space-3); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
-.hw-icon svg { width: 1.75rem; height: 1.75rem; }
 .hw-card strong { font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: 1.3; letter-spacing: -0.02em; }
-.hw-card small { color: var(--color-muted); font-size: var(--text-small); line-height: 1.5; }
-.haneuli-way { flex-direction: row; align-items: center; justify-content: flex-start; gap: var(--space-4); padding-right: calc(var(--space-5) + 2rem); cursor: pointer; }
+.hw-way-icon { width: 1.75rem; height: 1.75rem; flex: none; color: var(--color-primary); }
 .haneuli-way:hover { border-color: var(--color-primary); }
 .haneuli-way:disabled { opacity: 0.6; cursor: default; }
-.hw-way-text { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
-.hw-arrow { position: absolute; top: 50%; right: var(--space-5); width: 1.5rem; height: 1.5rem; color: var(--color-primary); transform: translateY(-50%); }
-/* 예약번호 칸: 입력 칸처럼 보이지만 누르면 숫자판이 열린다 */
-.hw-field { display: flex; align-items: center; gap: var(--space-3); min-height: var(--target-kiosk-floor); padding: 0 var(--space-4); border: 1px solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-canvas); color: var(--color-muted); font-size: var(--text-body); font-weight: var(--weight-body); }
-.hw-field svg { width: 1.5rem; height: 1.5rem; flex: none; color: var(--color-primary); }
+/* 둥근 소리 안내 단추: 그림만 보이고 이름(「소리로 안내 듣기」)은 화면 읽기 프로그램이 읽는다 */
+.hw-listen { display: grid; min-width: 0; }
+/* 키오스크의 .btn 모서리 규칙(html[data-kiosk] :is(.btn))보다 앞서도록 같은 시작(html[data-kiosk])으로 둔다 */
+html[data-kiosk] .hw-listen .listen-start { display: grid; place-items: center; width: var(--hw-row); height: var(--hw-row); min-height: 0; margin: 0; padding: 0; border-radius: var(--radius-pill); background: var(--color-surface); box-shadow: var(--shadow-1); }
+html[data-kiosk] .hw-listen .listen-start.on { background: var(--color-primary); }
+.hw-listen .listen-start svg { width: 2rem; height: 2rem; }
 /* 탑승권 읽기(카메라)는 칸 없이 그대로 켜 둔다(.sr-only). 카메라를 못 쓸 때만 안내(.banner)를 보여 준다. */
 .haneuli-camera.sr-only:has(.banner) { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
 .haneuli-camera .scan-hint { margin: var(--space-2) 0 0; font-size: var(--text-small); line-height: 1.4; }
@@ -103,20 +116,21 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 /* 4:3 장애인 키오스크(1024×768 등 가로 화면): 같은 틀에서 나랑이·카메라·카드만 줄인다 */
 @media (orientation: landscape) and (max-width: 1100px) {
   .hw-hero { padding: var(--space-4); gap: var(--space-2); }
-  .hw-card { padding: var(--space-3) var(--space-4); }
-  .haneuli-way { padding-right: calc(var(--space-4) + 2rem); }
+  .hw-card { padding: var(--space-2) var(--space-4); }
 }
 /* 낮은 화면(600~700px 높이): 여백부터 줄인다 */
 @media (max-height: 700px) {
   .hw-hero { padding: var(--space-3) var(--space-4); gap: var(--space-2); }
   .haneuli-bubble { padding-block: var(--space-2); }
-  .hw-card { padding: var(--space-2) var(--space-4); }
   .hw-hero-copy { gap: var(--space-2) var(--space-4); }
 }
 /* 세로 화면(안내로봇 1080×1920)과 좁은 화면: 위에 나랑이 상자, 아래에 카드를 한 줄로 쌓는다 */
 @media (orientation: portrait), (max-width: 760px) {
-  .haneuli-welcome { --hw-art: 34dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
-  .haneuli-ways { grid-template-rows: auto; }
+  .haneuli-welcome { --hw-art: 40dvh; }
+  .hw-welcome-stage { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .hw-welcome-stage .hw-art { justify-self: center; }
+  .hw-welcome-side { align-self: auto; align-items: center; padding-top: 0; }
+  .hw-welcome-bubble::after { inset-inline-start: calc(50% - 0.5rem); bottom: auto; top: -0.5625rem; transform: rotate(-135deg); }
   .kx-passport { grid-template-columns: minmax(0, 1fr); }
 }
 
