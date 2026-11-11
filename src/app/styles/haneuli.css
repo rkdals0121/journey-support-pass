@@ -47,12 +47,10 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .hw-orbit { position: absolute; inset: 0; border: 1px dashed var(--color-line); border-radius: var(--radius-pill); }
 .haneuli-character { position: relative; width: 90%; aspect-ratio: 1; }
 .haneuli-character img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0.5rem 0.75rem var(--color-shadow)); }
-/* 잠든 모습: 새 그림에는 눈 감은 모습이 없어서, 자는 동안 두 눈 위에 감은 눈(◡)을 얹는다 */
-.haneuli-lid { position: absolute; width: 13%; height: 15%; border-radius: 50%; background: var(--color-surface); box-shadow: 0 0 0.5rem 0.4rem var(--color-surface); opacity: 0; }
-.haneuli-lid::after { content: ""; position: absolute; left: 12%; right: 12%; top: 22%; height: 36%; border-bottom: 0.25rem solid var(--color-art-outline); border-radius: 0 0 100% 100%; }
-.haneuli-lid-l { left: 20%; top: 52%; }
-.haneuli-lid-r { left: 51%; top: 41%; }
-.is-idle .haneuli-lid { opacity: 1; }
+/* 잠든 모습: 자는 동안에는 잠든 그림을, 깨면 웃는 그림을 보여 준다 */
+.haneuli-character .haneuli-sleep { display: none; }
+.is-idle .haneuli-character .haneuli-sleep { display: block; }
+.is-idle .haneuli-character .haneuli-happy { display: none; }
 .haneuli-zzz { position: absolute; top: -4%; right: -8%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
 .is-idle .haneuli-zzz { animation: haneuli-dream 3s ease-in-out infinite; }
 .is-idle .haneuli-character { animation: haneuli-breathe var(--motion-breathe) ease-in-out infinite; }

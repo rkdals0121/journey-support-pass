@@ -26,8 +26,8 @@
 
 ## 이미지
 Built-in image_gen 사용. 사용자가 제공한 하늘이 디자인을 기준으로 생성하고 노란 헤드셋 밴드를 양쪽 귀까지 연결하도록 수정.
-- `public/images/haneuli/hello.png`: 깨어서 인사하는 모습
-- `public/images/haneuli/sleep.png`: 잠든 모습
+- `public/images/haneuli/narangi-sleep.webp`: 잠든 모습(2026-11 노란 나랑이 수정안)
+- `public/images/haneuli/narangi.webp`, `public/stamp/narangi*.webp`: 정면·왼쪽·오른쪽(같은 수정안에서 오려 냄). 원본은 팀 폴더 「본선 (11월)/나랑이.png·나랑이2.png」
 
 ### Final prompt — hello correction
 Edit this mascot asset. Critical correction: the character is wearing YELLOW HEADPHONES over the BLUE helmet. The yellow patch on top must be a single continuous yellow headphone headband arch extending down BOTH sides all the way to the WHITE circular ear cups. Recolor the currently blue/lavender side headband strips yellow so the whole external headband is yellow, not only the top patch. Only the circular ear cups are white with cyan illuminated centers. Keep blue helmet face rim, blue airplane fin, yellow wrist cuffs, entire character identity, face, pose, tablet, dimensions, transparent background unchanged. No text.
