@@ -837,7 +837,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 @media (max-height: 700px) and (min-width: 761px) {
  .service-workspace,.request-experience { padding-block:0 var(--space-3); }
  .service-heading { margin-bottom:var(--space-3); }
- .request-experience { padding-top:var(--space-2); }
+ .request-experience { padding-top:0; }
  .request-heading { margin-bottom:var(--space-2); }
  .request-hero-top { margin-bottom:0; }
  .airport-site .request-form { gap:var(--space-2); }
