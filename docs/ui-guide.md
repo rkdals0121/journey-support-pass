@@ -119,6 +119,8 @@ PR 에 **바꾸기 전 / 바꾼 뒤** 그림을 붙인다: 휴대전화 390, 노
 | 여객 패스 | `/p/[token]`, `/p/[token]/help` | 위쪽 바 + 카드 |
 | 키오스크 | `/kiosk`, `/kiosk/guide`, `/kiosk/entry`, `/kiosk/visits` | 위쪽 바(도움 요청하기 포함) + 소개 박스 + 같은 크기 카드, 스크롤 0 |
 | 기기 소개 | `/devices`, `/devices/[device]` | 여객 웹과 같은 틀 |
+
+> **기기 화면 미리보기(`/devices/[device]`)는 모형을 따로 만들지 않는다.** 실제 키오스크 화면(`/kiosk/entry`, `/kiosk/guide`)을 `?preview=1` 로 틀(iframe)에 그대로 띄운다(`src/app/devices/DeviceFrame.tsx`). 키오스크 화면을 고치면 미리보기도 자동으로 같이 바뀌므로 미리보기를 따로 고치지 않는다. 키오스크 화면을 새로 더하면 `DeviceFrame` 의 주소만 맞춘다.
 | 직원 | `/staff/*` | 직원 틀(딥그린 메뉴 + 미색 작업 면). 표·목록은 같은 여백·같은 상태 표시 |
 | 시연 | `/demo/*` | 여객 웹과 같은 틀 |
 
