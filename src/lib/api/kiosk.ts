@@ -18,6 +18,7 @@ import { logEvent } from "../metrics";
 import { cleanPassNo, resolvePassNo } from "../passes";
 import { updateNeeds } from "../registrations";
 import { pollState } from "../timing";
+import { operatingBlock } from "../support-operations";
 import { fail, ok, type ApiResult } from "./dto";
 import { lookupPass, NOT_A_PASS, PASS_ENDED, type PassLookup } from "./public";
 
@@ -250,3 +251,15 @@ export async function callCancelHandler(
   if (!call) return fail(404, "호출을 찾을 수 없습니다");
   return ok({ id: call.id, state: call.state });
 }
+
+/**
+ * 이 키오스크 자리에서 안내로봇을 지금 바로 부를 수 있는지. 운영 시간이 아니거나 가용 로봇이 없으면 available=false 이고,
+ * 화면은 「직원을 부를까요?」로 이어 간다. 로봇을 실제로 배정하지는 않는다(시연용 확인).
+ */
+export async function robotStatusHandler(db: Db, session: Session | null, now: Date): Promise<ApiResult> {
+  if (!session) return fail(401, "로그인이 필요합니다");
+  if (!session.isKiosk || !session.placeId) return fail(403, NEED_KIOSK);
+  const block = await operatingBlock(db, session.placeId, "robot", now);
+  return ok({ available: block === null });
+}
+

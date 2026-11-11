@@ -58,7 +58,7 @@ import { KioskNeeds } from "../../components/KioskNeeds";
 import { KioskPages } from "../../components/KioskPages";
 import { savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
-import { HaneuliSays, HaneuliWelcome } from "../../components/HaneuliWelcome";
+import { HaneuliSays, HaneuliStage, HaneuliWelcome } from "../../components/HaneuliWelcome";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import {
@@ -86,6 +86,11 @@ type View =
   | { kind: "services" }
   | { kind: "home" }
   | { kind: "route"; target: RouteTarget }
+  | { kind: "robotCheck" }
+  | { kind: "robotWait" }
+  | { kind: "robotArrived" }
+  | { kind: "noRobot" }
+  | { kind: "farewell" }
   | { kind: "survey" }
   | { kind: "thanks" };
 
@@ -98,6 +103,10 @@ const NO_PREFS: Prefs = {
   wantsStaff: false,
 };
 const THANKS_MS = 3500;
+// 시연용 로봇 안내 화면이 넘어가는 시간. 실제 로봇을 부르지는 않고, 「오고 있어요 → 도착했어요 → 즐거운 여행」을 차례로 보여 준다.
+const ROBOT_WAIT_MS = 7000;
+const ROBOT_ARRIVED_MS = 7000;
+const FAREWELL_MS = 6000;
 const ERROR_SHOW_MS = 6000;
 // 안내를 끝낸 여객이 QR 을 아직 카메라 앞에 들고 있어도 곧바로 다시 열리지 않게, 방금 끝낸 패스는 잠시 읽지 않는다.
 const SAME_PASS_GUARD_MS = 8000;
@@ -288,7 +297,7 @@ export function GuideKiosk({
   }, []);
 
   const open = useCallback(
-    async (body: { scanned: string } | { passNo: string }, then: "saved" | "services" = "saved") => {
+    async (body: { scanned: string } | { passNo: string }, then: "saved" | "robotCheck" = "saved") => {
       if (busyRef.current) return;
       busyRef.current = true;
       setAwake(true);
@@ -470,6 +479,39 @@ export function GuideKiosk({
     }, 2000);
     return () => clearInterval(timer);
   }, [quietIdle, idleAskSec, idleAnswerSec, reset]);
+
+  // 「안내로봇이 오고 있어요」→「도착했어요」→「즐거운 여행 되세요!」는 저절로 넘어가고, 마지막에는 처음 화면으로 돌아간다.
+  useEffect(() => {
+    const step =
+      view.kind === "robotWait" ? ([{ kind: "robotArrived" }, ROBOT_WAIT_MS] as const)
+      : view.kind === "robotArrived" ? ([{ kind: "farewell" }, ROBOT_ARRIVED_MS] as const)
+      : null;
+    const timer = view.kind === "farewell" ? setTimeout(reset, FAREWELL_MS) : step ? setTimeout(() => setView(step[0]), step[1]) : null;
+    return () => { if (timer) clearTimeout(timer); };
+  }, [view.kind, reset]);
+
+  // 「이대로 안내 받기」: 지금 안내로봇을 부를 수 있으면 로봇 안내 화면으로, 운영 시간이 아니거나 가용 로봇이 없으면 직원 호출을 묻는다.
+  // 설치 없이 여는 시연 화면처럼 서버가 답하지 않으면 로봇을 부를 수 있는 것으로 본다.
+  const [robotChecking, setRobotChecking] = useState(false);
+  const keepAndCallRobot = async () => {
+    if (robotChecking) return;
+    setRobotChecking(true);
+    let available = true;
+    try {
+      const r = await fetch("/api/kiosk/robot-status", { cache: "no-store" });
+      if (r.ok) available = (await r.json()).available !== false;
+    } catch {
+      /* 확인하지 못하면 로봇을 부를 수 있는 것으로 본다 */
+    }
+    setRobotChecking(false);
+    setView({ kind: available ? "robotWait" : "noRobot" });
+  };
+
+  // 현장에서 방금 등록한 여객은 확인 화면 없이 곧바로 안내로봇을 부를 수 있는지 본다.
+  useEffect(() => {
+    if (view.kind === "robotCheck") void keepAndCallRobot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view.kind]);
 
   // 고맙다는 화면은 잠깐만 보여주고 처음으로 돌아간다.
   useEffect(() => {
@@ -686,7 +728,7 @@ export function GuideKiosk({
             initialLang={lang}
             onExit={reset}
             onBackOut={() => setView({ kind: "scan" })}
-            onDone={(r) => void open({ passNo: r.passNo }, "services")}
+            onDone={(r) => void open({ passNo: r.passNo }, "robotCheck")}
           />
           {call}
           {idle}
@@ -757,7 +799,8 @@ export function GuideKiosk({
             <>
               <button
                 className="btn btn-primary"
-                onClick={() => setView({ kind: "services" })}
+                onClick={keepAndCallRobot}
+                disabled={robotChecking}
               >
                 {t.savedKeep}
                 <ArrowRight size={24} aria-hidden="true" />
@@ -797,7 +840,7 @@ export function GuideKiosk({
             onSaved: (g) => {
               setGuide(g);
               setEdited(true);
-              setView({ kind: "services" });
+              setView({ kind: "robotCheck" });
             },
           }}
         />
@@ -842,6 +885,47 @@ export function GuideKiosk({
         </FlowShell>
         {call}
         {idle}
+      </>
+    );
+  }
+  // ── 안내로봇 시연 화면: 오고 있어요 / 도착했어요 / 즐거운 여행 되세요 / 로봇을 못 부를 때 ──
+  if (view.kind === "robotCheck" || view.kind === "robotWait" || view.kind === "robotArrived" || view.kind === "farewell" || view.kind === "noRobot") {
+    const k = view.kind === "robotCheck" ? "robotWait" : view.kind;
+    const title = k === "robotWait" ? t.robotWaitTitle : k === "robotArrived" ? t.robotArrivedTitle : k === "farewell" ? t.farewellTitle : t.noRobotTitle;
+    const bubble = k === "robotWait" ? t.robotWaitBubble : k === "robotArrived" ? t.robotArrivedBubble : k === "farewell" ? t.farewellBubble : t.noRobotBubble;
+    const others = (
+      <button className="btn" onClick={() => setView({ kind: "services" })}>
+        {t.robotOtherServices}
+      </button>
+    );
+    return (
+      <>
+        <FlowShell
+          lang={lang}
+          prefs={prefs}
+          kiosk
+          screenKey={k}
+          className="kiosk-content"
+          speakText={`${title}. ${bubble}`}
+          onBack={k === "robotWait" || k === "noRobot" ? () => setView({ kind: "saved" }) : undefined}
+          onHome={reset}
+          cta={
+            k === "robotWait" || k === "robotArrived" ? others : k === "noRobot" ? (
+              <>
+                <button className="btn btn-primary" onClick={() => document.querySelector<HTMLButtonElement>(".call-btn")?.click()}>
+                  {t.robotCallStaff}
+                </button>
+                {others}
+              </>
+            ) : undefined
+          }
+        >
+          <div className="kc-page kc-entry kc-robot is-awake">
+            <HaneuliStage title={title} here={lang === "en" ? placeLabelEn : placeLabel} listen={null} bubble={bubble} />
+          </div>
+        </FlowShell>
+        {call}
+        {k === "noRobot" && idle}
       </>
     );
   }
