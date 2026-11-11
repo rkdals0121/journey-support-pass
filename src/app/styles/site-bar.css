@@ -160,7 +160,7 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
 }
 
 /* 키오스크: 둥근 바 안에서 「도움 요청하기」 자리만큼 오른쪽을 비운다(바의 소리 단추와 겹치던 것). */
-html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: var(--kiosk-bar-reserve, calc(var(--call-w, 14rem) + 3rem)); padding-top: var(--kiosk-bar-top, var(--space-2)); }
+html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: var(--kiosk-bar-reserve, calc(var(--call-w, 14rem) + var(--space-4))); padding-top: var(--kiosk-bar-top, var(--space-2)); }
 /* 나랑이 첫 화면: 카메라를 쓸 수 없을 때의 안내가 좁은 칸에 갇혀 한 글자씩 줄바꿈되던 것을 위아래로 놓는다. */
 .haneuli-camera .scan { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
 .haneuli-camera .scan > .banner { width: 100%; }
