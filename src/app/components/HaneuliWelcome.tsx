@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, BookUser, Keyboard, MapPin, ScanLine } from "lucide-react";
+import { ArrowRight, BookUser, Keyboard, MapPin } from "lucide-react";
 import { type ReactNode } from "react";
 
 /** 새 나랑이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
@@ -22,14 +22,47 @@ export function HaneuliSays({ text, size = "md", pose = "front" }: { text: strin
 }
 
 /**
+ * 큰 나랑이 상자. 안내 키오스크 첫 화면(왼쪽)과 입구·안내로봇 처음 화면(왼쪽, 세로에서는 위)이 같은 모양을 쓴다.
+ * 위에 제목·위치와 소리 안내 단추, 아래에 원 안의 큰 나랑이와 그 옆에 걸친 말풍선.
+ * 자는 모습(.is-idle)과 깨어 있는 모습은 바깥 틀이 건 클래스(.is-idle, .is-awake)로 정한다.
+ */
+export function HaneuliStage({ title, here, listen, bubble }: { title: string; here: string; listen: ReactNode; bubble: string }) {
+  return (
+    <section className="hw-hero">
+      <div className="hw-hero-copy">
+        <div className="hw-hero-title">
+          <h1>{title}</h1>
+          <p className="hw-here"><MapPin aria-hidden="true" />{here}</p>
+        </div>
+        {/* 소리 안내를 쓰는 분은 탑승권을 대기 전에도 여기서 켠다 */}
+        <div className="hw-actions">{listen}</div>
+      </div>
+      <div className="haneuli-center" aria-hidden="true">
+        <p className="haneuli-bubble">{bubble}</p>
+        <div className="hw-art">
+          <span className="hw-orbit" />
+          <div className="haneuli-character">
+            <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
+            {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
+            <span className="haneuli-lid haneuli-lid-l" />
+            <span className="haneuli-lid haneuli-lid-r" />
+            <span className="haneuli-zzz">z Z Z</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
  * 안내 키오스크 첫 장면. 왼쪽에 큰 나랑이(말풍선과 함께), 오른쪽에 확인 방법 카드 세 개.
  * 교통약자 전용 키오스크라 본인 확인을 먼저 한다. 카드: 탑승권 스캔(카메라), 여권 스캔, 예약번호 입력.
  * 나랑이는 건드리지 않으면 자고 있다. 탑승권을 바로 비추면 깨며 다음 화면으로 가고, 화면만 누르면 깨어 카드 중 하나를 고르라고 알려 준다.
  * The camera stays mounted across sleep and wake.
  */
-export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber, onPassport, scanner, error, listen }: {
+export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPassport, scanner, error, listen }: {
   en: boolean; here: string; awake: boolean; busy: boolean;
-  onWake: () => void; onRest: () => void; onNumber: () => void; onPassport: () => void;
+  onWake: () => void; onNumber: () => void; onPassport: () => void;
   scanner: ReactNode; error: ReactNode; listen: ReactNode;
 }) {
   const bubble = busy
@@ -45,41 +78,14 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
       event.stopPropagation();
       onWake();
     }}>
-      <section className="hw-hero">
-        <div className="hw-hero-copy">
-          <div className="hw-hero-title">
-            <h1>{en ? "Accessible kiosk" : "교통약자 전용 키오스크"}</h1>
-            <p className="hw-here"><MapPin aria-hidden="true" />{here}</p>
-          </div>
-          {/* 소리 안내를 쓰는 분은 탑승권을 대기 전에도 여기서 켠다 */}
-          <div className="hw-actions">
-            {listen}
-            {awake && <button className="hw-rest" onClick={onRest}>{en ? "Back to welcome" : "처음 화면으로"}</button>}
-          </div>
-        </div>
-        <div className="haneuli-center" aria-hidden="true">
-          <p className="haneuli-bubble">{bubble}</p>
-          <div className="hw-art">
-            <span className="hw-orbit" />
-            <div className="haneuli-character">
-              <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
-              {/* 잠든 모습: 새 그림에는 눈을 감은 모습이 없어서, 잘 때만 눈 위에 감은 눈을 얹는다. */}
-              <span className="haneuli-lid haneuli-lid-l" />
-              <span className="haneuli-lid haneuli-lid-r" />
-              <span className="haneuli-zzz">z Z Z</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HaneuliStage
+        title={en ? "Accessible kiosk" : "교통약자 전용 키오스크"}
+        here={here}
+        listen={listen}
+        bubble={bubble}
+      />
 
       <section className="haneuli-ways" aria-label={en ? "Check in" : "확인 방법"}>
-        <div className="hw-card haneuli-scan">
-          <p className="hw-card-head">
-            <span className="hw-icon"><ScanLine aria-hidden="true" /></span>
-            <strong>{en ? "Scan boarding pass" : "탑승권 스캔"}</strong>
-          </p>
-          <div className="haneuli-camera">{scanner}</div>
-        </div>
         <button className="hw-card haneuli-way haneuli-passport" onClick={onPassport} disabled={busy}>
           <span className="hw-icon"><BookUser aria-hidden="true" /></span>
           <span className="hw-way-text">
@@ -100,7 +106,11 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onRest, onNumber
           </span>
           <ArrowRight aria-hidden="true" className="hw-arrow" />
         </button>
-        <div className="haneuli-status" aria-live="polite">{busy ? <p role="status">{en ? "Checking your registration…" : "등록 내용을 확인하고 있습니다…"}</p> : error}</div>
+        {/* 탑승권 읽기(카메라)는 화면에 칸을 두지 않고 그대로 켜 둔다. 카메라를 못 쓸 때만 안내가 보인다. */}
+        <div className="haneuli-status" aria-live="polite">
+          <div className="haneuli-camera sr-only">{scanner}</div>
+          {busy ? <p role="status">{en ? "Checking your registration…" : "등록 내용을 확인하고 있습니다…"}</p> : error}
+        </div>
       </section>
     </div>
   );
