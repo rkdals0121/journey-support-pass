@@ -23,7 +23,7 @@ export default async function KioskEntryPage({ searchParams }: { searchParams: P
   return (
     <EntryKiosk
       initialLang={lang}
-      switchMode={q.preview === "1" ? undefined : q.inner === "1" ? "device" : "pc"}
+      switchMode={q.preview === "1" || q.inner === "1" ? undefined : "pc"}
       placeLabel={place.label}
       placeLabelEn={place.labelEn}
       idleAskSec={Number.isFinite(idle) && idle > 0 ? idle : config.idleAskSec}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ViewSwitch } from "./ViewSwitch";
 
 // 안내로봇의 실제 해상도(세로 1080×1920). 기기가 정해 둔 값이라 인라인 숫자로 둔다.
 const ROBOT_W = 1080;
@@ -20,6 +21,8 @@ export function RobotStage({ lang }: { lang: "ko" | "en" }) {
   }, []);
   return (
     <div className="robot-stage">
+      {/* 로봇 화면 안에는 시연용 버튼을 넣지 않는다(기기와 똑같이 보이게). 전환 버튼은 틀 바깥에 둔다. */}
+      <div className="robot-stage-bar"><ViewSwitch mode="device" lang={lang} /></div>
       {scale > 0 && (
         <div className="robot-stage-screen" style={{ width: ROBOT_W * scale, height: ROBOT_H * scale }}>
           <iframe
