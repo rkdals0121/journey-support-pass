@@ -256,6 +256,11 @@ async function openGuide(page: Page, keep = "이대로 안내 받기", hello = "
   // 아래 준비 과정은 펼침 단추만 열고, 스캐너/폼은 새 단계에서 기다린다.
   await page.waitForFunction((a, b) => document.body.innerText.includes(a) || document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, keep, hello);
   if (await has(page, keep)) await clickText(page, "button", keep);
+  // 「이대로 안내 받기」 다음에는 안내로봇 화면(오고 있어요, 또는 로봇을 못 부를 때 직원 호출 묻기)이 먼저 나온다.
+  // 로봇 운영 시간에 따라 어느 쪽이든 「다른 서비스 둘러보기」 단추가 있으니, 그것을 눌러 서비스 고르기로 간다.
+  const others = ["다른 서비스 둘러보기", "Browse other services"];
+  await page.waitForFunction((b, o) => document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main") || o.some((x) => document.body.innerText.includes(x)), { timeout: WAIT }, hello, others);
+  for (const x of others) if (await has(page, x)) await clickText(page, "button", x);
   await page.waitForFunction((b) => document.body.innerText.includes(b) || !!document.querySelector(".svc-card.is-main"), { timeout: WAIT }, hello);
   if (await page.$(".svc-card.is-main")) await page.click(".svc-card.is-main");
   await waitText(page, hello);
