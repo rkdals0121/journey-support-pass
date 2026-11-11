@@ -767,6 +767,11 @@ function ThemePicker({
           </p>
         )}
         <p className="sb-pick-sub">나중에 바꿔도 모은 도장은 그대로예요.</p>
+        {lang === "en" && (
+          <p className="sb-pick-sub" lang="en">
+            The stamp book is available in Korean only. Choose a notebook to start.
+          </p>
+        )}
         <ul className="sb-pick">
           {THEME_IDS.map((id) => (
             <li key={id}>
