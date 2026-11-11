@@ -31,6 +31,8 @@ import { EXITS, courseFits, gateProblem, makeCourse, stampEligibility } from "@/
 import { Emblem, Haneul, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
 import { StartMap } from "./StartMap";
+import { PublicShell } from "../components/PublicShell";
+import { useViewSettings } from "../components/viewSettings";
 import "./stamp.css";
 
 type View = "themes" | "cover" | "home" | "scan" | "got" | "done" | "camera";
@@ -81,7 +83,7 @@ function save(s: BookState) {
  * 가족 여행객 전자 스탬프북. 기록은 이 휴대전화에만 남는다(서버로 보내지 않는다).
  * scanned: 휴대전화 기본 카메라로 체크포인트 QR 을 찍어 /stamp/c/{번호} 로 들어온 경우 그 번호.
  */
-export function StampBook({ scanned }: { scanned?: string }) {
+export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "ko" | "en" }) {
   const [s, setS] = useState<BookState | null>(null);
   const [view, setView] = useState<View>("themes");
   const [got, setGot] = useState<{ i: number; again: boolean } | null>(null);
@@ -90,6 +92,13 @@ export function StampBook({ scanned }: { scanned?: string }) {
   const [typed, setTyped] = useState("");
   const [welcome, setWelcome] = useState("");
   const [clock, setClock] = useState(0);
+  const settings = useViewSettings();
+
+  // 입구의 공용 바에서 고른 글자 크기는 전용 수집 화면에서도 이어 쓴다.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--scale", String(settings.scale ?? 1));
+    return () => { document.documentElement.style.removeProperty("--scale"); };
+  }, [settings.scale, view]);
 
   // 처음 열 때 저장된 수첩을 읽는다. QR 주소로 들어왔으면 도장부터 찍는다.
   useEffect(() => {
@@ -129,14 +138,14 @@ export function StampBook({ scanned }: { scanned?: string }) {
       window.history.replaceState(
         { ...window.history.state, sb: "themes" },
         "",
-        "/stamp",
+        "/stamp" + (lang === "en" ? "?lang=en" : ""),
       );
       if (first !== "themes")
         window.history.pushState({ ...window.history.state, sb: first }, "");
     }
     setS(st);
     setView(first);
-  }, [scanned]);
+  }, [scanned, lang]);
 
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
@@ -197,6 +206,7 @@ export function StampBook({ scanned }: { scanned?: string }) {
   if (view === "themes" || !s.theme)
     return (
       <ThemePicker
+        lang={lang}
         current={s.theme}
         note={welcome}
         mine={
@@ -328,6 +338,11 @@ export function StampBook({ scanned }: { scanned?: string }) {
 
   return (
     <div className="sb" data-theme={theme}>
+      <nav className="sb-return" lang={lang} aria-label={lang === "en" ? "Leave the stamp book" : "스탬프북 나가기"}>
+        <Link href={"/services" + (lang === "en" ? "?lang=en" : "")} className="sb-link">
+          <ArrowLeft aria-hidden="true" /> {lang === "en" ? "Back to services" : "서비스로 돌아가기"}
+        </Link>
+      </nav>
       {view === "cover" && (
         <main className="sb-cover">
           <p className="sb-kicker">{t.kicker}</p>
@@ -723,12 +738,14 @@ export function StampBook({ scanned }: { scanned?: string }) {
 }
 
 function ThemePicker({
+  lang,
   current,
   note,
   mine,
   onPick,
   onOpen,
 }: {
+  lang: "ko" | "en";
   current: ThemeId | null;
   note: string;
   mine: string;
@@ -736,11 +753,9 @@ function ThemePicker({
   onOpen: () => void;
 }) {
   return (
-    <div className="sb" data-theme="pick">
-      <main className="sb-page">
-        <Link href="/" className="sb-link sb-pick-home">
-          <ArrowLeft aria-hidden="true" /> 메인 화면으로
-        </Link>
+    <PublicShell lang={lang}>
+    <main className="sb sb-entry" data-theme="pick" id="public-main" lang="ko">
+      <div className="sb-page">
         <h1 className="sb-pick-title">
           어떤 수첩으로
           <br />
@@ -787,8 +802,9 @@ function ThemePicker({
             <small>({mine})</small>
           </button>
         )}
-      </main>
-    </div>
+      </div>
+    </main>
+    </PublicShell>
   );
 }
 

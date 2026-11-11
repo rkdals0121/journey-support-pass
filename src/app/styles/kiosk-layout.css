@@ -374,11 +374,11 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .flow.kiosk-content {
   --kc-width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
   width: var(--kc-width); max-width: none; height: 100dvh; min-height: 0;
-  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-2);
-  padding-bottom: var(--space-2); box-sizing: border-box;
+  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-4);
+  padding-bottom: var(--space-4); box-sizing: border-box;
 }
 .kiosk-content .flow-workspace { min-height: 0; }
-.kiosk-content .flow-form-area { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-2); }
+.kiosk-content .flow-form-area { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4); }
 .flow.kiosk-content .flow-body { min-height: 0; padding: 0; }
 .kiosk-content .flow-cta { padding: 0; position: static; background: var(--color-surface); border-radius: var(--radius-medium); }
 .kiosk-content .flow-cta-inner { width: 100%; max-width: none; margin: 0; gap: var(--space-3); }
@@ -420,14 +420,14 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .svc-card:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
 .svc-card:disabled { opacity: 0.6; }
 .kc-menu, .kc-entry-services { --svc-card-min: calc(var(--target-kiosk-floor) * 1.5); grid-auto-rows: minmax(var(--svc-card-min), 9rem); align-content: start; }
-.kc-menu { min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.kc-menu { min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
 /* 입구·안내로봇 처음 화면: 왼쪽(세로에서는 위)에 큰 나랑이 상자(안내 키오스크 첫 화면과 같은 모양, haneuli.css), 오른쪽(아래)에 불러오기 카드와 바로 쓰는 서비스 */
 .kc-entry { --hw-art: max(7rem, calc(100dvh - var(--site-bar-height) - 17rem)); grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4); }
-.kc-entry-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); min-height: 0; gap: var(--space-3); }
+.kc-entry-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); min-height: 0; gap: var(--space-4); }
 .kc-entry-grid .kx-home-intro { gap: var(--space-2); min-height: 0; }
 .kc-entry-grid .kx-here { margin: 0; padding: 0; background: transparent; font-size: var(--text-caption); }
-.kc-entry-grid .kx-pass { flex: 1; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
-.kc-entry-services { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.kc-entry-grid .kx-pass { flex: 1; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+.kc-entry-services { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 .kc-entry-services .task-launcher { display: contents; }
 .kc-entry-grid .kx-home-services { min-height: 0; display: flex; flex-direction: column; }
 .kc-entry-grid .kx-home-services h2 { font-size: var(--text-caption); margin-bottom: var(--space-2); }

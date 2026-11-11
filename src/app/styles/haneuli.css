@@ -11,13 +11,15 @@ html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; borde
    16:9 키오스크에서 스크롤 없이 한 화면: 나랑이 크기(--hw-art)만 화면 높이에 맞춰 달라진다. */
 .haneuli-welcome {
   --hw-w: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
-  /* 나랑이 크기 = 화면 높이 − 위쪽 바 − 제목 줄·여백 몫(14.5rem). 글자(rem)가 커지는 기기에서는 그만큼 나랑이가 줄어 스크롤이 생기지 않는다. */
-  --hw-art: max(7rem, calc(100dvh - var(--site-bar-height) - 14.5rem));
+  /* 나랑이 크기 = 화면 높이 − 위쪽 바 − 제목 줄·여백 몫(12.5rem). 글자(rem)가 커지는 기기에서는 그만큼 나랑이가 줄어 스크롤이 생기지 않는다. */
+  --hw-art: max(7rem, calc(100dvh - var(--site-bar-height) - 12.5rem));
   box-sizing: border-box; width: var(--hw-w); margin-inline: calc((100% - var(--hw-w)) / 2);
   display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4);
-  min-height: calc(100dvh - var(--site-bar-height) - 8rem); padding-block: var(--space-2);
+  min-height: calc(100dvh - var(--site-bar-height) - 4rem); padding-block: 0;
   color: var(--color-text);
 }
+/* 위쪽 바와 첫 상자 사이, 상자와 화면 아래 사이는 모두 --space-4 하나. 본문 칸의 기본 여백(--space-5)을 이 화면에서는 이 값으로 맞춘다. */
+html[data-kiosk] .flow-body:has(.haneuli-welcome) { padding-block: var(--space-4); }
 .hw-hero {
   display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; min-height: 0;
   padding: var(--space-5) var(--space-6);
@@ -58,7 +60,7 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .is-awake .haneuli-character { animation: haneuli-pop var(--motion-slow) var(--ease-out), haneuli-bob 3s ease-in-out var(--motion-slow) infinite; }
 
 /* 확인 방법 카드 세 개(오른쪽에 쌓는다): 흰 바탕, 옅은 테두리, 아이콘 칩. 깨우면 테두리를 초록으로 */
-.haneuli-ways { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--space-3); min-height: 0; }
+.haneuli-ways { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--space-4); min-height: 0; }
 .hw-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; }
 .is-awake .hw-card { border-color: var(--color-primary); box-shadow: 0 0 0 0.25rem var(--color-primary-soft); }
 .hw-icon { display: inline-grid; place-items: center; padding: var(--space-3); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
