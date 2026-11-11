@@ -37,11 +37,12 @@
 .work-scope-control { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-top:1rem; }
 .work-scope-control>label { font-size:var(--text-small); }
 .staff-workspace .work-scope-control>select { width:auto; max-width:22rem; min-width:12rem; font-size:var(--text-small); padding:0.5rem 0.75rem; min-height:max(2.75rem,var(--target-floor)); }
-.work-details { margin:0!important; }
-.work-detail { display:none!important; }
-.work-detail.is-current { display:grid!important; margin:0; }
+/* 요청 상세: 고른 요청 하나만 보인다(아래 .staff-workspace … .is-current 에서 block). 「요청 목록으로」는 1199px 이하에서만 보인다. */
+.work-details { margin:0; }
+.work-detail { display:none; }
+.work-detail.is-current { margin:0; }
 .work-detail>h2 { font-size:var(--text-heading); }
-.work-back { display:none!important; }
+.work-back { display:none; }
 .work-alert-details { margin-top:0.75rem; font-size:var(--text-small); }
 .work-alert-details>summary, .work-secondary-actions>summary { cursor:pointer; font-weight:var(--weight-label); min-height:max(2.75rem,var(--target-floor)); display:flex; align-items:center; }
 .work-secondary-actions { border-top:0.0625rem solid var(--color-line); padding-top:0.5rem; }
@@ -98,7 +99,7 @@
 .workspace-page-head { display:flex; gap:1rem; align-items:center; justify-content:space-between; margin-bottom: 1.5rem; }
 .workspace-page-head h1 { margin:0 0 0.5rem; font-size: var(--text-title); }
 .staff-workspace .dx-toolbar .btn { flex: none; }
-.staff-workspace .work-requests .work-detail.is-current { display: block !important; }
+.staff-workspace .work-requests .work-detail.is-current { display: block; }
 .staff-workspace .staff-nav { display: none; }
 .staff-workspace .work-requests > .dx-summary { margin: 0; }
 .staff-workspace .work-requests > form.work-search > details > summary, .staff-workspace .work-preferences > summary { min-height: 1.75rem; padding: 0; }
@@ -363,10 +364,8 @@
 .work-request-table th { font-size:var(--text-caption); }
 .work-request-table td { padding:0.75rem 0.5rem; font-size:var(--text-small); }
 .work-request-table td:nth-child(2) { max-width:8rem; }
-.work-requests:not(.has-selection) .work-detail { display:none!important; }
 .work-requests.has-selection .work-master { display:none; }
-.work-requests.has-selection .work-detail.is-current { display:grid!important; }
-.work-back { display:inline-flex!important; width:auto; justify-self:start; margin:0; }
+.work-back { display:inline-flex; width:auto; justify-self:start; margin:0; }
 .staff-workspace .work-requests>form.dx-card { grid-template-columns:1fr auto; }
 .staff-workspace .work-requests>form>label { grid-column:1/-1; }
 .staff-workspace .work-requests>form>button:last-of-type { grid-column:1/-1; justify-self:start; }
@@ -414,14 +413,13 @@
     .workspace-page-head { display: none; }
 .staff-workspace
     .work-requests.has-selection
-    > :not(.work-master-detail):not([role="alert"]) { display: none !important; }
-.staff-workspace .work-requests.has-selection .work-detail.is-current { display: block !important; }
+    > :not(.work-master-detail):not([role="alert"]) { display: none; }
 .staff-workspace .work-requests > form.work-search { grid-template-columns: minmax(0, 1fr) auto; }
 .staff-workspace .work-requests > form.work-search > button:last-of-type { grid-column: 2; grid-row: 3; }
 .staff-workspace .work-detail .work-back { margin-bottom: 1.25rem; }
 }
 @media (min-width: 761px) and (max-width: 1199px) {
-.staff-workspace .work-back { display: inline-flex !important; }
+.staff-workspace .work-back { display: inline-flex; }
 }
 @media (min-width: 1200px) {
 .staff-workspace .work-back { display: none; }
@@ -511,7 +509,7 @@
 .staff-workspace.airport-workspace .work-detail .service-detail-list > div { grid-template-columns: 4.5rem minmax(0, 1fr); font-size: var(--text-small); }
 .staff-workspace.airport-workspace
     .work-requests.has-selection
-    .work-preferences { display: none !important; }
+    .work-preferences { display: none; }
 .airport-workspace .work-detail .work-back { margin-bottom: 1.25rem; }
 .airport-workspace .workspace-mobile-menu nav { right: 0; max-width: calc(100vw - 2rem); }
 }
