@@ -49,7 +49,7 @@ const SCALES = process.env.LAYOUT_SCALES ? process.env.LAYOUT_SCALES.split(",").
 // 빨리 돌려 볼 때: LAYOUT_PAGES=/,/help LAYOUT_WIDTHS=390,1333 LAYOUT_SCALES=1 npx tsx scripts/layout-check.ts
 const ONLY_PAGES = process.env.LAYOUT_PAGES?.split(",");
 const ONLY_WIDTHS = process.env.LAYOUT_WIDTHS?.split(",").map(Number);
-const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login"];
+const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login", "/devices", "/devices/kiosk", "/devices/robot"];
 const KIOSK_PAGES = ["/kiosk/guide", "/kiosk/entry", "/kiosk/visits"];
 /** 직원 화면. 도움 요청 대신 접수·지원정보 대신 등록은 여객·키오스크 화면을 왼쪽 메뉴 옆 본문 칸에 띄운다. */
 const STAFF_PAGES = ["/staff", "/staff/requests", "/staff/requests/new", "/staff/desk", "/staff/desk/register", "/staff/overview"];
