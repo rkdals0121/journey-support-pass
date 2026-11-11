@@ -4,6 +4,9 @@ import { hubOf } from "@/lib/service-hubs";
 import { PublicShell } from "@/app/components/PublicShell";
 import { HubMap } from "@/app/components/HubMap";
 import styles from "@/app/components/support-journey.module.css";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("만남 장소", "Meeting point");
 export default async function PointPage({
   params,
   searchParams,

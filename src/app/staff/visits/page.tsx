@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/staff-page";
 import { VisitConsole } from "./VisitConsole";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("거점 예약·현장 응대");
 export const dynamic = "force-dynamic";
 export default async function VisitOperations() {
   const s = await requireStaff();

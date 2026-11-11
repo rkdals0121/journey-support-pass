@@ -6,6 +6,9 @@ import { StaffNav } from "../../../components/StaffNav";
 import {OperationsSummary} from "./OperationsSummary";
 import { resourceSnapshot } from "@/lib/dispatch-resources";
 import { ResourceAvailability } from "@/app/components/ResourceAvailability";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("오늘 현황");
 
 export const dynamic = "force-dynamic";
 

@@ -9,6 +9,9 @@ import {
 import { PublicShell } from "../components/PublicShell";
 import { ServiceDirectory } from "../components/ServiceDirectory";
 import { portalSupportCards } from "../components/PortalSupport";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("서비스 찾기", "Find a service");
 export default async function ServicesPage({
   searchParams,
 }: {

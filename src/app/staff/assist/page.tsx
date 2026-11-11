@@ -3,6 +3,9 @@ import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { AssistList } from "./AssistList";
 import Link from "next/link";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("이동지원 요청");
 
 export const dynamic = "force-dynamic";
 

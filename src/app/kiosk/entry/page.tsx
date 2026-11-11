@@ -4,6 +4,9 @@ import { config } from "@/lib/config";
 import { currentSession } from "@/lib/session-server";
 import { EntryKiosk } from "./EntryKiosk";
 import { RobotStage } from "./RobotStage";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("안내로봇", "Guide robot");
 
 export const dynamic = "force-dynamic";
 

@@ -19,7 +19,8 @@ export const dynamic = "force-dynamic";
 // QR 값의 모양만 본다. 모양이 틀린 주소는 사이트 전체의 매니페스트가 그대로 쓰인다.
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const token = (await params).token.toUpperCase();
-  return TOKEN_RE.test(token) ? { manifest: `/p/${token}/manifest` } : {};
+  const title = "등록한 도움 · Journey Support Pass";
+  return TOKEN_RE.test(token) ? { title, manifest: `/p/${token}/manifest` } : { title };
 }
 
 // 여객의 등록 현황. 여객이 등록을 마치면 여기로 온다.
