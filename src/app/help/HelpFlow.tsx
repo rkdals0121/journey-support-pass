@@ -42,7 +42,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useSpeech } from "../components/useSpeech";
-import { SERVICE_CATALOG, supportTopic } from "@/lib/service-catalog";
+import { SERVICE_CATALOG, passengerLabel, supportTopic } from "@/lib/service-catalog";
 import { MobilityMapPlanner } from "../components/MobilityMapPlanner";
 
 const STORAGE = "jsp-dx-receipt-v1";
@@ -676,7 +676,7 @@ export function HelpFlow({
                               setDestinationId("");
                             }}
                           />
-                          <span>{en ? s.en : s.label}</span>
+                          <span>{en ? s.en : passengerLabel(s)}</span>
                         </label>
                       ))}
                     </fieldset>

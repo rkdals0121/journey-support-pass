@@ -295,6 +295,7 @@ html[data-kiosk] .flow .flow-bar {
 @media (max-width: 760px) {
   .airport-site .public-footer { display: block; border-radius: calc(var(--radius-medium) * 2); padding: var(--space-4) var(--space-5); }
   .airport-site .public-footer-links { margin-top: var(--space-3); }
+  .airport-site .public-footer-links a { min-height: max(2.75rem, var(--target-floor)); }
 }
 
 /* 좁은 화면에서도 도움 단추는 오른쪽 위에 두고 탐색 단추를 그 아래로 감싼다. */

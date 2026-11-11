@@ -86,6 +86,17 @@ export const SERVICE_CATALOG = [
     icon: "messages",
   },
 ] as const;
+// 여객이 보는 이름. 첫 화면(TaskLauncher)과 같은 쉬운 말로 맞춘다. 직원 화면과 접수 기록은 위의 label 을 그대로 쓴다.
+const PASSENGER_LABEL: Partial<Record<(typeof SERVICE_CATALOG)[number]["id"], string>> = {
+  mobility: "이동 도움받기",
+  guidance: "탑승구·시설 찾기",
+  facility: "시설 불편 알리기",
+  traffic: "교통·주차 이용",
+  other: "그 밖의 도움",
+};
+export function passengerLabel(s: { id: (typeof SERVICE_CATALOG)[number]["id"]; label: string }) {
+  return PASSENGER_LABEL[s.id] ?? s.label;
+}
 export type SupportTopic = (typeof SERVICE_CATALOG)[number]["id"];
 export function supportTopic(value: unknown) {
   return typeof value === "string"

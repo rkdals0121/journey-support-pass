@@ -252,6 +252,76 @@ async function guideSteps(page: Page, where: string) {
   if (await click(".haneuli-passport")) await inspect(page, where + " · 여권 화면");
 }
 
+/** 시연용 등록을 하나 만들어 고유 일련 번호를 받는다. 모의 운항(MK501)이 없으면 null. */
+async function demoPassNo(): Promise<string | null> {
+  try {
+    const found = (await (await fetch(`${BASE}/api/flights/search?q=MK501`)).json()) as { flights?: { flightDate: string; flightNo: string }[] };
+    const flight = found.flights?.find((f) => f.flightNo === "MK501");
+    if (!flight) return null;
+    const res = await fetch(`${BASE}/api/registrations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flightDate: flight.flightDate, flightNo: "MK501", choices: ["tr_walk"], lang: "ko", consent: true, startedAt: new Date(Date.now() - 60_000).toISOString(), editCount: 0 }),
+    });
+    if (!res.ok) return null;
+    return ((await res.json()) as { passNo?: string }).passNo ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 안내 키오스크에서 번호를 눌러 「이대로 안내 받기」 뒤의 안내로봇 화면을 차례로 본다.
+ * 로봇을 부를 수 있는지는 시각에 따라 달라지므로, 서버 답을 바꿔 두 경우(오는 중→도착→즐거운 여행 / 로봇 없음)를 모두 본다.
+ */
+async function robotSteps(browser: Browser, size: (typeof KIOSK_SIZES)[number], cookie: string, passNo: string, where: string) {
+  for (const available of [true, false]) {
+    const page = await browser.newPage();
+    await page.setViewport(size);
+    await page.evaluateOnNewDocument("window.__name = (f) => f");
+    const [name, ...rest] = cookie.split("=");
+    await page.setCookie({ name, value: rest.join("="), url: BASE, httpOnly: true });
+    await page.setRequestInterception(true);
+    page.on("request", (rq) =>
+      rq.url().includes("/api/kiosk/robot-status")
+        ? rq.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ available }) })
+        : rq.continue(),
+    );
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const click = (sel: string) => page.evaluate((q) => (document.querySelector(q) as HTMLElement | null)?.click(), sel);
+    const screenIs = (k: string) => page.waitForSelector(`[data-screen="${k}"]`, { timeout: 30_000 }).then(() => wait(800));
+    try {
+      await page.goto(BASE + "/kiosk/guide", { waitUntil: "networkidle2", timeout: 120_000 });
+      await wait(1200);
+      await click(".haneuli-character");
+      await wait(1000);
+      await click(".haneuli-number");
+      await wait(1000);
+      for (const d of passNo) {
+        await page.evaluate((x) => Array.from(document.querySelectorAll<HTMLButtonElement>(".pad-num .pad-key")).find((e) => e.innerText.trim() === x)?.click(), d);
+        await wait(120);
+      }
+      await screenIs("saved");
+      await page.evaluate(() => (document.querySelector(".flow-cta .btn-primary") as HTMLElement | null)?.click());
+      if (available) {
+        await screenIs("robotWait");
+        await inspect(page, where + " · 안내로봇 오는 중");
+        await screenIs("robotArrived");
+        await inspect(page, where + " · 안내로봇 도착");
+        await screenIs("farewell");
+        await inspect(page, where + " · 즐거운 여행");
+      } else {
+        await screenIs("noRobot");
+        await inspect(page, where + " · 안내로봇 없음(직원 호출 묻기)");
+      }
+    } catch (e) {
+      problems.push({ where, what: `안내로봇 화면(${available ? "가능" : "불가"})을 열지 못했습니다: ${String(e).slice(0, 120)}` });
+    } finally {
+      await page.close();
+    }
+  }
+}
+
 async function kioskCookie(placeId: string): Promise<string | null> {
   const kiosk = readSeedZones().find((z) => z.isKiosk);
   if (!kiosk) return null;
@@ -289,6 +359,14 @@ async function kioskCookie(placeId: string): Promise<string | null> {
             if (url === "/kiosk/guide" && scale === 1) await guideSteps(page, `${url} · ${size.name} · 글자 ×${scale}`);
             await page.close();
           }
+    // 안내로봇 화면(이대로 안내 받기 뒤): 글자 1배에서 기기 크기마다 본다.
+    if (guide && (!ONLY_PAGES || ONLY_PAGES.includes("/kiosk/guide")) && SCALES.includes(1)) {
+      const passNo = await demoPassNo();
+      if (!passNo) console.log("안내로봇 화면은 건너뜀 (모의 운항 MK501 이 없어 시연 등록을 만들지 못함)");
+      else
+        for (const size of KIOSK_SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
+          await robotSteps(browser, size, guide, passNo, `/kiosk/guide · ${size.name} · 글자 ×1`);
+    }
     const staff = await staffCookie();
     if (!staff) console.log("직원 화면은 건너뜀 (로컬 DB에 안내데스크 구역이 없음)");
     else
