@@ -282,7 +282,7 @@ html[data-kiosk] .flow .flow-bar {
   justify-content: space-between;
   gap: var(--space-2) var(--space-6);
   width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
-  margin: var(--space-2) auto 12px;
+  margin: var(--space-4) auto 12px;
   padding: var(--space-2) var(--space-6);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);

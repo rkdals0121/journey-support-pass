@@ -105,7 +105,7 @@ async function inspect(page: Page, where: string) {
     // 박스 간격: 바깥 박스(테두리나 배경이 있는 칸)끼리의 간격은 --space-4 하나다(키오스크는 rem 이 커서 그만큼 커진다).
     // 휴대전화·낮은 화면은 더 좁게 줄일 수 있다(아래). 기준의 3배 이상 떨어진 것은 구역을 나눈 것으로 보고 보지 않는다.
     // 두 박스 사이에 글자·그림·단추가 있으면(제목, 진행 표시 줄 등) 구역을 나눈 것으로 보고 뺀다. 직원 화면은 틀이 달라 보지 않는다.
-    if (!document.querySelector(".workspace-side")) {
+    if (!document.querySelector(".workspace-side, .staff-login-screen")) {
       const rem = parseFloat(getComputedStyle(doc).fontSize);
       const std = rem * (parseFloat(getComputedStyle(doc).getPropertyValue("--space-4")) || 1);
       const bodyBg = getComputedStyle(document.body).backgroundColor;

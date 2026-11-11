@@ -18,7 +18,7 @@
 :global(html[data-kiosk]) .current,:global(html[data-kiosk]) .swap,:global(html[data-kiosk]) .clear,:global(html[data-kiosk]) .primary,.workspace[data-kiosk=true] .current,.workspace[data-kiosk=true] .swap,.workspace[data-kiosk=true] .clear,.workspace[data-kiosk=true] .primary{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)))}
 :global(html[data-kiosk]) .endpoint,.workspace[data-kiosk=true] .endpoint{min-height:6rem}
 @media(orientation:portrait){:global(html[data-kiosk]) .layout,.workspace[data-kiosk=true] .layout{grid-template-columns:minmax(0,1fr)}:global(html[data-kiosk]) .summary,.workspace[data-kiosk=true] .summary{position:static}}
-@media(max-height:700px){.workspace{padding-top:var(--space-3)}.heading{margin-bottom:var(--space-2)}.card{padding:var(--space-3)}.endpoint{min-height:4.5rem}.endpoint em{display:none}.instruction{margin-top:var(--space-2)}}
+@media(max-height:700px){.workspace{padding-top:0}.heading{margin-bottom:var(--space-2)}.card{padding:var(--space-3)}.endpoint{min-height:4.5rem}.endpoint em{display:none}.instruction{margin-top:var(--space-2)}}
 
 .planner{--map-control-height:max(2.75rem,var(--target-floor));min-width:0;width:100%}.planner .endpoints{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.mobilityDistance{margin:var(--space-3) 0;font-size:var(--text-heading);font-weight:var(--weight-heading);color:var(--color-primary)}.pickupFallback{margin:var(--space-3) 0}.pickupFallback summary{min-height:2.75rem;cursor:pointer;color:var(--color-primary)}
 @media(max-width:760px){.planner .endpoints{grid-template-columns:minmax(0,1fr)}.planner .endpoints>.destinationControl{grid-row:auto}}
