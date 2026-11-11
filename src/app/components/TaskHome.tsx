@@ -26,7 +26,7 @@ export function TaskHome({ en = false }: { en?: boolean }) {
         </div>
         <div className="ph-hero-art" aria-hidden="true">
           <span className="ph-hero-orbit" />
-          <Image src="/images/haneuli/friend.webp" alt="" width={1280} height={1280} priority sizes="(max-width: 760px) 144px, 256px" />
+          <Image src="/images/haneuli/narangi.webp" alt="" width={1280} height={1280} priority sizes="(max-width: 760px) 144px, 256px" />
         </div>
       </section>
       <div className="ph-home-lead">

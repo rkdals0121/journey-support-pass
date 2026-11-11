@@ -1,7 +1,7 @@
 // 스탬프북 그림. 문장·도장·장식은 손으로 그린 SVG 다.
-// 「나랑이」는 팀이 디자인한 인천공항 마스코트 시안 그림(public/stamp/haneul.webp)을 그대로 쓰고,
+// 「나랑이」는 팀이 디자인한 인천공항 마스코트 시안 그림(public/stamp/narangi.webp)을 그대로 쓰고,
 // 기장·승무원·탐험가 필터 옷은 팀이 준 옷 사진(public/stamp/costume-*.webp, 배경·얼굴 자리를 투명하게 다듬은 것)을 쓴다.
-// 나랑이 친구 필터는 옷을 입히지 않고, 시안의 여러 방향 나랑이(public/stamp/haneul-*.webp)가 사진 곳곳에 함께 선다.
+// 나랑이 친구 필터는 옷을 입히지 않고, 시안의 여러 방향 나랑이(public/stamp/narangi-*.webp)가 사진 곳곳에 함께 선다.
 import Image from "next/image";
 import type { ThemeId } from "@/lib/stamp-book";
 
@@ -13,7 +13,7 @@ const DEEP = "var(--color-blue)";
 const YELLOW = "var(--color-accent)";
 const SKY = "var(--color-art-sky)";
 
-export const HANEUL_SRC = "/stamp/haneul.webp";
+export const HANEUL_SRC = "/stamp/narangi.webp";
 
 /**
  * 옷 사진(512×1024, 팀 시안 한 장에 나란히 있던 세 벌을 나눠 체크무늬 배경과 얼굴 자리만 투명하게 한 것)과
@@ -43,8 +43,8 @@ export function costumeLayout(p: (typeof COSTUME_PHOTO)[string]) {
  * rotate 는 도(°), 그림 가운데를 축으로 돌린다.
  */
 export const FRIENDS = [
-  { src: "/stamp/haneul-right.webp", x: -18, y: 458, w: 230, h: 286, rotate: 4 },
-  { src: "/stamp/haneul-left.webp", x: 383, y: 444, w: 235, h: 300, rotate: -4 },
+  { src: "/stamp/narangi-right.webp", x: -18, y: 458, w: 230, h: 286, rotate: 4 },
+  { src: "/stamp/narangi-left.webp", x: 383, y: 444, w: 235, h: 300, rotate: -4 },
   { src: HANEUL_SRC, x: 412, y: 30, w: 170, h: 170, rotate: 10 },
 ];
 

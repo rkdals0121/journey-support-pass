@@ -39,7 +39,7 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo=""}: {en?:
         </div>
       </header>
       <section className={styles.assistance} aria-labelledby="mobility-welcome">
-      <div className={styles.welcome}><Image src="/images/haneuli/friend.webp" width={160} height={160} alt={t("안내 도우미 나랑이","Narangi, your airport guide")} priority/><h2 id="mobility-welcome">{t("무엇을 도와드릴까요?","How can we help?")}</h2></div>
+      <div className={styles.welcome}><Image src="/images/haneuli/narangi.webp" width={160} height={160} alt={t("안내 도우미 나랑이","Narangi, your airport guide")} priority/><h2 id="mobility-welcome">{t("무엇을 도와드릴까요?","How can we help?")}</h2></div>
       <div className={styles.toolbar}>
         <button className={styles.listen} type="button" disabled={!supported} aria-pressed={speaking} aria-label={speaking?t("소리 안내 멈추기","Stop voice"):t("소리로 듣기","Listen")} onClick={()=>speaking?stop():speak(menuText)}>{speaking?<VolumeX aria-hidden="true"/>:<Volume2 aria-hidden="true"/>}<span>{t("소리로 듣기","Listen")}</span></button>
         <Link className={styles.call} href={staff}><BellRing aria-hidden="true"/><span>{t("도움 요청하기","Request help")}</span></Link>
