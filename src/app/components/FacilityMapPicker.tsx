@@ -42,6 +42,8 @@ type Props = {
   showSelectionTools?: boolean;
   additionalHelp?: ReactNode;
   selectionInstructions?: ReactNode;
+  /** 휴대전화에서 페이지 위쪽에 이미 제목·이전·소리 단추가 있으면 지도 칸의 제목 상자를 감춘다. */
+  pageHeading?: boolean;
   onKioskClose?: () => void;
   allowedFacilityIds?: readonly (string | number)[];
   pickupSelection?: boolean;
@@ -52,7 +54,7 @@ type Props = {
 export function FacilityMapPicker({
   value, onChange, en = false, disabled = false, pickup, restrictToPickup = false,
   initialBuilding = 1, selectedBuilding, onBuildingChange, focusKey = 0, searchResetKey = 0, route, start, destination, selectionRole = "destination",
-  kiosk = false, compactMobile = false, deviceLayout, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskHeadingAction, kioskBackHref, showSelectionTools = true, additionalHelp, selectionInstructions, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
+  kiosk = false, compactMobile = false, deviceLayout, hideSelection = false, fullscreen = kiosk, kioskPanel, kioskFooter, kioskTitle, kioskHeadingAction, kioskBackHref, showSelectionTools = true, additionalHelp, selectionInstructions, pageHeading = false, onKioskClose, allowedFacilityIds, pickupSelection = false, onRoute, onError,
 }: Props) {
   const id = useId();
   const shell = useRef<HTMLDivElement>(null);
@@ -266,7 +268,7 @@ export function FacilityMapPicker({
 
   if (full) return (
     <div ref={shell} className={styles.fullscreen} data-kiosk={kiosk} data-device-layout={deviceLayout}
-      data-compact-mobile={compactMobile} data-panel-open={panelVisible}
+      data-compact-mobile={compactMobile} data-panel-open={panelVisible} data-selecting={showSelectionTools}
       style={{top:deviceLayout === "robot" || compactMobile ? undefined : headerTop,"--map-header-top":`${headerTop}px`} as CSSProperties}
       aria-label={t("전체 화면 공항 지도", "Full-screen airport map")}>
       <div ref={mapViewport} className={styles.mapBackground}>{mapView}</div>
@@ -281,7 +283,7 @@ export function FacilityMapPicker({
         </select>
       </nav>
       {panelVisible && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
-        <div className={styles.panelTop}><header className={styles.panelHeading}>
+        <div className={styles.panelTop}>{!(pageHeading && compactMobile) && <header className={styles.panelHeading}>
           <div className={styles.panelHeadingTop}>
             {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg>
@@ -293,7 +295,7 @@ export function FacilityMapPicker({
           {kioskHeadingAction ? <div className={styles.headingTitleRow}>
             <h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1>{kioskHeadingAction}
           </div> : <h1>{kioskTitle ?? t("공항 지도", "Airport map")}</h1>}
-        </header>
+        </header>}
         {kioskPanel}</div>
         <div className={styles.panelContent}>{selectionInstructions}{showSelectionTools && <>{searchControls}{filterControls}{nearbyControls}</>}{errors}
         <details className={styles.mapHelp}><summary>{t("지도 이용 안내", "Map help")}</summary>{metaControls}{notices}{additionalHelp}</details></div>
