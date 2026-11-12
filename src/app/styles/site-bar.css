@@ -104,6 +104,8 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
   --site-bar-width: 1344px;
   --site-bar-height: clamp(76px, 10vh, 98px);
   --site-bar-gutter: 20px;
+  /* 바 위 여백. 바 아래 칸의 높이를 계산할 때도 쓴다(/prepare). */
+  --site-bar-top: 12px;
   /* 바가 놓이는 자리의 폭. 보통은 화면 전체(100vw). 직원 화면처럼 옆에 메뉴가 있는 틀은 이 값만 본문 칸 폭으로 바꾼다. */
   --site-bar-room: 100vw;
 }
@@ -117,7 +119,7 @@ html[data-kiosk] .flow .flow-bar {
   width: var(--site-bar-now);
   max-width: var(--site-bar-width);
   min-height: var(--site-bar-height);
-  margin: 12px auto 0;
+  margin: var(--site-bar-top) auto 0;
   padding: 8px 12px 8px 24px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
