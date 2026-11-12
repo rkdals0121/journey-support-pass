@@ -83,7 +83,8 @@ export function MyRequestPanel({
       <Link className="task-action-link" href={"/requests" + (en ? "?lang=en" : "")}>
         <span>
           <strong>{en ? "Request progress" : "요청 진행 현황"}</strong>
-          <small role="status">{loading ? (en ? "Checking…" : "확인 중…") : error || (request ? requestStateLabel(request, lang) : (en ? "View requests made in this tab." : "이 탭에서 접수한 요청을 확인하세요."))}</small>
+          {/* 요청이 있을 때만 상태를 보인다(빈 안내 글은 두지 않는다). 화면 읽기용 알림 자리는 늘 둔다. */}
+          <small role="status">{loading ? (en ? "Checking…" : "확인 중…") : error || (request ? requestStateLabel(request, lang) : "")}</small>
         </span>
         <ArrowRight aria-hidden="true" />
       </Link>
