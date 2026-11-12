@@ -121,7 +121,8 @@ html[data-kiosk] .hw-listen .listen-start.on { background: var(--color-primary);
 /* 세로 화면(안내로봇 1080×1920)과 좁은 화면: 위에 나랑이 상자, 아래에 카드를 한 줄로 쌓는다 */
 @media (orientation: portrait), (max-width: 760px) {
   .haneuli-welcome { --hw-art: 40dvh; }
-  .hw-welcome-stage { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  /* 남는 높이를 두 줄에 나눠 주면 말풍선이 나랑이에게서 멀어진다. 둘을 붙여 한 덩어리로 가운데에 둔다. */
+  .hw-welcome-stage { grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; }
   .hw-welcome-stage .hw-art { justify-self: center; }
   .hw-welcome-side { align-self: auto; align-items: center; padding-top: 0; }
   .hw-welcome-bubble::after { inset-inline-start: calc(50% - 0.5rem); bottom: auto; top: -0.5625rem; transform: rotate(-135deg); }
