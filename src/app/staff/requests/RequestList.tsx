@@ -495,7 +495,7 @@ export function RequestList({
           value={draft}
           maxLength={80}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="예: 127, 탑승동, 요청 번호"
+          placeholder="예: 127, 탑승동"
         />
         <button className="btn" type="submit">
           검색
