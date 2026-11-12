@@ -187,6 +187,8 @@ export function HelpFlow({
     : undefined;
   const [consent, setConsent] = useState(false);
   const [review, setReview] = useState(false);
+  // 이동 도움: 만날 곳을 고른 뒤 「필요한 도움」 단계로 넘어갔는지(위쪽 단계 표시에 씀)
+  const [mobilityConfirming, setMobilityConfirming] = useState(false);
   const [inputStep, setInputStep] = useState(0);
   const [trafficIntent, setTrafficIntent] = useState<
     "choose" | "info" | "dispatch"
@@ -231,6 +233,7 @@ export function HelpFlow({
     return () => cancelAnimationFrame(frame);
   }, [service, inputStep, review]);
   const reviewIndex = noMeeting ? 1 : 2;
+  const stepNow = service === "mobility" ? (mobilityConfirming ? 1 : 0) : inputStep;
   // 작성 중인 내용 되살리기. 같은 서비스로 다시 들어왔을 때만, 키오스크가 아닐 때만, 새로 시작하기(fresh)가 아닐 때만.
   const draftReady = useRef(false);
   useEffect(() => {
@@ -634,7 +637,7 @@ export function HelpFlow({
                   onFocusCapture={() => setInputStep(0)}
                 >
                   <h2 tabIndex={-1}>
-                    <span>1</span>
+                    <span>{service === "mobility" ? 2 : 1}</span>
                     {topic
                       ? tr("요청 내용", "Request details")
                       : tr("필요한 서비스", "Your service")}
@@ -1132,6 +1135,12 @@ export function HelpFlow({
             >
               {(noMeeting
                 ? [tr("요청 내용", "Request"), tr("내용 확인", "Review")]
+                : service === "mobility"
+                ? [
+                    tr("만날 곳", "Meeting place"),
+                    tr("필요한 도움", "Help needed"),
+                    tr("내용 확인", "Review"),
+                  ]
                 : [
                     tr("서비스 선택", "Service"),
                     tr("위치 확인", "Location"),
@@ -1141,11 +1150,11 @@ export function HelpFlow({
                 <li
                   key={label}
                   aria-current={
-                    (review ? reviewIndex : inputStep) === i ? "step" : undefined
+                    (review ? reviewIndex : stepNow) === i ? "step" : undefined
                   }
                 >
                   <span>
-                    {(review ? reviewIndex : inputStep) > i ? (
+                    {(review ? reviewIndex : stepNow) > i ? (
                       <Check aria-hidden="true" />
                     ) : (
                       i + 1
@@ -1312,7 +1321,7 @@ export function HelpFlow({
             >
               <div className="request-form-main">
                 {service === "mobility" && (<MobilityMapPlanner initialSupportMode={task?.id === "mobility-vehicle" ? "staff" : initialMobilityMode} placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
-                        en={en} disabled={busy} kiosk={sharedDevice} title={cartTitle} destinationEnabled={task?.id !== "mobility-wheelchair"}
+                        en={en} disabled={busy} kiosk={sharedDevice} title={cartTitle} onConfirmingChange={setMobilityConfirming} destinationEnabled={task?.id !== "mobility-wheelchair"}
                         requestContent={<>{requestDetails}{requestAdditional}{error && <p role="alert">{error}</p>}{requestSummary}</>}
                         backHref={mobilityHomeHref ?? returnTo ?? (en ? "/?lang=en" : "/")}
                         onChange={(nextPlace, nextDestination) => { setPlaceId(nextPlace); setDestinationId(nextDestination); setError(""); }} />)}

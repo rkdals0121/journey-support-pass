@@ -13,9 +13,9 @@ import styles from "../navigate/navigation-map.module.css";
 type Props = {
   initialSupportMode?:"staff"|"robot";
   placeId:string;destinationId:string;initialPlace:string;onChange:(placeId:string,destinationId:string)=>void;
-  requestContent?:ReactNode;backHref?:string;title?:string;en?:boolean;disabled?:boolean;kiosk?:boolean;destinationEnabled?:boolean;
+  requestContent?:ReactNode;onConfirmingChange?:(confirming:boolean)=>void;backHref?:string;title?:string;en?:boolean;disabled?:boolean;kiosk?:boolean;destinationEnabled?:boolean;
 };
-export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinationId,initialPlace,onChange,en=false,disabled=false,kiosk=false,destinationEnabled=true,requestContent,backHref,title}:Props) {
+export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinationId,initialPlace,onChange,en=false,disabled=false,kiosk=false,destinationEnabled=true,requestContent,backHref,title,onConfirmingChange}:Props) {
   const t=(ko:string,english:string)=>en?english:ko;
   const fromPlace=placeOf(placeId),currentPlace=placeOf(initialPlace);
   const from=facilityForPlace(fromPlace),current=facilityForPlace(currentPlace);
@@ -27,7 +27,8 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
   const target=allowDestination?mapFacilityOf(destinationId):null;
   const [notice,setNotice]=useState("");
   const [expanded,setExpanded]=useState(true);
-  const [confirming,setConfirming]=useState(false);
+  const [confirming,setConfirmingState]=useState(false);
+  function setConfirming(v:boolean){setConfirmingState(v);onConfirmingChange?.(v);}
   function updatePlace(id:string) {
     setNotice("");setRobotPhase("idle");
     onChange(id,validMapDestination(placeOf(id),destinationId)?destinationId:"");
@@ -62,7 +63,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
     initialBuilding={areaBuilding(fromPlace?.area)} destinationEnabled={allowDestination&&(!fromPlace||!!from)}
     destinationRestriction={fromPlace}
     startName={!from&&fromPlace?(en?fromPlace.labelEn:fromPlace.label):undefined} startTitle={robotMode?t("출발지","Start"):t("만날 곳","Meeting place")}
-    showSelectionTools={!confirming&&!robotActive}
+    pageHeading showSelectionTools={!confirming&&!robotActive}
     additionalHelp={!confirming ? alternateFinder : undefined}
     title={title ?? (robotMode ? t("안내로봇 동행", "Guide robot assistance") : t("직원 이동 지원", "Staff mobility assistance"))} backHref={backHref??"/"}
     footer={result=><>

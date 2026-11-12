@@ -44,6 +44,7 @@ type Props = {
   instructions?: ReactNode;
   showSelectionTools?: boolean;
   additionalHelp?: ReactNode;
+  pageHeading?: boolean;
   footer: (result: RoutePlannerResult) => ReactNode;
 };
 
@@ -51,7 +52,7 @@ type Props = {
 export function AirportRoutePlanner({start, destination, currentLocation, onStartChange, onDestinationChange, onUseCurrentLocation, onEndpointsChange,
   en = false, kiosk = false, deviceLayout: requestedLayout, disabled = false, initialBuilding = 1, destinationEnabled = true,
   allowedStartIds, startRestriction, destinationRestriction, startName, startTitle, title, backHref,
-  beforeControls, selectionControls, instructions, showSelectionTools = true, additionalHelp, footer}: Props) {
+  beforeControls, selectionControls, instructions, showSelectionTools = true, additionalHelp, pageHeading = false, footer}: Props) {
   const t = (ko: string, english: string) => en ? english : ko;
   const shell = useRef<HTMLDivElement>(null);
   const [phoneViewport, setPhoneViewport] = useState(false);
@@ -196,9 +197,9 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       </>}
     </div>
   </>;
-  const selectionInstructions = instructions ?? <div className={styles.instruction} role="status">
+  const selectionInstructions = instructions ?? (!showSelectionTools ? null : <div className={styles.instruction} role="status">
     <span>{activeMode === "start" ? "1" : "2"}</span>{stepText}
-  </div>;
+  </div>);
   const restriction = activeMode === "start" ? startRestriction : start ? destinationRestriction ?? mapFacilityPlace(facilityId(start)) : null;
   return <div ref={shell} className={styles.planner} data-kiosk={deviceControls} data-device-layout={deviceLayout}>
     <FacilityMapPicker value={(activeMode === "start" ? start : end) ? facilityId((activeMode === "start" ? start : end)!) : ""}
@@ -207,7 +208,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       initialBuilding={building} selectedBuilding={building} onBuildingChange={setBuilding} focusKey={revision}
       pickup={restriction} restrictToPickup={!!restriction}
       allowedFacilityIds={activeMode === "start" ? allowedStartIds : undefined} pickupSelection={activeMode === "start" && !!allowedStartIds}
-      showSelectionTools={showSelectionTools} searchResetKey={searchResetKey}
+      pageHeading={pageHeading} showSelectionTools={showSelectionTools} searchResetKey={searchResetKey}
       selectionInstructions={selectionInstructions}
       additionalHelp={<>{additionalHelp}{beforeControls && <details className={styles.moreInfo}>
         <summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}
