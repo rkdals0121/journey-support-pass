@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import {
   ArrowRight,
   Bot,
@@ -54,7 +56,7 @@ import { RegisterFlow } from "../../components/RegisterFlow";
 import { useBookingFind } from "../../components/FlightMethods";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { KioskHero } from "../../components/KioskHero";
-import { KioskSavedReview } from "../../components/KioskSavedReview";
+import { KioskNarangiSide, KioskSavedReview } from "../../components/KioskSavedReview";
 import { KioskSays } from "../../components/KioskSays";
 import { KioskPages } from "../../components/KioskPages";
 import { savedNeedsText } from "../../components/SavedNeeds";
@@ -1076,6 +1078,10 @@ export function GuideKiosk({
           )}
           </div>
           <RouteSteps route={route} target={target} from={here} t={t} />
+          {/* 남는 자리에 나랑이(함께 가는 느낌). 그림일 뿐이라 화면 읽기에서는 뺀다 */}
+          <div className="kc-route-art" aria-hidden="true">
+            <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="(orientation: portrait) 30vh, 30vw" />
+          </div>
           <div className="kc-route-foot">
           <button
             className="btn finish-btn"
@@ -1190,9 +1196,10 @@ export function GuideKiosk({
         }
       >
         {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
-        <div className="kc-page kc-directions">
-        <KioskHero title={t.guideHello} lead={`${here} · ${lang === "en" ? "Demo data" : "시연용 모의 자료"}`} />
-        <div className="kx-guide">
+        {/* 「미리 등록하신 내용이에요」와 같은 틀: 왼쪽(세로는 위) 말풍선·큰 나랑이, 오른쪽에 항공편·탑승구 가는 길·가까운 시설 */}
+        <div className="kc-page kc-saved kc-directions">
+        <KioskNarangiSide title={t.guideHello} lead={`${here} · ${lang === "en" ? "Demo data" : "시연용 모의 자료"}`} />
+        <div className="kx-guide kc-saved-main">
           <div className="kx-guide-main">
             {edited && <Banner role="status">{t.editSaved}</Banner>}
             <FlightBoard flight={flight} t={t} lang={lang} />
