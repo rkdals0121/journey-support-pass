@@ -1,7 +1,7 @@
 import { currentSession } from "@/lib/session-server";
 import { MobilityHome } from "../components/MobilityHome";
 import { HelpFlow } from "./HelpFlow";
-import { helpService, kioskReturn } from "@/lib/help-entry";
+import { helpService, kioskReturn, type KioskReturn } from "@/lib/help-entry";
 import { businessOf } from "@/lib/operating-profile";
 import { supportTopic } from "@/lib/service-catalog";
 import { PublicShell } from "../components/PublicShell";
@@ -34,7 +34,9 @@ export default async function HelpPage({
   const mobility = q.topic === "mobility" || (!q.topic && q.service === "mobility");
   if (mobility && !["staff","robot"].includes(q.flow??"") && q.resume !== "1") {
     const home = session?.isKiosk ? kioskReturn(q.returnTo) ?? "/kiosk/guide" : "/";
-    return <MobilityHome en={q.lang==="en"} homeHref={home+(q.lang==="en"?"?lang=en":"")} place={session?.isKiosk?session.placeId??"":q.place??""} returnTo={session?.isKiosk?home:""}/>;
+    const kioskPlace = session?.isKiosk ? placeOf(session.placeId) : undefined;
+    return <MobilityHome en={q.lang==="en"} homeHref={home+(q.lang==="en"?"?lang=en":"")} place={session?.isKiosk?session.placeId??"":q.place??""} returnTo={session?.isKiosk?home:""}
+      kiosk={session?.isKiosk ? {returnTo: home as KioskReturn, placeLabel: q.lang==="en" ? (kioskPlace?.labelEn ?? "") : (kioskPlace?.label ?? "")} : undefined}/>;
   }
   const business = businessOf(q.business);
   const topic = supportTopic(q.topic),
