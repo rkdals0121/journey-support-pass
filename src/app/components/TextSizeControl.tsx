@@ -10,7 +10,8 @@ export function TextSizeControl({ en = false }: { en?: boolean }) {
         <button key={value} type="button" aria-pressed={(scale ?? 1) === value}
           aria-label={en ? ["Standard text", "Large text", "Extra large text"][index] : ["기본 글자", "큰 글자", "아주 큰 글자"][index]}
           onClick={() => setViewSettings({ scale: value })}>
-          <span aria-hidden="true" style={{ fontSize: `${14 + index * 3}px` }}>가</span>
+          {/* 영어 화면에서는 「A」로 보여 준다(한국어를 읽지 못하는 여객도 글자 크기 단추임을 알 수 있게). */}
+          <span aria-hidden="true" style={{ fontSize: `${0.875 + index * 0.1875}rem` }}>{en ? "A" : "가"}</span>
         </button>
       ))}
     </div>
