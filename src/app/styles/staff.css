@@ -12,6 +12,8 @@
 .desk-card > svg { color: var(--color-muted); }
 .desk-found { padding: 1rem; }
 .desk-found-head { display: flex; align-items: center; justify-content: space-between; }
+/* 찾은 뒤 화면 읽기 프로그램이 읽도록 제목에 초점을 옮긴다. 누를 수 없는 제목이라 굵은 초점 테두리는 보이지 않게 한다. */
+.desk-found-head strong:focus { outline: 0; }
 .desk-found .pass-qr-code { width: min(12rem, 60vw); }
 .workspace-header>a:last-child { display:flex; gap:0.25rem; align-items:center; font-size:var(--text-small); color:var(--color-primary-hover); }
 .workspace-grid { display:grid; grid-template-columns:13.5rem minmax(0,1fr); min-height:calc(100vh - 8rem); }

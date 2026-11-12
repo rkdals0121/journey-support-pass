@@ -1501,7 +1501,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "등록된 패스가 아닙니다");
   await fill(page, "#desk-pass-no", kioskNo);
   await page.keyboard.press("Enter");
-  await waitText(page, "찾은 패스");
+  await waitText(page, "찾은 등록");
   check("여객이 불러 준 번호로 패스를 찾는다. 항공편과 고른 항목이 줄인 말로 나온다", (await has(page, "MK501")) && (await has(page, "휠체어 대여")) && (await has(page, "글·그림")));
   await shot(page, "데스크-찾은패스");
   await clickText(page, "button", "등록 지우기");

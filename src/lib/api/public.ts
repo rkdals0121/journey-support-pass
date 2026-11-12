@@ -229,7 +229,8 @@ export async function lookupPass(db: Db, scanned: string, now: Date): Promise<Pa
   return { kind: "ok", journey, passNo: res.pass.passNo, token };
 }
 
-export const NOT_A_PASS = "등록된 패스가 아닙니다. QR이나 번호를 다시 확인해 주세요";
+// 별도 지원 QR 은 없다(기존 탑승권을 쓴다). 「QR이나 번호」라고 하면 없는 QR 을 찾게 된다.
+export const NOT_A_PASS = "등록된 패스가 아닙니다. 탑승권이나 고유 일련 번호를 다시 확인해 주세요";
 export const PASS_ENDED = "사용이 끝난 패스입니다. 항공편이 출발했거나 등록을 지운 패스입니다";
 
 /**
