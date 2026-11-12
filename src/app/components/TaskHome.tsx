@@ -52,9 +52,9 @@ export function TaskHome({ en = false }: { en?: boolean }) {
           <TaskLauncher en={en} />
           <article className="task-action task-action-stamp">
             <Stamp aria-hidden="true" className="task-action-icon" strokeWidth={1.7} />
-            <Link href="/stamp" className="task-action-link">
+            <Link href={"/stamp" + q} className="task-action-link">
               <span>
-                <strong>{en ? "Airport stamp book (Korean)" : "공항 스탬프북"}</strong>
+                <strong>{en ? "Airport stamp book" : "공항 스탬프북"}</strong>
               </span>
               <ArrowRight aria-hidden="true" />
             </Link>
