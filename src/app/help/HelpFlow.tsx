@@ -732,11 +732,6 @@ export function HelpFlow({
                                   </span>
                                 )}
                               </label>
-                              {f.placeholder && (
-                                <p className="service-field-example">
-                                  {en ? f.placeholderEn : f.placeholder}
-                                </p>
-                              )}
                               {f.options ? (
                                 <select
                                   id={"task-" + f.id}

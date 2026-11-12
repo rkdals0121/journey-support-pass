@@ -311,7 +311,6 @@
 .booking-error { color:var(--color-error); margin-top:1rem; line-height:1.6; }
 .booking-provenance { border-left:0.1875rem solid var(--color-control-line); padding:0.5rem 0.75rem; color:var(--color-muted); font-size:var(--text-small); line-height:1.6; }
 .prepare-lookup-link { display:inline-block; margin-top:1.25rem; color:var(--color-primary-hover); text-decoration:underline; text-underline-offset:0.25rem; }
-.service-field-example { font-size: var(--text-caption); color: var(--color-muted); line-height: 1.6; margin: 0 0 var(--space-2); }
 .airport-site .public-logo { grid-column: 1; grid-row: 1; font-size: var(--text-heading); line-height: 1.25; font-weight: var(--weight-heading); letter-spacing: -0.045em; gap: 0.5rem; white-space: nowrap; }
 .airport-site .public-logo small { font-size: var(--text-caption); letter-spacing: 0.025em; font-weight: var(--weight-body); margin-top: 0.25rem; color: var(--color-muted); }
 .airport-site .public-nav { grid-column: 2; grid-row: 1; max-width: none; width: auto; justify-content: flex-end; gap: 1.75rem; flex-wrap: nowrap; border: 0; padding: 0; margin: 0; background: transparent; }
