@@ -57,6 +57,10 @@ interface Props {
   serviceHome?: boolean;
   headerTools?: React.ReactNode;
   headerRightTools?: React.ReactNode;
+  /** 바 왼쪽 로고 옆에 둘 것(안내 키오스크 첫 화면의 현재 위치). */
+  headerLead?: React.ReactNode;
+  /** 바의 소리 단추를 둘지. 화면 안에 같은 소리 단추가 따로 있으면 false(안내 키오스크 첫 화면). */
+  barListen?: boolean;
   /** 키오스크 화면 묶음의 배치. 공통 머리와 도움 단추는 그대로 쓴다. */
   className?: string;
 }
@@ -91,6 +95,8 @@ export function FlowShell({
   serviceHome = false,
   headerTools,
   headerRightTools,
+  headerLead,
+  barListen = true,
   className = "",
 }: Props) {
   const t = textOf(lang, prefs.easy);
@@ -130,6 +136,27 @@ export function FlowShell({
       e.stopPropagation();
     }
   };
+  // 키오스크: 위쪽 바 오른쪽에 「도움 요청하기」(따로 떠 있는 단추) 자리를 비워 둔다. 예전에는 고정 폭(--call-w)만큼 비워
+  // 단추가 그보다 좁으면 바의 단추(설정·언어 등)와 「도움 요청하기」 사이가 벌어졌다. 실제 단추 폭을 재서 간격을 --space-4(1rem) 하나로 맞춘다.
+  useLayoutEffect(() => {
+    if (!kiosk) return;
+    const root = document.documentElement;
+    const phone = window.matchMedia("(max-width: 760px)");
+    const update = () => {
+      const bar = barRef.current;
+      const btn = document.querySelector<HTMLElement>(".call-dock .call-btn");
+      if (!bar || !btn || phone.matches) { root.style.removeProperty("--kiosk-bar-reserve"); return; }
+      const gap = parseFloat(getComputedStyle(root).fontSize);
+      const reserve = bar.getBoundingClientRect().right - btn.getBoundingClientRect().left + gap;
+      if (reserve > 0) root.style.setProperty("--kiosk-bar-reserve", `${Math.ceil(reserve)}px`);
+    };
+    update();
+    const watch = new ResizeObserver(update);
+    const btn = document.querySelector(".call-dock .call-btn");
+    if (btn) watch.observe(btn);
+    window.addEventListener("resize", update);
+    return () => { watch.disconnect(); window.removeEventListener("resize", update); root.style.removeProperty("--kiosk-bar-reserve"); };
+  }, [kiosk, lang, screenKey]);
   const closeRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   useFocusTrap(sheetRef, settingsOpen);
@@ -280,6 +307,7 @@ export function FlowShell({
       <header className="flow-bar" ref={barRef}>
         {kiosk && <SharedVisitPrivacy />}
         {serviceHome && <Brand />}
+        {headerLead}
         <div className="flow-bar-side">
           {!serviceHome && (
             <>
@@ -305,7 +333,7 @@ export function FlowShell({
         </div>
         <div className="flow-bar-right">
         {headerRightTools}
-        {supported && (
+        {barListen && supported && (
           <button
             className={`bar-btn ${headerRightTools ? "bar-listen" : "bar-icon"} ${speaking ? "on" : ""}`}
             onClick={() => (speaking ? stop() : speak(speakText))}

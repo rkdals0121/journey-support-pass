@@ -304,5 +304,9 @@ html[data-kiosk] .flow .flow-bar {
 body:has(.call-dock) .flow-bar { margin-bottom: var(--call-h); }
 html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; }
 .flow-service-home .flow-bar { gap: 0.75rem; }
+/* 안내 키오스크 첫 화면: 로고 옆에 현재 위치(설정·언어는 오른쪽으로, 「도움 요청하기」와 같은 간격) */
+.flow-bar-here { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; margin: 0; color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-label); }
+.flow-bar-here svg { width: 1.125rem; height: 1.125rem; flex: none; color: var(--color-primary); }
+.flow-service-home .flow-bar-right:empty { display: none; }
 /* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
 .airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }

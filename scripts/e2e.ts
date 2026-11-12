@@ -490,7 +490,8 @@ async function callClearOfBar(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const call = document.querySelector(".call-btn")?.getBoundingClientRect();
     const buttons = [...document.querySelectorAll(".flow-bar .bar-btn")].map((b) => b.getBoundingClientRect());
-    return !!call && buttons.length >= 3 && buttons.every((b) => b.right <= call.left + 1 || b.left >= call.right - 1 || b.bottom <= call.top + 1 || b.top >= call.bottom - 1);
+    // 안내 키오스크 첫 화면의 바에는 설정·언어 두 단추만 있다(소리 단추는 화면 안 둥근 단추로 옮김, 2026-11-12).
+    return !!call && buttons.length >= 2 && buttons.every((b) => b.right <= call.left + 1 || b.left >= call.right - 1 || b.bottom <= call.top + 1 || b.top >= call.bottom - 1);
   });
 }
 
@@ -1054,7 +1055,8 @@ async function resetFlights(clearLocks = false) {
   await page.waitForFunction(() => {
     const call = document.querySelector(".call-btn")?.getBoundingClientRect();
     const buttons = [...document.querySelectorAll(".flow-bar .bar-btn")].map(b => b.getBoundingClientRect());
-    return !!call && buttons.length >= 3 && buttons.every(b => b.right <= call.left + 1 || b.left >= call.right - 1 || b.bottom <= call.top + 1 || b.top >= call.bottom - 1);
+    // 안내 키오스크 첫 화면의 바에는 설정·언어 두 단추만 있다(소리 단추는 화면 안 둥근 단추로 옮김, 2026-11-12).
+    return !!call && buttons.length >= 2 && buttons.every(b => b.right <= call.left + 1 || b.left >= call.right - 1 || b.bottom <= call.top + 1 || b.top >= call.bottom - 1);
   }, {timeout:WAIT});
   check("키오스크에서도 설정으로 글자와 그림을 더 키울 수 있다. 「도움 요청하기」는 여전히 위쪽 줄의 버튼을 가리지 않는다", (await rootPx(page)) > kPx && (await callClearOfBar(page)));
   check("글자를 아주 크게 해도 설정의 닫는 버튼이 화면 안에 보인다 (안내키오스크)", await closeInView(page));
