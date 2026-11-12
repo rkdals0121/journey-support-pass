@@ -27,13 +27,12 @@ import { ErrorNote } from "../../components/Alert";
 import { DocScan } from "../../components/DocScan";
 import { FlowShell } from "../../components/FlowShell";
 import { ViewSwitch } from "./ViewSwitch";
-import { FlightBoard } from "../../components/GuideParts";
 import { IdleGuard } from "../../components/IdleGuard";
 import { Choice, NumPad } from "../../components/Inputs";
 import { ListenStart } from "../../components/ListenStart";
 import { RegisterFlow } from "../../components/RegisterFlow";
 import { KioskHero } from "../../components/KioskHero";
-import { KioskNeeds } from "../../components/KioskNeeds";
+import { KioskSavedReview } from "../../components/KioskSavedReview";
 import { KioskHome } from "../../components/KioskHome";
 import { savedNeedsText } from "../../components/SavedNeeds";
 import { Scanner } from "../../components/Scanner";
@@ -482,13 +481,7 @@ export function EntryKiosk({
         t.savedAsk,
       ].join(". "),
       <>
-        <div className="kc-page">
-          <KioskHero title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} />
-          <div className="kc-review">
-            <FlightBoard flight={view.guide.flight} t={t} lang={lang} />
-            <KioskNeeds choices={view.guide.choices} extra={view.guide.extra} lang={lang} t={t} />
-          </div>
-        </div>
+        <KioskSavedReview title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} flight={view.guide.flight} choices={view.guide.choices} extra={view.guide.extra} lang={lang} t={t} />
       </>,
       <>
         <button
@@ -731,10 +724,7 @@ export function EntryKiosk({
     screen = shell(
       "guide",
       [t.svcGuide, t.noteLandside].join(". "),
-      <div className="kc-page">
-        <KioskHero title={t.svcGuide} lead={t.noteLandside} />
-        <div className="kc-review"><FlightBoard flight={guide.flight} t={t} lang={lang} /><KioskNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} /></div>
-      </div>,
+      <KioskSavedReview title={t.svcGuide} lead={t.noteLandside} flight={guide.flight} choices={guide.choices} extra={guide.extra} lang={lang} t={t} />,
       <button
         className="btn btn-primary"
         onClick={() => setView({ kind: "services", token: tok, guide })}
