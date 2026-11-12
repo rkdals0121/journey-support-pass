@@ -667,7 +667,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         // 확인 화면에서 등록하지 못했으면 그 까닭을 맨 먼저 읽는다.
         ...(kind === "review" && error ? [error] : []),
         // 항공편 화면에서 내용이 바뀐 뒤에는 제목과 설명을 되풀이하지 않고 바뀐 내용만 읽는다.
-        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [kicker ?? "", titleOf(kind), multipleSelectionStep ? (lang === "en" ? "Multiple selections allowed" : "중복 선택 가능") : hint ?? ""]),
+        ...(kind === "flight" && flightSpeak.length > 0 ? flightSpeak : [kicker ?? "", titleOf(kind), multipleSelectionStep ? (lang === "en" ? "Select all that apply" : "중복 선택 가능") : hint ?? ""]),
         ...(kind === "trouble" ? [t.troubleRead] : []),
         ...stepGroups.flatMap((g) => [...(g === "buggy" ? [t.buggyAsk] : []), ...itemsOf(g).map(itemLabel)]),
         ...(kind === "trouble" ? [t.troubleProxy] : []),
@@ -810,7 +810,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
       {mode === "web" && booking && sameFlight(flight, booking.flight) && <p className="booking-provenance" role="note">{lang === "en" ? "Demo booking · fictional flight. " : "시연 예약에서 불러온 가상 항공편입니다. "}<a href={"/prepare/booking" + (lang === "en" ? "?lang=en" : "")}>{lang === "en" ? "Search again (restarts registration)" : "다시 조회 (등록 처음부터)"}</a></p>}
       <div className="registration-question-heading">
         <h1>{titleOf(kind)}</h1>
-        {multipleSelectionStep && <p className="multi-select-note"><Sunflower />{lang === "en" ? "Multiple selections" : "중복 선택 가능"}</p>}
+        {multipleSelectionStep && <p className="multi-select-note"><Sunflower />{lang === "en" ? "Select all that apply" : "중복 선택 가능"}</p>}
       </div>
       {kind === "flight" && (
         <p className="flight-search-note">
