@@ -782,7 +782,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
         mode === "web" || sideSteps ? (
           <>
             <span className="public-eyebrow">
-              {lang === "en" ? "YOUR SAVED NEEDS" : "지금까지 선택한 내용"}
+              {lang === "en" ? "Your saved needs" : "지금까지 선택한 내용"}
             </span>
             <h2>{lang === "en" ? "Registration summary" : "작성 내용 요약"}</h2>
             {choices.length ? (

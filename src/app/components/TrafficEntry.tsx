@@ -35,7 +35,7 @@ export function TrafficEntry({
             </button>
             <span className="service-kicker">
               <CarFront aria-hidden="true" />
-              {en ? "AIRPORT SERVICES" : "공항 현장 서비스"}
+              {en ? "Airport services" : "공항 현장 서비스"}
             </span>
           </div>
           <h1>{en ? "Transport and parking" : "교통·주차 지원"}</h1>

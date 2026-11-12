@@ -191,7 +191,7 @@ export function VisitStatus({
 
   return (
     <main id="public-main" className={styles.page}>
-      <p className={styles.eyebrow}>{t("내 예약", "YOUR APPOINTMENT")}</p>
+      <p className={styles.eyebrow}>{t("내 예약", "Your appointment")}</p>
       <h1>{en ? VISIT_STATE_EN[visit.state] : VISIT_STATES[visit.state]}</h1>
       <p className={styles.demo}>
         {t(
