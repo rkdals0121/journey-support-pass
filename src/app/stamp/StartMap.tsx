@@ -4,7 +4,8 @@ import { Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Area } from "@/lib/airport";
 import { GATE_XY, gateArea, isGate } from "@/lib/gates";
-import { AREA_LABEL, CHECKPOINTS } from "@/lib/stamp-book";
+import { checkpointPlace, CHECKPOINTS } from "@/lib/stamp-book";
+import { areaName, exitName, stampCopy, type StampLang } from "./copy";
 import { EXITS } from "@/lib/stamp-routing";
 import { AIRSIDE_OUTLINE, EXIT_XY } from "@/lib/terminal-map";
 
@@ -33,7 +34,7 @@ interface Spot {
   title: string;
 }
 
-function areaView(area: Area) {
+function areaView(area: Area, lang: StampLang) {
   const gates = Object.keys(GATE_XY).map(Number).filter((g) => gateArea(g) === area);
   const xs = gates.map((g) => at(g)[0]);
   const ys = gates.map((g) => at(g)[1]);
@@ -47,8 +48,8 @@ function areaView(area: Area) {
     kind: "exit",
     x: flip(EXIT_XY[e.id])[0],
     y: flip(EXIT_XY[e.id])[1],
-    mark: e.label.replace(/^.*?(\d+번 출국장).*$/, "$1"),
-    title: e.label,
+    mark: lang === "en" ? `Exit ${e.id.split("-")[1]}` : e.label.replace(/^.*?(\d+번 출국장).*$/, "$1"),
+    title: exitName(e.id, e.label, lang),
   }));
   const cps: Spot[] = CHECKPOINTS.filter((c) => c.area === area).map((c) => ({
     id: c.code,
@@ -56,12 +57,13 @@ function areaView(area: Area) {
     x: at(c.near)[0],
     y: at(c.near)[1],
     mark: c.code,
-    title: `${c.code} · ${c.place}${/탑승구/.test(c.place) ? "" : ` (${c.near}번 탑승구 근처)`}`,
+    title: `${c.code} · ${checkpointPlace(c, lang)}${/탑승구/.test(c.place) ? "" : lang === "en" ? ` (near Gate ${c.near})` : ` (${c.near}번 탑승구 근처)`}`,
   }));
   return { gates, box, spots: [...exits, ...cps], cx, cy };
 }
 
-export function StartMap({ gate, value, onPick }: { gate: string; value?: string; onPick: (id: string) => void }) {
+export function StartMap({ gate, value, onPick, lang = "ko" }: { lang?: StampLang; gate: string; value?: string; onPick: (id: string) => void }) {
+  const tr = stampCopy(lang);
   const g = Number(gate);
   const ga = isGate(g) ? gateArea(g) : undefined;
   const areas: Area[] = !ga ? [] : ga === "CONCOURSE" ? ["T1", "CONCOURSE"] : [ga];
@@ -72,7 +74,7 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
   const [pending, setPending] = useState("");
   const [focus, setFocus] = useState<[number, number] | null>(null);
   const viewRef = useRef<HTMLDivElement>(null);
-  const view = useMemo(() => area && areaView(area), [area]);
+  const view = useMemo(() => area && areaView(area, lang), [area, lang]);
 
   // 확대하거나 구역·점을 고르면 그 자리가 가운데 오게 스크롤한다.
   useEffect(() => {
@@ -82,7 +84,7 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
     el.scrollTop = ((focus[1] - view.box.y) / view.box.h) * el.scrollHeight - el.clientHeight / 2;
   }, [zoom, focus, view]);
 
-  if (!area || !view) return <p className="sb-hint">탑승구 번호를 먼저 넣으면 그 터미널 지도가 나와요.</p>;
+  if (!area || !view) return <p className="sb-hint">{tr("탑승구 번호를 먼저 넣으면 그 터미널 지도가 나와요.")}</p>;
 
   const { box, spots, gates, cx, cy } = view;
   const u = box.w / (BASE_PX * zoom);
@@ -94,10 +96,10 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
   };
 
   return (
-    <section className="sb-map" aria-label="지도에서 지금 있는 곳 고르기">
-      <p className="sb-map-title">지금 있는 곳 · 지도에서 고르기</p>
+    <section className="sb-map" aria-label={tr("지도에서 지금 있는 곳 고르기")}>
+      <p className="sb-map-title">{tr("지금 있는 곳 · 지도에서 고르기")}</p>
       {areas.length > 1 && (
-        <div className="sb-tabs" role="tablist" aria-label="터미널">
+        <div className="sb-tabs" role="tablist" aria-label={tr("터미널")}>
           {areas.map((a) => (
             <button
               key={a}
@@ -111,16 +113,15 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
                 setFocus(null);
               }}
             >
-              {AREA_LABEL[a]}
+              {areaName(a, lang)}
             </button>
           ))}
         </div>
       )}
       <div className="sb-map-tools">
-        <div role="group" aria-label="구역 나눠 보기">
+        <div role="group" aria-label={tr("구역 나눠 보기")}>
           <button type="button" aria-pressed={zoom === 1} onClick={() => setZoom(1)}>
-            전체
-          </button>
+            {tr("전체 ")}</button>
           {ZONES.map((z, k) => (
             <button
               key={z}
@@ -130,15 +131,15 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
                 setFocus([box.x + (box.w * (k + 0.5)) / 3, box.y + box.h / 2]);
               }}
             >
-              {z}
+              {tr(z)}
             </button>
           ))}
         </div>
-        <div role="group" aria-label="확대·축소">
-          <button type="button" aria-label="축소" disabled={zoom === 1} onClick={() => setZoom(zoom - 1)}>
+        <div role="group" aria-label={tr("확대·축소")}>
+          <button type="button" aria-label={tr("축소")} disabled={zoom === 1} onClick={() => setZoom(zoom - 1)}>
             <Minus aria-hidden="true" />
           </button>
-          <button type="button" aria-label="확대" disabled={zoom === MAX_ZOOM} onClick={() => setZoom(zoom + 1)}>
+          <button type="button" aria-label={tr("확대")} disabled={zoom === MAX_ZOOM} onClick={() => setZoom(zoom + 1)}>
             <Plus aria-hidden="true" />
           </button>
         </div>
@@ -148,12 +149,11 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
           viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`}
           style={{ width: `${zoom * 100}%` }}
           role="group"
-          aria-label={`${AREA_LABEL[area]} 지도. 점을 누르면 지금 있는 곳으로 고를 수 있어요.`}
+          aria-label={tr(`${areaName(area, lang)} 지도. 점을 누르면 지금 있는 곳으로 고를 수 있어요.`)}
         >
           <path d={outlinePath(area)} className="sb-map-building" fillRule="evenodd" />
           <text x={box.x + 14 * u} y={box.y + 22 * u} className="sb-map-north" style={{ fontSize: 13 * u }}>
-            ↑ 북
-          </text>
+            {tr("↑ 북 ")}</text>
           {gates.map((n) => {
             if (zoom < 2 && n % 5 !== 0) return null;
             // 탑승구 번호는 점과 겹치지 않게 터미널 바깥쪽(계류장 쪽)으로 조금 밀어 적는다.
@@ -199,7 +199,7 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
                 {(zoom >= 2 || p.kind === "exit" || on) && (
                   <text x={p.x} y={p.y - 14 * u} style={{ fontSize: (p.kind === "exit" ? 11 : 10) * u }}>
                     {/* 전체 보기에서는 출구 이름이 겹치니 번호만 적는다. */}
-                    {p.kind === "exit" && zoom < 2 && !on ? p.mark.replace(" 출국장", "") : p.mark}
+                    {p.kind === "exit" && zoom < 2 && !on ? p.mark.replace(" 출국장", "").replace("Exit ", "") : p.mark}
                   </text>
                 )}
               </g>
@@ -208,13 +208,11 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
         </svg>
       </div>
       <p className="sb-map-legend" aria-hidden="true">
-        <span className="dot" /> 체크포인트 <span className="diamond" /> 출국심사 출구 <b>25</b> 탑승구 번호 · 지도 자료: 인천국제공항 공식 지도
-      </p>
+        <span className="dot" /> {tr("체크포인트 ")}<span className="diamond" /> {tr("출국심사 출구 ")}<b>25</b> {tr("탑승구 번호 · 지도 자료: 인천국제공항 공식 지도 ")}</p>
       {pending && chosen ? (
         <div className="sb-map-confirm" role="status">
           <p>
-            <strong>{chosen.title}</strong>, 여기 맞아요?
-          </p>
+            <strong>{chosen.title}</strong>{tr(", 여기 맞아요? ")}</p>
           <div>
             <button
               type="button"
@@ -224,21 +222,18 @@ export function StartMap({ gate, value, onPick }: { gate: string; value?: string
                 setPending("");
               }}
             >
-              여기 맞아요
-            </button>
+              {tr("여기 맞아요 ")}</button>
             <button type="button" className="sb-link" onClick={() => setPending("")}>
-              다시 고르기
-            </button>
+              {tr("다시 고르기 ")}</button>
           </div>
         </div>
       ) : chosen ? (
         <p className="sb-map-now">
-          지금 있는 곳: <strong>{chosen.title}</strong>
+          {tr("지금 있는 곳: ")}<strong>{chosen.title}</strong>
         </p>
       ) : (
         <p className="sb-hint">
-          주변 탑승구 번호 표지판을 보고 그 번호 가까운 점을 눌러요. 방금 출국심사를 마쳤다면 ◆ 출구를 눌러요.
-        </p>
+          {tr("주변 탑승구 번호 표지판을 보고 그 번호 가까운 점을 눌러요. 방금 출국심사를 마쳤다면 ◆ 출구를 눌러요. ")}</p>
       )}
     </section>
   );
