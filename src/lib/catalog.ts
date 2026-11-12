@@ -48,7 +48,8 @@ export const BRANCHES: { branch: Branch; trouble: string; groups: Group[] }[] = 
 
 export const GROUP_LABEL: Record<Group, string> = {
   trouble: "불편한 점",
-  walk: "걷기",
+  // 「불편한 점: 걷기」 다음에 「걷기: 휠체어를 빌릴래요」로 같은 말이 겹쳐 보여 묶음 이름은 「이동 도움」. 등록 단계 이름(i18n steps.walk)은 그대로.
+  walk: "이동 도움",
   buggy: "전동차",
   stand: "서서 기다리기",
   see: "보기",
@@ -63,7 +64,7 @@ export const GROUP_LABEL: Record<Group, string> = {
 
 export const GROUP_EN: Record<Group, string> = {
   trouble: "What is difficult",
-  walk: "Walking",
+  walk: "Mobility help",
   buggy: "Buggy",
   stand: "Standing and waiting",
   see: "Seeing",
