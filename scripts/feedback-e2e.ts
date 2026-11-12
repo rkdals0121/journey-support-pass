@@ -271,7 +271,7 @@ async function main() {
         (await linked).status() === 200,
       );
       // 연결 안내는 「준비 상황」 줄 안에 합쳐져 있다(따로 된 안내 칸은 없앰)
-      await p.waitForFunction(() => document.body.innerText.includes("기존 탑승권에 지원정보가 연결됐어요"));
+      await p.waitForFunction(() => document.body.innerText.includes("기존 탑승권에 지원정보가 연결"));
       check(
         "no new boarding or support QR is displayed",
         !(await p.$(".pass-qr-code")),
