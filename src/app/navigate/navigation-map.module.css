@@ -108,3 +108,35 @@
 
 .voiceControls[data-icon-only=true]{display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;flex-shrink:0}
 .voiceControls[data-icon-only=true] .voiceButton{flex:none;width:var(--target-kiosk-floor);height:var(--target-kiosk-floor);min-height:var(--target-kiosk-floor);padding:var(--space-3);border-radius:var(--radius-pill);background:var(--color-accent-soft);border-color:var(--color-line)}
+
+
+/* ── 지도 왼쪽 칸 정리(2026-11-12, 안내로봇 화면 제외) ──
+   출발지·목적지를 한 장의 카드(두 줄)로 묶는다. 바꾸기 단추는 카드 오른쪽 가운데, 「다시 설정」은 카드 아래 글자 단추.
+   지금 고르는 줄은 왼쪽 초록 띠와 옅은 초록 바탕으로 보여 준다. */
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoints{grid-template-columns:minmax(0,1fr) auto;gap:0;padding:var(--space-1);border:1px solid var(--color-control-line);border-radius:var(--radius-medium);background:var(--color-surface)}
+.planner:not([data-device-layout=robot]) .kioskInputs .startControl,
+.planner:not([data-device-layout=robot]) .kioskInputs .startControl:has(.endpoint[aria-pressed=true]){grid-column:1;grid-row:1;border:0;border-radius:0;background:none;align-items:center}
+.planner:not([data-device-layout=robot]) .kioskInputs .destinationControl,
+.planner:not([data-device-layout=robot]) .kioskInputs .endpointActions{display:contents}
+.planner:not([data-device-layout=robot]) .kioskInputs .destinationControl>.endpoint{grid-column:1;grid-row:2}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint{border:0;border-radius:var(--radius-small);background:none;align-items:center}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint[aria-pressed=true]{background:var(--color-primary-faint);box-shadow:inset .25rem 0 0 var(--color-primary)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint>svg{margin:0;color:var(--color-primary)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint small{font-size:var(--text-caption);color:var(--color-muted)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint strong{font-size:var(--text-body)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint[aria-pressed=true] small{color:var(--color-primary)}
+/* 두 줄 사이 가는 선 */
+.planner:not([data-device-layout=robot]) .kioskInputs .destinationControl>.endpoint{margin-top:var(--space-1);position:relative}
+.planner:not([data-device-layout=robot]) .kioskInputs .destinationControl>.endpoint::before{content:"";position:absolute;left:var(--space-3);right:0;top:calc(-1 * var(--space-1) / 2 - .5px);border-top:1px solid var(--color-line)}
+.planner:not([data-device-layout=robot]) .kioskInputs .current{width:auto;margin:0 var(--space-1);flex-direction:row;gap:var(--space-1);padding:0 var(--space-3);border-radius:var(--radius-pill);border-color:var(--color-line);background:var(--color-primary-faint);font-size:var(--text-small);white-space:nowrap}
+.planner:not([data-device-layout=robot]) .kioskInputs .current svg{width:1.25rem;height:1.25rem}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpointActions .swap{grid-column:2;grid-row:1 / span 2;align-self:center;width:var(--map-control-height);height:var(--map-control-height);min-height:var(--map-control-height);margin:0 var(--space-1);border-radius:var(--radius-pill);border-color:var(--color-line);background:var(--color-surface)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpointActions .swap svg{transform:rotate(90deg)}
+.planner:not([data-device-layout=robot]) .kioskInputs .destinationChange{grid-column:1 / -1;grid-row:3;justify-self:start;margin-top:var(--space-1);padding:0 var(--space-3);border:0;background:none;color:var(--color-muted);text-decoration:underline;text-underline-offset:var(--space-1)}
+.planner:not([data-device-layout=robot]) .kioskInputs .destinationChange svg{width:1.125rem;height:1.125rem}
+/* 단계 안내: 상자 대신 번호와 글자만 */
+.planner:not([data-device-layout=robot]) .instruction{margin:0;padding:var(--space-1) 0;background:none;font-size:var(--text-body)}
+/* 제목 줄의 소리 단추(웹·키오스크): 다른 단추와 같은 높이의 둥근 단추 */
+/* 제목 칸 오른쪽 위(「이전 · 3층 안내」 줄)에 둔다. 제목이 소리 단추 때문에 두 줄로 꺾이지 않게. */
+.planner:not([data-device-layout=robot]) .voiceControls[data-icon-only=true]{position:absolute;top:var(--space-2);right:var(--space-2);margin:0;gap:var(--space-1)}
+.planner:not([data-device-layout=robot]) .voiceControls[data-icon-only=true] .voiceButton{width:var(--map-control-height);height:var(--map-control-height);min-height:var(--map-control-height);padding:0}
