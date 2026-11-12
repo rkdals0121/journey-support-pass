@@ -544,7 +544,7 @@ export function GuideKiosk({
     setCallSeq(sessionSeq.current);
   };
   const call = (
-    <div className="call-dock">
+    <aside className="call-dock" aria-label={lang === "en" ? "Call staff" : "직원 부르기"}>
       <div className="call-dock-inner">
         <StaffCall
           lang={lang}
@@ -558,7 +558,7 @@ export function GuideKiosk({
           say={voiceOn ? speak : undefined}
         />
       </div>
-    </div>
+    </aside>
   );
   const idle = (
     <IdleGuard

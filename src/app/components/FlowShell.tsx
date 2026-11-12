@@ -371,7 +371,8 @@ export function FlowShell({
             </ol>
           </aside>
         )}
-        <div className="flow-form-area">
+        {/* 화면의 본문 영역(main). 화면 읽기 프로그램이 「본문으로 이동」으로 바로 올 수 있다. */}
+        <main className="flow-form-area" id="flow-main">
           <div className="flow-body" ref={bodyRef}>
             {children}
           </div>
@@ -381,7 +382,7 @@ export function FlowShell({
               <div className="flow-cta-inner">{cta}</div>
             </div>
           )}
-        </div>
+        </main>
         {desktopSummary && (
           <aside className="flow-desktop-summary">{desktopSummary}</aside>
         )}
