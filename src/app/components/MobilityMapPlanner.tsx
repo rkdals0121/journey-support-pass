@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { MapPin } from "lucide-react";
 import { requestPlaceOf as placeOf } from "@/lib/service-locations";
 import { facilityForPlace, facilityId, mapFacilityOf, areaBuilding, validMapDestination, type MapFacility } from "@/lib/map-facilities";
@@ -23,6 +23,10 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
   const [robotPhase,setRobotPhase]=useState<"idle"|"guiding"|"arrived"|"ended">("idle");
   const robotMode=supportMode==="robot";
   const robotActive=robotMode&&(robotPhase==="guiding"||robotPhase==="arrived");
+  // 「안내로봇 동행」은 서비스 이름이지 기기가 아니다. 세로 화면(안내로봇 1080×1920)에서만 로봇 화면 배치를 쓰고,
+  // 가로 키오스크·PC 에서는 보통 지도 배치를 쓴다(가로 화면에 세로 배치를 쓰면 1,300px 넘게 스크롤됐다).
+  const [portrait,setPortrait]=useState(false);
+  useEffect(()=>{const m=window.matchMedia("(orientation: portrait)");const u=()=>setPortrait(m.matches);u();m.addEventListener("change",u);return()=>m.removeEventListener("change",u);},[]);
   const allowDestination=robotMode||destinationEnabled;
   const target=allowDestination?mapFacilityOf(destinationId):null;
   const [notice,setNotice]=useState("");
@@ -50,7 +54,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
     {notice&&<p role="alert" className={styles.error}>{notice}</p>}
   </>;
   if (!expanded) return <div className={styles.planner}><p>{fromPlace?(en?fromPlace.labelEn:fromPlace.label):""}{target?` → ${target.name}`:""}</p><button type="button" className={styles.primary} onClick={()=>setExpanded(true)}>{t("전체 화면 지도로 선택","Choose on full-screen map")}</button>{fallback}{alternateFinder}</div>;
-  return <AirportRoutePlanner en={en} kiosk={kiosk} deviceLayout={robotMode?"robot":undefined} disabled={disabled||robotActive} start={from} destination={target} currentLocation={current}
+  return <AirportRoutePlanner en={en} kiosk={kiosk} deviceLayout={robotMode&&portrait?"robot":undefined} disabled={disabled||robotActive} start={from} destination={target} currentLocation={current}
     onStartChange={updateStart} onDestinationChange={updateDestination}
     onEndpointsChange={(start,end)=>{
       const pickup=start?mobilityPickupForFacility(start.id):null;
