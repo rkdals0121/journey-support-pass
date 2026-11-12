@@ -2,7 +2,30 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import puppeteer, { type Page } from "puppeteer-core";
+import sharp from "sharp";
+import { prepareZXingModule, writeBarcode } from "zxing-wasm/writer";
 import { readSeedZones } from "../src/lib/zones";
+// 시연 예약의 출발일은 「내일」이라 날마다 바뀐다. 고정 그림(tests/fixtures/boarding)은 2026-10-28 용이라
+// 그날이 아니면 맞지 않으므로, 점검할 때마다 그 날짜의 휴대전화 QR·종이 PDF417(돌린 그림)을 새로 만든다.
+async function boardingArtwork(out: string, flightDate: string) {
+  prepareZXingModule({
+    overrides: { wasmBinary: Uint8Array.from(fs.readFileSync("node_modules/zxing-wasm/dist/writer/zxing_writer.wasm")).buffer },
+    fireImmediately: true,
+  });
+  const payload = `BP1:${flightDate.replaceAll("-", "")}:DX9001:D3M0123456`;
+  const make = async (format: "QRCode" | "PDF417", rotate: number, name: string) => {
+    const r = await writeBarcode(payload, { format, scale: 4 });
+    assert.ok(r.image, r.error);
+    const file = path.resolve(out, name);
+    await sharp(Buffer.from(await r.image.arrayBuffer()))
+      .extend({ top: 40, bottom: 40, left: 40, right: 40, background: "#fff" })
+      .rotate(rotate)
+      .png()
+      .toFile(file);
+    return file;
+  };
+  return { mobile: await make("QRCode", 0, "mobile-boarding.png"), paper: await make("PDF417", 90, "paper-boarding.png") };
+}
 async function main() {
   const base = process.env.E2E_BASE ?? "http://127.0.0.1:3100";
   const local = ["localhost", "127.0.0.1"].includes(new URL(base).hostname);
@@ -52,7 +75,9 @@ async function main() {
       );
       await p.type("#task-facility", "남자화장실");
       await p.type("#task-issue", "바닥에 물이 고여요");
-      if (width < 760) await p.click("[data-request-next]");
+      // 휴대전화·PC 모두 단계별 화면이다(요청 내용 → 위치 확인)
+      await p.click("[data-request-next]");
+      await p.waitForSelector("#report-area", { visible: true });
       await p.select("#report-area", "CONCOURSE");
       await p.select("#report-level", "2");
       await p.type("#report-location", "130번 탑승구 연결 통로 아래층");
@@ -93,17 +118,36 @@ async function main() {
         path: `${out}/facility-review-${width}.png`,
         fullPage: true,
       });
-      await p.goto(base + "/help?topic=mobility&fresh=1");
+      // 이동 도움받기는 첫 화면(길 안내·도움 요청하기 등)에서 「도움 요청하기」로 들어가
+      // 지도에서 만날 곳을 고른 뒤 「이 장소에서 도움받기」를 눌러야 필요한 도움(동행·휠체어·차량)을 고른다.
+      await p.goto(base + "/help?topic=mobility&flow=staff&fresh=1");
+      await p.waitForSelector("#mobility-start-fallback-search");
+      await p.evaluate(() => {
+        let d = document.querySelector("[data-place-finder]")?.closest("details") ?? null;
+        while (d) {
+          d.open = true;
+          d = d.parentElement?.closest("details") ?? null;
+        }
+      });
+      await p.type("#mobility-start-fallback-search", "130");
+      await p.waitForSelector('[data-confirm-place="cc-130"]');
+      await p.click('[data-confirm-place="cc-130"]');
+      await p.waitForFunction(() =>
+        [...document.querySelectorAll("button")].some(
+          (b) => b.textContent?.includes("이 장소에서 도움받기") && !b.disabled,
+        ),
+      );
+      await p.evaluate(() =>
+        [...document.querySelectorAll("button")]
+          .find((b) => b.textContent?.includes("이 장소에서 도움받기"))
+          ?.click(),
+      );
       await p.waitForSelector('input[value="mobility-wheelchair"]');
       await p.click('input[value="mobility-wheelchair"]');
       check(
         `${width}px wheelchair handover asks no destination`,
         !(await p.$("#dx-destination")),
       );
-      if (width < 760) await p.click("[data-request-next]");
-      await p.type("#dx-place-search", "130");
-      await p.waitForSelector('[data-confirm-place="cc-130"]');
-      await p.click('[data-confirm-place="cc-130"]');
       check(
         `${width}px mobility does not ask wheelchair or speech preferences again`,
         !(await p.$(".request-needs")) &&
@@ -125,7 +169,7 @@ async function main() {
         `${width}px information requests need no location or intake form`,
         !(await p.$("form")) && !!(await p.$('a[href="tel:15772600"]')),
       );
-      await p.$eval(".traffic-information button.public-button", (e) =>
+      await p.$eval(".traffic-information button.btn-primary", (e) =>
         (e as HTMLButtonElement).click(),
       );
       await p.waitForSelector("#task-zone");
@@ -199,11 +243,7 @@ async function main() {
           surname: "KIM",
         })
       ).body.handoff;
-      assert.equal(
-        h.flight.flightDate,
-        "2026-10-28",
-        "Regenerate sample artwork for a different demo date",
-      );
+      const artwork = await boardingArtwork(out, h.flight.flightDate);
       const reg = await api(p, "/api/registrations", {
         flightDate: h.flight.flightDate,
         flightNo: h.flight.flightNo,
@@ -224,13 +264,14 @@ async function main() {
           r.request().method() === "POST",
       );
       await (await p.$('.boarding-link-panel input[type="file"]'))!.uploadFile(
-        path.resolve("tests/fixtures/boarding/mobile-demo.png"),
+        artwork.mobile,
       );
       check(
         "mobile QR image links existing boarding identity",
         (await linked).status() === 200,
       );
-      await p.waitForSelector(".boarding-linked-note");
+      // 연결 안내는 「준비 상황」 줄 안에 합쳐져 있다(따로 된 안내 칸은 없앰)
+      await p.waitForFunction(() => document.body.innerText.includes("기존 탑승권에 지원정보가 연결됐어요"));
       check(
         "no new boarding or support QR is displayed",
         !(await p.$(".pass-qr-code")),
@@ -266,7 +307,7 @@ async function main() {
       await staff.goto(base + "/staff/desk");
       await staff.waitForSelector('.scan input[type="file"]');
       await (await staff.$('.scan input[type="file"]'))!.uploadFile(
-        path.resolve("tests/fixtures/boarding/paper-demo.png"),
+        artwork.paper,
       );
       await staff.waitForSelector(".desk-found");
       check(
