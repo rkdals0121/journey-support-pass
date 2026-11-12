@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { CarFront } from "lucide-react";
 import {
   RESOURCE_KIND,
   RESOURCE_STATUS,
@@ -224,10 +225,18 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
         <p role="status">장비 현황 확인 중</p>
       ) : (
         rows.length === 0 && (
-          <p>
-            등록된 장비가 없습니다. 안내데스크에서 시범 장비를 등록한 뒤 요청에
-            배차할 수 있습니다.
-          </p>
+          // 거점 예약 화면과 같은 빈 상태 카드. 안내데스크는 바로 위 「장비 등록」을 쓰면 된다.
+          <div className="staff-queue-empty" role="status">
+            <span>
+              <CarFront size={30} aria-hidden="true" />
+            </span>
+            <strong>등록된 장비가 없습니다.</strong>
+            <p>
+              {isDesk
+                ? "위 「장비 등록」에서 시범 장비를 등록하면 요청에 배차할 수 있습니다."
+                : "안내데스크에서 시범 장비를 등록한 뒤 요청에 배차할 수 있습니다."}
+            </p>
+          </div>
         )
       )}
       {ready && rows.length > 0 && (
@@ -251,7 +260,8 @@ export function ResourceBoard({ isDesk }: { isDesk: boolean }) {
           </button>
         </div>
       )}
-      <ul className="inventory-list">
+      {/* 비었을 때 목록의 윗선만 혼자 남지 않게 감춘다 */}
+      <ul className="inventory-list" hidden={visible.length === 0}>
         {visible.map((r) => (
           <li key={r.id} data-resource-id={r.id}>
             <div className="inventory-name">
