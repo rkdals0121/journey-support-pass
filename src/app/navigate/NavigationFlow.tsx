@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { Navigation, Bot, ArrowRight } from "lucide-react";
+import { Navigation, Bot, ArrowRight, ChevronUp } from "lucide-react";
 import { AirportRoutePlanner, type RoutePlannerResult } from "../components/AirportRoutePlanner";
 import { IdleGuard } from "../components/IdleGuard";
 import { placeOf } from "@/lib/airport";
@@ -24,10 +24,15 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
   const t = (ko:string,english:string)=>en?english:ko;
   const {distance,hasResult}=result;
   const resultRef=useRef<HTMLElement>(null);
+  // 휴대전화: 화면 아래에 붙은 결과 줄은 처음에 한 줄(제목·거리)로 접혀 있고, 누르면 펼쳐 할 일을 보여 준다(지도를 덜 가리게).
+  // PC·키오스크에서는 이 단추가 보이지 않고 늘 펼쳐 있다(navigation-map.module.css).
+  const [open,setOpen]=useState(false);
   useEffect(()=>{if(hasResult)resultRef.current?.scrollIntoView({block:"nearest",behavior:"auto"});},[hasResult,robotPhase]);
   if (!hasResult) return null;
+  // 경로를 본 다음 할 일은 대개 「다른 곳 찾기」. 「처음 화면으로」(안내를 끝냄)는 실수로 누르지 않게 작은 단추로 둔다.
   const completionActions = !isRobotMode ? <>
-    <Link className={styles.primary} href={homeHref}>{t("처음 화면으로", "Back to home")}<ArrowRight size={20} aria-hidden="true" /></Link>
+    <button type="button" className={styles.primary} onClick={()=>{setOpen(false);result.clearDestination();}}>{t("다른 곳 찾기", "Find another place")}<ArrowRight size={20} aria-hidden="true" /></button>
+    <Link className={styles.clear} href={homeHref}>{t("처음 화면으로", "Back to home")}</Link>
   </> : robotPhase === "guiding" ? <>
     <p role="status">{t("안내로봇이 목적지까지 안내하고 있어요.", "Guide robot is guiding you to your destination.")}</p>
     <button type="button" className={styles.primary} onClick={()=>setRobotPhase("arrived")}>{t("목적지 도착 확인(시연)", "Confirm arrival (demo)")}</button>
@@ -43,9 +48,10 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
     ? robotPhase === "guiding" ? t("안내로봇 안내 중", "Guide robot guidance") : robotPhase === "arrived" ? t("목적지 도착", "Destination reached") : t("안내 종료", "Guidance ended")
     : t("경로 확인 완료", "Route ready");
   const summary = (
-<aside ref={resultRef} className={styles.summary} aria-live="polite" aria-label={t("경로 결과", "Route result")}>
+<aside ref={resultRef} className={styles.summary} data-collapsed={!open} aria-live="polite" aria-label={t("경로 결과", "Route result")}>
           {isRobotMode ? <Bot aria-hidden="true" /> : <Navigation aria-hidden="true" />}<h2>{hasResult ? resultTitle : t("한 지도에서 바로 찾기", "Find it on one map")}</h2>
           {hasResult ? <><strong className={styles.distance}>{Math.round(distance!)} m</strong>
+            <button type="button" className={styles.resultToggle} aria-expanded={open} aria-label={open ? t("결과 접기", "Collapse result") : t("결과 펼치기", "Expand result")} onClick={()=>setOpen(v=>!v)}><ChevronUp aria-hidden="true" /></button>
             <dl className={styles.routeEndpoints}>
               <div><dt>{t("출발지", "Start")}</dt><dd>{from?.name}<small>{from?.description}</small></dd></div>
               <div><dt>{t("목적지", "Destination")}</dt><dd>{target?.name}<small>{target?.description}</small></dd></div>

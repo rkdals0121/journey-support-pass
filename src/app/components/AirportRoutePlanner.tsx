@@ -174,7 +174,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
         {(currentLocation || onUseCurrentLocation) && <button type="button" className={styles.current} disabled={disabled}
           title={t("등록된 기기 위치를 출발지로 설정", "Use the registered device location")}
           onClick={()=>{if (onUseCurrentLocation) {onUseCurrentLocation();invalidate();setMode(destinationEnabled?"destination":"start");return;}if (currentLocation && onStartChange(currentLocation) !== false) {invalidate();setBuilding(currentLocation.building as 1 | 2 | 3);setMode(destinationEnabled ? "destination" : "start");}}}>
-          <LocateFixed aria-hidden="true"/>{t("현재 위치", "Current location")}
+          <LocateFixed aria-hidden="true"/>{/* 웹·키오스크는 바꾸기 단추와 같은 둥근 그림 단추(좁은 칸에서 출발지 이름이 꺾이던 것). 이름은 화면 읽기용 */}<span className={deviceLayout === "robot" ? undefined : "sr-only"}>{t("현재 위치", "Current location")}</span>
         </button>}
       </div>
       {destinationEnabled && <>
