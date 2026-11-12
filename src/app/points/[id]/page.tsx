@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import { hubOf } from "@/lib/service-hubs";
 import { PublicShell } from "@/app/components/PublicShell";
@@ -20,15 +21,17 @@ export default async function PointPage({
   if (!hub) notFound();
   return (
     <PublicShell lang={en ? "en" : "ko"}>
-      <main id="public-main" className={styles.page}>
-        <p className={styles.eyebrow}>{t("만남 장소", "Meeting point")}</p>
-        <h1>{en ? hub.en : hub.label}</h1>
-        <p className={styles.demo}>
-          {t(
-            "시범 거점 · 실제 장비 운행 미연결",
-            "Prototype meeting point · Hardware is not connected",
-          )}
-        </p>
+      {/* 만남 장소 찾기(/points)와 같은 틀: 소개 상자 아래 두 칸. 제목이 상자 없이 떠 있던 것. */}
+      <main id="public-main" className="service-page service-short-page">
+        <section className="ph-hero" aria-labelledby="point-title">
+          <div className="ph-hero-copy service-intro-copy">
+            <span className="ph-hero-label">
+              <MapPin aria-hidden="true" />
+              {t("만남 장소 · 시범 거점(실제 장비 운행 미연결)", "Meeting point · Prototype (hardware not connected)")}
+            </span>
+            <h1 id="point-title">{en ? hub.en : hub.label}</h1>
+          </div>
+        </section>
         <div className={styles.layout}>
           <section className={styles.panel}>
             <h2>
@@ -50,7 +53,7 @@ export default async function PointPage({
               >
                 {t("이 위치로 직원 도움 요청", "Request staff here")}
               </Link>
-              <Link className={styles.secondary} href="/stamp">
+              <Link className={styles.secondary} href={"/stamp" + (en ? "?lang=en" : "")}>
                 {t("스탬프북 열기", "Open stamp book")}
               </Link>
             </div>
