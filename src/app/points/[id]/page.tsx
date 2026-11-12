@@ -32,7 +32,7 @@ export default async function PointPage({
             <h1 id="point-title">{en ? hub.en : hub.label}</h1>
           </div>
         </section>
-        <div className={styles.layout}>
+        <div className={`${styles.layout} ${styles.pointLayout}`}>
           <section className={styles.panel}>
             <h2>
               {t(
