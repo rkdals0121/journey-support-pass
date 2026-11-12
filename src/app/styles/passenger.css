@@ -35,9 +35,7 @@
 .request-guide h2 { font-size:var(--text-heading); line-height:1.5; margin:0.75rem 0; }
 .public-request-layout .dx-page form { padding:0; border:0; box-shadow:none; }
 .public-request-layout .dx-notice { font-size:var(--text-small); background:var(--color-primary-faint); padding:0.75rem 1rem; border:0; border-left:0.1875rem solid var(--color-accent); }
-.pretrip-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.5rem 2rem; max-width:78rem; margin:auto; border-bottom:0.0625rem solid var(--color-line); }
-.pretrip-header>a:last-child { color:var(--color-primary-hover); font-size:var(--text-small); }
-.prepare-layout { max-width:74rem; margin:3rem auto 4rem; padding:1rem 2rem; display:grid; grid-template-columns:minmax(0,1.2fr) minmax(18rem,.8fr); gap:5rem; align-items:center; }
+.prepare-layout { max-width:74rem; margin:0 auto 4rem; padding:0 2rem 1rem; display:grid; grid-template-columns:minmax(0,1.2fr) minmax(18rem,.8fr); gap:5rem; align-items:center; }
 .prepare-intro>.public-button { margin:1.5rem 0 0.5rem; }
 .prepare-intro>.public-caption { font-size:var(--text-small); max-width:30rem; }
 .prepare-step { display:flex; gap:1rem; padding:1.25rem 0; border-bottom:0.0625rem solid var(--color-line); }
@@ -523,8 +521,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .public-footer { display:block; padding:2rem 1rem; font-size:var(--text-small); }
 .public-footer-links { margin-top:1.5rem; gap:1rem; }
 .public-page-heading { padding-bottom:1rem; }
-.pretrip-header { padding:1rem 1rem; }
-.prepare-layout { display:flex; flex-direction:column; gap:2rem; padding:1rem 1.25rem; margin:1rem auto 2rem; }
+.prepare-layout { display:flex; flex-direction:column; gap:2rem; padding:0 1.25rem 1rem; margin:0 auto 2rem; }
 .prepare-intro h1 { font-size:var(--text-title); }
 .prepare-intro>.public-button { width:100%; }
 .prepare-steps { width:100%; padding:1.25rem; }

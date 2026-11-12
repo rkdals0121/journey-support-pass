@@ -7,9 +7,7 @@ import {
   MapPin,
   Sun,
 } from "lucide-react";
-import { Sunflower } from "../components/Sunflower";
-import { TextSizeControl } from "../components/TextSizeControl";
-import { ViewScale } from "../components/ViewScale";
+import { PublicShell } from "../components/PublicShell";
 import { pageTitle } from "@/lib/page-title";
 
 export const generateMetadata = pageTitle("여행 전 지원 등록", "Register before your trip");
@@ -27,42 +25,11 @@ export default async function PreparePage({
   });
   const registrationHref =
     "/register" + (entry.size ? "?" + entry.toString() : "");
-  const languageEntry = new URLSearchParams(
-    params.via === "booking" ? { via: "booking" } : {},
-  );
-  if (!en) languageEntry.set("lang", "en");
   return (
-    <div className="pretrip-site" lang={lang}>
-      <ViewScale />
-      <a className="public-skip" href="#prepare-main">
-        {en ? "Skip to content" : "본문 바로가기"}
-      </a>
-      <header className="pretrip-header">
-        <Link className="public-logo" href="/prepare">
-          <Sunflower />
-          <span>
-            Journey Support Pass
-            <small>
-              {en
-                ? "Prepare for your airport visit"
-                : "공항 이용 도움 사전등록"}
-            </small>
-          </span>
-        </Link>
-        <div className="prepare-tools">
-        <TextSizeControl en={en} />
-        <Link
-          href={
-            "/prepare" +
-            (languageEntry.size ? "?" + languageEntry.toString() : "")
-          }
-          hrefLang={en ? "ko" : "en"}
-        >
-          {en ? "한국어" : "EN"}
-        </Link>
-        </div>
-      </header>
-      <main id="prepare-main" className="prepare-layout">
+    <PublicShell lang={lang}>
+      {/* 위쪽 바는 다른 여객 화면과 같은 공용 바(PublicShell)를 쓴다. 본문 모양은 .pretrip-site 아래에서 정한다. */}
+      <div className="pretrip-site">
+      <main id="public-main" className="prepare-layout">
         <section className="prepare-intro">
           <span className="public-eyebrow">
             <Plane size={18} aria-hidden="true" />
@@ -143,6 +110,7 @@ export default async function PreparePage({
           {en ? "Request help now" : "현장 도움 요청하기"}
         </Link>
       </footer>
-    </div>
+      </div>
+    </PublicShell>
   );
 }

@@ -245,13 +245,14 @@
    예전 sunflower.css 에 있던 것을 옮겼다. 위쪽 바 모양은 site-bar.css 에서 정한다. */
 .airport-site :is(.request-section, .service-form-card, .request-submit-card, .request-empty-state) { border-radius: var(--radius-medium); }
 /* 위쪽 바는 그대로, 두 박스가 남는 높이를 모두 쓰고 아래 안내 줄은 맨 아래에 붙는다. */
-.pretrip-site { display: flex; flex-direction: column; min-height: 100dvh; background: var(--color-canvas); }
+/* 위쪽 바는 공용 바(PublicShell)다. 이 칸은 바 아래 남은 높이를 채운다(바 높이·바 위 여백·바 아래 간격을 뺀 값). */
+.pretrip-site { display: flex; flex-direction: column; min-height: calc(100dvh - var(--site-bar-height) - var(--site-bar-top) - var(--space-4)); background: var(--color-canvas); }
 /* 큰 박스 하나 대신 두 박스(왼쪽 소개, 오른쪽 순서)로 나눈다. 두 박스를 합친 너비와 끝선은 위쪽 바와 같다. */
 .pretrip-site .prepare-layout {
   display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
   align-items: stretch; gap: var(--space-4);
   box-sizing: border-box; width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
-  max-width: var(--site-bar-width); flex: 1 0 auto; margin: var(--space-4) auto 0; padding: 0;
+  max-width: var(--site-bar-width); flex: 1 0 auto; margin: 0 auto; padding: 0;
   border: 0; background: none; box-shadow: none;
 }
 .pretrip-site .prepare-intro,
@@ -288,7 +289,7 @@
   .pretrip-site .prepare-benefit { font-size: var(--text-body); }
 }
 @media (max-width: 60rem) {
-  .pretrip-site .prepare-layout { grid-template-columns: 1fr; margin: var(--space-4) auto; gap: var(--space-4); }
+  .pretrip-site .prepare-layout { grid-template-columns: 1fr; margin: 0 auto var(--space-4); gap: var(--space-4); }
   .pretrip-site .prepare-intro, .pretrip-site .prepare-steps { padding: 2rem; }
   .pretrip-site .prepare-intro h1 { font-size: var(--text-large); }
 }
