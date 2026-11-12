@@ -142,7 +142,7 @@ export function DeviceCheck({ lang = "ko" }: { lang?: "ko" | "en" }) {
         const missingEn = !ko && !english ? "Korean and English" : ko ? "English" : "Korean";
         setVoice({
           state: "warn",
-          text: lang === "en" ? `${missingEn} voices are missing. Text may sound incorrect or may not be read. Download ${missingEn} voices in your device's text-to-speech (TTS) settings.` : `${missing} 목소리가 없습니다. 그 언어는 다른 목소리로 어색하게 읽거나 읽지 못할 수 있습니다. 기기 설정의 "텍스트 음성 변환(TTS)"에서 ${missing} 목소리를 내려받으세요.`,
+          text: lang === "en" ? `${missingEn} voices are missing. Text may sound incorrect or may not be read. Download ${missingEn} voices in your device's text-to-speech (TTS) settings.` : `${missing} 목소리가 없습니다. 그 언어는 다른 목소리로 어색하게 읽거나 읽지 못할 수 있습니다. 기기 설정의 「텍스트 음성 변환(TTS)」에서 ${missing} 목소리를 내려받으세요.`,
         });
       }
     };

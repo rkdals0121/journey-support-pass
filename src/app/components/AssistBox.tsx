@@ -62,6 +62,8 @@ export function AssistBox({ token, t }: { token: string; t: Text }) {
       <h2>
         <CarFront size={22} aria-hidden="true" /> {t.assistTitle}
       </h2>
+      {/* 제목과 단추가 같은 말만 하던 것: 요청 전에는 무엇을 청하는지 한 줄로 알려 준다 */}
+      {!req && <p className="muted">{t.svcAssistBody}</p>}
       {req && (
         <p className="assist-state" role="status">
           <strong>{t.assistState[req.state]}</strong>
@@ -80,7 +82,7 @@ export function AssistBox({ token, t }: { token: string; t: Text }) {
       ) : (
         <button className="btn" onClick={() => void act("/api/assist")} disabled={busy} aria-busy={busy}>
           <CarFront size={20} aria-hidden="true" />
-          {t.svcAssist}
+          {t.assistAsk}
         </button>
       )}
     </section>

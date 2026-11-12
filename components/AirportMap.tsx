@@ -55,6 +55,8 @@ export type NearbyResult = { requestKey: string; results: { id: string | number;
 type Props = {
   state?: MapState;
   height?: number | string;
+  /** 화면 읽기 프로그램이 읽는 지도 칸 이름(영어 화면은 영어로) */
+  title?: string;
   className?: string;
   onCheckpointChange?: (checkpoint: Checkpoint) => void;
   onCheckpointSelect?: (checkpoint: Checkpoint) => void;
@@ -74,6 +76,7 @@ const CHANNEL = "journey-airport-map";
 export default function AirportMap({
   state = {},
   height = 420,
+  title = "공항 실내지도",
   className,
   ...callbacks
 }: Props) {
@@ -142,7 +145,7 @@ export default function AirportMap({
   return (
     <iframe
       ref={frame}
-      title="공항 실내지도"
+      title={title}
       src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=mobile-service-map" : "/airport-map/index.html?v=mobile-service-map"}
       loading="eager"
       className={className}

@@ -912,7 +912,7 @@ async function resetFlights(clearLocks = false) {
     page.waitForNavigation({waitUntil:"networkidle0",timeout:WAIT}),
     (await page.$('.boarding-link-panel input[type="file"]'))!.uploadFile(boardingFile),
   ]);
-  await waitText(page, "기존 탑승권에 지원정보가 연결됐어요");
+  await waitText(page, "기존 탑승권에 지원정보가 연결되었습니다");
   check("기존 탑승권 이미지를 읽어 지원정보를 연결한다", (await post("/api/guide", {token:myToken})).body.guide.checkedIn);
   check("별도 지원 QR은 발급하지 않는다", (await count(page,".pass-qr-code"))===0);
   check("우대출구에서 기존 탑승권을 보여 주면 된다고 알린다", await has(page,"증빙서류는 꺼내지 않아도 됩니다"));
@@ -1081,7 +1081,7 @@ async function resetFlights(clearLocks = false) {
   const steps = await page.$$eval(".route > li", (es) => es.map((e) => (e as HTMLElement).innerText.replace(/\n/g, " ")));
   check("길 안내가 '지금 계신 곳'에서 시작해 '도착'으로 끝난다", steps[0].includes("지금 계신 곳") && steps[steps.length - 1].includes("127 도착"), `${steps.length}줄`);
   check("휠체어를 쓰는 여객에게는 엘리베이터로 안내한다 (에스컬레이터 아님)", steps.some((s) => s.includes("엘리베이터를 타고 3층")) && !steps.some((s) => s.includes("에스컬레이터를 타고")));
-  check("걷는 구간은 '127번 탑승구' 표지를 따라가라고 안내한다", steps.some((s) => s.includes("‘127번 탑승구’ 표지를 따라")));
+  check("걷는 구간은 '127번 탑승구' 표지를 따라가라고 안내한다", steps.some((s) => s.includes("「127번 탑승구」 표지를 따라")));
   check("가는 길의 장애인 화장실을 알려 준다", steps.some((s) => s.includes("가는 길에") && s.includes("장애인 화장실")));
   check("길 안내 화면에서도 「도움 요청하기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
   check("「이전」「처음으로」가 왼쪽 위에 있다", (await spot(page, ".bar-btn", "이전")) !== null && (await spot(page, ".bar-btn", "처음으로")) !== null);

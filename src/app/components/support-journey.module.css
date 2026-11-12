@@ -602,12 +602,14 @@
 .visitLayout .field { margin-bottom:var(--space-3);gap:var(--space-2); }
 .visitLayout .field > label { margin:0; }
 .visitLayout .draftSteps { margin-bottom:var(--space-3); }
+/* 지도 칸 제목의 기본 윗여백 때문에 휴대전화에서 옆 칸보다 위가 비어 보이던 것 */
+.visitLayout .hubMap h2 { margin:0; }
 .visitLayout .actions { position:sticky;bottom:0;padding-block:var(--space-3);background:var(--color-surface); }
 @media (min-width: 1101px) {
  .visitLayout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }
  .visitLayout .hubMap { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:var(--space-2); }
  .visitLayout .hubMap > h2,.visitLayout .hubMap > .landmark,.visitLayout .hubMap > .link { grid-column:1 / -1; }
- .visitLayout .hubMap h2 { margin:0;font-size:var(--text-body); }
+ .visitLayout .hubMap h2 { font-size:var(--text-body); }
  .visitLayout .hubMap .landmark { margin:0; }
  .visitLayout .hubMap > figure { min-width:0; }
  .visitLayout .mapLegend { margin:0;align-content:start; }

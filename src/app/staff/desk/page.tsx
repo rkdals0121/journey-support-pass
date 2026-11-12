@@ -20,7 +20,7 @@ export default async function DeskPage() {
               <Lock size={28} aria-hidden="true" />
             </span>
             <strong>안내데스크에서만 쓸 수 있습니다</strong>
-            <p>대신 등록과 패스 찾기는 안내데스크 코드로 로그인해야 쓸 수 있습니다.</p>
+            <p>여객 대신 등록과 등록 찾기는 안내데스크 코드로 로그인해야 쓸 수 있습니다.</p>
           </div>
           <Link className="btn" href="/staff/requests">
             통합 요청으로
@@ -57,7 +57,7 @@ export default async function DeskPage() {
           <ChevronRight size={22} aria-hidden="true" />
         </Link>
 
-        <h2>패스 찾기</h2>
+        <h2>등록 찾기</h2>
         <DeskFind />
       </main>
       <StaffNav isDesk />

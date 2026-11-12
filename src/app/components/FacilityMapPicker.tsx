@@ -246,7 +246,7 @@ export function FacilityMapPicker({
   );
   const mapView = (
     <div className={styles.map} aria-disabled={disabled} inert={disabled}>
-        <AirportMap state={state} height="100%" onFacilityClick={p => {
+        <AirportMap state={state} height="100%" title={t("공항 실내지도", "Airport indoor map")} onFacilityClick={p => {
           const canonical = MAP_FACILITIES.find(x => String(x.id) === String(p.id));
           if (canonical) choose(canonical);
         }} onNearby={setNearbyResult} onRoute={onRoute} onError={message => { setMapError(message); onError?.(message); }} />

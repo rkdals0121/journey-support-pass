@@ -341,13 +341,8 @@ export function PassView({ token, initial, isNew }: { token: string; initial: Gu
             <ReadyRow
               done={guide.checkedIn}
               title={guide.checkedIn ? t.readyCheckinDone : t.readyCheckinWait}
-              body={
-                guide.checkedIn
-                  ? lang === "en"
-                    ? "Support information is linked to your existing boarding pass."
-                    : "기존 탑승권에 지원정보가 연결됐어요."
-                  : t.readyCheckinWaitBody
-              }
+              // 연결된 뒤에는 제목이 같은 말을 하므로 작은 글을 두지 않는다(같은 문장이 두 번 보이던 것).
+              body={guide.checkedIn ? undefined : t.readyCheckinWaitBody}
             >
               {!guide.checkedIn && (
                 <>
