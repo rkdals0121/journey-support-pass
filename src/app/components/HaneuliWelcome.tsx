@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { BookUser, Keyboard, MapPin } from "lucide-react";
 import { type ReactNode } from "react";
+import { Narangi3D } from "./Narangi3D";
 
 /** 새 나랑이 그림(배경이 투명한 정면·옆모습). 스탬프북과 같은 그림을 쓴다. */
 const POSES = {
@@ -103,6 +104,8 @@ export function HaneuliWelcome({ en, awake, busy, onWake, onNumber, onPassport, 
               <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
               <Image className="haneuli-sleep" src="/images/haneuli/narangi-sleep.webp" alt="" width={640} height={640} priority />
               <span className="haneuli-zzz">z Z Z</span>
+              {/* 3D 나랑이: 준비되면 위 그림을 덮고, 못 쓰면 그림이 그대로 남는다 */}
+              <Narangi3D mood={awake ? "awake" : "sleep"} />
             </div>
           </div>
           <div className="hw-welcome-side">

@@ -49,6 +49,12 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .haneuli-character .haneuli-sleep { display: none; }
 .is-idle .haneuli-character .haneuli-sleep { display: block; }
 .is-idle .haneuli-character .haneuli-happy { display: none; }
+/* 나랑이 3D(Narangi3D): 그림과 같은 칸에 겹친다. 준비되면(data-narang-3d) 그림·z Z Z·CSS 움직임을 끄고 3D 가 숨쉬기·Z 를 맡는다.
+   3D 는 그림보다 몸이 작게 잡혀 칸보다 조금 크게 그린다(칸 밖으로 넘친 부분은 투명). */
+.haneuli-character .narang-3d { position: absolute; inset: -8%; width: 116%; height: 116%; opacity: 0; pointer-events: none; transition: opacity var(--motion-slow) var(--ease-out); }
+.haneuli-character[data-narang-3d] .narang-3d { opacity: 1; }
+.haneuli-character[data-narang-3d] :is(img, .haneuli-zzz) { visibility: hidden; }
+.haneuli-welcome .haneuli-character[data-narang-3d] { animation: none; }
 .haneuli-zzz { position: absolute; top: -4%; right: -8%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
 .is-idle .haneuli-zzz { animation: haneuli-dream 3s ease-in-out infinite; }
 .is-idle .haneuli-character { animation: haneuli-breathe var(--motion-breathe) ease-in-out infinite; }
