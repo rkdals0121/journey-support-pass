@@ -824,7 +824,7 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
                 : "탑승권의 바코드·QR 코드로 항공편을 불러옵니다."
               : lang === "en"
                 ? "Search by flight number or destination city."
-                : "편명 또는 도착지로 항공편을 검색할 수 있습니다."}
+                : "편명 또는 도착 도시로 항공편을 찾을 수 있습니다."}
         </p>
       )}
       {hint && !multipleSelectionStep && kind !== "flight" && kind !== "note" && <p className="lead">{hint}</p>}
