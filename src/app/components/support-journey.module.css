@@ -79,7 +79,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin: 1rem 0;
 }
 .button,
 .secondary {
@@ -597,6 +597,9 @@
 }
 
 /* Scope booking density so staff and checkpoint pages keep their own layout. */
+/* 만남 장소 상세: 소개 상자·두 칸 사이를 --space-4 하나로(패널 기본 위아래 여백이 겹쳐 32·48px 이던 것) */
+.pointLayout { gap:var(--space-4); }
+.pointLayout > .panel { margin:0; }
 .visitLayout { gap:var(--space-4); }
 .visitLayout > .panel { padding:var(--space-4);margin:0;border-color:var(--color-line);border-radius:var(--radius-medium); }
 .visitLayout .field { margin-bottom:var(--space-3);gap:var(--space-2); }
