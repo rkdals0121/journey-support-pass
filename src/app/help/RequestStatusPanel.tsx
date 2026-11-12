@@ -48,10 +48,12 @@ export function RequestStatusPanel({
     };
   return (
     <>
-      <header className="service-heading status-heading">
-        <span className="service-kicker">
+      {/* 다른 여객 화면(내 요청 등)과 같은 소개 상자. 제목이 상자 없이 화면 끝에 붙어 있던 것. */}
+      <header className="ph-hero status-heading">
+        <div className="ph-hero-copy service-intro-copy">
+        <span className="ph-hero-label">
           <Clock3 aria-hidden="true" />
-          {t("서비스 진행 현황", "SERVICE PROGRESS")}
+          {t("서비스 진행 현황", "Service progress")}
         </span>
         <h1>
           {en
@@ -60,12 +62,15 @@ export function RequestStatusPanel({
             : (taskOf(r.serviceDetails?.task)?.label ??
               supportTopic(r.topicId ?? r.service)?.label)}
         </h1>
+        <p className="status-meta">
         <span className={`request-state-pill state-${r.state}`} role="status">
           {requestStateLabel(r, en ? "en" : "ko")}
         </span>
         <span className="request-reference">
           {t("접수번호", "Reference")} {r.id.slice(0, 8).toUpperCase()}
         </span>
+        </p>
+        </div>
       </header>
       <div className="request-status-layout">
         <section className="request-status-primary">
@@ -177,10 +182,13 @@ export function RequestStatusPanel({
                 })}
               </dd>
             </div>
-            <div>
-              <dt>{t("인원", "People")}</dt>
-              <dd>{r.party}</dd>
-            </div>
+            {/* 만나지 않는 온라인 요청에는 인원이 뜻이 없다 */}
+            {r.placeId !== NO_MEETING_PLACE && (
+              <div>
+                <dt>{t("인원", "People")}</dt>
+                <dd>{r.party}</dd>
+              </div>
+            )}
           </dl>
           {r.serviceDetails && (
             <ServiceDetailsView details={r.serviceDetails} en={en} />

@@ -535,7 +535,9 @@ a.svc-card { text-decoration:none; }
 .status-refresh, .status-cancel { background:none; border:0; font:inherit; color:var(--color-primary-hover); cursor:pointer; min-height:max(2.75rem,var(--target-floor)); }
 .required-dot { color:var(--color-primary); }
 .status-refresh { display:flex; align-items:center; gap:0.5rem; font-size:var(--text-caption); }
-.status-cancel { color:var(--color-muted); padding:0; }
+/* 「요청 취소」가 글자 라벨처럼 보이던 것: 다른 글자 단추처럼 밑줄 */
+.status-cancel { color:var(--color-muted); padding:0; text-decoration:underline; text-underline-offset:0.3em; }
+.status-heading .status-meta { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2) var(--space-3); margin:var(--space-2) 0 0; }
 .route-empty { padding:2rem 0.25rem; }
 .route-empty>svg { width:2.75rem; height:2.75rem; color:var(--color-primary); }
 .route-empty p { font-size:var(--text-caption); color:var(--color-muted); }
