@@ -342,3 +342,79 @@ export function makeCertId(
   for (let i = 0; i < 4; i++) tail += abc[Math.floor(rand() * abc.length)];
   return `${THEMES[theme].idPrefix}-${now.getFullYear()}-${tail}`;
 }
+
+export const AREA_LABEL_EN: Record<Area, string> = { T1: "Terminal 1", CONCOURSE: "Concourse", T2: "Terminal 2" };
+
+/** 체크포인트 원본과 저장 형식은 바꾸지 않고, 표시할 장소 이름만 영어로 돌려준다. */
+export function checkpointPlace(c: Checkpoint, lang: "ko" | "en"): string {
+  if (lang === "ko") return c.place;
+  const gate = c.place.match(/^(\d+)번 탑승구 앞(?: · (.*))?$/);
+  if (gate) return `Outside Gate ${gate[1]}${gate[2] ? ` · ${gate[2].replace("동편 끝 활주로 창가", "east-end runway windows").replace("서편 끝 활주로 창가", "west-end runway windows").replace("활주로 창가", "runway windows")}` : ""}`;
+  const names: Record<string, string> = {
+    "동편 어린이 놀이공간 앞": "Outside the east children's play area",
+    "서편 어린이 놀이공간 앞": "Outside the west children's play area",
+    "동편 화장품 면세점 앞": "Outside the east duty-free cosmetics shop",
+    "서편 화장품 면세점 앞": "Outside the west duty-free cosmetics shop",
+    "동편 푸드코트 입구": "East food court entrance",
+    "서편 푸드코트 입구": "West food court entrance",
+    "전통문화 체험관 앞": "Outside the traditional culture experience centre",
+    "중앙 면세거리 큰 시계 앞": "By the large clock on the central duty-free street",
+    "탑승동 셔틀트레인 승강장 내려가는 에스컬레이터 앞": "By the escalator down to the Concourse Shuttle Train",
+    "중앙 실내 정원 앞": "Outside the central indoor garden",
+    "서편 패션 면세점 앞": "Outside the west duty-free fashion shop",
+    "동편 패션 면세점 앞": "Outside the east duty-free fashion shop",
+    "서편 항공사 라운지 입구 앞": "West airline lounge entrance",
+    "서편 기념품 매장 앞": "Outside the west souvenir shop",
+    "동편 기념품 매장 앞": "Outside the east souvenir shop",
+    "셔틀트레인 도착층에서 올라오는 에스컬레이터 앞": "By the escalator up from Shuttle Train arrivals",
+    "중앙 면세거리 앞": "By the central duty-free street",
+    "서편 휴게 라운지 앞": "Outside the west rest lounge",
+    "문화공연 무대 앞": "By the cultural performance stage",
+  };
+  return names[c.place] ?? c.place;
+}
+
+/** 테마·역할 ID는 한국어판과 같다. 번역된 글자는 저장 판정에 쓰지 않는다. */
+export const THEMES_EN: Record<ThemeId, Theme> = {
+  flight: {
+    ...THEMES.flight,
+    title: "My Flight Log", subtitle: "Junior pilot and cabin crew stamp book", start: "Start my flight",
+    nameLabel: "Name", gateLabel: "Gate", photoSlot: "Your certificate photo",
+    promise: "Collect stamps in this area\nto earn your pilot or cabin crew ID here.", unit: "Stamps",
+    stops: ["Ready for take-off", "On the runway", "Cruising altitude", "Calling the control tower", "Ready to land", "Final boarding"],
+    scanHint: n => `Scan the QR code at checkpoint ${n}`,
+    got: () => "Stamp collected!", gotSub: (s, n) => `${s} · Stamp ${n}`,
+    remain: left => left ? `Collect ${left} more stamps to unlock your photo filter` : "Your photo filter is ready!",
+    next: "Next checkpoint", doneTitle: "Flight complete!",
+    roles: [
+      { id: "captain", label: "Pilot", badge: "Junior Pilot Certificate", filter: "Pilot photo filter" },
+      { id: "crew", label: "Cabin crew", badge: "Cabin Crew Certificate", filter: "Cabin crew photo filter" },
+    ],
+    takePhoto: "Take a photo and get my ID",
+  },
+  explorer: {
+    ...THEMES.explorer,
+    title: "Airport Explorer Log", subtitle: "A stamp book for young explorers", start: "Start exploring",
+    nameLabel: "Explorer name", gateLabel: "Destination gate", photoSlot: "Your certificate photo",
+    promise: "Discover checkpoints in this area\nto earn your Master Explorer ID here.", unit: "Discoveries",
+    stops: ["Base camp", "Secret passage", "Sparkling square", "Watching the big wings", "Rest oasis", "Arrival base"],
+    scanHint: n => `Scan the QR code at discovery point ${n}`,
+    got: () => "A new place discovered!", gotSub: (s, n) => `${s} · Discovery ${n}`,
+    remain: left => left ? `Discover ${left} more places to earn your explorer ID` : "Your explorer ID is ready!",
+    next: "Next discovery", doneTitle: "Exploration complete!",
+    roles: [{ id: "explorer", label: "Explorer", badge: "Master Explorer Certificate", filter: "Explorer photo filter" }],
+    takePhoto: "Take a photo and get my ID",
+  },
+  friend: {
+    ...THEMES.friend,
+    kicker: "WITH NARANGI", title: "Airport Stamp Adventure", subtitle: "Collect star stamps with Narangi",
+    start: "Start playing", nameLabel: "My name", gateLabel: "Our gate", photoSlot: "Your friendship photo",
+    promise: "Collect stars in this area\nto earn your Narangi Best Friend ID here.", unit: "Stars",
+    stops: ["Hello stamp", "Cloud stamp", "Star stamp", "Breeze stamp", "Rainbow stamp", "Arrival stamp"],
+    scanHint: () => "Scan a sparkling QR code", got: s => `${s} collected!`, gotSub: (_, n) => `Stamp ${n}`,
+    remain: left => left ? `Collect ${left} more stars for a photo with your friends` : "You can take a photo with your friends!",
+    next: "Find the next stamp", doneTitle: "Airport friendship complete!",
+    roles: [{ id: "friend", label: "Best friend", badge: "Narangi Best Friend Certificate", filter: "Narangi photo filter" }],
+    takePhoto: "Take a photo with friends",
+  },
+};
