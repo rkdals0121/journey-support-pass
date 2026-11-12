@@ -553,3 +553,5 @@
 .staff-login-form { padding: var(--space-4); }
 }
 @media (forced-colors: active) { }
+/* 목록·상세를 바꾸면 화면 읽기 프로그램이 읽도록 제목에 초점을 옮긴다. 누를 수 없는 제목이라 굵은 초점 상자는 보이지 않게 한다(상세 칸 제목 둘레에 상자가 생기던 것). */
+.staff-workspace :is(h1, h2, strong)[tabindex="-1"]:focus { outline: 0; }
