@@ -4,10 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, BellRing, Bot, CalendarCheck, CarFront, ClipboardCheck, MapPin, Navigation, Volume2, VolumeX } from "lucide-react";
 import { PublicShell } from "./PublicShell";
+import { FieldTaskShell } from "./FieldTaskShell";
+import type { KioskReturn } from "@/lib/help-entry";
 import { useSpeech } from "./useSpeech";
 import styles from "./mobility-home.module.css";
 
-export function MobilityHome({en=false,homeHref="/",place="",returnTo=""}: {en?:boolean;homeHref?:string;place?:string;returnTo?:string}) {
+export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk}: {en?:boolean;homeHref?:string;place?:string;returnTo?:string;
+  /** 키오스크에서는 여객 사이트 위쪽 바(메뉴 링크) 대신 다른 키오스크 접수 화면과 같은 바를 쓴다. */
+  kiosk?:{returnTo:KioskReturn;placeLabel:string}}) {
   const t=(ko:string,english:string)=>en?english:ko;
   const {supported,speaking,speak,stop}=useSpeech(en?"en":"ko",true);
   function href(path:string,extra:Record<string,string>={},language=en) {
@@ -26,8 +30,7 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo=""}: {en?:
     {title:t("내 신청","My requests"),detail:t("직원·로봇 지원과 예약 확인","Staff, robot & meeting status"),Icon:ClipboardCheck,url:href("/requests",{entry:"mobility"})},
   ];
   const menuText=t("무엇을 도와드릴까요? 길 안내, 전동차 타기, 안내로봇 동행, 내 신청 중에서 선택해 주세요.","How can we help? Choose directions, electric cart, guide robot assistance, or my requests.");
-  return <PublicShell lang={en?"en":"ko"}>
-    <main id="public-main" data-mobility-home data-kiosk={!!place} className={styles.content}>
+  const content=<main id="public-main" data-mobility-home data-kiosk={!!place} className={styles.content}>
       <header className={`ph-hero ${styles.intro}`}>
         <div className="ph-hero-copy">
           <div className={`service-kicker ${styles.introTop}`}>
@@ -47,6 +50,8 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo=""}: {en?:
       </section>
       <div className={styles.cards}>{cards.map(({title,detail,Icon,url},i)=><Link key={title} data-mobility-action={["directions","cart","robot","requests"][i]} href={url} className={`${styles.card} ${i===0?styles.featured:""}`}><Icon aria-hidden="true"/><strong>{title}</strong><span>{detail}</span></Link>)}</div>
     <div className={styles.footer} role="group" aria-label={t("안내 마무리","Finish assistance")}><Link href={homeHref}>{t("안내 끝내기","Finish")}</Link><Link href={href("/visits")}><CalendarCheck aria-hidden="true"/>{t("만남 예약 확인","Appointments")}</Link></div>
-    </main>
-  </PublicShell>;
+    </main>;
+  return kiosk
+    ? <FieldTaskShell en={en} returnTo={kiosk.returnTo} place={kiosk.placeLabel}>{content}</FieldTaskShell>
+    : <PublicShell lang={en?"en":"ko"}>{content}</PublicShell>;
 }
