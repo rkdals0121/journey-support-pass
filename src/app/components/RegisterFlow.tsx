@@ -958,7 +958,10 @@ export function RegisterFlow({ mode, initialLang, onExit, onBackOut, onDone, onP
             {method !== "flight" ? (
               flight ? (
                 <>
-                  <p className="hint" aria-live="polite">{t.flightPicked}</p>
+                  {/* 예약번호·탑승권으로 찾은 화면에는 편명 칸이 없다. 「편명을 다시 넣어」 대신 아래 단추를 가리킨다. */}
+                  <p className="hint" aria-live="polite">{method === "booking"
+                    ? (lang === "en" ? "Flight selected. To change it, choose “Look up another booking”." : "항공편을 골랐습니다. 바꾸려면 「다른 예약 조회」를 눌러 주세요.")
+                    : (lang === "en" ? "Flight selected. To change it, choose “Scan another boarding pass”." : "항공편을 골랐습니다. 바꾸려면 「다른 탑승권 읽기」를 눌러 주세요.")}</p>
                   <div role="radiogroup" aria-label={t.flightChoice} className="choices">
                     <button role="radio" aria-checked="true" className={`flight-opt on ${flight.cancelled ? "cancelled" : ""}`} onClick={() => pickFound(flight)}>
                       <span className="flight-opt-no num">{flight.flightNo}</span>
