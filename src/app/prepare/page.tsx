@@ -10,7 +10,7 @@ import {
 import { PublicShell } from "../components/PublicShell";
 import { pageTitle } from "@/lib/page-title";
 
-export const generateMetadata = pageTitle("출발부터 탑승까지 도움 신청", "Get help from arrival to boarding");
+export const generateMetadata = pageTitle("여행 전 지원 등록", "Register before your trip");
 export default async function PreparePage({
   searchParams,
 }: {

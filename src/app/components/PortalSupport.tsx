@@ -8,7 +8,7 @@ export function portalSupportCards({ lang = "ko", showRequests = true, showPrepa
       ...(showPrepare ? [<article className="task-action" key="prepare">
         <Plane className="task-action-icon" aria-hidden="true" />
         <Link className="task-action-link" href={"/prepare" + (en ? "?lang=en" : "")}>
-          <span><strong>{en ? "Get help from arrival to boarding" : "출발부터 탑승까지 도움 신청"}</strong><small>{en ? "Save your flight and support needs." : "항공편과 필요한 도움을 미리 등록하세요."}</small></span>
+          <span><strong>{en ? "Before you travel" : "여행 전 지원 등록"}</strong><small>{en ? "Save your flight and support needs." : "항공편과 필요한 도움을 미리 등록하세요."}</small></span>
           <ArrowUpRight aria-hidden="true" />
         </Link>
       </article>] : []),

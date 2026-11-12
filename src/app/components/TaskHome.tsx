@@ -7,7 +7,7 @@ import { MyRequestPanel } from "./MyRequestPanel";
 
 /**
  * 여객 첫 화면.
- * 1) 무엇을 하는 곳인지 제목 한 줄. 2) 공항에 오기 전이면 「출발부터 탑승까지 도움 신청」(이 서비스의 핵심, 화면의 강조 하나).
+ * 1) 무엇을 하는 곳인지 제목 한 줄. 2) 공항에 오기 전이면 「여행 전 지원 등록」(이 서비스의 핵심, 화면의 강조 하나).
  * 3) 공항에서 바로 쓰는 서비스 카드(이름만, 작은 설명 글은 두지 않는다 — 2026-11-12 사용자 요청).
  */
 export function TaskHome({ en = false }: { en?: boolean }) {
@@ -34,7 +34,7 @@ export function TaskHome({ en = false }: { en?: boolean }) {
             {en ? "Not at the airport yet?" : "공항에 가기 전이라면"}
           </h2>
           <Link className="btn btn-primary ph-prepare-go" href={"/prepare" + q}>
-            {en ? "Get help from arrival to boarding" : "출발부터 탑승까지 도움 신청"}
+            {en ? "Register support before you travel" : "여행 전 지원 등록"}
             <ArrowRight aria-hidden="true" />
           </Link>
           <Link className="ph-text-link" href={"/visits" + q}>
