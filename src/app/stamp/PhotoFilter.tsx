@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { COSTUME_PHOTO, COSTUME_SIZE, FRIENDS, FilterDeco, SLOT, costumeLayout } from "./art";
 
+import { stampCopy, type StampLang } from "./copy";
+
 interface Props {
+  lang?: StampLang;
   role: string;
   /** 사진 아래 띠에 찍히는 글자. 예: "나의 비행 수첩 · 지우 · 기장 인증" */
   caption: string;
@@ -35,7 +38,8 @@ type Art = { deco: HTMLImageElement } & (
 // 옷 필터: 앞 카메라 영상에서 얼굴을 찾아, 얼굴이 옷의 얼굴 자리에 오도록 화면을 옮겨 그리고 옷을 입힌다.
 // 얼굴 인식을 못 불러오면(인터넷이 약하거나 기기가 못 돌리면) 점선 동그라미에 얼굴을 맞추는 고정 틀로 돈다.
 // 나랑이 친구 필터: 옷도 얼굴 인식도 없이, 카메라 화면 그대로에 나랑이들이 함께 선다.
-export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
+export function PhotoFilter({ role, caption, onDone, onCancel, lang = "ko" }: Props) {
+  const tr = stampCopy(lang);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const decoRef = useRef<SVGSVGElement>(null);
@@ -186,17 +190,17 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
 
   const hint =
     cam === "none" ? "" :
-    !photo ? "나랑이 친구들 사이에서 활짝 웃어요!" :
-    ai === "loading" ? "얼굴 인식을 준비하고 있어요…" :
-    ai === "off" ? "점선 동그라미에 얼굴을 맞춰 주세요" :
-    face ? "좋아요! 찰칵 버튼을 눌러요" : "얼굴이 화면에 보이게 해 주세요";
+    !photo ? tr("나랑이 친구들 사이에서 활짝 웃어요!") :
+    ai === "loading" ? tr("얼굴 인식을 준비하고 있어요…") :
+    ai === "off" ? tr("점선 동그라미에 얼굴을 맞춰 주세요") :
+    face ? tr("좋아요! 찰칵 버튼을 눌러요") : tr("얼굴이 화면에 보이게 해 주세요");
 
   return (
     <div className="sb-camera">
       <div className="sb-camera-frame">
         <video ref={videoRef} playsInline muted aria-hidden="true" className="sb-camera-src" />
-        <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="필터를 입힌 카메라 화면" />
-        {cam === "none" && <p className="sb-camera-none">카메라를 켤 수 없어요.<br />아래 「사진 고르기」로 찍어 주세요.</p>}
+        <canvas ref={canvasRef} width={W} height={H} role="img" aria-label={tr("필터를 입힌 카메라 화면")} />
+        {cam === "none" && <p className="sb-camera-none">{tr("카메라를 켤 수 없어요.")}<br />{tr("아래 「사진 고르기」로 찍어 주세요.")}</p>}
         {cam === "live" && photo && ai === "off" && (
           <svg viewBox="0 0 300 400" className="sb-overlay" aria-hidden="true">
             <ellipse cx={SLOT.x / 2} cy={SLOT.y / 2 + 14} rx="64" ry="80" fill="none" stroke="var(--color-surface)" strokeWidth="2.5" strokeDasharray="8 8" opacity=".8" />
@@ -207,11 +211,11 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
       <p className="sb-camera-hint" aria-live="polite">{hint}</p>
       <div className="sb-actions">
         <button type="button" className="sb-btn sb-btn-main" onClick={shoot} disabled={cam !== "live" || busy || count > 0}>
-          {busy ? "사진 만드는 중…" : "찰칵! 찍기"}
+          {busy ? tr("사진 만드는 중…") : tr("찰칵! 찍기")}
         </button>
         <div className="sb-row">
-          <button type="button" className="sb-btn sb-btn-line" onClick={() => fileRef.current?.click()} disabled={busy}>사진 고르기</button>
-          <button type="button" className="sb-btn sb-btn-line" onClick={onCancel} disabled={busy}>돌아가기</button>
+          <button type="button" className="sb-btn sb-btn-line" onClick={() => fileRef.current?.click()} disabled={busy}>{tr("사진 고르기")}</button>
+          <button type="button" className="sb-btn sb-btn-line" onClick={onCancel} disabled={busy}>{tr("돌아가기")}</button>
         </div>
       </div>
       <input
@@ -220,7 +224,7 @@ export function PhotoFilter({ role, caption, onDone, onCancel }: Props) {
         accept="image/*"
         capture="user"
         hidden
-        aria-label="사진 고르기"
+        aria-label={tr("사진 고르기")}
         onChange={(e) => {
           const f = e.target.files?.[0];
           e.target.value = "";
