@@ -597,7 +597,9 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 
 .kc-directions .route-sum em { background: var(--color-primary-faint); color: var(--color-primary); }
 /* 안내로봇 시연 화면(오고 있어요·도착했어요·즐거운 여행): 나랑이 큰 칸 하나만 가득 */
-.kc-robot { grid-template-columns: minmax(0, 1fr); }
+.kc-robot { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+/* 상자가 남는 높이를 다 채운다(가로 키오스크에서 상자가 위쪽 절반에만 있던 것) */
+.kc-robot > .hw-hero { height: 100%; box-sizing: border-box; }
 @media (orientation: portrait) {
   .kc-robot { --hw-art: 36dvh; grid-template-rows: minmax(0, 1fr); }
 }

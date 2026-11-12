@@ -320,6 +320,8 @@ export function EntryKiosk({
       screenKey={key}
       className="kiosk-content"
       serviceHome={key === "sleep"}
+      // 처음 화면에는 나랑이 상자 안에 큰 「소리로 안내 듣기」가 있어 위쪽 바의 소리 단추는 뺀다(안내 키오스크와 같게, 바가 넘치지 않게)
+      barListen={key !== "sleep"}
       headerTools={
         <>
           {key === "sleep" && (
