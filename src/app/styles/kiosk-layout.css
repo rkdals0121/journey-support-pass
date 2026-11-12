@@ -477,6 +477,9 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .svc-card:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
 .svc-card:disabled { opacity: 0.6; }
 .kc-menu, .kc-entry-services { --svc-card-min: calc(var(--target-kiosk-floor) * 1.5); grid-auto-rows: minmax(var(--svc-card-min), 9rem); align-content: start; }
+/* 입구 로봇 「바로 이용하기」: 글자를 크게(1.5배) 하면 카드 내용이 카드 높이(최소 높이)를 넘쳐 다음 카드와 겹쳤다.
+   칸 최소 높이를 내용 높이로 둔다(글자 1배에서는 크기가 그대로). */
+.kc-entry-services { grid-auto-rows: minmax(min-content, 9rem); }
 .kc-menu { min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
 /* 입구·안내로봇 처음 화면: 왼쪽(세로에서는 위)에 큰 나랑이 상자(안내 키오스크 첫 화면과 같은 모양, haneuli.css), 오른쪽(아래)에 불러오기 카드와 바로 쓰는 서비스 */
 .kc-entry { --hw-art: max(7rem, calc(100dvh - var(--site-bar-height) - 17rem)); grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4); }
