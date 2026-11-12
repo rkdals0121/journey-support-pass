@@ -32,23 +32,6 @@ const order = [
   "traffic",
   "other",
 ];
-const descriptions: Record<string, [string, string]> = {
-  guidance: [
-    "탑승구·편의시설까지 경로 확인",
-    "Routes to gates and airport facilities",
-  ],
-  mobility: [
-    "이동 동행·휠체어·차량 지원",
-    "Escort, wheelchair and vehicle assistance",
-  ],
-  robot: ["안내로봇 호출 과정 체험", "Try the guide robot request flow"],
-  facility: ["청결·시설 불편 신고", "Report cleaning and facility issues"],
-  traffic: [
-    "주차·승차 안내와 현장 지원",
-    "Parking, transport information and on-site help",
-  ],
-  other: ["그 밖의 문의와 업무 요청", "Other enquiries and service requests"],
-};
 const searchText = (value: string) =>
   value.toLowerCase().replace(/[\s·-]/g, "");
 export function ServiceDirectory({
@@ -129,9 +112,9 @@ export function ServiceDirectory({
           href={topicLink(s.id, lang)}
           aria-label={`${en ? s.en : passengerLabel(s)} · ${en ? "Use service" : "서비스 이용"}`}
         >
+          {/* 카드에는 이름만(작은 설명 글은 두지 않는다 — 2026-11-12 사용자 요청). 찾기는 설명까지 본다. */}
           <span>
             <strong>{en ? s.en : passengerLabel(s)}</strong>
-            <small>{descriptions[s.id]?.[en ? 1 : 0] ?? (en ? s.descriptionEn : s.description)}{s.mode === "simulation" && <em className="service-mode-label">{en ? "Simulation" : "모의 시연"}</em>}</small>
           </span>
           <ArrowUpRight size={19} aria-hidden="true" />
         </Link>
