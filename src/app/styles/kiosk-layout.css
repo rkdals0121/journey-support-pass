@@ -354,6 +354,10 @@ html[data-kiosk] .flow-body .kx-pass-body .btn-primary { justify-self: stretch; 
 @media (orientation: portrait) {
   .kx-says-face { width: clamp(8rem, 16dvh, 18rem); }
   html[data-kiosk] .flow-body .kx-number .code-boxes { justify-content: center; }
+  /* 번호 상자가 화면 아래까지 채우고, 남는 높이는 번호판 단추가 나눠 쓴다(아래가 비어 있던 것) */
+  html[data-kiosk] .flow-body:has(> .kx-number) { display: flex; flex-direction: column; }
+  html[data-kiosk] .flow-body > .kx-number { flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); align-items: stretch; }
+  html[data-kiosk] .flow-body .kx-number .pad-num { height: 100%; grid-template-rows: repeat(4, minmax(0, 1fr)); }
 }
 
 /* ── 모든 키오스크 화면: 본문이 머리에 붙지 않게 위쪽 여백 ── */
