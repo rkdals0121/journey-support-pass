@@ -219,6 +219,7 @@ const ko = {
   svcStatusBody: "청한 이동지원이 어디까지 왔는지 봅니다",
   entryEnd: "끝내기",
   assistTitle: "이동지원 요청",
+  assistAsk: "전동차 이동 도움 부르기",
   assistSteps: ["접수", "직원 배정", "이동 중", "완료"],
   assistState: { received: "접수되었습니다", assigned: "직원이 배정되었습니다", moving: "이동 중입니다", done: "이동지원을 마쳤습니다", cancelled: "요청이 취소되었습니다" },
   assistStateBody: {
@@ -226,7 +227,7 @@ const ko = {
     assigned: "곧 직원이 이 자리로 옵니다. 이 자리에서 기다려 주세요.",
     moving: "직원과 함께 이동하고 있습니다.",
     done: "좋은 여행 되세요.",
-    cancelled: "다시 청하려면 「이동지원 요청」을 눌러 주세요.",
+    cancelled: "다시 청하려면 「전동차 이동 도움 부르기」를 눌러 주세요.",
   },
   assistNone: "아직 청한 이동지원이 없습니다.",
   assistCancel: "요청 거두기",
@@ -469,7 +470,7 @@ const ko = {
   } as Record<FacilityKind, string>,
   area: { T1: "제1여객터미널", CONCOURSE: "탑승동", T2: "제2여객터미널" } as Record<string, string>,
   walk: (m: number, min: number, g: number | null, to: Step["walkTo"]) => {
-    const sign = g ? `‘${g}번 탑승구’ 표지를 따라 ` : "";
+    const sign = g ? `「${g}번 탑승구」 표지를 따라 ` : "";
     const end =
       to === "lift"
         ? "엘리베이터·에스컬레이터 있는 곳까지 갑니다"
@@ -550,7 +551,7 @@ const koEasy: Partial<Text> = {
   surveyTitle: "안내가 도움이 됐나요?",
   surveyHint: "하나를 누르세요.",
   walk: (m: number, min: number, g: number | null, to: Step["walkTo"]) => {
-    const sign = g ? `‘${g}’ 숫자가 있는 표지를 따라 ` : "";
+    const sign = g ? `「${g}」 숫자가 있는 표지를 따라 ` : "";
     // 다음 줄이 에스컬레이터일 수도 있어서 "엘리베이터까지"라고 못박지 않는다. 앞뒤 줄이 서로 달라 보이면 헷갈린다.
     const end =
       to === "lift" ? "엘리베이터나 에스컬레이터가 있는 곳까지 갑니다" : to === "train" ? "셔틀트레인(기차) 타는 곳까지 갑니다" : to === "security" ? "비행기 타러 들어가는 문(출국장)까지 갑니다" : "갑니다";
@@ -765,6 +766,7 @@ const en: Text = {
   svcStatusBody: "See how far your mobility help has got",
   entryEnd: "Finish",
   assistTitle: "Mobility help",
+  assistAsk: "Call a buggy ride",
   assistSteps: ["Received", "Staff assigned", "On the way", "Done"],
   assistState: { received: "Request received", assigned: "A staff member is assigned", moving: "On the way", done: "Mobility help completed", cancelled: "Request cancelled" },
   assistStateBody: {
@@ -772,7 +774,7 @@ const en: Text = {
     assigned: "A staff member is coming to you. Please wait here.",
     moving: "You are on the way with a staff member.",
     done: "Have a good trip.",
-    cancelled: "To ask again, press “Request mobility help”.",
+    cancelled: "To ask again, press “Call a buggy ride”.",
   },
   assistNone: "You have not requested mobility help yet.",
   assistCancel: "Cancel request",

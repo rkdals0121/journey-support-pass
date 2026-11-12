@@ -395,7 +395,7 @@ function Metric({
         {value}
         <small>건</small>
       </strong>
-      <small>{hint} · 요청 보기 ↗</small>
+      <small>{hint} · 요청 보기 →</small>
     </Link>
   );
 }

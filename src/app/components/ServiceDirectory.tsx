@@ -9,7 +9,6 @@ import {
   Bus,
   Briefcase,
   MessagesSquare,
-  ArrowUpRight,
   Search,
   ArrowRight,
 } from "lucide-react";
@@ -89,8 +88,8 @@ export function ServiceDirectory({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={
           en
-            ? "Gate, mobility, facility assistance"
-            : "탑승구, 이동 지원, 시설 불편 검색"
+            ? "Search services"
+            : "서비스 이름으로 찾기"
         }
       />
       <button type="submit" aria-label={en ? "Search" : "검색"}>
@@ -116,7 +115,8 @@ export function ServiceDirectory({
           <span>
             <strong>{en ? s.en : passengerLabel(s)}</strong>
           </span>
-          <ArrowUpRight size={19} aria-hidden="true" />
+          {/* 같은 사이트 안으로 가는 길이라 바깥 사이트 표시(↗) 대신 → 를 쓴다(첫 화면 카드와 같게) */}
+          <ArrowRight size={19} aria-hidden="true" />
         </Link>
       </article>
     );

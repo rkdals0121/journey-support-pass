@@ -602,6 +602,8 @@
 .visitLayout .field { margin-bottom:var(--space-3);gap:var(--space-2); }
 .visitLayout .field > label { margin:0; }
 .visitLayout .draftSteps { margin-bottom:var(--space-3); }
+/* 지도 칸 제목의 기본 윗여백 때문에 휴대전화에서 위 칸보다 위가 비어 보이던 것 */
+@media (max-width: 760px) { .visitLayout .hubMap h2 { margin:0; } }
 .visitLayout .actions { position:sticky;bottom:0;padding-block:var(--space-3);background:var(--color-surface); }
 @media (min-width: 1101px) {
  .visitLayout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }

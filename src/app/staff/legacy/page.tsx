@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
-import { ArrowUpRight, Bell, Accessibility, Inbox } from "lucide-react";
+import { ArrowRight, Bell, Accessibility, Inbox } from "lucide-react";
 import { pageTitle } from "@/lib/page-title";
 
 export const generateMetadata = pageTitle("이전 요청·인계");
@@ -30,7 +30,7 @@ export default async function LegacyRequests() {
             <h2>접수·배정</h2>
             <p>새 현장 요청 확인과 담당자 배정</p>
             <span>
-              통합 요청으로 <ArrowUpRight size={18} aria-hidden="true" />
+              접수·배정으로 <ArrowRight size={18} aria-hidden="true" />
             </span>
           </Link>
           <Link className="staff-destination-card" href="/staff/legacy/calls">
@@ -38,7 +38,7 @@ export default async function LegacyRequests() {
             <h2>이전 직원 호출</h2>
             <p>통합 전 접수된 직원 호출 기록</p>
             <span>
-              기록 확인 <ArrowUpRight size={18} aria-hidden="true" />
+              기록 확인 <ArrowRight size={18} aria-hidden="true" />
             </span>
           </Link>
           <Link className="staff-destination-card" href="/staff/assist">
@@ -46,7 +46,7 @@ export default async function LegacyRequests() {
             <h2>이전 이동지원</h2>
             <p>기존 이동지원 요청과 인계 내역</p>
             <span>
-              내역 확인 <ArrowUpRight size={18} aria-hidden="true" />
+              내역 확인 <ArrowRight size={18} aria-hidden="true" />
             </span>
           </Link>
         </div>
