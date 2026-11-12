@@ -23,6 +23,8 @@ button { font: inherit; color: inherit; }
 .lead { margin-bottom: 1.25rem; color: var(--color-muted); font-size: var(--text-body); }
 .fine { margin-top: 1.25rem; color: var(--color-muted); font-size: var(--text-small); }
 .hint { margin: 0.5rem 0 0.75rem; min-height: 1.4em; color: var(--color-muted); font-size: var(--text-small); }
+/* 글이 나타날 때 줄이 밀리지 않게 빈 줄 높이를 잡아 두지만, 도착 도시 고르기 칸 바로 앞의 빈 줄은 위를 비워 보이게만 해서 접는다 */
+.hint:empty:has(+ .city-picker) { min-height: 0; margin: 0; }
 .kicker { margin: 0 0 0.5rem; color: var(--color-primary); font-size: var(--text-small); font-weight: var(--weight-heading); letter-spacing: 0.02em; }
 h1.kicker { margin: 0 0 0.5rem; font-size: var(--text-small); line-height: 1.5; letter-spacing: 0.02em; }
 .page { flex: 1 0 auto; width: 100%; max-width: var(--col); margin: 0 auto; padding: 1.25rem 1.25rem 3rem; }
