@@ -15,7 +15,7 @@
 
 ## 다른 출처
 
-- `assets/journey-robot.svg`: 팀원 Journey Support Pass의 `/devices` 캐릭터를 참조·추출한 자료. 팀 내 이용 범위를 확인해야 합니다.
+- `assets/narangi-robot.webp`: 팀 캐릭터 나랑이(`public/stamp/narangi.webp`)를 지도 표시용으로 128px 로 줄인 것. 팀 자체 그림.
 - `assets/react.production.min.js`, `assets/react-dom.production.min.js`: React / ReactDOM 배포 번들. 파일의 라이선스 주석을 유지합니다. 이들 라이브러리의 조건이 공항 엔진·도면에 적용되는 것은 아닙니다.
 
 ## 직접 작성한 연결 코드

@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { ArrowUpRight, Bell, Accessibility, Inbox } from "lucide-react";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("이전 요청·인계");
 export const dynamic = "force-dynamic";
 export default async function LegacyRequests() {
   const session = await requireStaff();

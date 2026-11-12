@@ -7,6 +7,9 @@ import { PublicShell } from "@/app/components/PublicShell";
 import { FieldTaskShell } from "@/app/components/FieldTaskShell";
 import { placeOf } from "@/lib/airport";
 import { prefsOf } from "@/lib/catalog";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("도움 요청", "Request help");
 export const dynamic = "force-dynamic";
 export default async function RegisteredHelp({
   params,

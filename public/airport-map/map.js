@@ -169,20 +169,20 @@
       image: new E.Icon({
         src:
           kind === "robot"
-            ? "assets/journey-robot.svg"
+            ? "assets/narangi-robot.webp" // 안내로봇 = 나랑이(노란 캐릭터). public/stamp/narangi.webp 를 128px 로 줄인 것
             : badge(
                 { user: "●", checkpoint: "⚑", destination: "◆" }[kind] || "●",
                 colors[kind],
               ),
-        width: kind === "robot" ? 48 : 34,
-        height: kind === "robot" ? 48 : 34,
+        width: kind === "robot" ? 52 : 34,
+        height: kind === "robot" ? 52 : 34,
       }),
       text: new E.Text({
         text: label || labels[kind],
         font: "600 12px Arial,sans-serif",
         fill: new E.Fill({ color: colors[kind] }),
         stroke: new E.Stroke({ color: "#fff", width: 5 }),
-        offsetY: -28,
+        offsetY: kind === "robot" ? -32 : -28,
       }),
       zIndex: 1000,
     });

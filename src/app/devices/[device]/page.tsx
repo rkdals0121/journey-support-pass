@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import { DevicePreview } from "../DevicePreview";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("기기 화면 미리보기", "Device screen preview");
 export default async function DevicePage({
   params,
   searchParams,

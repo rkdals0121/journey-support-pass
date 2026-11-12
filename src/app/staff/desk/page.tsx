@@ -3,6 +3,9 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../components/StaffNav";
 import { DeskFind } from "./DeskFind";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("안내데스크");
 
 export const dynamic = "force-dynamic";
 

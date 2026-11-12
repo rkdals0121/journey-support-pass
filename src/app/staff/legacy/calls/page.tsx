@@ -3,6 +3,9 @@ import { requireStaff } from "@/lib/staff-page";
 import { StaffNav } from "../../../components/StaffNav";
 import { CallList } from "../../CallList";
 import Link from "next/link";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("이전 직원 호출");
 export const dynamic = "force-dynamic";
 export default async function LegacyCalls() {
   const session = await requireStaff();

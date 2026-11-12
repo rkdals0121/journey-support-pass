@@ -185,7 +185,8 @@ export function KioskVisitFlow({
       }
     >
       <SharedVisitPrivacy />
-      <main className={styles.devicePage + " kiosk-appointment-page"}>
+      {/* 본문 영역(main)은 FlowShell 이 감싼다. 여기서는 칸만 둔다. */}
+      <div className={styles.devicePage + " kiosk-appointment-page"}>
         {/* 번호 넣는 화면은 카드 하나에 담는다. 왼쪽: 무엇을 넣는지와 넣은 번호(8칸), 오른쪽: 자판. */}
         {!visit && !meetingPoint ? (
           <form
@@ -450,7 +451,7 @@ export function KioskVisitFlow({
             "Prototype screen · no live robot navigation",
           )}
         </p>
-      </main>
+      </div>
       <IdleGuard
         t={textOf(en ? "en" : "ko")}
         enabled={!!visit || !!reference || !!meetingPoint}
@@ -459,7 +460,7 @@ export function KioskVisitFlow({
         onTimeout={reset}
       />
     </FlowShell>
-    <div className="call-dock">
+    <aside className="call-dock" aria-label={en ? "Call staff" : "직원 부르기"}>
       <div className="call-dock-inner">
         <StaffCall
           lang={en ? "en" : "ko"}
@@ -470,7 +471,7 @@ export function KioskVisitFlow({
           returnTo={returnTo}
         />
       </div>
-    </div>
+    </aside>
     </>
   );
 }

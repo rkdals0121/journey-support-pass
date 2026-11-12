@@ -2,6 +2,9 @@ import { requireStaff } from "@/lib/staff-page";
 import { integrationReadiness } from "@/lib/integration-config";
 import { CHANNEL_LABEL } from "@/lib/integration-model";
 import { redirect } from "next/navigation";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("외부 연동");
 export const dynamic = "force-dynamic";
 export default async function IntegrationsPage() {
   const session = await requireStaff();

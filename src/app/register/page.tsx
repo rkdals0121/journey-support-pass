@@ -1,5 +1,8 @@
 import { langOf } from "@/lib/i18n";
 import { WebRegister } from "./WebRegister";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("필요한 도움 등록", "Register the help you need");
 
 export const dynamic = "force-dynamic";
 

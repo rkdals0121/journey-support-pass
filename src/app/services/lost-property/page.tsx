@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Search, HandHelping, Briefcase, ArrowUpRight, MapPin } from "lucide-react";
 import { PublicShell } from "../../components/PublicShell";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("유실물 안내", "Lost property");
 export default async function LostProperty({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const en = (await searchParams).lang === "en";
   return <PublicShell lang={en ? "en" : "ko"}>

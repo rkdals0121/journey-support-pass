@@ -1,6 +1,9 @@
 import { PublicShell } from "../../components/PublicShell";
 import { MapPin, Phone, ArrowUpRight } from "lucide-react";
 import { OfficialMapPanel } from "../../components/OfficialMapPanel";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("안내데스크 위치", "Information desks");
 const desks = [
   {
     name: "제1터미널",

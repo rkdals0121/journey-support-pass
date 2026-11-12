@@ -4,6 +4,9 @@ import { CalendarClock } from "lucide-react";
 import { currentSession } from "@/lib/session-server";
 import { redirect } from "next/navigation";
 import { SavedVisits } from "./SavedVisits";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("만남 예약", "Book a meeting");
 export default async function VisitsPage({
   searchParams,
 }: {

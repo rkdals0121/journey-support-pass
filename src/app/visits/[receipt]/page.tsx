@@ -1,6 +1,7 @@
 import { currentSession } from "@/lib/session-server";
 import { redirect } from "next/navigation";
 export const metadata = {
+  title: "만남 예약 확인 · Journey Support Pass",
   robots: { index: false, follow: false },
   referrer: "no-referrer" as const,
 };

@@ -2,6 +2,9 @@ import Link from "next/link";
 import { PublicShell } from "@/app/components/PublicShell";
 import { SERVICE_HUBS } from "@/lib/service-hubs";
 import { ArrowRight, MapPin, QrCode } from "lucide-react";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("만남 장소 찾기", "Meeting points");
 export default async function PointsPage({
   searchParams,
 }: {

@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowRight, Bot, Monitor, Settings2 } from "lucide-react";
 import { PublicShell } from "../components/PublicShell";
 import { Robot } from "../components/Robot";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("키오스크·안내로봇", "Kiosks and guide robots");
 
 // 첫 화면(/)과 같은 틀: 위쪽 바와 같은 끝선의 소개 박스 아래, 같은 높이의 기기 카드 두 장.
 export default async function Devices({

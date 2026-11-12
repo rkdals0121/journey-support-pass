@@ -1,5 +1,8 @@
 import { requireStaff } from "@/lib/staff-page";
 import { DesignSamples } from "./DesignSamples";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("화면 부품 미리보기");
 export default async function DesignGallery() {
   await requireStaff();
   return (
