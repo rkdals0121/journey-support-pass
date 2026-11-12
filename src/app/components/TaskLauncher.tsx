@@ -113,9 +113,9 @@ export function TaskLauncher({
                 href={href.pathname + href.search}
                 className="task-action-link"
               >
+                {/* 여객 첫 화면 카드는 이름만(작은 설명은 키오스크 카드에서만 쓴다) */}
                 <span>
                   <strong>{en ? english : ko}</strong>
-                  <small>{en ? detailEn : detail}</small>
                 </span>
                 <ArrowRight aria-hidden="true" />
               </Link>
