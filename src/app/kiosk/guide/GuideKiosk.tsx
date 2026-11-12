@@ -55,6 +55,7 @@ import { useBookingFind } from "../../components/FlightMethods";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { KioskHero } from "../../components/KioskHero";
 import { KioskSavedReview } from "../../components/KioskSavedReview";
+import { KioskSays } from "../../components/KioskSays";
 import { KioskPages } from "../../components/KioskPages";
 import { savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
@@ -611,7 +612,7 @@ export function GuideKiosk({
             {numberKind === "booking" ? (
               <div className="kx-code kx-number kx-booking">
                 <div className="kx-code-entry">
-                  <h1>{lang === "en" ? "Enter your booking reference" : "항공 예약번호 입력"}</h1>
+                  <KioskSays title={lang === "en" ? "Enter your booking reference" : "항공 예약번호 입력"} />
                   {bookingFind.form}
                 </div>
                 {bookingFind.pad}
@@ -619,12 +620,7 @@ export function GuideKiosk({
             ) : (
             <div className="kx-code kx-number">
               <div className="kx-code-entry">
-                <p className="kx-here">
-                  <MapPin aria-hidden="true" />
-                  {here}
-                </p>
-                <h1>{t.numberTitle}</h1>
-                <p className="kx-lead">{t.numberHint}</p>
+                <KioskSays title={t.numberTitle} lead={t.numberHint} />
                 <p className="sr-only" role="status">
                   {lang === "en"
                     ? `${digits.length} of ${PASS_NO_LENGTH} digits`

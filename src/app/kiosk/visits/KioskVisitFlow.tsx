@@ -18,6 +18,7 @@ import { FlowShell } from "../../components/FlowShell";
 import { IdleGuard } from "../../components/IdleGuard";
 import { SharedVisitPrivacy } from "../../components/SharedVisitPrivacy";
 import { VisitResponse } from "../../visits/VisitResponse";
+import { KioskSays } from "../../components/KioskSays";
 import styles from "../../components/support-journey.module.css";
 export function KioskVisitFlow({
   en: initialEnglish,
@@ -198,17 +199,13 @@ export function KioskVisitFlow({
             }}
           >
             <div className="kx-code-entry">
-              <p className="kx-here">
-                <MapPin aria-hidden="true" />
-                {en ? (hub?.en ?? "Airport device") : (hub?.label ?? place)}
-              </p>
-              <h1>{title}</h1>
-              <p className="kx-lead">
-                {t(
+              <KioskSays
+                title={title}
+                lead={t(
                   "예약할 때 받은 확인번호 8자리를 자판으로 눌러 주세요.",
                   "Use the keypad to enter the 8-character reference from your booking.",
                 )}
-              </p>
+              />
               <label htmlFor="kiosk-visit-reference" className="kx-code-label">
                 {t("예약 확인번호", "Appointment reference")}
                 <span className="num">{reference.length} / 8</span>
