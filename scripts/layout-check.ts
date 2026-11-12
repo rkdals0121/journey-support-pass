@@ -88,6 +88,16 @@ async function inspect(page: Page, where: string) {
       })
       .slice(0, 2);
     if (squeezed.length) out.push(`찌그러진 단추 (${squeezed.map((e) => (e.textContent || "").trim().slice(0, 12)).join(", ")})`);
+    // 위쪽 바: 바 안의 단추·글이 바 밖으로 삐져나오면 안 된다(세로 키오스크에서 「설정·English」가 바 아래로 나와 본문을 덮던 일, 2026-11-12)
+    for (const bar of document.querySelectorAll(".flow-bar, .public-header")) {
+      const b = bar.getBoundingClientRect();
+      if (b.width === 0 || b.height === 0) continue;
+      const stray = [...bar.querySelectorAll("button, a, select, .bar-btn")].find((e) => {
+        const r = e.getBoundingClientRect();
+        return !folded(e) && r.width > 0 && r.height > 0 && getComputedStyle(e).position !== "fixed" && (r.top < b.top - 1 || r.bottom > b.bottom + 1);
+      });
+      if (stray) out.push(`위쪽 바 밖으로 나온 단추 (${(stray.textContent || "").trim().slice(0, 12)})`);
+    }
     if (doc.scrollWidth > doc.clientWidth + 1) {
       const wide = [...document.querySelectorAll("body *")]
         .filter((e) => e.getBoundingClientRect().right > doc.clientWidth + 1 && e.getBoundingClientRect().width > 0)

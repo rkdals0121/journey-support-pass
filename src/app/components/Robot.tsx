@@ -1,50 +1,18 @@
-// 공항 도우미 로봇(키오스크의 얼굴). 탑승권을 찍기 전에는 자고, 찍으면 깨어난다.
-// 그림일 뿐이므로 화면 읽기 프로그램에는 감춘다(말풍선 글이 같은 내용을 전한다).
+import Image from "next/image";
 
+/**
+ * 공항 안내 캐릭터 나랑이(키오스크·안내로봇의 얼굴). 예전에는 흰 로봇 그림(SVG)이었는데 2026-11 나랑이로 바꿨다.
+ * 잘 때(sleep)는 잠든 그림, 깨어 있을 때(awake·happy)는 정면 그림. 그림일 뿐이므로 화면 읽기 프로그램에는 감춘다.
+ */
 export function Robot({ mood, size = 220 }: { mood: "sleep" | "awake" | "happy"; size?: number }) {
-  const awake = mood !== "sleep";
   return (
-    <svg className={`robot robot-${mood}`} width={size} height={size} viewBox="0 0 220 220" aria-hidden="true">
-      {/* 몸 */}
-      <ellipse cx="110" cy="196" rx="62" ry="14" fill="var(--color-shadow)" />
-      <rect x="62" y="140" width="96" height="58" rx="28" fill="var(--color-primary-faint)" stroke="var(--color-art-leaf)" strokeWidth="3" />
-      <rect x="96" y="156" width="28" height="12" rx="6" fill="var(--color-primary-hover)" opacity=".85" />
-      {/* 머리 */}
-      <rect x="34" y="34" width="152" height="118" rx="54" fill="var(--color-surface)" stroke="var(--color-art-leaf)" strokeWidth="3" />
-      {/* 헤드폰 */}
-      <rect x="18" y="72" width="26" height="46" rx="12" fill="var(--color-primary-hover)" />
-      <rect x="176" y="72" width="26" height="46" rx="12" fill="var(--color-primary-hover)" />
-      <path d="M44 66 Q110 6 176 66" fill="none" stroke="var(--color-primary-hover)" strokeWidth="8" strokeLinecap="round" />
-      {/* 얼굴 판 */}
-      <rect x="54" y="58" width="112" height="74" rx="34" fill={awake ? "var(--color-dark)" : "var(--color-dark)"} />
-      {awake ? (
-        <>
-          <ellipse cx="88" cy="94" rx="11" ry={mood === "happy" ? 6 : 13} fill="var(--color-primary-soft)" />
-          <ellipse cx="132" cy="94" rx="11" ry={mood === "happy" ? 6 : 13} fill="var(--color-primary-soft)" />
-          <path d="M96 114 Q110 124 124 114" fill="none" stroke="var(--color-primary-soft)" strokeWidth="5" strokeLinecap="round" />
-          <circle cx="70" cy="110" r="6" fill="var(--color-error)" opacity=".7" />
-          <circle cx="150" cy="110" r="6" fill="var(--color-error)" opacity=".7" />
-        </>
-      ) : (
-        <>
-          <path d="M77 96 Q88 104 99 96" fill="none" stroke="var(--color-primary-soft)" strokeWidth="5" strokeLinecap="round" />
-          <path d="M121 96 Q132 104 143 96" fill="none" stroke="var(--color-primary-soft)" strokeWidth="5" strokeLinecap="round" />
-          <path d="M103 116 Q110 119 117 116" fill="none" stroke="var(--color-primary-soft)" strokeWidth="4" strokeLinecap="round" />
-          <text x="164" y="44" className="robot-z" fill="var(--color-surface)" fontSize="22" fontWeight="700">
-            z
-          </text>
-          <text x="182" y="26" className="robot-z robot-z2" fill="var(--color-surface)" fontSize="16" fontWeight="700">
-            z
-          </text>
-        </>
-      )}
-      {mood === "happy" && (
-        <>
-          <path d="M20 40 l10 6" stroke="var(--color-accent)" strokeWidth="5" strokeLinecap="round" />
-          <path d="M200 40 l-10 6" stroke="var(--color-accent)" strokeWidth="5" strokeLinecap="round" />
-          <path d="M110 4 v12" stroke="var(--color-accent)" strokeWidth="5" strokeLinecap="round" />
-        </>
-      )}
-    </svg>
+    <Image
+      className={`robot robot-${mood}`}
+      src={mood === "sleep" ? "/images/haneuli/narangi-sleep.webp" : "/images/haneuli/narangi.webp"}
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+    />
   );
 }

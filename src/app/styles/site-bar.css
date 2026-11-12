@@ -308,5 +308,13 @@ html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; }
 .flow-bar-here { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; margin: 0; color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-label); }
 .flow-bar-here svg { width: 1.125rem; height: 1.125rem; flex: none; color: var(--color-primary); }
 .flow-service-home .flow-bar-right:empty { display: none; }
+/* 세로 키오스크·안내로봇(폭 1080): 첫 화면 바에 로고 글자·현재 위치·설정·언어·(PC 버전 전환)가 다 들어가지 않아 바 밖으로 삐져나왔다.
+   로고는 해바라기만 남기고, 그래도 넘치면 바가 아래로 늘어나 안에 담는다(바 밖으로 나가지 않게). */
+@media (orientation: portrait) {
+  html[data-kiosk] .flow-service-home .flow-bar > .brand span { display: none; }
+}
+/* 모든 키오스크 바: 큰 글자(1.5배) 등으로 단추가 한 줄에 다 들어가지 않으면 바가 아래로 늘어나 안에 담는다.
+   한 줄에 들어가면 높이는 그대로(--site-bar-height). 「도움 요청하기」는 첫 줄 기준 자리 그대로. */
+html[data-kiosk] .flow .flow-bar { height: auto; min-height: var(--site-bar-height); flex-wrap: wrap; row-gap: var(--space-2); }
 /* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
 .airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }
