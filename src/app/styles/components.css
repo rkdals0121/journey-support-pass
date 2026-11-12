@@ -498,7 +498,8 @@ a.svc-card { text-decoration:none; }
 .demo-flight-summary dd { margin:0; font-weight:var(--weight-heading); overflow-wrap:anywhere; }
 .demo-flight-summary [data-demo-flight] { font-size:var(--text-heading); color:var(--color-primary-hover); }
 .demo-preparation-links { display:flex; flex-wrap:wrap; gap:1rem; }
-.demo-preparation-links a { color:var(--color-primary-hover); font-weight:var(--weight-heading); }
+/* 카드 안 「여객 시작 화면」 링크도 같은 초록(브라우저 기본 파랑으로 나오던 것) */
+.demo-preparation-links a, .demo-preparation-page .dx-card > a { color:var(--color-primary-hover); font-weight:var(--weight-heading); }
 .place-finder { padding:1rem; background:var(--color-primary-faint); border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); min-width:0; margin-bottom:1rem; }
 .place-finder>label { display:block; font-weight:var(--weight-heading); font-size:var(--text-body); margin:0 0 0.5rem; }
 .place-finder-hint { font-size:var(--text-small); line-height:1.65; color:var(--color-muted); margin:0.5rem 0 1rem; }

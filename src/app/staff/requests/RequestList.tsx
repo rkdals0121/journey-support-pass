@@ -951,7 +951,8 @@ export function RequestList({
                   </div>
                 )}
                 <p>
-                  {r.party}명 ·{" "}
+                  {/* 만나지 않는 온라인 요청은 인원이 뜻이 없어 빼고 접수 경로부터 쓴다 */}
+                  {r.placeId !== "no-meeting" && <>{r.party}명 ·{" "}</>}
                   {r.source === "preregistered"
                     ? "사전등록 연결"
                     : r.source === "kiosk"
