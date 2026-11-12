@@ -307,6 +307,7 @@ html[data-kiosk] .flow-body .kx-booking .pad-alnum { width: 100%; max-width: non
 html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-row { gap: var(--space-2); }
 /* 단추가 길쭉한 알약이 되지 않게 너비에 가까운 높이(정사각형에 가깝게) */
 html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-key { min-height: 3.5rem; border-radius: var(--radius-medium); font-size: var(--text-title); }
+html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-wide { font-size: var(--text-body); }
 html[data-kiosk] .flow-body .kx-booking .kx-lead { margin: 0 0 var(--space-2); }
 html[data-kiosk] .flow-body .kx-booking .booking-find-note { margin: var(--space-2) 0; }
 /* 번호 종류 줄: 아래 카드와 같은 너비·끝선(위쪽 바와도 같다) */

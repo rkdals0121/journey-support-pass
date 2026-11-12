@@ -4,7 +4,7 @@
    "src/app/components/facility-map.module.css": 1,
    "src/app/components/support-journey.module.css": 1,
    "src/app/stamp/stamp.css": 1,
-   "src/app/styles/components.css": 19,
+   "src/app/styles/components.css": 16,
    "src/app/styles/passenger.css": 3
   },
   "breakpoint": {
