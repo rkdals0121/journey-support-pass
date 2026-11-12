@@ -544,7 +544,6 @@ a.svc-card { text-decoration:none; }
 .journey-route-steps { padding:0 0 0 1.25rem; list-style:decimal; margin:1.5rem 0; display:grid; gap:1rem; font-size:var(--text-small); }
 .journey-route-steps li>svg { vertical-align:middle; }
 .boarding-link-panel { margin: 1rem 0; width: 100%; }
-.boarding-linked-note { border-left: 0.1875rem solid var(--color-primary); padding: 0.75rem 1rem; line-height: 1.6; color: var(--color-primary-hover); }
 .official-map-panel { margin: 0 0 1.25rem; border: 0.0625rem solid var(--color-control-line); border-radius: var(--radius-small); padding: 0.75rem 1rem; }
 .official-map-panel summary { cursor: pointer; color: var(--color-primary-hover); font-weight: var(--weight-label); min-height: 2rem; line-height: 1.6; }
 .official-map-panel > a { display: inline-block; font-size: var(--text-small); margin: 0.75rem 0; }
