@@ -54,7 +54,7 @@ import { RegisterFlow } from "../../components/RegisterFlow";
 import { useBookingFind } from "../../components/FlightMethods";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { KioskHero } from "../../components/KioskHero";
-import { KioskNeeds } from "../../components/KioskNeeds";
+import { KioskSavedReview } from "../../components/KioskSavedReview";
 import { KioskPages } from "../../components/KioskPages";
 import { savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
@@ -812,13 +812,7 @@ export function GuideKiosk({
             </>
           }
         >
-          <div className="kc-page">
-            <KioskHero title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} />
-            <div className="kc-review">
-              <FlightBoard flight={guide.flight} t={t} lang={lang} />
-              <KioskNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
-            </div>
-          </div>
+          <KioskSavedReview title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} flight={guide.flight} choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
         </FlowShell>
         {call}
         {idle}
