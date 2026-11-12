@@ -213,6 +213,11 @@ html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
 .kx-says-bubble::after { content: ""; position: absolute; inset-inline-start: -0.5625rem; top: calc(50% - 0.5rem); width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: rotate(135deg); }
 html[data-kiosk] .flow-body .kx-says-bubble h1 { margin: 0; font-size: var(--text-title); line-height: 1.3; font-weight: var(--weight-heading); letter-spacing: -0.03em; text-wrap: balance; }
 .kx-says-bubble p { margin: var(--space-2) 0 0; color: var(--color-muted); font-size: var(--text-body); line-height: 1.5; }
+/* 항공 예약번호 칸(왼쪽 칸이 좁고 오른쪽에 영문 자판): 나랑이·말풍선을 작게(말풍선 글자가 한 글자씩 세로로 꺾이던 것) */
+.kx-booking .kx-says { grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--space-3); margin-bottom: var(--space-3); }
+.kx-booking .kx-says-face { width: 4.5rem; }
+.kx-booking .kx-says-bubble { padding: var(--space-3) var(--space-4); }
+html[data-kiosk] .flow-body .kx-booking .kx-says-bubble h1 { font-size: var(--text-heading); }
 .kx-code-entry .kx-here { align-self: flex-start; margin-bottom: var(--space-4); }
 .kx-code-entry .kx-lead { margin: 0 0 var(--space-4); color: var(--color-muted); font-size: var(--text-body); line-height: 1.6; }
 .kx-code-label {
@@ -310,7 +315,7 @@ html[data-kiosk] .flow-body .kx-number .pad-num { width: 100%; max-width: 30rem;
 html[data-kiosk] .flow-body .kx-number .pad-key { min-height: 5rem; box-shadow: none; border-width: 0.0625rem; }
 html[data-kiosk] .flow-body .kx-number .pad-key:active { background: var(--color-primary-soft); }
 /* 항공 예약번호: 영문·숫자 글자판이 넓어야 해서 오른쪽 칸을 더 넓게, 단추 높이는 줄인다 */
-html[data-kiosk] .flow-body .kx-booking { grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr); gap: var(--space-5); padding-block: var(--space-4); }
+html[data-kiosk] .flow-body .kx-booking { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: var(--space-5); padding-block: var(--space-4); }
 html[data-kiosk] .flow-body .kx-booking .pad-alnum { width: 100%; max-width: none; margin: 0; gap: var(--space-2); }
 html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-row { gap: var(--space-2); }
 /* 단추가 길쭉한 알약이 되지 않게 너비에 가까운 높이(정사각형에 가깝게) */
@@ -358,6 +363,13 @@ html[data-kiosk] .flow-body .kx-pass-body .btn-primary { justify-self: stretch; 
   html[data-kiosk] .flow-body:has(> .kx-number) { display: flex; flex-direction: column; }
   html[data-kiosk] .flow-body > .kx-number { flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); align-items: stretch; }
   html[data-kiosk] .flow-body .kx-number .pad-num { height: 100%; grid-template-rows: repeat(4, minmax(0, 1fr)); }
+  /* 항공 예약번호: 세로에서는 입력 칸 위, 영문 자판 아래로 쌓고 자판 단추는 크게(좌우로 나뉘어 자판이 아주 작던 것) */
+  html[data-kiosk] .flow-body .kx-booking { grid-template-columns: minmax(0, 1fr); }
+  html[data-kiosk] .flow-body .kx-booking .kx-says { grid-template-columns: auto minmax(0, 1fr); }
+  html[data-kiosk] .flow-body .kx-booking .kx-says-face { width: clamp(8rem, 22dvh, 22rem); }
+  html[data-kiosk] .flow-body .kx-booking .kx-says-bubble h1 { font-size: var(--text-title); }
+  html[data-kiosk] .flow-body .kx-booking .pad-alnum { align-self: start; }
+  html[data-kiosk] .flow-body .kx-booking .pad-alnum .pad-key { min-height: 5rem; }
 }
 
 /* ── 모든 키오스크 화면: 본문이 머리에 붙지 않게 위쪽 여백 ── */
@@ -467,34 +479,26 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kc-entry-grid .kx-home-services { min-height: 0; display: flex; flex-direction: column; }
 .kc-entry-grid .kx-home-services h2 { font-size: var(--text-caption); margin-bottom: var(--space-2); }
 .kc-entry-grid .kc-entry-services { flex: 1 1 0; height: auto; min-height: 0; }
-.kc-directions .kx-guide { align-items: stretch; min-height: 0; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-1); }
+/* 「나에게 맞춘 안내」(.kc-saved.kc-directions): 왼쪽(세로는 위) 말풍선·큰 나랑이, 오른쪽에 항공편 → 탑승구 가는 길(큰 초록 단추) → 가까운 시설.
+   칸은 내용만큼, 글자는 크게(시설 카드가 키만 크고 속이 비던 것, 세로 화면 아래가 절반쯤 비던 것을 바꿈). 항공편 모양은 .kc-saved .board 를 함께 쓴다. */
+.kc-directions .kx-guide { display: flex; flex-direction: column; align-items: stretch; justify-content: safe center; gap: var(--space-4); min-height: 0; }
 .kc-directions .kx-guide-main { display: contents; }
-.kc-directions .kx-guide-side { min-height: 0; grid-column: 2; grid-row: 1; }
-.kc-directions .board { grid-column: 1; grid-row: 1; min-width: 0; margin: 0; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-text); }
-.kc-directions .board-main { padding: var(--space-1); gap: var(--space-2); flex-wrap: nowrap; }
-.kc-directions .board-label, .kc-directions .board-time { font-size: var(--text-caption); color: var(--color-muted); }
-.kc-directions .board-time b { color: var(--color-text); font-size: var(--text-body); }
-.kc-directions .board-dest { font-size: var(--text-body); }
-.kc-directions .gate-sign { padding: var(--space-2); min-width: 0; border-color: var(--color-line); background: var(--color-primary-faint); }
-.kc-directions .gate-sign b { font-size: var(--text-heading); }
-.kc-directions .gate-sign :is(small, span) { font-size: var(--text-caption); }
-.kc-directions .board-close { padding: var(--space-1) var(--space-2); font-size: var(--text-caption); background: var(--color-primary-faint); color: var(--color-text); }
-.kc-directions .gate-go { grid-column: 1 / -1; margin: 0; padding: var(--space-2) var(--space-3); gap: var(--space-2); min-height: var(--target-kiosk-floor); }
-.kc-directions .gate-go strong { font-size: var(--text-small); }
-.kc-directions .gate-go-ico { width: 1.5rem; height: 1.5rem; }
-.kc-directions .gate-go-text { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
-.kc-directions .gate-go-pace { font-size: var(--text-caption); }
+.kc-directions .kx-guide-side { flex: none; min-height: 0; }
+.kc-directions .gate-go { margin: 0; padding: var(--space-3) var(--space-5); gap: var(--space-4); min-height: calc(var(--target-kiosk-floor) * 1.2); }
+.kc-directions .gate-go strong { font-size: var(--text-title); }
+.kc-directions .gate-go-ico { width: 2.25rem; height: 2.25rem; }
+.kc-directions .gate-go-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.kc-directions .gate-go-pace, .kc-directions .gate-go .route-sum { font-size: var(--text-body); }
 .kc-directions .kx-guide-actions .btn { flex-basis: 0; }
-.kc-directions .gate-go .route-sum { font-size: var(--text-caption); }
 .kiosk-content .kx-guide-actions { display: flex; width: 100%; gap: var(--space-3); margin: 0; }
-.kc-pages { min-height: 0; height: 100%; display: flex; flex-direction: column; gap: var(--space-1); }
-.kc-pages h2 { margin: 0; font-size: var(--text-small); }
-.kc-facilities { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); }
-.kc-facilities .tile { min-width: 0; min-height: var(--target-kiosk-floor); padding: var(--space-1); gap: var(--space-2); margin: 0; align-items: center; background: var(--color-surface); box-shadow: none; }
-.kc-facilities .tile-ico { width: 1.5rem; height: 1.5rem; }
-.kc-facilities .tile-text strong { font-size: var(--text-caption); }
-.kc-facilities .tile-text > span { font-size: var(--text-caption); }
-.kc-facilities .tile > svg { width: 1rem; height: 1rem; }
+.kc-pages { min-height: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
+.kc-facilities { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; gap: var(--space-3); }
+.kc-facilities .tile { min-width: 0; min-height: var(--target-kiosk-floor); padding: var(--space-2) var(--space-4); gap: var(--space-3); margin: 0; align-items: center; background: var(--color-surface); box-shadow: none; }
+.kc-facilities .tile-ico { width: 2rem; height: 2rem; }
+.kc-facilities .tile-text strong { font-size: var(--text-body); }
+.kc-facilities .tile-text > span { font-size: var(--text-small); }
+.kc-facilities .tile > svg { width: 1.25rem; height: 1.25rem; }
 @media (min-width: 761px) and (max-width: 1100px) {
   .kc-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -508,13 +512,11 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
   .guide-services .kc-menu .svc-card :is(strong, span) { align-self: auto; }
 }
 @media (orientation: portrait) {
-  .kc-entry-grid, .kc-directions .kx-guide { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .kc-entry-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   /* 세로 화면: 위에 말풍선, 그 아래 큰 나랑이(남는 높이), 맨 아래 항공편·등록한 도움 */
   .kc-saved { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   .kc-saved-bubble h1 { font-size: var(--text-large); }
   .kc-entry { --hw-art: 26dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
-  .kc-directions .kx-guide-side { grid-column: 1; grid-row: 2; }
-  .kc-directions .gate-go { grid-row: 3; }
   .kc-menu { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-height: 700px) {
@@ -587,11 +589,6 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
  .kc-choices, .kc-proof:has(.docscan), .kc-proof .kc-proof-choices { --choice-columns: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
 }
 
-@media (min-width: 761px) and (max-width: 1100px) and (orientation: portrait) {
-  .kiosk-content[data-screen="home"] { height: auto; min-height: 100dvh; }
-  .kc-directions, .kc-directions .kc-pages { height: auto; }
-  .kc-directions .kx-guide { grid-template-rows: auto auto auto; }
-}
 
 .kc-saved .board-close:is(.urgent, .cancelled), .kc-directions .board-close:is(.urgent, .cancelled) { color: var(--color-error); background: var(--color-error-soft); }
 
@@ -618,11 +615,21 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
   box-shadow: var(--shadow-1);
 }
 /* 가로 키오스크: 왼쪽에 제목·걸리는 시간·마감과 「안내 첫 화면으로」, 오른쪽에 가는 길 단계. 단계가 많아도(셔틀·엘리베이터) 스크롤 없이 한 화면. */
+/* 카드가 바 아래부터 화면 아래까지 채우고, 남는 자리는 나랑이가 쓴다(카드가 화면 절반만 차지하던 것) */
+.flow.kiosk-route .flow-body { display: flex; flex-direction: column; }
+.kc-route { flex: 1 1 auto; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "info" "steps" "art" "foot"; row-gap: var(--space-4); }
+.kc-route-art { grid-area: art; position: relative; min-height: 0; }
+.kc-route-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.kc-route-info { grid-area: info; }
+.kc-route > .route { grid-area: steps; margin: 0; }
+.kc-route-foot { grid-area: foot; }
+/* 가는 길 단계 글자를 한 단계 크게(키오스크는 멀리서도 읽혀야 한다) */
+.kc-route .route > li strong { font-size: var(--text-heading); line-height: 1.35; }
+.kc-route .route > li div > span { font-size: var(--text-body); }
+.kc-route .route > li { padding-bottom: var(--space-5); }
 @media (orientation: landscape) {
-  .kc-route { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "info steps" "foot steps"; column-gap: var(--space-6); }
-  .kc-route-info { grid-area: info; }
-  .kc-route > .route { grid-area: steps; margin: 0; }
-  .kc-route-foot { grid-area: foot; align-self: end; }
+  .kc-route { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "info steps" "art steps" "foot steps"; column-gap: var(--space-6); }
+  .kc-route-foot { align-self: end; }
 }
 
 /* 세로 안내로봇의 예약 확인번호 화면: 카드를 바 바로 아래부터 아래 끝까지 채우고, 남는 높이는 자판 단추를 키우는 데 쓴다(위·아래로 크게 비던 것). */
