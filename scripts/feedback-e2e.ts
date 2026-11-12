@@ -46,8 +46,8 @@ async function main() {
       await p.waitForSelector("#task-facility");
       check(
         `${width}px facility example is explicit`,
-        await p.$eval(".service-field-example", (e) =>
-          e.textContent?.includes("다음 단계"),
+        await p.$eval("#task-facility", (e) =>
+          (e as HTMLInputElement).placeholder.includes("다음 단계"),
         ),
       );
       await p.type("#task-facility", "남자화장실");
