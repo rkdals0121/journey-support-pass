@@ -1,4 +1,7 @@
 import { redirect } from "next/navigation";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("직원 업무");
 
 export const dynamic = "force-dynamic";
 

@@ -8,6 +8,9 @@ import { PublicShell } from "../components/PublicShell";
 import { redirect } from "next/navigation";
 import { FieldTaskShell } from "../components/FieldTaskShell";
 import { placeOf } from "@/lib/airport";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("현장 도움 요청", "Request help");
 export default async function HelpPage({
   searchParams,
 }: {

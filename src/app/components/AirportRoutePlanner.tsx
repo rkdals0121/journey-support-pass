@@ -116,16 +116,17 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
   useEffect(() => {
     if (voice && supported) speak(spokenText);
   }, [voice, supported, spokenText, speak]);
-  const voiceControls = <div className={styles.voiceControls} data-icon-only={deviceLayout === "robot"}>
-    <button type="button" className={styles.voiceButton} disabled={!supported} aria-pressed={voice} aria-label={voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}
+  // 소리 안내 단추는 제목 줄 오른쪽에 둥근 그림 단추로 둔다(위쪽 바의 소리 단추와 같은 모양). 이름은 화면 읽기 프로그램이 읽는다.
+  const voiceControls = <div className={styles.voiceControls} data-icon-only="true">
+    <button type="button" className={styles.voiceButton} disabled={!supported} aria-pressed={voice} aria-label={voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")} title={voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}
       onClick={()=>{if (voice) stop(); setVoice(v=>!v);}}>
       {voice ? <VolumeX aria-hidden="true"/> : <Volume2 aria-hidden="true"/>}
-      <span className={deviceLayout === "robot" ? "sr-only" : undefined}>{voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}</span>
+      <span className="sr-only">{voice ? t("소리 안내 끄기", "Turn voice off") : t("소리로 듣기", "Listen")}</span>
     </button>
-    {voice && <button type="button" className={styles.voiceButton} aria-label={speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")} onClick={()=>speaking ? stop() : speak(spokenText)}>
-      <RotateCcw aria-hidden="true"/><span className={deviceLayout === "robot" ? "sr-only" : undefined}>{speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")}</span>
+    {voice && <button type="button" className={styles.voiceButton} aria-label={speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")} title={speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")} onClick={()=>speaking ? stop() : speak(spokenText)}>
+      <RotateCcw aria-hidden="true"/><span className="sr-only">{speaking ? t("잠깐 멈추기", "Pause") : t("다시 듣기", "Repeat")}</span>
     </button>}
-    {!supported && <small className={deviceLayout === "robot" ? "sr-only" : undefined}>{t("이 기기는 소리 안내를 지원하지 않아요.", "Voice is unavailable on this device.")}</small>}
+    {!supported && <small className="sr-only">{t("이 기기는 소리 안내를 지원하지 않아요.", "Voice is unavailable on this device.")}</small>}
   </div>;
   function invalidate() { setNotice(""); setResult(null); setRevision(n => n + 1); }
   function choose(id: string) {
@@ -169,11 +170,12 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
           <MapPin size={22} aria-hidden="true"/><span><small>{startTitle ?? t("출발지", "Start")}{start?.id === currentLocation?.id && currentLocation ? t(" · 현재 위치", " · Current") : ""}</small>
             <strong>{startName ?? start?.name ?? t("출발지 선택", "Choose start")}</strong>{start && <em>{start.description}</em>}</span>
         </button>
-        <button type="button" className={styles.current} disabled={disabled || (!currentLocation && !onUseCurrentLocation)}
-          title={currentLocation || onUseCurrentLocation ? t("등록된 기기 위치를 출발지로 설정", "Use the registered device location") : t("이 화면에 등록된 기기 위치가 없어요", "No device location is registered here")}
+        {/* 이 기기에 등록된 위치가 없으면(휴대전화·웹) 누를 수 없는 단추를 흐리게 두지 않고 아예 감춘다 */}
+        {(currentLocation || onUseCurrentLocation) && <button type="button" className={styles.current} disabled={disabled}
+          title={t("등록된 기기 위치를 출발지로 설정", "Use the registered device location")}
           onClick={()=>{if (onUseCurrentLocation) {onUseCurrentLocation();invalidate();setMode(destinationEnabled?"destination":"start");return;}if (currentLocation && onStartChange(currentLocation) !== false) {invalidate();setBuilding(currentLocation.building as 1 | 2 | 3);setMode(destinationEnabled ? "destination" : "start");}}}>
           <LocateFixed aria-hidden="true"/>{t("현재 위치", "Current location")}
-        </button>
+        </button>}
       </div>
       {destinationEnabled && <>
         <div className={styles.destinationControl}>
@@ -210,7 +212,7 @@ export function AirportRoutePlanner({start, destination, currentLocation, onStar
       additionalHelp={<>{additionalHelp}{beforeControls && <details className={styles.moreInfo}>
         <summary>{t("시연 기기 설정", "Demo device settings")}</summary>{beforeControls}
       </details>}</>}
-      kioskTitle={title} kioskHeadingAction={deviceLayout === "robot" ? voiceControls : undefined} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{deviceLayout !== "robot" && voiceControls}{showSelectionTools && controls}</div>}
+      kioskTitle={title} kioskHeadingAction={voiceControls} kioskBackHref={backHref} kioskPanel={<div className={styles.kioskInputs}>{selectionControls}{showSelectionTools && controls}</div>}
       kioskFooter={<div aria-label={t("경로와 지원 진행", "Route and assistance actions")}>{error && <p className={styles.error} role="alert">{error}</p>}{footer({distance,pending,error,hasResult:distance !== null && !pending && !error,findRoute,clearDestination,reset})}
       </div>}
       onRoute={response=>{if(route)setResult({key:routeKey,distance:response?.distance ?? null,error:response ? "" : t("연결된 통로를 찾지 못했어요. 현장 안내를 요청해 주세요.", "No connected route was found. Please ask staff.")});}}

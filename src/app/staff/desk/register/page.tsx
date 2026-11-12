@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { config } from "@/lib/config";
 import { requireStaff } from "@/lib/staff-page";
 import { RegisterKiosk } from "../../../kiosk/register/RegisterKiosk";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("대신 등록");
 
 export const dynamic = "force-dynamic";
 

@@ -5,6 +5,9 @@ import { StaffSessionControls } from "./StaffSessionControls";
 import Link from "next/link";
 import { businessOf } from "@/lib/operating-profile";
 import { UNCLASSIFIED_BUSINESS } from "@/lib/business-overview-model";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("접수·배정");
 export const dynamic = "force-dynamic";
 export default async function RequestsPage({
   searchParams,

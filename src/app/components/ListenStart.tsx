@@ -9,12 +9,13 @@ import { setViewSettings, useViewSettings } from "./viewSettings";
  * 앞이 잘 보이지 않는 여객은 QR 을 대기 전에는 소리 안내를 켤 방법이 위쪽 줄의 작은 스피커 그림뿐이었다.
  * 누르면 이 화면부터 읽어 주고, QR 을 대거나 등록을 시작한 뒤에도 계속 읽어 준다. 다음 사람으로 넘어가면 꺼진다.
  */
-export function ListenStart({ t }: { t: Text }) {
+/** compact: 둥근 그림 단추(이름은 화면 읽기 프로그램만 읽는다). 안내 키오스크 첫 화면의 아래 줄에서 쓴다. */
+export function ListenStart({ t, compact = false }: { t: Text; compact?: boolean }) {
   const on = useViewSettings().voice === true;
   return (
     <button className={`btn listen-start ${on ? "on" : ""}`} aria-pressed={on} onClick={() => setViewSettings({ voice: !on })}>
       {on ? <VolumeX size={24} aria-hidden="true" /> : <Volume2 size={24} aria-hidden="true" />}
-      {on ? t.listenStartOff : t.listenStart}
+      <span className={compact ? "sr-only" : undefined}>{on ? t.listenStartOff : t.listenStart}</span>
     </button>
   );
 }

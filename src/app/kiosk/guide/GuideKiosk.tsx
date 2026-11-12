@@ -54,7 +54,7 @@ import { RegisterFlow } from "../../components/RegisterFlow";
 import { useBookingFind } from "../../components/FlightMethods";
 import type { BookingHandoff } from "@/lib/booking-model";
 import { KioskHero } from "../../components/KioskHero";
-import { KioskNeeds } from "../../components/KioskNeeds";
+import { KioskSavedReview } from "../../components/KioskSavedReview";
 import { KioskPages } from "../../components/KioskPages";
 import { savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
@@ -544,7 +544,7 @@ export function GuideKiosk({
     setCallSeq(sessionSeq.current);
   };
   const call = (
-    <div className="call-dock">
+    <aside className="call-dock" aria-label={lang === "en" ? "Call staff" : "직원 부르기"}>
       <div className="call-dock-inner">
         <StaffCall
           lang={lang}
@@ -558,7 +558,7 @@ export function GuideKiosk({
           say={voiceOn ? speak : undefined}
         />
       </div>
-    </div>
+    </aside>
   );
   const idle = (
     <IdleGuard
@@ -765,7 +765,7 @@ export function GuideKiosk({
             onWake={() => setAwake(true)}
             onNumber={() => { setAwake(true); setView({ kind: "number" }); }}
             onPassport={() => { setAwake(true); setError(null); setView({ kind: "passport" }); }}
-            listen={<ListenStart t={t} />}
+            listen={<ListenStart t={t} compact />}
             error={error ? <ErrorNote>{error}</ErrorNote> : null}
             scanner={<Scanner onScan={onScan} paused={busy} prefer="user" text={{
               starting: t.camStarting, ready: t.camReady, read: t.camRead,
@@ -812,13 +812,7 @@ export function GuideKiosk({
             </>
           }
         >
-          <div className="kc-page">
-            <KioskHero title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} />
-            <div className="kc-review">
-              <FlightBoard flight={guide.flight} t={t} lang={lang} />
-              <KioskNeeds choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
-            </div>
-          </div>
+          <KioskSavedReview title={t.savedTitle} lead={lang === "en" ? "Check your support before continuing." : "등록한 도움을 확인하고 계속하세요."} flight={guide.flight} choices={guide.choices} extra={guide.extra} lang={lang} t={t} />
         </FlowShell>
         {call}
         {idle}
@@ -859,6 +853,7 @@ export function GuideKiosk({
           prefs={prefs}
           kiosk
           screenKey="survey"
+          className="kiosk-route"
           speakText={`${t.surveyTitle}. ${t.surveyHint}. ${t.surveyGood}. ${t.surveyFair}. ${t.surveyPoor}`}
           onBack={() => setView({ kind: "home" })}
           onHome={reset}
@@ -956,13 +951,13 @@ export function GuideKiosk({
     const help = (service: ServiceType, topic?: string, resume = false) =>
       kioskHelpHref(token, lang, service, "/kiosk/guide", resume) + (topic ? `&topic=${topic}` : "");
     const cards = [
-      { key: "guidance", Icon: Navigation, main: true, to: null, title: en ? "Gate & facilities" : "탑승구·시설 안내", body: en ? "Directions from where you are" : "현재 위치에서 가는 길" },
-      { key: "mobility", Icon: CarFront, to: help("mobility"), title: en ? "Mobility assistance" : "이동 도움받기", body: en ? "Wheelchair or an escort" : "휠체어·이동 동행" },
+      { key: "guidance", Icon: Navigation, main: true, to: null, title: en ? "Find a gate or facility" : "탑승구·시설 찾기", body: en ? "Directions from where you are" : "현재 위치에서 가는 길" },
+      { key: "mobility", Icon: CarFront, to: help("mobility"), title: en ? "Get mobility assistance" : "이동 도움받기", body: en ? "Wheelchair or an escort" : "휠체어·이동 동행" },
       { key: "robot", Icon: Bot, to: help("robot"), title: en ? "Call a guide robot" : "안내로봇 호출", body: en ? "Ask a robot to walk with you" : "로봇과 함께 이동" },
       { key: "status", Icon: ClipboardCheck, to: help("guidance", undefined, true), title: en ? "Check your request" : "신청 내용 확인", body: en ? "See the status of your request" : "접수·처리 상태" },
-      { key: "facility", Icon: Wrench, to: help("guidance", "facility"), title: en ? "Report a facility issue" : "시설 불편 신고", body: en ? "Cleaning or facility inspection" : "청소, 시설 점검을 요청합니다" },
-      { key: "traffic", Icon: Bus, to: help("guidance", "traffic"), title: en ? "Transport & parking" : "교통 및 주차 안내", body: en ? "Transport information or on-site help" : "승차 안내, 주차장 현장 지원" },
-      { key: "other", Icon: MessagesSquare, to: help("guidance", "other"), title: en ? "Other enquiries" : "기타 문의", body: en ? "Enquiries and other requests" : "문의와 그 밖의 요청" },
+      { key: "facility", Icon: Wrench, to: help("guidance", "facility"), title: en ? "Report a facility issue" : "시설 불편 알리기", body: en ? "Cleaning or facility inspection" : "청소·시설 점검 요청" },
+      { key: "traffic", Icon: Bus, to: help("guidance", "traffic"), title: en ? "Transport and parking" : "교통·주차 이용", body: en ? "Transport information or on-site help" : "승차 안내·주차장 현장 지원" },
+      { key: "other", Icon: MessagesSquare, to: help("guidance", "other"), title: en ? "Other assistance" : "그 밖의 도움", body: en ? "Enquiries and other requests" : "문의와 그 밖의 요청" },
       { key: "meeting", Icon: CalendarCheck, sub: true, to: "/kiosk/visits" + (en ? "?lang=en" : ""), title: en ? "Meeting appointment" : "만남 예약 확인", body: en ? "Find your appointment" : "예약한 장소·시간" },
     ];
     const heading = en ? "Which service do you need?" : "어떤 서비스가 필요하세요?";

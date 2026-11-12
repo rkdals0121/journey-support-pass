@@ -3,6 +3,9 @@ import { placeOf } from "@/lib/airport";
 import { config } from "@/lib/config";
 import { currentSession } from "@/lib/session-server";
 import { GuideKiosk } from "./GuideKiosk";
+import { pageTitle } from "@/lib/page-title";
+
+export const generateMetadata = pageTitle("안내 키오스크", "Guide kiosk");
 
 export const dynamic = "force-dynamic";
 
