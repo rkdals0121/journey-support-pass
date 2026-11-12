@@ -33,6 +33,15 @@ function tempProfile(prefix: string): string {
 }
 // 가짜 카메라에 넣은 그림 파일. 끝나면 함께 지운다.
 const tempFiles: string[] = [];
+/** 다 쓴 가짜 카메라 파일을 지운다. Windows 에서는 브라우저를 닫은 직후에도 파일을 잠깐 잡고 있어(EPERM) 점검 전체가 멈췄다.
+ *  지우지 못하면 그대로 두고 끝날 때(process exit) 다시 지운다. */
+function dropTempFile(file: string): void {
+  try {
+    fs.rmSync(file, { force: true });
+  } catch {
+    // 끝날 때 tempFiles 정리에서 다시 지운다.
+  }
+}
 process.on("exit", () => {
   for (const file of tempFiles) {
     try {
@@ -1311,7 +1320,7 @@ async function resetFlights(clearLocks = false) {
   await waitText(page, "Take the lift up to 4F");
   await shot(page, "안내키오스크-영어-라운지길");
   await browser.close();
-  for (const f of [nearFile, farFile, enFile]) fs.rmSync(f, { force: true });
+  for (const f of [nearFile, farFile, enFile]) dropTempFile(f);
 
   // 길을 안내하지 못하는 경우들
   await resetFlights();
@@ -1553,7 +1562,7 @@ async function resetFlights(clearLocks = false) {
   check("우대출구 화면에는 대상 유형, 증빙서류, 안내 화면 설정, 찾는 시설이 나오지 않는다", !["장애", "복지카드", "큰 글씨", "쉴 곳"].some((s) => exitText.includes(s)));
   await shot(page, "우대출구-확인됨");
   await browser.close();
-  fs.rmSync(exitFile, { force: true });
+  dropTempFile(exitFile);
   const noProof = await register("MK127", ["mov_no_stairs"]);
   await post("/api/pass/checkin", { token: noProof.token });
   const notOk = await post("/api/staff/exit", { scanned: noProof.token }, zoneStaff);
@@ -1617,7 +1626,7 @@ async function resetFlights(clearLocks = false) {
   const currentMobilityRule = ((await get("/api/staff/visits", desk)).body.rules as HubRule[]).find((r: {hubId:string;service:string}) => r.hubId === "t1-departure" && r.service === "mobility");
   const restoredMobilityRule = await post("/api/staff/visits", {...originalMobilityRule!, action:"rule", version:currentMobilityRule!.version}, desk);
   check("로컬 거점의 시험용 운영시간을 원래 기준으로 돌린다",restoredMobilityRule.status === 200);
-  fs.rmSync(bpFile, { force: true });
+  dropTempFile(bpFile);
 
   section("키오스크 방문 기록: 도움 요청");
   const visitHelpBrowser = await launch();
