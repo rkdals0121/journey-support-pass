@@ -25,13 +25,14 @@ html[data-kiosk] .flow-body:has(.haneuli-welcome) { padding-block: var(--space-4
   background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%);
 }
 /* 위쪽: 제목 한 줄, 그 아래에 위치(왼쪽)와 소리 안내 단추(오른쪽)를 한 줄로 */
-.hw-hero-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-4); min-width: 0; }
+/* 글자를 크게 해서 위치 칸이 너무 좁아지면(「안내데스/크」처럼 끊기면) 소리 단추를 다음 줄로 내린다. 글자 1배에서는 한 줄 그대로. */
+.hw-hero-copy { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); min-width: 0; }
 .hw-hero-title { display: contents; }
-.hw-hero-title h1 { grid-column: 1 / -1; }
+.hw-hero-title h1 { flex: 1 0 100%; }
 html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: var(--text-page-title); text-wrap: balance; line-height: 1.2; font-weight: var(--weight-heading); letter-spacing: -0.04em; }
-.hw-here { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; margin: 0; word-break: keep-all; color: var(--color-muted); font-size: var(--text-body); }
+.hw-here { display: inline-flex; flex: 1 1 9rem; align-items: center; gap: var(--space-2); min-width: 0; margin: 0; word-break: keep-all; color: var(--color-muted); font-size: var(--text-body); }
 .hw-here svg { width: 1.25rem; height: 1.25rem; flex: none; }
-.hw-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.hw-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: var(--space-3); }
 .hw-actions:empty { display: none; }
 /* 단추는 글자 너비만큼 그대로 두고(세로로 찌그러지지 않게), 줄어드는 건 위치 글자가 맡는다 */
 .hw-actions .listen-start { width: auto; min-height: var(--target-kiosk-floor); margin: 0; white-space: nowrap; }
