@@ -28,8 +28,8 @@ export function Narangi3D({ mood }: { mood: NarangMood }) {
     import("@/lib/narang/narang").then(({ canRender3D, createNarang }) => {
       if (!alive || !canRender3D()) return;
       api.current = createNarang(el, {
-        model: "/narang/narang_lite.glb",
-        sleepModel: "/narang/sleep.glb",
+        model: "/narang/narang_lite.glb?v=3.2", // 모델을 바꾸면 v 를 올린다(브라우저에 남은 예전 파일 대신 새 파일)
+        sleepModel: "/narang/sleep.glb?v=3.2",
         mood: shown.current,
         // 키오스크: 화면을 누르면 나랑이가 깨어나는 동작이 따로 있어 끌어 돌리기·눌러 점프는 끈다. 사람 쪽 바라보기만 켠다.
         dragToRotate: false,
