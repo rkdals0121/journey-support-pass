@@ -33,7 +33,7 @@ export default async function PreparePage({
         <section className="prepare-intro">
           <span className="public-eyebrow">
             <Plane size={18} aria-hidden="true" />
-            {en ? "BEFORE YOUR AIRPORT VISIT" : "여행 전, 필요한 도움을 미리"}
+            {en ? "Before your airport visit" : "여행 전, 필요한 도움을 미리"}
           </span>
           <h1>
             {en ? (

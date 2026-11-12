@@ -894,7 +894,7 @@ export function HelpFlow({
   const requestSummary = (<aside className="request-submit-card">
                 <span className="service-kicker">
                   <ClipboardCheck aria-hidden="true" />
-                  {tr("요청 요약", "YOUR REQUEST")}
+                  {tr("요청 요약", "Your request")}
                 </span>
                 <h2>
                   {en
@@ -1081,7 +1081,7 @@ export function HelpFlow({
                 </button>
                 <span className="service-kicker">
                   <MapPin aria-hidden="true" />
-                  {tr("공항 현장 서비스", "AIRPORT SERVICES")}
+                  {tr("공항 현장 서비스", "Airport services")}
                 </span>
                 <span className="service-demo-label">
                   {tr(

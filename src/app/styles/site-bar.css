@@ -260,6 +260,8 @@ html[data-kiosk] .flow .flow-bar {
     min-height: var(--target-floor);
     padding-inline: var(--space-1);
   }
+  /* 영어 화면의 「한국어」 단추가 「EN」보다 2px 넓어 위쪽 바가 두 줄로 내려앉던 것. 양옆 여백을 줄여 같은 폭(44px)에 맞춘다. */
+  html:not([data-kiosk]) .public-site .public-tools > a { padding-inline: 0.125rem; }
 }
 
 /* 아래쪽 바: 위쪽 바와 같은 너비·같은 끝선의 둥근 바. 그라데이션 없이 흰 단색. */
