@@ -21,6 +21,18 @@ export function HaneuliSays({ text, size = "md", pose = "front" }: { text: strin
   );
 }
 
+/** 원 안의 큰 나랑이(정면, 깨어 있는 모습). 안내 키오스크 첫 화면과 같은 크기 규칙(--hw-art)을 쓴다. */
+export function HaneuliArt() {
+  return (
+    <div className="hw-art" aria-hidden="true">
+      <span className="hw-orbit" />
+      <div className="haneuli-character">
+        <Image className="haneuli-happy" src={POSES.front} alt="" width={640} height={640} priority />
+      </div>
+    </div>
+  );
+}
+
 /**
  * 큰 나랑이 상자. 안내 키오스크 첫 화면(왼쪽)과 입구·안내로봇 처음 화면(왼쪽, 세로에서는 위)이 같은 모양을 쓴다.
  * 위에 제목·위치와 소리 안내 단추, 아래에 원 안의 큰 나랑이와 그 옆에 걸친 말풍선.
@@ -54,14 +66,15 @@ export function HaneuliStage({ title, here, listen, bubble }: { title: string; h
 }
 
 /**
- * 안내 키오스크 첫 장면(2026-11 스케치). 위에는 큰 나랑이와 오른쪽 말풍선(「탑승권을 스캔해 주세요」),
- * 아래에는 「탑승권이 없으신가요?」와 함께 여권 스캔 · 예약번호 입력 · 소리 안내(둥근 단추)를 한 줄로 작게 둔다.
+ * 안내 키오스크 첫 장면(2026-11 스케치). 한 상자 안에 제목, 큰 나랑이와 오른쪽 말풍선,
+ * 맨 아래 「탑승권이 없으신가요?」와 여권 스캔 · 예약번호 입력 · 소리 안내(둥근 단추)를 한 줄로 둔다.
+ * 현재 위치는 위쪽 바(로고 옆)에 있고, 위쪽 바의 소리 단추는 이 화면에서 빼고 아래 둥근 소리 단추만 둔다.
  * 탑승권 읽기(카메라)는 칸 없이 켜 두고, 카메라를 못 쓸 때만 말풍선 아래에 안내가 보인다.
  * 나랑이는 건드리지 않으면 자고 있다. 탑승권을 비추면 깨며 다음 화면으로 가고, 화면만 누르면 깨어 아래 단추를 고르라고 알려 준다.
  * The camera stays mounted across sleep and wake.
  */
-export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPassport, scanner, error, listen }: {
-  en: boolean; here: string; awake: boolean; busy: boolean;
+export function HaneuliWelcome({ en, awake, busy, onWake, onNumber, onPassport, scanner, error, listen }: {
+  en: boolean; awake: boolean; busy: boolean;
   onWake: () => void; onNumber: () => void; onPassport: () => void;
   scanner: ReactNode; error: ReactNode; listen: ReactNode;
 }) {
@@ -82,7 +95,6 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPass
       <section className="hw-hero hw-welcome-hero">
         <div className="hw-welcome-title">
           <h1>{en ? "Accessible kiosk" : "교통약자 전용 키오스크"}</h1>
-          <p className="hw-here"><MapPin aria-hidden="true" />{here}</p>
         </div>
         <div className="hw-welcome-stage">
           <div className="hw-art" aria-hidden="true">
@@ -104,20 +116,21 @@ export function HaneuliWelcome({ en, here, awake, busy, onWake, onNumber, onPass
             </div>
           </div>
         </div>
-      </section>
 
-      <section className="haneuli-ways" aria-labelledby="hw-ways-title">
-        <p className="hw-ways-title" id="hw-ways-title">{en ? "No boarding pass?" : "탑승권이 없으신가요?"}</p>
-        <div className="hw-ways-row">
-          <button className="hw-card haneuli-way haneuli-passport" onClick={onPassport} disabled={busy}>
-            <BookUser aria-hidden="true" className="hw-way-icon" />
-            <strong>{en ? "Scan passport" : "여권 스캔"}</strong>
-          </button>
-          <button className="hw-card haneuli-way haneuli-number" onClick={onNumber} disabled={busy}>
-            <Keyboard aria-hidden="true" className="hw-way-icon" />
-            <strong>{en ? "Enter booking number" : "예약번호 입력"}</strong>
-          </button>
-          <div className="hw-listen">{listen}</div>
+        {/* 「탑승권이 없으신가요?」 줄도 나랑이 상자 안에 둔다(2026-11-12 사용자 요청: 상자가 아래 단추까지 감싸게) */}
+        <div className="haneuli-ways" role="group" aria-labelledby="hw-ways-title">
+          <p className="hw-ways-title" id="hw-ways-title">{en ? "No boarding pass?" : "탑승권이 없으신가요?"}</p>
+          <div className="hw-ways-row">
+            <button className="hw-card haneuli-way haneuli-passport" onClick={onPassport} disabled={busy}>
+              <BookUser aria-hidden="true" className="hw-way-icon" />
+              <strong>{en ? "Scan passport" : "여권 스캔"}</strong>
+            </button>
+            <button className="hw-card haneuli-way haneuli-number" onClick={onNumber} disabled={busy}>
+              <Keyboard aria-hidden="true" className="hw-way-icon" />
+              <strong>{en ? "Enter booking number" : "예약번호 입력"}</strong>
+            </button>
+            <div className="hw-listen">{listen}</div>
+          </div>
         </div>
       </section>
     </div>

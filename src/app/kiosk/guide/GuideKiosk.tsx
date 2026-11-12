@@ -58,7 +58,7 @@ import { KioskSavedReview } from "../../components/KioskSavedReview";
 import { KioskPages } from "../../components/KioskPages";
 import { savedNeedsText } from "../../components/SavedNeeds";
 import { StaffCall } from "../../components/StaffCall";
-import { HaneuliSays, HaneuliStage, HaneuliWelcome } from "../../components/HaneuliWelcome";
+import { HaneuliArt, HaneuliSays, HaneuliStage, HaneuliWelcome } from "../../components/HaneuliWelcome";
 import { useRobotTheme } from "../../components/useRobotTheme";
 import { useSpeech } from "../../components/useSpeech";
 import {
@@ -684,33 +684,41 @@ export function GuideKiosk({
             onBack={() => setView({ kind: "scan" })}
             onHome={reset}
           >
-            <div className="kx-passport">
-              <div className="kx-passport-copy">
-                <p className="kx-here">
-                  <MapPin aria-hidden="true" />
-                  {here}
-                </p>
-                <HaneuliSays size="md" pose="left" text={lang === "en" ? "Hold the photo page of\nyour passport to the camera." : "여권 사진면을\n카메라에 대 주세요."} />
-                <p className="kx-lead">{lang === "en" ? "Demo screen" : "시연 화면"}</p>
-                <button
-                  className="btn btn-primary kx-passport-go"
-                  onClick={() => {
-                    setBooking(null);
-                    setView({ kind: "register" });
-                  }}
-                >
-                  {lang === "en" ? "Read passport (demo)" : "여권 읽기 (시연)"}
-                  <ArrowRight size={24} aria-hidden="true" />
-                </button>
-              </div>
-              <div className="kx-passport-camera">
-                {/* 여기서 탑승권을 비춰도 그대로 등록을 찾는다. */}
-                <Scanner onScan={onScan} paused={busy} prefer="user" text={{
-                  starting: t.camStarting, ready: lang === "en" ? "Hold your passport photo page to the camera" : "여권 사진면을 네모 안에 보여 주세요",
-                  read: t.camRead, none: t.camNone, switchCamera: t.camSwitch,
-                }} />
-                {error && <ErrorNote>{error}</ErrorNote>}
-              </div>
+            {/* 첫 화면과 같은 상자: 제목, 큰 나랑이(정면)와 말풍선·카메라, 맨 아래 「여권 읽기」. 나랑이와 함께 진행하는 느낌을 이어 간다. */}
+            <div className="haneuli-welcome is-awake kx-passport">
+              <section className="hw-hero hw-welcome-hero">
+                <div className="hw-welcome-title">
+                  <h1>{lang === "en" ? "Scan passport" : "여권 스캔"}</h1>
+                </div>
+                <div className="hw-welcome-stage">
+                  <HaneuliArt />
+                  <div className="hw-welcome-side">
+                    <p className="haneuli-bubble hw-welcome-bubble" aria-live="polite">
+                      <strong>{lang === "en" ? "Hold the photo page of\nyour passport to the camera." : "여권 사진면을\n카메라에 대 주세요."}</strong>
+                    </p>
+                    <div className="kx-passport-camera">
+                      {/* 여기서 탑승권을 비춰도 그대로 등록을 찾는다. */}
+                      <Scanner onScan={onScan} paused={busy} prefer="user" text={{
+                        starting: t.camStarting, ready: lang === "en" ? "Hold your passport photo page to the camera" : "여권 사진면을 네모 안에 보여 주세요",
+                        read: t.camRead, none: t.camNone, switchCamera: t.camSwitch,
+                      }} />
+                      {error && <ErrorNote>{error}</ErrorNote>}
+                    </div>
+                  </div>
+                </div>
+                <div className="kx-passport-actions">
+                  <button
+                    className="btn btn-primary kx-passport-go"
+                    onClick={() => {
+                      setBooking(null);
+                      setView({ kind: "register" });
+                    }}
+                  >
+                    {lang === "en" ? "Read passport (demo)" : "여권 읽기 (시연)"}
+                    <ArrowRight size={24} aria-hidden="true" />
+                  </button>
+                </div>
+              </section>
             </div>
           </FlowShell>
           {call}
@@ -743,6 +751,8 @@ export function GuideKiosk({
           kiosk
           screenKey="scan"
           serviceHome
+          barListen={false}
+          headerLead={<p className="flow-bar-here"><MapPin aria-hidden="true" />{here}</p>}
           headerTools={
             <>
               <button
@@ -759,7 +769,6 @@ export function GuideKiosk({
         >
           <HaneuliWelcome
             en={lang === "en"}
-            here={here}
             awake={awake}
             busy={busy}
             onWake={() => setAwake(true)}

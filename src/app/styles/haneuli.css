@@ -13,7 +13,7 @@ html[data-kiosk] body.kiosk-guide .kx-guide .btn { border-width: 0.125rem; borde
   --hw-row: max(var(--target-kiosk-floor), 4.5rem);
   --hw-art: max(8rem, calc(100dvh - var(--site-bar-height) - var(--hw-row) - 12rem));
   box-sizing: border-box; width: var(--hw-w); margin-inline: calc((100% - var(--hw-w)) / 2);
-  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4);
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4);
   min-height: calc(100dvh - var(--site-bar-height) - 4rem); padding-block: 0;
   color: var(--color-text);
 }
@@ -58,8 +58,8 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 /* 첫 화면의 큰 나랑이 상자: 왼쪽 위에 제목·위치(작게), 가운데 큰 나랑이, 오른쪽에 말풍선(꼬리가 나랑이 쪽) */
 .hw-welcome-hero { gap: var(--space-2); }
 .hw-welcome-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4); min-width: 0; }
-html[data-kiosk] .hw-welcome-title h1 { margin: 0; font-size: var(--text-heading); line-height: 1.3; font-weight: var(--weight-heading); letter-spacing: -0.02em; }
-.hw-welcome-title .hw-here { font-size: var(--text-small); }
+/* 위치를 위쪽 바로 옮겨 제목 줄에는 제목만 — 한 단계 크게 */
+html[data-kiosk] .hw-welcome-title h1 { margin: 0; font-size: var(--text-title); line-height: 1.25; font-weight: var(--weight-heading); letter-spacing: -0.03em; }
 .hw-welcome-stage { flex: 1 1 0; display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); align-items: center; gap: var(--space-4); min-height: 0; }
 .hw-welcome-stage .hw-art { justify-self: end; }
 .hw-welcome-side { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); min-width: 0; align-self: start; padding-top: var(--space-6); }
@@ -71,7 +71,7 @@ html[data-kiosk] .hw-welcome-title h1 { margin: 0; font-size: var(--text-heading
 
 /* 아래 줄: 「탑승권이 없으신가요?」 다음에 여권 스캔·예약번호 입력(같은 너비)과 둥근 소리 단추. 단추 높이·끝선이 한 줄로 맞는다 */
 .haneuli-ways { display: grid; gap: var(--space-2); min-width: 0; }
-html[data-kiosk] .hw-ways-title { margin: 0; padding-inline: var(--space-2); color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
+html[data-kiosk] .hw-ways-title { margin: 0; padding-inline: var(--space-2); color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); }
 .hw-ways-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--hw-row); gap: var(--space-4); align-items: stretch; }
 .hw-card { position: relative; display: flex; align-items: center; justify-content: center; gap: var(--space-3); min-width: 0; min-height: var(--hw-row); padding: var(--space-2) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-1); font: inherit; cursor: pointer; }
 .is-awake .hw-card { border-color: var(--color-primary); box-shadow: 0 0 0 0.25rem var(--color-primary-soft); }
@@ -96,11 +96,6 @@ html[data-kiosk] .hw-listen .listen-start.on { background: var(--color-primary);
 .haneuli-welcome button:focus-visible { outline: 0.1875rem solid var(--color-focus); outline-offset: 0.25rem; }
 
 /* 여권 스캔(시연): 왼쪽 안내와 단추, 오른쪽 카메라 */
-.kx-passport { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: center; padding: var(--space-4) 0; }
-.kx-passport-copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); }
-.kx-passport-copy .kx-lead { margin: 0; color: var(--color-muted); font-size: var(--text-body); line-height: 1.6; }
-.kx-passport-go { min-height: 4.5rem; font-size: var(--text-heading); }
-.kx-passport-camera .scanner { width: 100%; max-width: none; margin: 0; }
 
 /* 나랑이가 한마디 하는 줄(서비스 고르기, 등록 내용, 끝 인사) */
 .haneuli-says { display: flex; align-items: center; gap: var(--space-4); }
@@ -130,7 +125,6 @@ html[data-kiosk] .hw-listen .listen-start.on { background: var(--color-primary);
   .hw-welcome-stage .hw-art { justify-self: center; }
   .hw-welcome-side { align-self: auto; align-items: center; padding-top: 0; }
   .hw-welcome-bubble::after { inset-inline-start: calc(50% - 0.5rem); bottom: auto; top: -0.5625rem; transform: rotate(-135deg); }
-  .kx-passport { grid-template-columns: minmax(0, 1fr); }
 }
 
 @keyframes haneuli-pop { 50% { transform: translateY(-0.75rem) scale(1.04); } 100% { transform: none; } }
@@ -142,3 +136,9 @@ html[data-kiosk] .hw-listen .listen-start.on { background: var(--color-primary);
   .haneuli-welcome .haneuli-character, .haneuli-welcome .haneuli-zzz, .haneuli-saved-greeting { animation: none; }
   .is-idle .haneuli-zzz { opacity: 1; }
 }
+
+/* ── 여권 스캔 화면: 첫 화면과 같은 상자(.haneuli-welcome·.hw-hero)를 쓰고, 맨 아래 「여권 읽기」 한 줄 ── */
+.kx-passport-camera { display: grid; gap: var(--space-3); width: 100%; min-width: 0; }
+.kx-passport-camera .scanner { width: 100%; max-width: none; margin: 0; }
+.kx-passport-actions { display: grid; }
+html[data-kiosk] .kx-passport .kx-passport-go { min-height: var(--hw-row); margin: 0; border-radius: var(--radius-pill); font-size: var(--text-heading); }
