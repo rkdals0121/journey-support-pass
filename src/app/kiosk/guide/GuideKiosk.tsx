@@ -865,8 +865,10 @@ export function GuideKiosk({
           onBack={() => setView({ kind: "home" })}
           onHome={reset}
         >
-          <h1>{t.surveyTitle}</h1>
-          <p className="lead">{t.surveyHint}</p>
+          {/* 다른 키오스크 화면과 같은 제목 상자(나랑이 얼굴)를 쓴다. 제목만 바탕에 떠 있던 것. */}
+          <div className="kc-page">
+          <KioskHero title={t.surveyTitle} lead={t.surveyHint} />
+          <div className="kc-survey">
           <div className="faces">
             <button className="face good" onClick={() => answer(3)}>
               <Smile size={56} aria-hidden="true" />
@@ -884,6 +886,8 @@ export function GuideKiosk({
           <button className="btn btn-ghost" onClick={() => answer(null)}>
             {t.surveySkip}
           </button>
+          </div>
+          </div>
         </FlowShell>
         {call}
         {idle}
