@@ -112,21 +112,21 @@ export function MyRequests({
       </section>
       {children}
       <div className="request-list-bar">
-        <span>
+        <h2>{t("직원·안내로봇 요청", "Staff and guide robot requests")}</h2>
+        <span className="request-list-count">
           {t(
             `${rows.filter((r) => OPEN_REQUEST_STATES.includes(r.request.state)).length}건 진행 중`,
             `${rows.filter((r) => OPEN_REQUEST_STATES.includes(r.request.state)).length} active`,
           )}
+          <button
+            type="button"
+            onClick={() => setVersion((v) => v + 1)}
+            aria-label={t("다시 확인", "Refresh")}
+          >
+            <RefreshCw aria-hidden="true" />
+          </button>
         </span>
-        <button
-          type="button"
-          onClick={() => setVersion((v) => v + 1)}
-          aria-label={t("다시 확인", "Refresh")}
-        >
-          <RefreshCw aria-hidden="true" />
-        </button>
       </div>
-      <h2>{t("직원·안내로봇 요청", "Staff and guide robot requests")}</h2>
       {loading ? (
         <p role="status">{t("요청을 불러오는 중…", "Loading requests…")}</p>
       ) : rows.length ? (
@@ -160,7 +160,7 @@ export function MyRequests({
           ))}
         </div>
       ) : (
-        <section className="service-info-card">
+        <section className="service-info-card request-empty-card">
           <header className="service-info-heading">
             <span className="service-info-icon">
               <ClipboardList aria-hidden="true" />

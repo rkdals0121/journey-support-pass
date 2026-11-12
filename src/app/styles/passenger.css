@@ -195,7 +195,11 @@
 .request-loading { padding:4rem 1rem; text-align:center; color:var(--color-muted); }
 .request-recovery { padding:1.5rem; background:var(--color-accent-soft); border-radius:var(--radius-medium); margin:1rem 0; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; }
 .request-recovery p { width:100%; }
-.request-list-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; color:var(--color-muted); font-size:var(--text-small); }
+.request-list-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--space-2) var(--space-4); margin:0; }
+.request-list-bar h2 { margin:0; font-size:var(--text-heading); color:var(--color-text); }
+.request-list-count { display:inline-flex; align-items:center; gap:var(--space-1); color:var(--color-muted); font-size:var(--text-small); }
+/* 빈 안내 카드는 한 줄을 다 쓰므로, 넓은 화면에서는 단추가 화면 끝까지 늘어나지 않게 */
+@media (min-width: 761px) { .request-empty-card .service-primary-action { align-self:flex-start; width:auto; padding-inline:var(--space-6); } }
 /* 내 요청 카드: 첫 화면 서비스 카드와 같은 흰 카드. 누르는 곳은 카드 전체 */
 .my-service-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); }
 .my-service-request { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); text-decoration: none; transition: border-color var(--motion-normal) var(--ease-out), box-shadow var(--motion-normal) var(--ease-out); }
@@ -213,7 +217,7 @@
 .request-empty-state h2 { font-size:var(--text-heading); margin:0; }
 .request-empty-state p { font-size:var(--text-small); color:var(--color-muted); margin:0; }
 .request-empty-state>.public-button { margin-top:0.5rem; }
-.request-list-privacy { margin-top:1.5rem; }
+.request-list-privacy { margin-top:0; }
 .service-form-card>.request-section { border:0; padding:0; border-radius:0; margin-bottom:var(--space-4); }
 .service-form-card label { font-size:var(--text-small); }
 .service-form-card .public-button { width:100%; cursor:pointer; }
@@ -278,27 +282,25 @@
 .airport-site .request-section > h2, .airport-site .service-form-card h2 { font-size: var(--text-heading); letter-spacing: -0.03em; }
 .airport-site .request-section label:not(.dx-option), .airport-site .service-form-card > label { font-size: var(--text-body); }
 .airport-site .request-state-pill { transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out); }
-.booking-lookup { width:min(var(--site-bar-width),calc(100vw - 2 * var(--site-bar-gutter))); margin:var(--space-4) auto var(--space-5); color:var(--color-dark); }
-.booking-back { font-size:var(--text-small); color:var(--color-muted); text-decoration:underline; text-underline-offset:0.25rem; }
-.booking-lookup h1 { font-size:var(--text-page-title); letter-spacing:-.04em; margin:var(--space-2) 0; }
-.booking-demo-note { color:var(--color-muted); line-height:1.65; margin-bottom:var(--space-4); max-width:40rem; }
-.booking-lookup form { border-block:0.0625rem solid var(--color-control-line); padding:var(--space-4) 0; }
+/* 예약정보 불러오기: 다른 여객 화면처럼 위 소개 카드 + 흰 입력 카드 */
+.booking-card { min-width:0; padding:var(--space-5); border:1px solid var(--color-line); border-radius:var(--radius-medium); background:var(--color-surface); color:var(--color-dark); }
 .booking-lookup fieldset { border:0; padding:0; margin:0; min-width:0; }
-.booking-lookup label { display:block; font-weight:var(--weight-label); margin-bottom:0.5rem; }
+.booking-lookup label { display:block; font-weight:var(--weight-label); margin:0 0 var(--space-2); }
 .booking-lookup input, .booking-lookup select { display:block; box-sizing:border-box; width:100%; min-height:3.2rem; border:0.0625rem solid var(--color-control-line); border-radius:var(--radius-small); background:var(--color-surface); padding:0.75rem 0.75rem; color:inherit; font:inherit; }
 .booking-lookup input:focus, .booking-lookup select:focus { outline:0.1875rem solid var(--color-control-line); outline-offset:0.125rem; }
-.booking-fields { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); margin-top:var(--space-4); }
+.booking-fields { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--space-4); }
 .booking-actions { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:var(--space-4); }
 .booking-sample { border:0; background:none; padding:0.75rem 0; font:inherit; color:var(--color-primary-hover); text-decoration:underline; text-underline-offset:0.25rem; cursor:pointer; }
-.booking-manual { min-height:max(2.75rem,var(--target-floor)); display:flex; align-items:center; justify-content:space-between; padding:1.25rem 0; color:var(--color-primary-hover); gap:1rem; }
+.booking-manual { min-height:max(3.5rem,var(--target-floor)); display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); padding:var(--space-3) var(--space-5); border:1px solid var(--color-line); border-radius:var(--radius-medium); background:var(--color-surface); color:var(--color-primary-hover); font-weight:var(--weight-label); text-decoration:none; }
+.booking-manual:hover { border-color:var(--color-primary); }
 @media (max-height: 700px) {
-.booking-lookup { margin-bottom:var(--space-2); }
-.booking-lookup form { padding-block:var(--space-2); }
-.booking-fields { margin-top:var(--space-2); }
+.booking-card { padding:var(--space-4); }
 .booking-actions { margin-top:var(--space-2); }
-.booking-manual { padding-block:var(--space-2); }
 }
-.booking-result h2 { font-size:var(--text-heading); margin:0 0 1.5rem; }
+.booking-result h2 { display:flex; align-items:center; gap:var(--space-2); font-size:var(--text-heading); margin:0 0 var(--space-4); color:var(--color-primary); }
+.booking-result h2 svg { width:1.5rem; height:1.5rem; flex:none; }
+/* 결과가 나오면 읽기 프로그램이 제목부터 읽도록 제목에 초점을 옮긴다. 이 초점은 테두리를 그리지 않는다 */
+.booking-result h2[tabindex="-1"]:focus { outline:0; }
 .booking-itinerary { display:flex; align-items:center; gap:1rem; font-size:var(--text-title); font-weight:var(--weight-heading); }
 .booking-itinerary span { font-size:var(--text-body); font-weight:var(--weight-body); }
 .booking-result dl { display:grid; grid-template-columns:max-content 1fr; gap:0.75rem 2rem; margin:1.5rem 0; }
@@ -481,7 +483,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .flow-pretrip .flow-desktop-steps { border-right: 0.0625rem solid var(--color-line); padding-right: 1.5rem; padding: .5rem 0; background: transparent; border: 0; }
 .flow-pretrip .flow-desktop-summary { border: 0; border-top: 0.125rem solid var(--color-control-line); border-radius: 0; background: transparent; padding: .5rem 0; }
 .gate-sign { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 6.5rem; margin-left: auto; padding: 0.5rem 1rem; border-radius: var(--radius-small); background: var(--color-primary-soft); color: var(--color-primary-hover); line-height: 1.1; border-top: .25rem solid var(--color-accent); box-shadow: none; }
-.booking-result { border-block: 0.0625rem solid var(--color-control-line); padding: 1.75rem 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); box-shadow: none; }
 .service-form-card { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 1.5rem; box-shadow: none; }
 .service-route-result { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 1.5rem; position: sticky; top: 1.5rem; box-shadow: none; }
 .request-status-card { min-width: 0; background: var(--color-surface); border: 0; border-radius: var(--radius-medium); padding: 1.5rem; box-shadow: none; }
@@ -702,7 +703,9 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .airport-site .request-section .service-detail-list > div { grid-template-columns: 5rem minmax(0, 1fr); }
 }
 @media (max-width:760px) {
-.booking-fields { grid-template-columns:1fr; gap:1rem; }
+.booking-fields { grid-template-columns:minmax(0, 1fr); }
+.booking-card { padding:var(--space-4); }
+.booking-manual { padding-inline:var(--space-4); }
 .booking-actions { align-items:stretch; flex-direction:column-reverse; }
 .booking-result dl { gap:0.75rem 1rem; }
 .booking-lookup .public-button { justify-content:center; width:100%; }

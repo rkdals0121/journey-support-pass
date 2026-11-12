@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plane, Search } from "lucide-react";
 import type { BookingHandoff } from "@/lib/booking-model";
 import type { Lang } from "@/lib/i18n";
 import { PublicShell } from "../../components/PublicShell";
@@ -39,23 +39,28 @@ export function BookingLookup({ lang, enabled }: { lang: Lang; enabled: boolean 
   }
   if (register && result) return <WebRegister lang={lang} via="booking" booking={result} />;
   return <PublicShell lang={lang}>
-    <main id="public-main" className="booking-lookup">
-      <Link className="booking-back" href={"/prepare" + suffix}>{en ? "Before you travel" : "여행 전 사전등록"}</Link>
-      <h1>{en ? "Find your booking" : "예약정보 불러오기"}</h1>
-      <p className="booking-demo-note">{en ? "Demo only. Use the fictional booking DEMO01 / KIM. Real airline bookings cannot be retrieved." : "시연용입니다. 가상 예약 DEMO01 / KIM만 사용해 주세요. 실제 항공사 예약은 조회되지 않습니다."}</p>
+    <main id="public-main" className="service-page service-short-page booking-lookup">
+      <section className="ph-hero" aria-labelledby="booking-title">
+        <div className="ph-hero-copy service-intro-copy">
+          <Link className="ph-text-link" href={"/prepare" + suffix}><ArrowLeft aria-hidden="true" />{en ? "Before you travel" : "여행 전 사전등록"}</Link>
+          <h1 id="booking-title">{en ? "Find your booking" : "예약정보 불러오기"}</h1>
+          <p className="booking-demo-note">{en ? "Demo only. Use the fictional booking DEMO01 / KIM. Real airline bookings cannot be retrieved." : "시연용입니다. 가상 예약 DEMO01 / KIM만 사용해 주세요. 실제 항공사 예약은 조회되지 않습니다."}</p>
+        </div>
+      </section>
+      <div className="booking-card">
       {!enabled ? <p role="status">{en ? "Demo lookup is disabled in live mode." : "실제 운영 모드에서는 시연 조회를 사용할 수 없습니다."}</p> : <>
         {!result ? <form onSubmit={lookup} aria-busy={busy}>
           <fieldset disabled={busy}>
-            <label htmlFor="booking-airline">{en ? "Airline" : "항공사"}</label>
-            <select id="booking-airline" defaultValue="demo"><option value="demo">{en ? "Demo Air (fictional)" : "시연 항공 (가상)"}</option></select>
             <div className="booking-fields">
+              <div><label htmlFor="booking-airline">{en ? "Airline" : "항공사"}</label>
+              <select id="booking-airline" defaultValue="demo"><option value="demo">{en ? "Demo Air (fictional)" : "시연 항공 (가상)"}</option></select></div>
               <div><label htmlFor="booking-reference">{en ? "Booking reference" : "예약번호"}</label><input id="booking-reference" value={reference} onChange={e => setReference(e.target.value)} maxLength={12} autoComplete="off" autoCapitalize="characters" spellCheck={false} required /></div>
               <div><label htmlFor="booking-surname">{en ? "Passenger surname" : "탑승객 영문 성"}</label><input id="booking-surname" value={surname} onChange={e => setSurname(e.target.value)} maxLength={30} autoComplete="off" autoCapitalize="characters" spellCheck={false} required /></div>
             </div>
             <div className="booking-actions"><button type="button" className="booking-sample" onClick={() => { setReference("DEMO01"); setSurname("KIM"); setError(""); }}>{en ? "Fill demo booking" : "시연값 넣기"}</button><button className="public-button" type="submit"><Search size={18} aria-hidden="true" />{busy ? (en ? "Searching…" : "조회 중…") : (en ? "Find booking" : "예약 조회")}</button></div>
           </fieldset>
         </form> : <section className="booking-result" aria-labelledby="booking-result-title">
-          <h2 id="booking-result-title" ref={resultTitle} tabIndex={-1}>{en ? "Demo flight found" : "시연 항공편을 찾았어요"}</h2>
+          <h2 id="booking-result-title" ref={resultTitle} tabIndex={-1}><Plane aria-hidden="true" />{en ? "Demo flight found" : "시연 항공편을 찾았어요"}</h2>
           <p className="booking-itinerary">ICN <ArrowRight aria-hidden="true" size={22} /> NRT <span>{en ? "Tokyo" : "도쿄"}</span></p>
           <dl><dt>{en ? "Flight" : "항공편"}</dt><dd>DX9001 · {en ? "Demo Air" : "시연 항공"}</dd><dt>{en ? "Departure (Korea time)" : "출발 (한국 시간)"}</dt><dd>{result.flight.flightDate} 18:00</dd></dl>
           <p className="booking-footnote">{en ? "Lookup is valid for 30 minutes. Registering support needs does not book a service." : "조회 결과는 30분 동안 유효합니다. 지원등록은 서비스 예약 확정이 아닙니다."}</p>
@@ -66,6 +71,7 @@ export function BookingLookup({ lang, enabled }: { lang: Lang; enabled: boolean 
         </section>}
         {error && <p role="alert" className="booking-error">{error}</p>}
       </>}
+      </div>
       <Link className="booking-manual" href={"/register?via=booking" + (en ? "&lang=en" : "")}>{en ? "Select a flight manually" : "항공편 직접 선택해서 등록"}<ArrowRight size={17} aria-hidden="true" /></Link>
     </main>
   </PublicShell>;
