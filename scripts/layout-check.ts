@@ -252,6 +252,27 @@ async function guideSteps(page: Page, where: string) {
   if (await click(".haneuli-passport")) await inspect(page, where + " · 여권 화면");
 }
 
+/**
+ * 모의 운항을 지금 시각 기준으로 다시 맞춘다(e2e 의 resetFlights 와 같은 통로).
+ * 모의 운항은 넣은 시각부터 몇 분 뒤 떠나는 편이라, 몇 시간 지나면 MK501·MK101 이 목록에서 빠져 안내로봇·탑승구 화면 점검을 건너뛰었다.
+ * 개발 서버의 운영자 통로를 여는 값은 .env.local 의 CRON_SECRET(없으면 개발용 기본값). 실패해도 점검은 이어 간다.
+ */
+async function refreshMockFlights(): Promise<void> {
+  const file = path.resolve(".env.local");
+  const line = fs.existsSync(file) ? fs.readFileSync(file, "utf-8").split(/\r?\n/).find((l) => l.startsWith("CRON_SECRET=")) : undefined;
+  const secret = process.env.E2E_CRON_SECRET || line?.slice("CRON_SECRET=".length).replace(/^"(.*)"$/, "$1") || "dev-only-secret-change-me";
+  try {
+    const res = await fetch(`${BASE}/api/admin/setup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
+      body: JSON.stringify({ mockFlights: true }),
+    });
+    if (!res.ok) console.log(`모의 운항을 다시 맞추지 못했습니다 (${res.status}). 지난 편이면 안내로봇·탑승구 화면을 건너뜁니다.`);
+  } catch {
+    console.log("모의 운항을 다시 맞추지 못했습니다(서버 연결 실패).");
+  }
+}
+
 /** 시연용 등록을 하나 만들어 고유 일련 번호를 받는다. 모의 운항(MK501)이 없으면 null. */
 async function demoPassNo(flightNo = "MK501", choices: string[] = ["tr_walk"]): Promise<string | null> {
   try {
@@ -406,6 +427,8 @@ async function kioskCookie(placeId: string): Promise<string | null> {
             if (url === "/kiosk/guide" && scale === 1) await guideSteps(page, `${url} · ${size.name} · 글자 ×${scale}`);
             await page.close();
           }
+    // 안내로봇·탑승구 화면은 시연 항공편으로 등록해서 본다. 편이 이미 떠났을 수 있어 먼저 지금 시각 기준으로 다시 맞춘다.
+    if (guide && (!ONLY_PAGES || ONLY_PAGES.includes("/kiosk/guide")) && SCALES.includes(1)) await refreshMockFlights();
     // 안내로봇 화면(이대로 안내 받기 뒤): 글자 1배에서 기기 크기마다 본다.
     if (guide && (!ONLY_PAGES || ONLY_PAGES.includes("/kiosk/guide")) && SCALES.includes(1)) {
       const passNo = await demoPassNo();
