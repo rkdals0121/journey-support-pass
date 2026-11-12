@@ -1,6 +1,6 @@
 /*
   사이트 전체의 위쪽 바를 하나의 모양으로 맞춘다. 기준은 메인 화면의 둥근 바(해바라기 노랑이 옅게 번지는 흰 띠).
-  여객 공용 머리(PublicShell), 여행 전 등록 첫 화면(/prepare), 키오스크의 서비스 화면(FieldTaskShell)이 같은 모양을 쓴다.
+  여객 공용 머리(PublicShell, /prepare 도 이것을 쓴다), 키오스크의 서비스 화면(FieldTaskShell)이 같은 모양을 쓴다.
   키오스크의 FlowShell도 같은 바 크기를 쓴다.
   사전등록 배치(responsive-passenger.css) 바로 앞에 읽힌다.
 */
@@ -16,15 +16,11 @@
 @media (max-width: 36rem) {
   .flow-pretrip .flow-bar .bar-btn { padding-inline: .5rem; }
 }
-.prepare-tools { flex-wrap: wrap; }
 .text-size-control { display: inline-flex; padding: 4px; gap: 2px; border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); }
 .text-size-control button { display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--color-text); background: transparent; cursor: pointer; }
 .text-size-control button[aria-pressed=true] { background: var(--color-primary); color: var(--color-surface); }
 .text-size-control button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .airport-site .public-nav > a { border-radius: var(--radius-pill); }
-@media (max-width: 36rem) {
-  .pretrip-site .pretrip-header { flex-wrap: wrap; }
-}
 @media (max-width: 59.999rem) {
   .registration-language > span { display: none; }
   .flow-bar-right { gap: .375rem; }
@@ -32,26 +28,23 @@
 
 /* ── 둥근 바 모양: 아래 「Main-page dimensions」 한 곳에서 정한다 ── */
 .public-site .public-header { position: relative; top: auto; z-index: 30; }
-.pretrip-site .pretrip-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .field-task-shell .field-task-header { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-4); }
 .staff-login-screen .staff-login-brand { display: flex; align-items: center; }
 .field-task-shell .field-task-header > span { margin-left: auto; font-size: var(--text-small); }
 
 /* 바 안의 로고: 같은 크기 */
-:is(.public-header, .pretrip-header, .field-task-header) .public-logo,
+:is(.public-header, .field-task-header) .public-logo,
 .field-task-header .brand { gap: var(--space-2); font-size: var(--text-body); }
-:is(.public-header, .pretrip-header) .public-logo small { font-size: var(--text-caption); }
-:is(.public-header, .pretrip-header, .field-task-header) .sunflower { width: 2rem; height: 2rem; }
+.public-header .public-logo small { font-size: var(--text-caption); }
+:is(.public-header, .field-task-header) .sunflower { width: 2rem; height: 2rem; }
 
 /* 바 오른쪽 도구: 글자 크기 → 언어 → (소리·메뉴) 순서, 같은 높이 */
 .public-site .public-tools,
-.pretrip-site .prepare-tools,
 .field-task-shell .field-task-tools,
 .flow-pretrip .flow-bar-right { display: flex; align-items: center; gap: var(--space-2); }
 .public-site .public-tools { flex-direction: row-reverse; justify-content: flex-start; }
 .public-site .public-tools .public-menu-toggle { order: -1; }
 .public-site .public-tools > a,
-.pretrip-site .prepare-tools > a,
 .field-task-shell .field-task-tools > :is(a, button) {
   display: inline-flex;
   align-items: center;
@@ -70,13 +63,12 @@
 .field-task-shell .field-task-tools > button[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
 
 /* 바 아래 본문과의 거리 */
-.public-site .public-header + *,
-.pretrip-site .pretrip-header ~ main { margin-top: var(--space-4); }
+.public-site .public-header + * { margin-top: var(--space-4); }
 
 @media (max-width: 40rem) {
   .field-task-shell .field-task-header { flex-wrap: wrap; }
   .field-task-shell .field-task-header > span { order: 3; width: 100%; margin: 0; }
-  :is(.public-header, .pretrip-header) .public-logo small { display: none; }
+  .public-header .public-logo small { display: none; }
 }
 
 /* ── 사전등록: 가운데 상자 안쪽만 따로 스크롤되던 것을 없앤다 ──
@@ -116,7 +108,6 @@ body:has(.flow-pretrip) { height: auto; min-height: 100%; overflow: visible; ove
   --site-bar-room: 100vw;
 }
 .public-site .public-header,
-.pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
 .staff-login-screen .staff-login-brand,
 .flow .flow-bar,
@@ -141,7 +132,6 @@ html[data-kiosk] .flow .flow-bar {
 html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-now)) / 2); }
 @media (min-width: 60rem) {
   .public-site .public-header,
-  .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
   .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
@@ -150,7 +140,6 @@ html[data-kiosk] .flow .flow-bar { margin-inline: calc((100% - var(--site-bar-no
 @media (max-width: 40rem) {
   :root { --site-bar-gutter: 12px; }
   .public-site .public-header,
-  .pretrip-site .pretrip-header,
   .field-task-shell .field-task-header,
   .staff-login-screen .staff-login-brand,
   .flow .flow-bar,
@@ -168,7 +157,6 @@ html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: var(--kio
 /* Shared header typography and alignment, including standalone preparation. */
 html { scrollbar-gutter: stable; }
 .public-site .public-header,
-.pretrip-site .pretrip-header,
 .field-task-shell .field-task-header,
 .staff-login-screen .staff-login-brand,
 .flow .flow-bar,
@@ -176,31 +164,31 @@ html[data-kiosk] .flow .flow-bar {
   font-family: var(--font-body); font-size: calc(14px * var(--scale, 1));
   line-height: 1.5; letter-spacing: 0;
 }
-:is(.public-header, .pretrip-header, .field-task-header, .staff-login-brand) :is(.public-logo, .brand) {
+:is(.public-header, .field-task-header, .staff-login-brand) :is(.public-logo, .brand) {
   display: flex; align-items: center; gap: 8px; margin: 0;
   font-size: calc(16px * var(--scale, 1)); font-weight: 700;
   line-height: 1.5; letter-spacing: 0;
 }
-:is(.public-header, .pretrip-header, .field-task-header) :is(.public-logo, .brand) small {
+:is(.public-header, .field-task-header) :is(.public-logo, .brand) small {
   display: block; margin: 4px 0 0; max-width: none;
   font-size: calc(12px * var(--scale, 1)); font-weight: 400;
   line-height: 1.5; letter-spacing: .01em;
 }
-:is(.public-header, .pretrip-header, .field-task-header, .staff-login-brand) .sunflower { width: 32px; height: 32px; flex: none; }
-:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) :is(.public-tools, .prepare-tools, .field-task-tools, .flow-bar-right) {
+:is(.public-header, .field-task-header, .staff-login-brand) .sunflower { width: 32px; height: 32px; flex: none; }
+:is(.public-header, .field-task-header, .flow-bar) :is(.public-tools, .field-task-tools, .flow-bar-right) {
   align-items: center; gap: 8px; margin: 0;
 }
-:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) :is(button, select, .prepare-tools > a, .public-tools > a, .field-task-tools > a) {
+:is(.public-header, .field-task-header, .flow-bar) :is(button, select, .public-tools > a, .field-task-tools > a) {
   font-family: inherit; font-size: calc(14px * var(--scale, 1));
   font-weight: 600; line-height: 1.5; letter-spacing: 0;
 }
-:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) .text-size-control {
+:is(.public-header, .field-task-header, .flow-bar) .text-size-control {
   padding: 4px; gap: 2px; height: 50px; box-sizing: border-box;
 }
-:is(.public-header, .pretrip-header, .field-task-header, .flow-bar) .text-size-control button {
+:is(.public-header, .field-task-header, .flow-bar) .text-size-control button {
   width: 40px; height: 40px; min-height: 40px; padding: 0;
 }
-:is(.public-header, .pretrip-header) :is(.prepare-tools > a, .public-tools > a) {
+.public-header .public-tools > a {
   min-width: 52px; height: 44px; box-sizing: border-box; padding: 0 16px;
   justify-content: center;
 }
@@ -219,14 +207,13 @@ html[data-kiosk] .flow .flow-bar {
 }
 
 .public-site .public-header .public-logo .sunflower,
-.pretrip-site .pretrip-header .public-logo .sunflower,
 .field-task-shell .field-task-header .brand .sunflower {
   width: 32px; height: 32px; flex: 0 0 32px;
 }
 
 @media (max-width: 760px) {
   /* 여객 웹과 사전등록에 같은 여백·모서리·누르는 크기를 쓴다. */
-  html:not([data-kiosk]) :is(.public-site .public-header, .pretrip-site .pretrip-header, .flow .flow-bar) {
+  html:not([data-kiosk]) :is(.public-site .public-header, .flow .flow-bar) {
     display: flex;
     flex-wrap: wrap;
     height: auto;
@@ -235,7 +222,7 @@ html[data-kiosk] .flow .flow-bar {
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-medium);
   }
-  html:not([data-kiosk]) :is(.public-site .public-header, .pretrip-site .pretrip-header) .public-logo {
+  html:not([data-kiosk]) .public-site .public-header .public-logo {
     flex: 1 0 7rem;
     min-width: 0;
     min-height: var(--target-floor);
@@ -244,29 +231,29 @@ html[data-kiosk] .flow .flow-bar {
     font-size: var(--text-small);
     line-height: 1.2;
   }
-  html:not([data-kiosk]) :is(.public-site .public-header, .pretrip-site .pretrip-header) .public-logo .sunflower {
+  html:not([data-kiosk]) .public-site .public-header .public-logo .sunflower {
     width: 1.25rem;
     height: 1.25rem;
     flex-basis: 1.25rem;
   }
-  html:not([data-kiosk]) :is(.public-site .public-header, .pretrip-site .pretrip-header) :is(.public-tools, .prepare-tools) {
+  html:not([data-kiosk]) .public-site .public-header .public-tools {
     flex: 0 0 auto;
     flex-wrap: nowrap;
     max-width: 100%;
     gap: var(--space-1);
     margin-inline-start: auto;
   }
-  html:not([data-kiosk]) :is(.public-site .public-header, .pretrip-site .pretrip-header, .flow .flow-bar) .text-size-control {
+  html:not([data-kiosk]) :is(.public-site .public-header, .flow .flow-bar) .text-size-control {
     height: auto;
     padding: 0;
     gap: 0;
   }
-  html:not([data-kiosk]) :is(.public-site .public-header, .pretrip-site .pretrip-header, .flow .flow-bar) .text-size-control button {
+  html:not([data-kiosk]) :is(.public-site .public-header, .flow .flow-bar) .text-size-control button {
     width: var(--target-floor);
     height: var(--target-floor);
     min-height: var(--target-floor);
   }
-  html:not([data-kiosk]) :is(.public-site .public-tools, .pretrip-site .prepare-tools) > :is(a, button) {
+  html:not([data-kiosk]) .public-site .public-tools > :is(a, button) {
     min-width: var(--target-floor);
     min-height: var(--target-floor);
     padding-inline: var(--space-1);
