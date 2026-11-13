@@ -736,7 +736,8 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
                   onClick={() => go("camera")}
                 >
                   <Camera aria-hidden="true" />{" "}
-                  {s.photo ? tr("다시 찍기") : t.takePhoto}
+                  {/* 인증 ID를 이미 받았으면 「인증 ID 받기」가 맞지 않다. 사진만 더하는 일 */}
+                  {s.photo ? tr("다시 찍기") : s.certId ? (lang === "en" ? "Add a photo" : "인증 사진도 찍기") : t.takePhoto}
                 </button>
                 {!s.certId && (
                   <button
