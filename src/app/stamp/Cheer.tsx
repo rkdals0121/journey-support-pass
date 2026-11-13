@@ -37,6 +37,8 @@ export function NarangiSays({
         aria-hidden="true"
         width={face === "front" ? 480 : 363}
         height={face === "front" ? 480 : 464}
+        // 화면에는 4~7.5rem 으로만 그린다. 원본(480px)을 그대로 받지 않게 실제 크기를 알려 준다
+        sizes={size === "lg" ? "160px" : size === "sm" ? "96px" : "128px"}
       />
       <p className="sb-says-bubble" role="status">
         {text}

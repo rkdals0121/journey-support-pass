@@ -1101,7 +1101,7 @@
   font-size: var(--text-heading);
   font-weight: var(--weight-heading);
 }
-.sb-pick-text > span:not(.sb-pick-stamps) {
+.sb-pick-text > span:not(.sb-pick-stamps, .sb-pick-reward) {
   font-size: var(--text-small);
   font-weight: var(--weight-label);
   opacity: 0.9;
@@ -1178,7 +1178,6 @@
 }
 .sb-pick-mine small {
   font-weight: var(--weight-label);
-  opacity: 0.8;
 }
 @keyframes sb-pop {from { opacity:0; transform:translateY(.25rem); } to { opacity:1; transform:none; }
 }
@@ -1473,8 +1472,11 @@
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--color-accent);
-  color: var(--color-blue);
+  /* 가장 진한 글자색으로(노랑 위 대비 4.5:1 이상) */
+  color: var(--color-dark);
   font-size: var(--text-caption);
   font-weight: var(--weight-heading);
 }
 .sb-pick-reward svg.lucide { width: 0.875rem; height: 0.875rem; flex: none; }
+/* QR 스캔 화면의 나랑이 안내(진한 바탕 위) */
+.sb-scan > .sb-says { max-width: 30rem; margin: 0 auto var(--space-3); }
