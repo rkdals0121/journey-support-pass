@@ -497,7 +497,7 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
                 </strong>
               </div>
               <StampBoard theme={theme} n={n} goal={goal} lang={lang} />
-              <NarangiSays size="sm" face={n === 0 ? "side" : "front"} text={boardLine(n, goal, nextPlace, reward, lang)} />
+              <NarangiSays size="sm" face={n === 0 ? "guide" : n >= goal ? "cheer" : "goodluck"} text={boardLine(n, goal, nextPlace, reward, lang)} />
             </section>
           ) : (
             <Progress lang={lang} theme={theme} n={n} goal={goal} />
@@ -539,6 +539,7 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
         <main className="sb-scan">
           <h1 className="sr-only">{tr("QR 스캔")}</h1>
           <NarangiSays
+            face="guide"
             size="sm"
             text={
               lang === "en"
@@ -635,7 +636,7 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
             <StampBoard theme={theme} n={n} goal={goal} fresh={got.again ? undefined : itinerary.indices.indexOf(got.i) >= 0 ? n - 1 : undefined} lang={lang} />
             <NarangiSays
               pop={!got.again}
-              face={got.again ? "side" : "front"}
+              face={got.again ? "sorry" : n >= goal ? "cheer" : "surprised"}
               text={
                 got.again
                   ? lang === "en"
@@ -685,6 +686,7 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
                   <Burst />
                   <StampBoard theme={theme} n={n} goal={goal} lang={lang} />
                   <NarangiSays
+                    face="cheer"
                     pop
                     text={
                       lang === "en"
