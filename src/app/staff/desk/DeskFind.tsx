@@ -19,7 +19,7 @@ const DESK_TIMEOUT_MS = 15_000;
 
 /**
  * 여객이 보여 준 QR 을 찍거나 불러 준 번호를 넣어 패스를 찾는다.
- * 찾은 패스의 항공편과 고른 항목, 우대 확인 여부를 보고, 여객이 원하면 지운다. 이름으로는 찾을 수 없다(이름을 받지 않는다).
+ * 찾은 등록의 항공편과 고른 항목, 우대 확인 여부를 보고, 여객이 원하면 지운다. 이름으로는 찾을 수 없다(이름을 받지 않는다).
  * 스티커 인쇄는 없앴다(멘토링: 실물 매개체의 폐기물과 이중 절차). QR 은 여객 휴대전화의 탑승권에 있다.
  */
 export function DeskFind() {
@@ -28,7 +28,7 @@ export function DeskFind() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  // 패스를 찾으면 「찾은 패스」로, 닫거나 지우면 번호 칸으로 초점을 옮긴다. 누른 단추가 사라져 초점이 빠지지 않게 한다.
+  // 패스를 찾으면 「찾은 등록」으로, 닫거나 지우면 번호 칸으로 초점을 옮긴다. 누른 단추가 사라져 초점이 빠지지 않게 한다.
   const foundRef = useRef<HTMLElement>(null);
   const hadFound = useRef(false);
   useEffect(() => {
@@ -131,7 +131,7 @@ export function DeskFind() {
       <div className="panel desk-found">
         <div className="desk-found-head">
           <strong ref={foundRef} tabIndex={-1}>
-            찾은 패스
+            찾은 등록
           </strong>
           <button
             className="icon-btn"

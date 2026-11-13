@@ -237,6 +237,8 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
   }
   .flow-pretrip .flow-body::-webkit-scrollbar { display: block; width: 6px; }
   .flow-pretrip .flow-cta { position: relative; flex: 0 0 auto; padding: .75rem 0 0; background: transparent; }
+  /* PC 사전등록: 「다음」 단추가 화면 아래 끝에 딱 붙어 있던 것. 다른 박스 사이 간격과 같은 여백을 둔다(키오스크는 한 화면 맞춤 그대로). */
+  html:not([data-kiosk]) .flow-pretrip .flow-cta { padding-bottom: var(--space-4); }
   html[data-kiosk] .flow-pretrip :is(.flow-desktop-steps, .flow-desktop-summary) {
     display: block; position: static; min-height: 0; max-height: 100%; overflow-y: auto;
     overscroll-behavior: none; align-self: stretch;

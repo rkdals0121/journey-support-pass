@@ -130,6 +130,9 @@ nav a[aria-current="page"] .workspace-nav-arrow { opacity: 1; }
 .staff-legacy-list .call-other { border-style: dashed; }
 .staff-legacy-list .call-accepted { border-color: var(--color-primary); }
 .staff-legacy-list .calls-ended { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
+/* 카드 안 첫 줄 위의 나눔선은 카드 테두리와 겹쳐 선이 두 번 보이므로 뺀다 */
+.staff-legacy-list .calls-ended li:first-child { border-top: 0; padding-top: 0; }
+.staff-legacy-list .calls-ended li:last-child { padding-bottom: 0; }
 
 /* 운영 기준과 기타 업무도 같은 제목·카드·간격을 사용한다. */
 .staff-reference-intro { margin: 0 0 var(--space-4); color: var(--color-muted); font-size: var(--text-small); line-height: 1.7; }

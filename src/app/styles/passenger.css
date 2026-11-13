@@ -397,7 +397,8 @@
 .flow-pretrip .flow-desktop-summary > .public-eyebrow { display: none; }
 .flow-pretrip .flow-desktop-summary h2 { font-size: var(--text-body); margin-top: 0; }
 .flow-pretrip .flow-desktop-summary :is(p, li) { font-size: var(--text-caption); line-height: 1.7; }
-.flow-pretrip .choices { gap: 0; border-top: 0.0625rem solid var(--color-line); }
+/* 고르는 칸은 둥근 카드라 서로 붙이지 않는다(휴대전화 「들를 곳」 등에서 카드가 맞붙고 위에 선만 하나 남던 것). 「불편한 점」 화면과 같은 간격 */
+.flow-pretrip .choices { gap: var(--space-2); }
 html[data-kiosk] .flow-pretrip .choice-icon { width: 1.75rem; height: 1.75rem; border-radius: 0; background: none; }
 html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; width: 1.5rem; height: 1.5rem; padding: var(--space-2); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
 .flow-pretrip .choice-icon svg { width: 1.5rem; height: 1.5rem; }
