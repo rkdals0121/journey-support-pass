@@ -2,7 +2,7 @@ import { PublicShell } from "../components/PublicShell";
 import { NavigationFlow } from "./NavigationFlow";
 import { currentSession } from "@/lib/session-server";
 import { placeOf } from "@/lib/airport";
-import { kioskReturn } from "@/lib/help-entry";
+import { kioskReturn, previewPlaceId } from "@/lib/help-entry";
 import { FieldTaskShell } from "../components/FieldTaskShell";
 import { config } from "@/lib/config";
 import { pageTitle } from "@/lib/page-title";
@@ -11,19 +11,22 @@ export const generateMetadata = pageTitle("탑승구·시설 찾기", "Find gate
 export default async function Navigate({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string; gate?: string; entry?:string; place?:string; returnTo?: string; device?: string }>;
+  searchParams: Promise<{ lang?: string; gate?: string; entry?:string; place?:string; returnTo?: string; device?: string; preview?: string }>;
 }) {
   const q = await searchParams;
   const en = q.lang === "en";
   const session = await currentSession();
-  const place = session?.isKiosk ? placeOf(session.placeId) : undefined;
+  // 기기 화면 미리보기(?preview=1)는 설치하지 않았지만 그 키오스크의 시연 자리로 그린다.
+  const previewPlace = session?.isKiosk ? undefined : previewPlaceId(q.preview, q.returnTo);
+  const preview = !!previewPlace;
+  const place = session?.isKiosk ? placeOf(session.placeId) : previewPlace ? placeOf(previewPlace) : undefined;
   const returnTo =
     kioskReturn(q.returnTo) ??
     (place?.landside ? "/kiosk/entry" : "/kiosk/guide");
   const flow = (
     <NavigationFlow
       en={en}
-      backHref={q.entry === "mobility" ? "/help?topic=mobility"+(en?"&lang=en":"")+(session?.isKiosk?"&returnTo="+encodeURIComponent(returnTo):"") : undefined}
+      backHref={q.entry === "mobility" ? "/help?topic=mobility"+(en?"&lang=en":"")+(place?"&returnTo="+encodeURIComponent(returnTo):"")+(preview?"&preview=1":"") : undefined}
       initialGate={q.gate && /^\d{1,3}$/.test(q.gate) ? q.gate : ""}
       initialPlace={place?.id ?? ""}
       fixedPlace={!!place}
@@ -37,6 +40,7 @@ export default async function Navigate({
     return (
       <FieldTaskShell
         en={en}
+        preview={preview}
         returnTo={returnTo}
         place={en ? place.labelEn : place.label}
       >

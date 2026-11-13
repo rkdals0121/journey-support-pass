@@ -1,7 +1,7 @@
 import { currentSession } from "@/lib/session-server";
 import { MobilityHome } from "../components/MobilityHome";
 import { HelpFlow } from "./HelpFlow";
-import { helpService, kioskReturn, type KioskReturn } from "@/lib/help-entry";
+import { helpService, kioskReturn, previewPlaceId, withPreview, type KioskReturn } from "@/lib/help-entry";
 import { businessOf } from "@/lib/operating-profile";
 import { supportTopic } from "@/lib/service-catalog";
 import { PublicShell } from "../components/PublicShell";
@@ -25,17 +25,22 @@ export default async function HelpPage({
     resume?: string;
     business?: string;
     topic?: string;
+    preview?: string;
   }>;
 }) {
   const q = await searchParams;
   if (q.topic === "lost-property")
     redirect("/services/lost-property" + (q.lang === "en" ? "?lang=en" : ""));
-  const session = await currentSession();
+  const realSession = await currentSession();
+  // 기기 화면 미리보기(?preview=1)는 설치하지 않은 화면이지만 키오스크 화면으로 그린다(링크·「이전」에도 미리보기를 잇는다).
+  const previewPlace = realSession?.isKiosk ? undefined : previewPlaceId(q.preview, q.returnTo);
+  const preview = !!previewPlace;
+  const session = realSession?.isKiosk ? realSession : previewPlace ? { isKiosk: true as const, placeId: previewPlace } : realSession;
   const mobility = q.topic === "mobility" || (!q.topic && q.service === "mobility");
   if (mobility && !["staff","robot"].includes(q.flow??"") && q.resume !== "1") {
     const home = session?.isKiosk ? kioskReturn(q.returnTo) ?? "/kiosk/guide" : "/";
     const kioskPlace = session?.isKiosk ? placeOf(session.placeId) : undefined;
-    return <MobilityHome en={q.lang==="en"} homeHref={home+(q.lang==="en"?"?lang=en":"")} place={session?.isKiosk?session.placeId??"":q.place??""} returnTo={session?.isKiosk?home:""}
+    return <MobilityHome en={q.lang==="en"} preview={preview} homeHref={withPreview(home+(q.lang==="en"?"?lang=en":""), preview)} place={session?.isKiosk?session.placeId??"":q.place??""} returnTo={session?.isKiosk?home:""}
       kiosk={session?.isKiosk ? {returnTo: home as KioskReturn, placeLabel: q.lang==="en" ? (kioskPlace?.labelEn ?? "") : (kioskPlace?.label ?? "")} : undefined}/>;
   }
   const business = businessOf(q.business);
@@ -54,7 +59,7 @@ export default async function HelpPage({
       initialService={topic?.service ?? helpService(q.service)}
       initialTopic={topic?.id}
       initialBusiness={business?.id}
-      mobilityHomeHref={mobility ? "/help?"+new URLSearchParams({topic:"mobility",...(q.lang==="en"?{lang:"en"}:{}),...(q.place?{place:q.place}:{}),...(session?.isKiosk?{returnTo:kioskReturn(q.returnTo)??"/kiosk/guide"}:{})}).toString() : undefined}
+      mobilityHomeHref={mobility ? "/help?"+new URLSearchParams({topic:"mobility",...(q.lang==="en"?{lang:"en"}:{}),...(q.place?{place:q.place}:{}),...(session?.isKiosk?{returnTo:kioskReturn(q.returnTo)??"/kiosk/guide"}:{}),...(preview?{preview:"1"}:{})}).toString() : undefined}
       initialTask={mobility && q.task === "mobility-vehicle" ? q.task : undefined}
       initialMobilityMode={q.flow === "robot" && q.task !== "mobility-vehicle" ? "robot" : "staff"}
       initialNote=""
@@ -70,6 +75,7 @@ export default async function HelpPage({
     return (
       <FieldTaskShell
         en={lang === "en"}
+        preview={preview}
         returnTo={
           kioskReturn(q.returnTo) ??
           (place?.landside ? "/kiosk/entry" : "/kiosk/guide")

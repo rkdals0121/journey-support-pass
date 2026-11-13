@@ -12,7 +12,8 @@ import { hubOf, VISIT_STATES, type VisitView } from "@/lib/service-hubs";
 import { VISIT_STATE_EN, visitError } from "@/lib/visit-labels";
 import { HubMap } from "../../components/HubMap";
 import { MapPin, ArrowRight, Delete } from "lucide-react";
-import type { KioskReturn } from "@/lib/help-entry";
+import { kioskHomeHref, type KioskReturn } from "@/lib/help-entry";
+import { usePreview } from "../../components/usePreview";
 import { StaffCall } from "../../components/StaffCall";
 import { FlowShell } from "../../components/FlowShell";
 import { IdleGuard } from "../../components/IdleGuard";
@@ -35,6 +36,7 @@ export function KioskVisitFlow({
   askSec: number;
   answerSec: number;
 }) {
+  const preview = usePreview();
   const [en, setEn] = useState(initialEnglish),
     [reference, setReference] = useState("");
   const [meetingPoint, setMeetingPoint] = useState<{
@@ -97,6 +99,9 @@ export function KioskVisitFlow({
           body: JSON.stringify(body),
           signal: AbortSignal.any([request.signal, AbortSignal.timeout(12000)]),
         });
+        // 기기 화면 미리보기는 설치하지 않은 화면이라 조회가 401 이다.
+        if (r.status === 401 && preview)
+          throw Error(en ? "Appointments cannot be found in this preview. Please use an installed kiosk." : "미리보기 화면에서는 예약을 찾을 수 없습니다. 설치한 키오스크에서 해 주세요.");
         const b = await r.json();
         if (!r.ok) throw Error(visitError(b, en));
         if (turn !== epoch.current) return;
@@ -130,7 +135,7 @@ export function KioskVisitFlow({
         }
       }
     },
-    [reference, en],
+    [reference, en, preview],
   );
   useEffect(() => {
     if (!visit?.id) return;
@@ -176,9 +181,9 @@ export function KioskVisitFlow({
       speakText={title}
       onHome={() => {
         reset();
-        window.location.replace(returnTo + (en ? "?lang=en" : ""));
+        window.location.replace(kioskHomeHref(returnTo, en, preview));
       }}
-      onBack={visit ? reset : () => window.location.replace(returnTo)}
+      onBack={visit ? reset : () => window.location.replace(kioskHomeHref(returnTo, en, preview))}
       headerTools={
         <button className="bar-btn" onClick={() => setEn(!en)}>
           {en ? "한국어" : "English"}

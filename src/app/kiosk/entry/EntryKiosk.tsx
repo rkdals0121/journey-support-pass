@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { kioskHelpHref } from "@/lib/help-entry";
+import { usePreview } from "../../components/usePreview";
 import { useCallback, useRef, useState } from "react";
 import { labelOf, prefsOf } from "@/lib/catalog";
 import type { Target } from "@/lib/docscan";
@@ -135,6 +136,7 @@ export function EntryKiosk({
   idleAnswerSec,
 }: Props) {
   useRobotTheme();
+  const preview = usePreview();
   const [lang, setLang] = useState<Lang>(initialLang);
   const [view, setView] = useState<View>({ kind: "sleep" });
   const [scanOpen, setScanOpen] = useState(false);
@@ -178,6 +180,11 @@ export function EntryKiosk({
   }, []);
 
   const failed = (status: number, body: Record<string, unknown>) => {
+    // 기기 화면 미리보기는 설치하지 않은 화면이라 조회가 401 이다. 설치 화면으로 보내지 않고 알려 준다.
+    if (status === 401 && preview) {
+      setError(lang === "en" ? "Registrations cannot be found in this preview. Please use an installed kiosk." : "미리보기 화면에서는 등록을 찾을 수 없습니다. 설치한 키오스크에서 해 주세요.");
+      return;
+    }
     if (status === 401) return window.location.replace("/kiosk");
     setError(
       typeof body.error === "string"
@@ -217,7 +224,7 @@ export function EntryKiosk({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [busy, lang],
+    [busy, lang, preview],
   );
 
   async function findNumber() {
@@ -383,6 +390,7 @@ export function EntryKiosk({
         }
         topics={["guidance", "mobility"]}
         returnTo="/kiosk/entry"
+        preview={preview}
         appointmentLabel={
           lang === "en" ? "Confirm a meeting appointment" : "만남 예약 확인"
         }
@@ -695,7 +703,7 @@ export function EntryKiosk({
           <Link
             className="svc-card"
             prefetch={false}
-            href={kioskHelpHref(tok, lang, "mobility", "/kiosk/entry")}
+            href={kioskHelpHref(tok, lang, "mobility", "/kiosk/entry", false, preview)}
           >
             <CarFront size={36} aria-hidden="true" />
             <strong>{t.svcAssist}</strong>
@@ -708,7 +716,7 @@ export function EntryKiosk({
           <Link
             className="svc-card"
             prefetch={false}
-            href={kioskHelpHref(tok, lang, "guidance", "/kiosk/entry", true)}
+            href={kioskHelpHref(tok, lang, "guidance", "/kiosk/entry", true, preview)}
           >
             <ClipboardCheck size={36} aria-hidden="true" />
             <strong>{t.svcStatus}</strong>
