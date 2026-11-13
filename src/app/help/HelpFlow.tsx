@@ -18,6 +18,8 @@ import {
 } from "@/lib/service-request-model";
 import { textOf } from "@/lib/i18n";
 import { IdleGuard } from "../components/IdleGuard";
+import { usePreview } from "../components/usePreview";
+import { withPreview } from "@/lib/help-entry";
 import { ReceiptQr } from "./ReceiptQr";
 import { PickupChange } from "./PickupChange";
 import { ReportLocationPicker } from "../components/ReportLocationPicker";
@@ -164,6 +166,7 @@ export function HelpFlow({
       ? NO_MEETING_PLACE
       : (placeOf(initialPlace)?.id ?? ""),
   );
+  const preview = usePreview();
   const [service, setService] = useState<ServiceType>(initialService);
   const [choices, setChoices] = useState(savedChoices);
   const [party, setParty] = useState(savedParty);
@@ -564,7 +567,7 @@ export function HelpFlow({
         sessionStorage.removeItem(STORAGE_SCOPE);
       } catch {}
       window.location.assign(
-        assisted ? "/staff/requests/new" : (returnTo ?? "/help"),
+        assisted ? "/staff/requests/new" : withPreview(returnTo ?? "/help", preview),
       );
       return;
     }
@@ -954,7 +957,7 @@ export function HelpFlow({
     >
       {!embedded && (
         <div className="request-local-tools">
-          <Link href={returnTo ?? registrationHome ?? (en ? "/?lang=en" : "/")}>
+          <Link href={returnTo ? withPreview(returnTo, preview) : (registrationHome ?? (en ? "/?lang=en" : "/"))}>
             {returnTo
               ? tr("안내 화면으로", "Back to kiosk")
               : registrationHome
@@ -1323,7 +1326,7 @@ export function HelpFlow({
                 {service === "mobility" && (<MobilityMapPlanner initialSupportMode={task?.id === "mobility-vehicle" ? "staff" : initialMobilityMode} placeId={placeId} destinationId={destinationId} initialPlace={initialPlace}
                         en={en} disabled={busy} kiosk={sharedDevice} title={cartTitle} onConfirmingChange={setMobilityConfirming} destinationEnabled={task?.id !== "mobility-wheelchair"}
                         requestContent={<>{requestDetails}{requestAdditional}{error && <p role="alert">{error}</p>}{requestSummary}</>}
-                        backHref={mobilityHomeHref ?? returnTo ?? (en ? "/?lang=en" : "/")}
+                        backHref={mobilityHomeHref ?? (returnTo ? withPreview(returnTo, preview) : (en ? "/?lang=en" : "/"))}
                         onChange={(nextPlace, nextDestination) => { setPlaceId(nextPlace); setDestinationId(nextDestination); setError(""); }} />)}
                 {service !== "mobility" && requestDetails}
                 {!noMeeting && service !== "mobility" && (

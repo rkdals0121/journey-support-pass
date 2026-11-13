@@ -7,7 +7,8 @@ import { AirportRoutePlanner, type RoutePlannerResult } from "../components/Airp
 import { IdleGuard } from "../components/IdleGuard";
 import { placeOf } from "@/lib/airport";
 import { MAP_FACILITIES, facilityForPlace, areaBuilding, type MapFacility } from "@/lib/map-facilities";
-import type { KioskReturn } from "@/lib/help-entry";
+import { kioskHomeHref, type KioskReturn } from "@/lib/help-entry";
+import { usePreview } from "../components/usePreview";
 import { textOf } from "@/lib/i18n";
 import styles from "./navigation-map.module.css";
 
@@ -74,12 +75,13 @@ export function NavigationFlow({ backHref, en, initialGate = "", initialPlace = 
   const [deviceMode,setDeviceMode]=useState<"kiosk"|"robot">(robotGuidance?"robot":"kiosk");
   const [robotPhase,setRobotPhase]=useState<RobotPhase>("idle");
   const isRobotMode=deviceMode==="robot";
+  const preview=usePreview();
   const robotActive=isRobotMode&&(robotPhase==="guiding"||robotPhase==="arrived");
   const currentLocation=facilityForPlace(placeOf(initialPlace));
   const [from,setFrom]=useState<MapFacility|null>(()=>facilityForPlace(placeOf(initialPlace)));
   const [target,setTarget]=useState<MapFacility|null>(()=>MAP_FACILITIES.find(p=>p.name===`탑승구 ${initialGate}`)??null);
-  const homeHref=backHref??(fixedPlace?returnTo:isRobotMode?"/devices/robot":"/")+(en?"?lang=en":"");
-  const helpHref=`/help?topic=guidance&fresh=1${initialPlace?"&place="+encodeURIComponent(initialPlace):""}${fixedPlace?"&returnTo="+encodeURIComponent(returnTo):""}${en?"&lang=en":""}`;
+  const homeHref=backHref??(fixedPlace?kioskHomeHref(returnTo,en,preview):(isRobotMode?"/devices/robot":"/")+(en?"?lang=en":""));
+  const helpHref=`/help?topic=guidance&fresh=1${initialPlace?"&place="+encodeURIComponent(initialPlace):""}${fixedPlace?"&returnTo="+encodeURIComponent(returnTo):""}${en?"&lang=en":""}${preview?"&preview=1":""}`;
   const deviceControls=<fieldset className={styles.deviceMode}>
     <legend>{t("이용 기기 · 시연","Device · demo")}</legend>
     {(["kiosk","robot"] as const).map(value=><label key={value}>
@@ -88,7 +90,7 @@ export function NavigationFlow({ backHref, en, initialGate = "", initialPlace = 
     </label>)}
   </fieldset>;
   return <main id="public-main" className={styles.workspace} data-kiosk={fixedPlace} data-device-layout={deviceMode}>
-    <IdleGuard t={textOf(en?"en":"ko")} enabled={fixedPlace&&!robotActive} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={()=>window.location.assign(returnTo+(en?"?lang=en":""))}/>
+    <IdleGuard t={textOf(en?"en":"ko")} enabled={fixedPlace&&!robotActive} askSec={idleAskSec} answerSec={idleAnswerSec} onTimeout={()=>window.location.assign(kioskHomeHref(returnTo,en,preview))}/>
     <AirportRoutePlanner en={en} kiosk={fixedPlace || isRobotMode} deviceLayout={deviceMode} disabled={robotActive} start={from} destination={target} currentLocation={currentLocation}
       onStartChange={p=>{setFrom(p);setRobotPhase("idle");}} onDestinationChange={p=>{setTarget(p);setRobotPhase("idle");}}
       initialBuilding={areaBuilding(placeOf(initialPlace)?.area)}

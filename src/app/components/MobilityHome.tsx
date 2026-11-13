@@ -9,7 +9,7 @@ import type { KioskReturn } from "@/lib/help-entry";
 import { useSpeech } from "./useSpeech";
 import styles from "./mobility-home.module.css";
 
-export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk}: {en?:boolean;homeHref?:string;place?:string;returnTo?:string;
+export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk,preview=false}: {en?:boolean;homeHref?:string;place?:string;returnTo?:string;preview?:boolean;
   /** 키오스크에서는 여객 사이트 위쪽 바(메뉴 링크) 대신 다른 키오스크 접수 화면과 같은 바를 쓴다. */
   kiosk?:{returnTo:KioskReturn;placeLabel:string}}) {
   const t=(ko:string,english:string)=>en?english:ko;
@@ -20,6 +20,7 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk}:
     else q.delete("lang");
     if(place)q.set("place",place);
     if(returnTo)q.set("returnTo",returnTo);
+    if(preview)q.set("preview","1");
     return path+(q.size?"?"+q.toString():"");
   }
   const staff=href("/help",{topic:"mobility",flow:"staff",fresh:"1"});
@@ -52,6 +53,6 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk}:
     <div className={styles.footer} role="group" aria-label={t("안내 마무리","Finish assistance")}><Link href={homeHref}>{t("안내 끝내기","Finish")}</Link><Link href={href("/visits")}><CalendarCheck aria-hidden="true"/>{t("만남 예약 확인","Appointments")}</Link></div>
     </main>;
   return kiosk
-    ? <FieldTaskShell en={en} returnTo={kiosk.returnTo} place={kiosk.placeLabel}>{content}</FieldTaskShell>
+    ? <FieldTaskShell en={en} preview={preview} returnTo={kiosk.returnTo} place={kiosk.placeLabel}>{content}</FieldTaskShell>
     : <PublicShell lang={en?"en":"ko"}>{content}</PublicShell>;
 }

@@ -4,6 +4,7 @@ import { BellRing } from "lucide-react";
 import { useEffect } from "react";
 import type { Text } from "@/lib/i18n";
 import { kioskHelpHref, type KioskReturn } from "@/lib/help-entry";
+import { usePreview } from "./usePreview";
 interface Props {
   t: Text;
   big: boolean;
@@ -26,6 +27,7 @@ export function StaffCall({
   returnTo,
   onActive,
 }: Props) {
+  const preview = usePreview();
   useEffect(() => {
     onActive?.(false);
   }, [onActive]);
@@ -39,6 +41,8 @@ export function StaffCall({
         "guidance",
         returnTo ??
           (screen === "register" ? "/kiosk/register" : "/kiosk/guide"),
+        false,
+        preview,
       )}
     >
       <BellRing size={24} aria-hidden="true" />

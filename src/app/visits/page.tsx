@@ -5,17 +5,21 @@ import { currentSession } from "@/lib/session-server";
 import { redirect } from "next/navigation";
 import { SavedVisits } from "./SavedVisits";
 import { pageTitle } from "@/lib/page-title";
+import { kioskReturn, withPreview } from "@/lib/help-entry";
 
 export const generateMetadata = pageTitle("만남 예약", "Book a meeting");
 export default async function VisitsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ hub?: string; pass?: string; lang?: string }>;
+  searchParams: Promise<{ hub?: string; pass?: string; lang?: string; preview?: string; returnTo?: string }>;
 }) {
   const q = await searchParams,
     en = q.lang === "en";
   const session = await currentSession();
   if (session?.isKiosk) redirect(`/kiosk/visits${en ? "?lang=en" : ""}`);
+  // 기기 화면 미리보기(?preview=1)도 실제 키오스크처럼 키오스크 예약 확인 화면으로 보낸다.
+  if (q.preview === "1" && kioskReturn(q.returnTo))
+    redirect(withPreview(`/kiosk/visits?returnTo=${encodeURIComponent(kioskReturn(q.returnTo)!)}${en ? "&lang=en" : ""}`, true));
   return (
     <PublicShell lang={en ? "en" : "ko"}>
       <main id="public-main" className="service-page service-short-page">

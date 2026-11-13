@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarCheck } from "lucide-react";
 import type { ReactNode } from "react";
-import type { KioskReturn } from "@/lib/help-entry";
+import { withPreview, type KioskReturn } from "@/lib/help-entry";
 import { HaneuliStage } from "./HaneuliWelcome";
 import { TaskLauncher } from "./TaskLauncher";
 
@@ -21,6 +21,7 @@ export function KioskHome({
   topics,
   returnTo,
   appointmentLabel,
+  preview = false,
 }: {
   en: boolean;
   here: string;
@@ -34,6 +35,8 @@ export function KioskHome({
   topics?: readonly string[];
   returnTo: KioskReturn;
   appointmentLabel: string;
+  /** 기기 화면 미리보기(?preview=1) 안이면 다음 화면에도 미리보기를 잇는다 */
+  preview?: boolean;
 }) {
   return (
     <div className="kc-page kc-entry is-awake">
@@ -49,9 +52,11 @@ export function KioskHome({
         <div
           className="svc-grid kc-entry-services"
         >
-          <TaskLauncher en={en} returnTo={returnTo} topics={topics} kioskCards />
+          <TaskLauncher en={en} returnTo={returnTo} topics={topics} kioskCards preview={preview} />
           <Link
-            href={"/kiosk/visits" + (en ? "?lang=en" : "")}
+            href={preview
+              ? withPreview("/kiosk/visits?returnTo=" + encodeURIComponent(returnTo) + (en ? "&lang=en" : ""), true)
+              : "/kiosk/visits" + (en ? "?lang=en" : "")}
             className="svc-card"
           >
             <CalendarCheck aria-hidden="true" />

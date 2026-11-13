@@ -69,6 +69,7 @@ export function TaskLauncher({
   topics,
   device,
   kioskCards = false,
+  preview = false,
 }: {
   en?: boolean;
   returnTo?: KioskReturn;
@@ -76,6 +77,8 @@ export function TaskLauncher({
   topics?: readonly string[];
   device?: "robot" | "kiosk";
   kioskCards?: boolean;
+  /** 기기 화면 미리보기(?preview=1) 안이면 다음 화면에도 미리보기를 잇는다 */
+  preview?: boolean;
 }) {
   return (
     <div className={"task-launcher" + (field ? " task-launcher-field" : "")}>
@@ -89,6 +92,7 @@ export function TaskLauncher({
           if (returnTo) href.searchParams.set("returnTo", returnTo);
           if (id === "guidance" && (device === "robot" || returnTo === "/kiosk/entry")) href.searchParams.set("device", "robot");
           if (id !== "guidance") href.searchParams.set("fresh", "1");
+          if (preview && returnTo) href.searchParams.set("preview", "1");
           // 서비스 이동과 순서는 유지하고 기기에서는 공용 서비스 카드 모양을 쓴다.
           const KioskIcon = id === "mobility" ? CarFront : Icon;
           if (kioskCards) return (

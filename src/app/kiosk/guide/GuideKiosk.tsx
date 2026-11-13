@@ -25,7 +25,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GATE_LEVEL } from "@/lib/airport";
 import { isAdapted, prefsOf, type Prefs } from "@/lib/catalog";
 import type { GuideDto, GuideFacility } from "@/lib/guide";
-import { kioskHelpHref } from "@/lib/help-entry";
+import { kioskHelpHref, withPreview } from "@/lib/help-entry";
+import { usePreview } from "../../components/usePreview";
 import type { ServiceType } from "@/lib/service-request-model";
 import { textOf, type Lang } from "@/lib/i18n";
 import {
@@ -115,6 +116,9 @@ const ERROR_SHOW_MS = 6000;
 const SAME_PASS_GUARD_MS = 8000;
 // 다시 받기(그리고 QR·번호 확인) 한 번을 기다리는 가장 긴 시간. 약한 와이파이에서 답이 오지 않는 요청을 끝없이 붙잡지 않는다.
 const REFRESH_TIMEOUT_MS = 15_000;
+// 기기 화면 미리보기에서 번호·탑승권을 조회했을 때(설치하지 않아 서버가 401)
+const PREVIEW_LOOKUP_KO = "미리보기 화면에서는 등록을 찾을 수 없습니다. 설치한 키오스크에서 해 주세요.";
+const PREVIEW_LOOKUP_EN = "Registrations cannot be found in this preview. Please use an installed kiosk.";
 // 키오스크 설치(로그인)가 풀려 서버가 401 로 답하면 설치 화면으로 보낸다. 이 기기로는 더 QR 을 확인할 수 없다.
 const KIOSK_SETUP = "/kiosk";
 
@@ -133,6 +137,7 @@ export function GuideKiosk({
   idleAnswerSec,
 }: Props) {
   useRobotTheme();
+  const preview = usePreview();
   // 이 화면에만 거는 표시. 안내 키오스크의 모양(haneuli.css)이 입구 안내로봇 같은 다른 키오스크 화면으로 번지지 않게 한다.
   useEffect(() => {
     document.body.classList.add("kiosk-guide");
@@ -325,6 +330,12 @@ export function GuideKiosk({
           signal: ctrl.signal,
         });
         if (mine !== openSeq.current) return;
+        // 기기 화면 미리보기는 설치하지 않은 화면이라 조회가 401 이다. 설치 화면으로 보내지 않고 알려 준다.
+        if (res.status === 401 && preview) {
+          setError(startLang === "en" ? PREVIEW_LOOKUP_EN : PREVIEW_LOOKUP_KO);
+          setDigits("");
+          return;
+        }
         if (res.status === 401) return window.location.replace(KIOSK_SETUP);
         const data = await res.json();
         if (mine !== openSeq.current) return;
@@ -378,7 +389,7 @@ export function GuideKiosk({
         }
       }
     },
-    [startLang, callerLeft],
+    [startLang, callerLeft, preview],
   );
 
   const onScan = useCallback(
@@ -960,7 +971,7 @@ export function GuideKiosk({
   if (view.kind === "services") {
     const en = lang === "en";
     const help = (service: ServiceType, topic?: string, resume = false) =>
-      kioskHelpHref(token, lang, service, "/kiosk/guide", resume) + (topic ? `&topic=${topic}` : "");
+      kioskHelpHref(token, lang, service, "/kiosk/guide", resume, preview) + (topic ? `&topic=${topic}` : "");
     const cards = [
       { key: "guidance", Icon: Navigation, main: true, to: null, title: en ? "Find a gate or facility" : "탑승구·시설 찾기", body: en ? "Directions from where you are" : "현재 위치에서 가는 길" },
       { key: "mobility", Icon: CarFront, to: help("mobility"), title: en ? "Get mobility assistance" : "이동 도움받기", body: en ? "Wheelchair or an escort" : "휠체어·이동 동행" },
@@ -969,7 +980,7 @@ export function GuideKiosk({
       { key: "facility", Icon: Wrench, to: help("guidance", "facility"), title: en ? "Report a facility issue" : "시설 불편 알리기", body: en ? "Cleaning or facility inspection" : "청소·시설 점검 요청" },
       { key: "traffic", Icon: Bus, to: help("guidance", "traffic"), title: en ? "Transport and parking" : "교통·주차 이용", body: en ? "Transport information or on-site help" : "승차 안내·주차장 현장 지원" },
       { key: "other", Icon: MessagesSquare, to: help("guidance", "other"), title: en ? "Other assistance" : "그 밖의 도움", body: en ? "Enquiries and other requests" : "문의와 그 밖의 요청" },
-      { key: "meeting", Icon: CalendarCheck, sub: true, to: "/kiosk/visits" + (en ? "?lang=en" : ""), title: en ? "Meeting appointment" : "만남 예약 확인", body: en ? "Find your appointment" : "예약한 장소·시간" },
+      { key: "meeting", Icon: CalendarCheck, sub: true, to: preview ? withPreview("/kiosk/visits?returnTo=%2Fkiosk%2Fguide" + (en ? "&lang=en" : ""), true) : "/kiosk/visits" + (en ? "?lang=en" : ""), title: en ? "Meeting appointment" : "만남 예약 확인", body: en ? "Find your appointment" : "예약한 장소·시간" },
     ];
     const heading = en ? "Which service do you need?" : "어떤 서비스가 필요하세요?";
     return (
