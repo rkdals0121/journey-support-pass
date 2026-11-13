@@ -116,6 +116,15 @@
   position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
   min-height: 2.75rem; padding-inline: .625rem;
 }
+/* 칸이 좁으면(좁은 휴대전화·큰 글자) 오른쪽에 「수정」 자리를 비워 두면 내용이 「장애인복지카/드」처럼 끊긴다.
+   이때는 「수정」을 제목 줄 오른쪽에 두고 내용은 칸 폭을 다 쓴다. */
+.flow-pretrip[data-screen="review"] .review { container-type: inline-size; }
+@container (max-width: 17rem) {
+  .flow-pretrip .registration-review-group { padding-right: .75rem; }
+  .flow-pretrip .registration-review-group dt { flex-wrap: wrap; }
+  .flow-pretrip .registration-review-group dd { word-break: keep-all; }
+  .flow-pretrip .registration-review-group .review-edit { position: static; transform: none; margin-left: auto; }
+}
 .flow-pretrip .flow-desktop-steps > p { font-size: var(--text-small); }
 .flow-pretrip .flow-desktop-steps h2 { font-size: var(--text-heading); }
 .flow-pretrip .flow-desktop-steps li { font-size: var(--text-body); }
