@@ -14,11 +14,20 @@ import { StampMark } from "./art";
  * 움직임은 하나하나 240ms 이하로 짧게 두고 차례로 이어 붙인다. 모션 줄이기 설정이면 모두 끈다(stamp.css).
  */
 
-const FACE = { front: "/stamp/narangi.webp", side: "/stamp/narangi-left.webp" } as const;
+// 나랑이 표정(1024 원본을 384px webp 로 줄인 것, 판넬과 같은 그림). 상황마다 다른 얼굴로 반응한다.
+const FACE = {
+  hello: "/stamp/faces/hello.webp", // 인사: 수첩 고르기
+  guide: "/stamp/faces/guide.webp", // 안내: 첫 도장 자리, QR 스캔
+  surprised: "/stamp/faces/surprised.webp", // 놀람: 도장 쾅!
+  goodluck: "/stamp/faces/goodluck.webp", // 응원: 도장판 진행 중
+  cheer: "/stamp/faces/cheer.webp", // 환호: 다 모음·완성
+  sorry: "/stamp/faces/sorry.webp", // 미안: 이미 받은 도장
+} as const;
+export type NarangiFace = keyof typeof FACE;
 
 export function NarangiSays({
   text,
-  face = "front",
+  face = "hello",
   size = "md",
   pop = false,
 }: {
@@ -35,8 +44,8 @@ export function NarangiSays({
         src={FACE[face]}
         alt=""
         aria-hidden="true"
-        width={face === "front" ? 480 : 363}
-        height={face === "front" ? 480 : 464}
+        width={384}
+        height={384}
         // 화면에는 4~7.5rem 으로만 그린다. 원본(480px)을 그대로 받지 않게 실제 크기를 알려 준다
         sizes={size === "lg" ? "160px" : size === "sm" ? "96px" : "128px"}
       />

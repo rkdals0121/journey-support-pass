@@ -158,6 +158,8 @@ html[data-kiosk] body:has(.call-dock) .flow .flow-bar { padding-right: var(--kio
 
 /* Shared header typography and alignment, including standalone preparation. */
 html { scrollbar-gutter: stable; }
+/* 키오스크·안내로봇은 스크롤이 없는 한 화면이다. 오른쪽에만 스크롤 막대 자리(15px)를 비워 두면 화면 전체가 가운데에서 7.5px 왼쪽으로 치우친다 */
+html[data-kiosk], html:has(.field-task-shell) { scrollbar-gutter: auto; }
 .public-site .public-header,
 .field-task-shell .field-task-header,
 .staff-login-screen .staff-login-brand,
