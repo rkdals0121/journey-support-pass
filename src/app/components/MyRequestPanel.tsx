@@ -7,6 +7,7 @@ import {
   requestStateLabel,
   type ServiceRequestView,
 } from "@/lib/service-request-model";
+import { userErrorMessage } from "@/lib/user-error";
 export function MyRequestPanel({
   lang = "ko",
   hideWhenEmpty = false,
@@ -62,7 +63,7 @@ export function MyRequestPanel({
         }
       } catch (e) {
         if (live && !controller?.signal.aborted)
-          setError(e instanceof Error ? e.message : "");
+          setError(userErrorMessage(e, en));
       } finally {
         running = false;
         if (live) setLoading(false);

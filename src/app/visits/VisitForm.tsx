@@ -13,6 +13,7 @@ import {
 import { visitError } from "@/lib/visit-labels";
 import { HubMap } from "../components/HubMap";
 import styles from "../components/support-journey.module.css";
+import { userErrorMessage } from "@/lib/user-error";
 
 export const VISIT_STORAGE = "jsp-support-visits-v1";
 export function rememberVisit(receipt: string, start: string) {
@@ -240,7 +241,7 @@ export function VisitForm({
         }
       })
       .catch((e) => {
-        if (!ctrl.signal.aborted) setError((e as Error).message);
+        if (!ctrl.signal.aborted) setError(userErrorMessage(e, en));
       })
       .finally(() => {
         if (!ctrl.signal.aborted) setLoading(false);
@@ -322,7 +323,7 @@ export function VisitForm({
       else router.push(`/visits/${receipt.current}${en ? "?lang=en" : ""}`);
     } catch (e) {
       if (!edit && !definitiveFailure) rememberVisit(receipt.current, slot);
-      setError((e as Error).message);
+      setError(userErrorMessage(e, en));
     } finally {
       sending.current = false;
       setSaving(false);

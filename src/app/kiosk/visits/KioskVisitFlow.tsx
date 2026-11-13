@@ -21,6 +21,7 @@ import { SharedVisitPrivacy } from "../../components/SharedVisitPrivacy";
 import { VisitResponse } from "../../visits/VisitResponse";
 import { KioskSays } from "../../components/KioskSays";
 import styles from "../../components/support-journey.module.css";
+import { userErrorMessage } from "@/lib/user-error";
 export function KioskVisitFlow({
   en: initialEnglish,
   hubId,
@@ -127,7 +128,7 @@ export function KioskVisitFlow({
         }
       } catch (e) {
         if (turn === epoch.current && !request.signal.aborted)
-          setError((e as Error).message);
+          setError(userErrorMessage(e, en));
       } finally {
         if (!silent && turn === epoch.current) {
           saving.current = false;
