@@ -332,10 +332,17 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
     go("got", true);
   }
 
-  function onScan(text: string) {
+  // typed: 고유번호를 손으로 넣은 경우. 「QR을 비춰 주세요」 대신 번호를 다시 보라고 한다
+  function onScan(text: string, typed = false) {
     const i = checkpointOf(text);
     if (i < 0)
-      setScanErr(tr("스탬프북 QR이 아니에요. 체크포인트의 QR을 비춰 주세요."));
+      setScanErr(
+        typed
+          ? lang === "en"
+            ? "That code does not match a checkpoint. Check the 6 characters under the QR poster."
+            : "맞는 고유번호가 아니에요. QR 포스터 아래 6자리를 다시 확인해 주세요."
+          : tr("스탬프북 QR이 아니에요. 체크포인트의 QR을 비춰 주세요."),
+      );
     else if (!stampEligibility(s!, Date.now()).indices.includes(i))
       setScanErr(
         itinerary.reason || tr("이 체크포인트는 지금 코스·경로에 없어요. 수첩 목록에 있는 체크포인트를 찾아봐요."),
@@ -531,6 +538,14 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
       {view === "scan" && (
         <main className="sb-scan">
           <h1 className="sr-only">{tr("QR 스캔")}</h1>
+          <NarangiSays
+            size="sm"
+            text={
+              lang === "en"
+                ? `Find the QR poster at ${nextPlace || "a checkpoint"} and scan it!`
+                : `「${nextPlace || "체크포인트"}」의 QR 포스터를 찾아 비춰 주세요!`
+            }
+          />
           <Scanner
             onScan={onScan}
             imageLabel={tr("QR 사진으로 찍기")}
@@ -551,7 +566,7 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
             className="sb-typed"
             onSubmit={(e) => {
               e.preventDefault();
-              onScan(typed);
+              onScan(typed, true);
             }}
           >
             <label htmlFor="sb-code">

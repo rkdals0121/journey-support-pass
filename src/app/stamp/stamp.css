@@ -1478,3 +1478,5 @@
   font-weight: var(--weight-heading);
 }
 .sb-pick-reward svg.lucide { width: 0.875rem; height: 0.875rem; flex: none; }
+/* QR 스캔 화면의 나랑이 안내(진한 바탕 위) */
+.sb-scan > .sb-says { max-width: 30rem; margin: 0 auto var(--space-3); }
