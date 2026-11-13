@@ -391,6 +391,8 @@ html[data-kiosk] .flow-cta .btn:not(.btn-primary):not(:disabled) { border-color:
    가로 화면: 왼쪽에 내 항공편·탑승구 가는 길·다음 할 일, 오른쪽에 시설. 세로 화면: 위→아래. */
 .kx-guide { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-6); align-items: start; }
 .kx-guide-main, .kx-guide-side { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+/* 안내 글(다른 터미널·결항·탑승구 미정)의 기본 위아래 여백이 칸 사이 간격과 겹쳐 40px 이 되고, 1280×800 에서 27px 스크롤이 생겼다. 간격은 gap(--space-4) 하나로. */
+.kx-guide-main > .banner { margin: 0; }
 html[data-kiosk] .flow-body .kx-guide h1.kicker { margin: 0; color: var(--color-primary-hover); font-size: var(--text-body); font-weight: var(--weight-heading); letter-spacing: 0; }
 html[data-kiosk] .flow-body .kx-guide-side h2 { margin: 0; color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-label); letter-spacing: 0.02em; }
 html[data-kiosk] .flow-body .kx-guide-side h2 ~ h2 { margin-top: var(--space-3); }
@@ -447,7 +449,7 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kc-saved-bubble { position: relative; text-align: center; padding: var(--space-4) var(--space-6); border: 1px solid var(--color-line); border-radius: calc(var(--radius-medium) * 2); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 60%); box-shadow: var(--shadow-1); }
 .kc-saved-bubble::after { content: ""; position: absolute; inset-inline-start: calc(50% - 0.5rem); bottom: -0.5625rem; width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: rotate(45deg); }
 .kc-saved-bubble h1 { margin: 0; font-size: var(--text-title); line-height: 1.25; letter-spacing: -0.03em; text-wrap: balance; }
-.kc-saved-bubble p { margin: var(--space-1) 0 0; font-size: var(--text-body); color: var(--color-muted); }
+.kc-saved-bubble p { margin: var(--space-1) 0 0; font-size: var(--text-body); color: var(--color-muted); text-wrap: balance; }
 .kc-saved .board { margin: 0; flex: none; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-text); }
 .kc-saved .board-main { padding: var(--space-3) var(--space-4); gap: var(--space-3); flex-wrap: nowrap; }
 .kc-saved .board-flight { flex-basis: 0; min-width: 0; }
@@ -514,7 +516,7 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
 .kc-facilities .tile { min-width: 0; min-height: var(--target-kiosk-floor); padding: var(--space-2) var(--space-4); gap: var(--space-3); margin: 0; align-items: center; background: var(--color-surface); box-shadow: none; }
 .kc-facilities .tile-ico { width: 2rem; height: 2rem; }
 .kc-facilities .tile-text strong { font-size: var(--text-body); }
-.kc-facilities .tile-text > span { font-size: var(--text-small); }
+.kc-facilities .tile-text > span { font-size: var(--text-small); text-wrap: pretty; } /* 「115번 탑승구 / 옆」처럼 한 낱말만 다음 줄에 남지 않게 */
 .kc-facilities .tile > svg { width: 1.25rem; height: 1.25rem; }
 @media (min-width: 761px) and (max-width: 1100px) {
   .kc-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
