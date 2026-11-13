@@ -195,11 +195,11 @@ html[data-picture] .choice-icon svg { width: 2.5rem; height: 2.5rem; }
 .read-offer .fine { margin: 0; }
 .flow-body h2 { margin: 1.5rem 0 0.75rem; }
 .steppers { display: grid; gap: 0.75rem; margin: 1rem 0 0; }
-.stepper { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 0.0625rem solid var(--color-line); border-radius: var(--radius); background: var(--color-surface); }
+.stepper { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 0.0625rem solid var(--color-line); border-radius: var(--radius); background: var(--color-surface); }
 .stepper-label { grid-column: 1 / -1; font-weight: var(--weight-label); }
 .stepper-btn { display: grid; place-items: center; width: 3rem; height: 3rem; border: 0.09375rem solid var(--color-control-line); border-radius: 50%; background: var(--color-surface); color: var(--color-dark); cursor: pointer; }
 .stepper-btn:disabled { opacity: 0.4; cursor: default; }
-.stepper-value { min-width: 3.5rem; text-align: center; font-size: var(--text-heading); font-weight: var(--weight-heading); }
+.stepper-value { min-width: 0; text-align: center; font-size: var(--text-heading); font-weight: var(--weight-heading); } /* 가운데 칸이 남는 폭을 쓴다. 3.5rem 고정이면 큰 글자·좁은 휴대전화에서 + 단추가 칸 밖으로 나갔다 */
 .stepper-value small { font-size: var(--text-small); font-weight: var(--weight-body); }
 .note-field textarea { width: 100%; min-height: 8rem; padding: 0.75rem 1rem; border: 0.09375rem solid var(--color-control-line); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-body); line-height: 1.5; resize: vertical; }
 .note-field textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 0.1875rem var(--color-overlay); }

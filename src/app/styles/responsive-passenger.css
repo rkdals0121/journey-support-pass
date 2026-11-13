@@ -68,7 +68,10 @@
 /* 동의 화면의 「동의하지 않습니다」는 다른 화면과 같은 높이의 진행 버튼 줄 바로 위에 둔다. */
 .flow-pretrip[data-screen="consent"] .flow-cta-inner { position: relative; }
 .flow-pretrip[data-screen="consent"] .consent-decline {
-  position: absolute; left: 0; right: 0; bottom: calc(100% + .25rem);
+  position: absolute; left: 0; right: 0; bottom: 100%;
+  /* 진행 버튼 줄과 같은 바탕을 깔아, 큰 글자·작은 휴대전화에서 위로 지나가는 글(제목 등)과 겹쳐 보이지 않게 한다 */
+  padding-top: var(--space-3); padding-bottom: .25rem;
+  background: linear-gradient(to bottom, transparent, var(--color-canvas) var(--space-3));
 }
 .flow-pretrip[data-screen="consent"] .flow-form-area { padding-bottom: 0; }
 
