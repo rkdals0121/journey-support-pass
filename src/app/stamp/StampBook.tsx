@@ -5,6 +5,7 @@ import {
   BookOpen,
   Camera,
   Download,
+  Gift,
   Lock,
   Palette,
   QrCode,
@@ -28,8 +29,9 @@ import {
   type ThemeId,
 } from "@/lib/stamp-book";
 import { EXITS, courseFits, gateProblem, makeCourse, stampEligibility } from "@/lib/stamp-routing";
-import { Emblem, Haneul, Portrait, StampMark } from "./art";
+import { Emblem, Portrait, StampMark } from "./art";
 import { PhotoFilter } from "./PhotoFilter";
+import { Burst, NarangiSays, StampBoard, boardLine, cheerLine } from "./Cheer";
 import { StartMap } from "./StartMap";
 import { PublicShell } from "../components/PublicShell";
 import { useViewSettings } from "../components/viewSettings";
@@ -229,6 +231,10 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
   const goal = itinerary.indices.length;
   const n = itinerary.indices.filter((i) => i in s.stamps).length;
   const complete = goal > 0 && n >= goal;
+  // 나랑이가 알려 줄 다음 도장 자리와 보상 이름
+  const nextStop = itinerary.indices.find((i) => !(i in s.stamps));
+  const nextPlace = nextStop === undefined ? "" : checkpointPlace(CHECKPOINTS[nextStop], lang);
+  const reward = lang === "en" ? "photo filter" : "인증 사진 필터";
   // 첫 도장을 받으면 설정(탑승구·지금 있는 곳·지도·탑승 시각)은 접고, 진행도·탑승 정보·체크포인트만 보여 준다.
   const started = n > 0;
   // 탑승구·지금 있는 곳(경로형)·탑승 시각 설정. 첫 도장 전에는 펼쳐 두고, 뒤에는 "탑승 정보 바꾸기" 안에 접는다.
@@ -474,7 +480,21 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
               {tr(scanErr)}
             </p>
           )}
-          <Progress lang={lang} theme={theme} n={n} goal={goal} />
+          {goal > 0 ? (
+            <section className="sb-board-card" aria-label={lang === "en" ? "Stamp board" : "도장판"}>
+              <div className="sb-board-head">
+                <span>{lang === "en" ? "My stamps" : `모은 ${t.unit}`}</span>
+                <strong className="num">
+                  {n}
+                  <small> / {goal}</small>
+                </strong>
+              </div>
+              <StampBoard theme={theme} n={n} goal={goal} lang={lang} />
+              <NarangiSays size="sm" face={n === 0 ? "side" : "front"} text={boardLine(n, goal, nextPlace, reward, lang)} />
+            </section>
+          ) : (
+            <Progress lang={lang} theme={theme} n={n} goal={goal} />
+          )}
           {started ? (
             <>
               <TripInfo lang={lang} gate={s.gate} boardingAt={s.boardingAt} now={clock || Date.now()} />
@@ -564,31 +584,57 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
       )}
 
       {view === "got" && got && (
-        <main className="sb-got">
-          <div className="sb-got-top" aria-hidden="true">
-            <QrCode />
+        <main className={`sb-got${got.again ? " is-again" : ""}`}>
+          {/* 도장을 받은 순간: 도장이 「쾅」 찍히고 반짝이가 퍼진 뒤 나랑이가 튀어나와 한마디 한다 */}
+          <div className="sb-got-stage">
+            <div className="sb-stamp-pop">
+              {!got.again && <Burst />}
+              {/* 나랑이는 아래 말풍선에서 말한다. 무대에는 모든 테마가 도장을 크게 찍는다 */}
+              <StampMark theme={theme} size={150} />
+            </div>
+            {!got.again && goal > 0 && (
+              <p className="sb-plus" aria-hidden="true">
+                +1
+              </p>
+            )}
           </div>
           <section className="sb-sheet">
-            <div className="sb-stamp-pop">
-              {theme === "friend" ? (
-                <Haneul size={170} />
-              ) : (
-                <StampMark theme={theme} size={140} />
-              )}
-            </div>
-            <h1>
-              {got.again ? tr("이미 받은 도장이에요") : t.got(stopName(t.stops, itinerary.indices, got.i, lang))}
-            </h1>
-            <p className="sb-sub-ink">
+            <p className="sb-got-kicker">
               {got.again
-                ? `${checkpointPlace(CHECKPOINTS[got.i], lang)} · ${lang === "en" ? "Try another checkpoint" : "다른 체크포인트를 찾아봐요"}`
-                : t.gotSub(stopName(t.stops, itinerary.indices, got.i, lang), n)}
+                ? lang === "en" ? "Already stamped" : "이미 찍은 곳"
+                : lang === "en" ? `Stamp ${n}!` : `${n}번째 도장 쾅!`}
             </p>
+            {/* 제목은 그 도장의 이름(테마마다 다름). 「도장 쾅!」과 같은 말을 두 번 하지 않는다 */}
+            <h1>
+              {got.again ? tr("이미 받은 도장이에요") : stopName(t.stops, itinerary.indices, got.i, lang)}
+            </h1>
             <p className="sb-hint">
               {CHECKPOINTS[got.i].code} · {checkpointPlace(CHECKPOINTS[got.i], lang)}
             </p>
-            {theme === "friend" && <Stars lang={lang} n={n} goal={goal} />}
-            <Progress lang={lang} theme={theme} n={n} goal={goal} note />
+            {goal > 0 && (
+              <div className="sb-score" aria-label={lang === "en" ? `${n} of ${goal} stamps` : `도장 ${goal}개 중 ${n}개`}>
+                <strong className="num">{n}</strong>
+                <span className="num">/ {goal}</span>
+              </div>
+            )}
+            <StampBoard theme={theme} n={n} goal={goal} fresh={got.again ? undefined : itinerary.indices.indexOf(got.i) >= 0 ? n - 1 : undefined} lang={lang} />
+            <NarangiSays
+              pop={!got.again}
+              face={got.again ? "side" : "front"}
+              text={
+                got.again
+                  ? lang === "en"
+                    ? "You already have this one. Let's find another stop!"
+                    : "여긴 이미 찍었어요. 다른 곳을 찾아봐요!"
+                  : cheerLine(n, goal, lang)
+              }
+            />
+            {goal > 0 && n < goal && (
+              <p className="sb-reward-left">
+                <Lock aria-hidden="true" />
+                {t.remain(Math.max(0, goal - n))}
+              </p>
+            )}
             <div className="sb-actions">
               <button
                 type="button"
@@ -618,6 +664,21 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
             </p>
           ) : (
             <>
+              {/* 완성 축하: 꽉 찬 도장판과 나랑이의 축하. 아직 인증을 받지 않았을 때만(받은 뒤엔 인증 카드가 주인공) */}
+              {!s.certId && (
+                <section className="sb-finish" aria-label={lang === "en" ? "Course complete" : "코스 완성"}>
+                  <Burst />
+                  <StampBoard theme={theme} n={n} goal={goal} lang={lang} />
+                  <NarangiSays
+                    pop
+                    text={
+                      lang === "en"
+                        ? `All ${goal} stamps! Pick a photo filter and get your certificate.`
+                        : `도장 ${goal}개를 다 모았어요! 사진 필터를 골라 인증을 받아요!`
+                    }
+                  />
+                </section>
+              )}
               <figure className="sb-portrait">
                 {s.photo ? (
                   <img src={s.photo} alt={tr(`${role.filter}로 찍은 인증 사진`)} />
@@ -755,6 +816,14 @@ function ThemePicker({
             {tr(note)}
           </p>
         )}
+        <NarangiSays
+          size="sm"
+          text={
+            lang === "en"
+              ? "Pick a notebook and let's go! Fill it with stamps and I'll give you a special photo filter."
+              : "수첩을 골라 같이 떠나요! 도장을 다 모으면 특별한 사진 필터를 줄게요."
+          }
+        />
         <p className="sb-pick-sub">{tr("나중에 바꿔도 모은 도장은 그대로예요.")}</p>
         <ul className="sb-pick">
           {THEME_IDS.map((id) => (
@@ -775,6 +844,13 @@ function ThemePicker({
                     <StampMark theme={id} size={26} />
                     <StampMark theme={id} size={26} />
                     <StampMark theme={id} size={26} />
+                  </span>
+                  {/* 무엇을 받는지 먼저 보여 준다(게임의 「완성 보상」) */}
+                  <span className="sb-pick-reward">
+                    <Gift aria-hidden="true" />
+                    {lang === "en" ? "Reward · " : "완성 보상 · "}
+                    {themeFor(id, lang).roles.map((r) => r.label).join(lang === "en" ? " / " : "·")}
+                    {lang === "en" ? " photo" : " 사진"}
                   </span>
                 </span>
               </button>
@@ -853,18 +929,6 @@ function stopName(stops: string[], indices: number[], i: number, lang: StampLang
   return k >= 0 ? stops[Math.min(k, stops.length - 1)] : checkpointPlace(CHECKPOINTS[i], lang);
 }
 
-function Stars({ n, goal, lang }: { n: number; goal: number; lang: StampLang }) {
-  const tr = stampCopy(lang);
-  return (
-    <p className="sb-stars" aria-label={tr(`별 ${n}개`)}>
-      {Array.from({ length: goal }, (_, i) => (
-        <span key={i} className={i < n ? "on" : ""} aria-hidden="true">
-          ★
-        </span>
-      ))}
-    </p>
-  );
-}
 
 /** 첫 도장 뒤 수첩 홈에 보이는 탑승 정보: 탑승구와 탑승 시각(몇 분 남았는지). */
 function TripInfo({ gate, boardingAt, now, lang }: { gate: string; boardingAt?: string; now: number; lang: StampLang }) {
@@ -906,13 +970,11 @@ function PlayList({ s, lang }: { s: BookState; lang: StampLang }) {
   if (plan.reason) return null;
   return (
     <>
+      {/* 긴 설명 문단 대신 한 줄. 다음 도장 자리는 위 도장판에서 나랑이가 말한다. */}
       <p className="sb-hint">
-        {lang === "en" ? <>
-          Explore {areaName(CHECKPOINTS[plan.indices[0]].area, lang)} and collect stamps in any order. The last stop is near Gate {s.gate}, ready for boarding.
-        </> : <>
-          {areaName(CHECKPOINTS[plan.indices[0]].area, lang)} 곳곳에 숨은 도장을 찾아 돌아다니는 탐험 코스예요.
-          순서 없이 찍어도 되고, 마지막 도장은 {s.gate}번 탑승구 근처라 다 모으면 바로 탑승하러 가면 돼요.
-        </>}
+        {lang === "en"
+          ? `Any order is fine · the last stop is near Gate ${s.gate}`
+          : `순서는 자유 · 마지막 도장은 ${s.gate}번 탑승구 근처`}
       </p>
       <Stops lang={lang} s={s} indices={plan.indices} gate={s.gate} />
     </>
@@ -953,7 +1015,7 @@ function Stops({ s, indices, gate, lang }: { s: BookState; indices: number[]; ga
                   {k + 1}. {t.stops[Math.min(k, t.stops.length - 1)]}
                 </strong>
                 <small>
-                  {done ? tr(`${t.unit} 획득 완료 · `) : ""}
+                  {/* 찍은 칸은 도장 그림이 말해 준다. 「획득 완료」 글을 되풀이하지 않는다 */}
                   {c.code} · {checkpointPlace(c, lang)}
                   {gate && k === indices.length - 1 ? tr(` · ${gate}번 탑승구 근처`) : ""}
                   {c.train ? tr(" · 셔틀트레인") : ""}
