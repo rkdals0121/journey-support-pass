@@ -694,15 +694,15 @@
   margin: 0 auto;
   background: var(--dark);
 }
-.sb-got-top {
+/* 도장 무대: 테마 진한 색 바탕에 햇살 무늬. 도장이 「쾅」 찍히고 반짝이가 퍼진다 */
+.sb-got-stage {
+  position: relative;
   display: grid;
   place-items: center;
-  height: 7rem;
-  color: var(--cta);
-}
-.sb-got-top svg.lucide {
-  width: 4rem;
-  height: 4rem;
+  padding: var(--space-6) 0 var(--space-8);
+  background:
+    repeating-conic-gradient(from 0deg at 50% 60%, var(--color-transparent) 0 9deg, var(--color-shadow) 9deg 18deg),
+    var(--dark);
 }
 .sb-sheet {
   flex: 1;
@@ -733,22 +733,174 @@
   width: 100%;
 }
 .sb-stamp-pop {
-  animation: sb-pop var(--motion-normal) var(--ease-out) both;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 11rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-accent-soft) 0 58%, var(--color-transparent) 59%);
+  /* 위에서 크게 내려와 「쾅」 찍히고 살짝 기울어 멈춘다 */
+  transform: rotate(-8deg);
+  animation: sb-slam var(--motion-slow) var(--ease-in) both;
 }
-.sb-stars {
-  display: flex;
-  gap: 0.25rem;
+.sb-got.is-again .sb-stamp-pop { animation: sb-pop var(--motion-normal) var(--ease-out) both; transform: none; opacity: 0.85; }
+.sb-plus {
+  position: absolute;
+  right: calc(50% - 7.5rem);
+  top: var(--space-6);
   margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--cta);
+  color: var(--cta-ink);
   font-size: var(--text-title);
+  font-weight: var(--weight-heading);
+  box-shadow: var(--shadow-2);
+  transform: rotate(10deg);
+  animation: sb-pop var(--motion-slow) var(--ease-out) 260ms both;
+}
+.sb-burst { position: absolute; inset: 0; pointer-events: none; }
+.sb-burst i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.75rem;
+  height: 1.75rem;
+  margin: -0.875rem -0.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  /* 퍼진 뒤 그 자리에 남아 도장 둘레를 반짝이로 꾸민다(멈춘 화면·모션 줄이기에서도 보인다) */
+  transform: rotate(var(--a)) translateY(-7.5rem);
+  animation: sb-spark var(--motion-slow) var(--ease-out) calc(220ms + var(--d)) both;
+}
+.sb-burst i:nth-child(3n) { background: var(--color-surface); }
+.sb-burst i:nth-child(3n + 1) { background: var(--color-rose-soft); width: 0.875rem; height: 0.875rem; }
+.sb-got-kicker {
+  margin: 0;
+  color: var(--color-rose);
+  font-size: var(--text-title);
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.02em;
+}
+.sb-got.is-again .sb-got-kicker { color: var(--muted); font-size: var(--text-body); }
+.sb-score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
   line-height: 1;
 }
-.sb-stars span {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--color-on-dark-muted);
+.sb-score strong { font-size: var(--text-display); color: var(--ink); animation: sb-pop var(--motion-slow) var(--ease-out) 200ms both; }
+.sb-score span { font-size: var(--text-title); color: var(--muted); font-weight: var(--weight-heading); }
+.sb-reward-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--ink);
+  font-size: var(--text-small);
+  font-weight: var(--weight-heading);
+  text-align: left;
+  word-break: keep-all;
 }
-.sb-stars span.on {
-  color: var(--color-accent-ink);
-  -webkit-text-stroke: 2px var(--color-blue);
+.sb-reward-left svg.lucide { width: 1rem; height: 1rem; flex: none; }
+
+/* 도장판: 모은 도장이 칸을 채운다. 다음 칸은 점선으로 기다리고, 마지막 칸에는 보상 선물 */
+.sb-board {
+  display: grid;
+  grid-template-columns: repeat(var(--slots, 6), minmax(0, 1fr));
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sb-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 50%;
+  border: 2px dashed var(--color-control-line);
+  background: var(--color-surface);
+  color: var(--muted);
+  font-weight: var(--weight-heading);
+}
+.sb-slot svg { width: 100%; height: 100%; }
+.sb-slot.is-filled { border: 0; background: none; transform: rotate(var(--tilt)); }
+.sb-slot.is-next { border-color: var(--cta); border-style: solid; border-width: 3px; background: var(--color-accent-soft); color: var(--ink); }
+.sb-slot.is-goal:not(.is-filled) { border-style: solid; border-color: var(--color-rose); background: var(--color-rose-soft); color: var(--color-rose); }
+.sb-slot.is-goal:not(.is-filled) svg.lucide { width: 55%; height: 55%; }
+.sb-slot.is-fresh { animation: sb-slam var(--motion-slow) var(--ease-in) 120ms both; }
+
+/* 나랑이 말풍선 */
+.sb-says {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+}
+.sb-says-face { width: 5.5rem; height: auto; filter: drop-shadow(0 0.25rem 0.375rem var(--color-shadow)); }
+.sb-says-sm .sb-says-face { width: 4rem; }
+.sb-says-lg .sb-says-face { width: 7.5rem; }
+.sb-says-bubble {
+  position: relative;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 1.25rem;
+  background: var(--color-surface);
+  color: var(--ink);
+  font-weight: var(--weight-heading);
+  line-height: 1.45;
+  word-break: keep-all;
+  box-shadow: var(--shadow-1);
+}
+.sb-says-bubble::before {
+  content: "";
+  position: absolute;
+  left: -0.5rem;
+  top: calc(50% - 0.5rem);
+  width: 1rem;
+  height: 1rem;
+  background: inherit;
+  transform: rotate(45deg);
+}
+.sb-says.is-pop .sb-says-face { animation: sb-hop var(--motion-slow) var(--ease-out) 380ms both; }
+.sb-says.is-pop .sb-says-bubble { animation: sb-pop var(--motion-slow) var(--ease-out) 520ms both; }
+
+/* 수첩 홈의 도장판 칸 */
+.sb-board-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+.sb-board-head { display: flex; align-items: baseline; justify-content: space-between; font-weight: var(--weight-heading); }
+.sb-board-head strong { font-size: var(--text-page-title); line-height: 1; color: var(--ink); }
+.sb-board-head small { font-size: var(--text-body); color: var(--muted); }
+.sb-board-card .sb-says-bubble { background: var(--bg); box-shadow: none; font-size: var(--text-small); }
+
+@keyframes sb-slam {
+  0% { opacity: 0; transform: scale(1.8) rotate(-24deg); }
+  70% { opacity: 1; transform: scale(0.92) rotate(-6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(var(--tilt, -8deg)); }
+}
+@keyframes sb-spark {
+  0% { opacity: 0; transform: rotate(var(--a)) translateY(-4.5rem) scale(0.4); }
+  100% { opacity: 1; }
+}
+@keyframes sb-hop {
+  0% { opacity: 0; transform: translateY(1.5rem) scale(0.8); }
+  70% { opacity: 1; transform: translateY(-0.375rem) scale(1.05); }
+  100% { opacity: 1; transform: none; }
 }
 
 /* 3. 완성 */
@@ -1290,3 +1442,39 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
+
+/* 완성 축하 칸: 꽉 찬 도장판 위로 반짝이가 퍼지고 나랑이가 축하한다 */
+.sb-finish {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  box-shadow: var(--shadow-1);
+}
+.sb-finish .sb-burst { display: none; }
+.sb-finish .sb-slot.is-filled { animation: sb-slam var(--motion-slow) var(--ease-in) both; }
+.sb-finish .sb-slot:nth-child(2) { animation-delay: 60ms; }
+.sb-finish .sb-slot:nth-child(3) { animation-delay: 120ms; }
+.sb-finish .sb-slot:nth-child(4) { animation-delay: 180ms; }
+.sb-finish .sb-slot:nth-child(5) { animation-delay: 240ms; }
+.sb-finish .sb-slot:nth-child(6) { animation-delay: 300ms; }
+
+/* 수첩 고르기: 나랑이 인사와 수첩마다 「완성 보상」 */
+.sb-entry .sb-says { margin: var(--space-2) 0; }
+.sb-pick-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  justify-self: start;
+  width: fit-content;
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-blue);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-heading);
+}
+.sb-pick-reward svg.lucide { width: 0.875rem; height: 0.875rem; flex: none; }
