@@ -68,7 +68,10 @@
 /* 동의 화면의 「동의하지 않습니다」는 다른 화면과 같은 높이의 진행 버튼 줄 바로 위에 둔다. */
 .flow-pretrip[data-screen="consent"] .flow-cta-inner { position: relative; }
 .flow-pretrip[data-screen="consent"] .consent-decline {
-  position: absolute; left: 0; right: 0; bottom: calc(100% + .25rem);
+  position: absolute; left: 0; right: 0; bottom: 100%;
+  /* 진행 버튼 줄과 같은 바탕을 깔아, 큰 글자·작은 휴대전화에서 위로 지나가는 글(제목 등)과 겹쳐 보이지 않게 한다 */
+  padding-top: var(--space-3); padding-bottom: .25rem;
+  background: linear-gradient(to bottom, transparent, var(--color-canvas) var(--space-3));
 }
 .flow-pretrip[data-screen="consent"] .flow-form-area { padding-bottom: 0; }
 
@@ -112,6 +115,15 @@
 .flow-pretrip .registration-review-group .review-edit {
   position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
   min-height: 2.75rem; padding-inline: .625rem;
+}
+/* 칸이 좁으면(좁은 휴대전화·큰 글자) 오른쪽에 「수정」 자리를 비워 두면 내용이 「장애인복지카/드」처럼 끊긴다.
+   이때는 「수정」을 제목 줄 오른쪽에 두고 내용은 칸 폭을 다 쓴다. */
+.flow-pretrip[data-screen="review"] .review { container-type: inline-size; }
+@container (max-width: 17rem) {
+  .flow-pretrip .registration-review-group { padding-right: .75rem; }
+  .flow-pretrip .registration-review-group dt { flex-wrap: wrap; }
+  .flow-pretrip .registration-review-group dd { word-break: keep-all; }
+  .flow-pretrip .registration-review-group .review-edit { position: static; transform: none; margin-left: auto; }
 }
 .flow-pretrip .flow-desktop-steps > p { font-size: var(--text-small); }
 .flow-pretrip .flow-desktop-steps h2 { font-size: var(--text-heading); }
