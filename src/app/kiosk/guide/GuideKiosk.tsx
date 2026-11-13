@@ -1188,7 +1188,8 @@ export function GuideKiosk({
                 onClick={() => setView({ kind: "saved" })}
               >
                 <ClipboardList size={22} aria-hidden="true" />
-                {t.savedTitle}
+                {/* 단추는 할 일로 쓴다(「미리 등록하신 내용이에요」는 그 화면의 제목) */}
+                {lang === "en" ? "View my registration" : "등록한 내용 보기"}
               </button>
               <button
                 className="btn finish-btn"
