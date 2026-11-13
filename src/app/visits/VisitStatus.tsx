@@ -21,6 +21,7 @@ import {
 import { HubMap } from "../components/HubMap";
 import { VisitForm, rememberVisit } from "./VisitForm";
 import styles from "../components/support-journey.module.css";
+import { userErrorMessage } from "@/lib/user-error";
 interface History {
   version: number;
   action: string;
@@ -84,7 +85,7 @@ export function VisitStatus({
           rememberVisit(receipt, b.visit.startAt);
         }
       } catch (e) {
-        if (!signal?.aborted) setError((e as Error).message);
+        if (!signal?.aborted) setError(userErrorMessage(e, en));
       }
     },
     [receipt, en],
@@ -135,7 +136,7 @@ export function VisitStatus({
         );
       }
     } catch (e) {
-      setError((e as Error).message);
+      setError(userErrorMessage(e, en));
       await load();
     } finally {
       saving.current = false;

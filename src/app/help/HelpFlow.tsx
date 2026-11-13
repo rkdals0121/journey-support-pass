@@ -46,6 +46,7 @@ import {
 import { useSpeech } from "../components/useSpeech";
 import { SERVICE_CATALOG, passengerLabel, supportTopic } from "@/lib/service-catalog";
 import { MobilityMapPlanner } from "../components/MobilityMapPlanner";
+import { userErrorMessage } from "@/lib/user-error";
 
 const STORAGE = "jsp-dx-receipt-v1";
 // 작성 중인 요청(피드백: 뒤로 갔다 다시 들어와도 내용이 남아 있게). 접수하거나 30분이 지나면 지운다.
@@ -514,9 +515,7 @@ export function HelpFlow({
           ? "This service is unavailable now. Book another time or request staff guidance."
           : en && e instanceof RequestError && e.code === "duplicate_service"
             ? "A request for this service is already active for your registration. Ask staff to check the existing request."
-            : e instanceof Error
-              ? e.message
-              : tr("연결을 확인해 주세요", "Check your connection"),
+            : userErrorMessage(e, en),
       );
     } finally {
       inFlight.current = false;
@@ -534,7 +533,7 @@ export function HelpFlow({
         forgetExpired();
         return;
       }
-      setError((e as Error).message);
+      setError(userErrorMessage(e, en));
     } finally {
       setBusy(false);
     }
@@ -555,7 +554,7 @@ export function HelpFlow({
         forgetExpired();
         return;
       }
-      setError((e as Error).message);
+      setError(userErrorMessage(e, en));
     } finally {
       setBusy(false);
     }

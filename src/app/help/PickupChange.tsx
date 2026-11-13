@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { PlaceFinder } from "../components/PlaceFinder";
 import type { ServiceRequestView } from "@/lib/service-request-model";
+import { userErrorMessage } from "@/lib/user-error";
 export function PickupChange({
   request: r,
   receipt,
@@ -81,7 +82,7 @@ export function PickupChange({
             ),
       );
     } catch (e) {
-      setError((e as Error).message);
+      setError(userErrorMessage(e, en));
       await onRefresh();
     } finally {
       setBusy(false);
