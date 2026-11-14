@@ -16,7 +16,8 @@ const SIZES: Record<"robot" | "kiosk", Size[]> = {
 /**
  * 실제 키오스크 화면(/kiosk/entry, /kiosk/guide)을 기기 크기 그대로 틀(iframe)에 띄우고 보이는 폭에 맞게 줄여 보여 준다.
  * 모형 화면이 아니라 진짜 화면이라서, 키오스크 화면을 고치면 미리보기도 같이 바뀐다.
- * 설치 쿠키 없이 열리도록 ?preview=1 을 붙인다. 카메라·마이크는 켜지 않는다.
+ * 설치 쿠키 없이 열리도록 ?preview=1 을 붙인다. 여권·QR 스캔을 미리보기에서도 해 볼 수 있게 카메라는 허용한다
+ * (허용 창은 스캔을 누를 때만 뜬다). 마이크는 사이트 전체에서 막혀 있어 켜지 않는다.
  */
 export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang: "ko" | "en" }) {
   const en = lang === "en";
@@ -62,7 +63,7 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
               key={size.id + src}
               title={en ? "Live device screen" : "실제 기기 화면"}
               src={src}
-              allow="camera 'none'; microphone 'none'"
+              allow="camera; microphone 'none'"
               style={{ width: size.w, height: size.h, transform: `scale(${scale})` }}
             />
           </div>

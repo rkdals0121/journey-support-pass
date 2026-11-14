@@ -1,6 +1,6 @@
 "use client";
 
-import { CarFront, X } from "lucide-react";
+import { Accessibility, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { Text } from "@/lib/i18n";
 
@@ -60,7 +60,7 @@ export function AssistBox({ token, t }: { token: string; t: Text }) {
   return (
     <section className="assist-box" aria-label={t.assistTitle}>
       <h2>
-        <CarFront size={22} aria-hidden="true" /> {t.assistTitle}
+        <Accessibility size={22} aria-hidden="true" /> {t.assistTitle}
       </h2>
       {/* 제목과 단추가 같은 말만 하던 것: 요청 전에는 무엇을 청하는지 한 줄로 알려 준다 */}
       {!req && <p className="muted">{t.svcAssistBody}</p>}
@@ -81,7 +81,7 @@ export function AssistBox({ token, t }: { token: string; t: Text }) {
         )
       ) : (
         <button className="btn" onClick={() => void act("/api/assist")} disabled={busy} aria-busy={busy}>
-          <CarFront size={20} aria-hidden="true" />
+          <Accessibility size={20} aria-hidden="true" />
           {t.assistAsk}
         </button>
       )}
