@@ -71,7 +71,7 @@ export default async function PointPage({
             </Link>
           </section>
           <aside className={styles.panel}>
-            <HubMap hubId={hub.id} en={en} photo />
+            <HubMap hubId={hub.id} en={en} photo live />
           </aside>
         </div>
       </main>

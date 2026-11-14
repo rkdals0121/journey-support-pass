@@ -456,10 +456,10 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kc-saved .board-label, .kc-saved .board-time { color: var(--color-muted); font-size: var(--text-body); }
 .kc-saved .board-dest { font-size: var(--text-title); }
 .kc-saved .board-time b { color: var(--color-text); font-size: var(--text-heading); }
-.kc-saved .gate-sign { flex: 0 0 auto; min-width: 0; padding: var(--space-2) var(--space-4); border-color: var(--color-line); background: var(--color-primary-faint); }
+.kc-saved .gate-sign { flex: 0 0 auto; min-width: 0; padding: var(--space-2) var(--space-4); border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
 .kc-saved .gate-sign b { font-size: var(--text-large); }
 .kc-saved .gate-sign :is(small, span) { font-size: var(--text-small); }
-.kc-saved .board-close { padding: var(--space-2) var(--space-4); background: var(--color-primary-faint); color: var(--color-text); font-size: var(--text-body); }
+.kc-saved .board-close { padding: var(--space-2) var(--space-4); border-top: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-text); font-size: var(--text-body); }
 .kc-saved .kc-needs { flex: none; }
 .kc-saved .kc-needs-grid { flex: none; grid-auto-rows: auto; gap: var(--space-4); }
 .kc-saved .kc-need { padding: var(--space-3) var(--space-4); }
@@ -503,18 +503,26 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kc-directions .kx-guide { display: flex; flex-direction: column; align-items: stretch; justify-content: safe center; gap: var(--space-4); min-height: 0; }
 .kc-directions .kx-guide-main { display: contents; }
 .kc-directions .kx-guide-side { flex: none; min-height: 0; }
-.kc-directions .gate-go { margin: 0; padding: var(--space-3) var(--space-5); gap: var(--space-4); min-height: calc(var(--target-kiosk-floor) * 1.2); }
+.kc-directions .gate-go { margin: 0; padding: var(--space-2) var(--space-5); gap: var(--space-4); min-height: calc(var(--target-kiosk-floor) * 1.2); border: 1px solid var(--color-accent); border-radius: var(--radius-medium); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%); color: var(--color-text); box-shadow: var(--shadow-1); }
+.kc-directions .gate-go > svg { flex: none; width: 3rem; height: 3rem; padding: var(--space-3); box-sizing: border-box; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-text); }
+.kc-directions .gate-go .route-sum em { border: 1px solid var(--color-accent); background: var(--color-surface); color: var(--color-accent-ink); }
+.kc-directions .gate-go-pace { color: var(--color-muted); line-height: 1.35; }
+.kc-directions .gate-go .route-sum em { padding-block: 0; }
 .kc-directions .gate-go strong { font-size: var(--text-title); }
-.kc-directions .gate-go-ico { width: 2.25rem; height: 2.25rem; }
+.kc-directions .gate-go-ico { width: 2.25rem; height: 2.25rem; background: none; color: var(--color-text); }
 .kc-directions .gate-go-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .kc-directions .gate-go-pace, .kc-directions .gate-go .route-sum { font-size: var(--text-body); }
-.kc-directions .kx-guide-actions .btn { flex-basis: 0; }
+/* 아래 단추 줄과 시설 넘기기: 첫 화면의 흰 둥근 단추 */
+html[data-kiosk] body.kiosk-guide .kc-directions .kc-pager .btn { border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); }
+html[data-kiosk] body.kiosk-guide .kiosk-content .kx-guide-actions .btn { flex-basis: 0; min-height: var(--target-kiosk-floor); border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-1); }
 .kiosk-content .kx-guide-actions { display: flex; width: 100%; gap: var(--space-3); margin: 0; }
 .kc-pages { min-height: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
 .kc-facilities { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; gap: var(--space-3); }
 .kc-facilities .tile { min-width: 0; min-height: var(--target-kiosk-floor); padding: var(--space-2) var(--space-4); gap: var(--space-3); margin: 0; align-items: center; background: var(--color-surface); box-shadow: none; }
-.kc-facilities .tile-ico { width: 2rem; height: 2rem; }
+.kc-facilities .tile-ico { width: 2rem; height: 2rem; padding: var(--space-2); background: var(--color-accent-soft); color: var(--color-text); }
+.kc-facilities .tile { border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
+.kc-facilities .tile.tile-chosen { border-color: var(--color-accent); box-shadow: 0 0 0 0.1875rem var(--color-accent-soft); }
 .kc-facilities .tile-text strong { font-size: var(--text-body); }
 .kc-facilities .tile-text > span { font-size: var(--text-small); text-wrap: pretty; } /* 「115번 탑승구 / 옆」처럼 한 낱말만 다음 줄에 남지 않게 */
 .kc-facilities .tile > svg { width: 1.25rem; height: 1.25rem; }
@@ -625,30 +633,55 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   --kc-width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter)));
   width: var(--kc-width); max-width: none; box-sizing: border-box;
 }
-.flow.kiosk-route .flow-body { padding: var(--space-4) 0; }
+.flow.kiosk-route .flow-body { display: flex; flex-direction: column; padding: var(--space-4) 0; }
+/* 길 안내(탑승구·시설 가는 길): 키오스크 첫 화면과 같은 모양. 옅은 노랑에서 흰색으로 번지는 큰 칸 하나,
+   그 안 왼쪽에 제목·걸리는 시간(크게)·나랑이와 말풍선, 오른쪽에 흰 칸의 가는 길 단계. 강조 노랑은 도착 표시 한 곳에만 쓴다.
+   카드가 바 아래부터 화면 아래까지 채우고, 단계가 많아도(셔틀·엘리베이터) 스크롤 없이 한 화면. */
 .kc-route {
-  padding: var(--space-4) var(--space-6);
-  border: 0.0625rem solid var(--color-line);
-  border-radius: calc(var(--radius-medium) * 2);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-1);
+  flex: 1 1 auto; display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "info" "art" "steps" "foot";
+  gap: var(--space-4) var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--color-line); border-radius: var(--radius-medium);
+  background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%);
 }
-/* 가로 키오스크: 왼쪽에 제목·걸리는 시간·마감과 「안내 첫 화면으로」, 오른쪽에 가는 길 단계. 단계가 많아도(셔틀·엘리베이터) 스크롤 없이 한 화면. */
-/* 카드가 바 아래부터 화면 아래까지 채우고, 남는 자리는 나랑이가 쓴다(카드가 화면 절반만 차지하던 것) */
-.flow.kiosk-route .flow-body { display: flex; flex-direction: column; }
-.kc-route { flex: 1 1 auto; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "info" "steps" "art" "foot"; row-gap: var(--space-4); }
-.kc-route-art { grid-area: art; position: relative; min-height: 0; }
-.kc-route-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.kc-route-info { grid-area: info; }
-.kc-route > .route { grid-area: steps; margin: 0; }
-.kc-route-foot { grid-area: foot; }
-/* 가는 길 단계 글자를 한 단계 크게(키오스크는 멀리서도 읽혀야 한다) */
+.kc-route-info { grid-area: info; display: grid; gap: var(--space-2); }
+html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); line-height: 1.25; font-weight: var(--weight-heading); letter-spacing: -0.03em; }
+.kc-route-info .lead { margin: 0; }
+/* 걸리는 시간은 멀리서도 읽히게 크게. 「같은 층」·「계단 없는 길」은 흰 바탕 작은 띠 */
+.kc-route-info .route-sum { gap: var(--space-3); }
+.kc-route-info .route-sum b { font-size: var(--text-large); font-weight: var(--weight-heading); line-height: 1.1; letter-spacing: -0.03em; color: var(--color-text); }
+.kc-route-info .route-sum em { padding: var(--space-1) var(--space-3); border: 1px solid var(--color-accent); background: var(--color-surface); color: var(--color-accent-ink); font-size: var(--text-small); }
+/* 나랑이: 첫 화면처럼 큰 노란 원 안에. 말풍선(남은 시간)은 원 오른쪽 위에 걸치고 꼬리가 나랑이 쪽 */
+.kc-route-art { grid-area: art; container-type: size; position: relative; min-height: 0; }
+.kc-route-ring { position: absolute; left: 0; bottom: 0; width: min(100cqh, 72cqw); aspect-ratio: 1; }
+.kc-route-ring::before { content: ""; position: absolute; inset: 4%; border-radius: var(--radius-pill); background: var(--color-accent-soft); border: 1px solid var(--color-accent); }
+.kc-route-ring img { position: absolute; inset: 6%; width: 88%; height: 88%; object-fit: contain; filter: drop-shadow(0 0.5rem 0.75rem var(--color-shadow)); }
+.kc-route-bubble { position: absolute; top: 0; right: 0; z-index: 1; display: grid; gap: var(--space-1); max-width: 46cqw; margin: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: calc(var(--radius-medium) * 2); background: var(--color-surface); box-shadow: var(--shadow-1); text-align: left; word-break: keep-all; text-wrap: balance; }
+.kc-route-bubble::after { content: ""; position: absolute; left: var(--space-5); bottom: -0.5625rem; width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: rotate(45deg); }
+.kc-route-bubble span { color: var(--color-muted); font-size: var(--text-small); }
+.kc-route-bubble strong { font-size: var(--text-heading); line-height: 1.3; letter-spacing: -0.02em; }
+.kc-route-bubble.pace-late { border-color: var(--color-error); }
+.kc-route-bubble.pace-late strong { color: var(--color-error); }
+/* 가는 길 단계: 흰 칸. 지금 계신 곳은 진한 선 원, 지나는 곳은 회색 선 원, 도착은 노란 원(화면의 강조 한 곳) */
+.kc-route-steps { grid-area: steps; min-height: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-1); }
+/* 단계는 칸 높이에 맞춰 세로로 고르게 펼친다(단계가 적을 때 아래가 휑하게 비지 않게). 너무 벌어지지 않게 한 칸은 9rem 까지 */
+.kc-route-steps .route { display: flex; flex-direction: column; height: 100%; margin: 0; }
+.kc-route .route > li { flex: 1 1 auto; max-height: 9rem; padding-bottom: var(--space-4); }
+.kc-route .route > li:last-child { flex: none; padding-bottom: 0; }
+.kc-route .route > li::before { background: var(--color-line); }
 .kc-route .route > li strong { font-size: var(--text-heading); line-height: 1.35; }
 .kc-route .route > li div > span { font-size: var(--text-body); }
-.kc-route .route > li { padding-bottom: var(--space-5); }
+.kc-route .route-ico { border-color: var(--color-control-line); background: var(--color-surface); color: var(--color-text); }
+.kc-route .route-here .route-ico { border-color: var(--color-text); background: var(--color-surface); color: var(--color-text); }
+.kc-route .route-end .route-ico { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
+/* 「안내 첫 화면으로」: 첫 화면의 흰 둥근 단추와 같은 모양 */
+.kc-route-foot { grid-area: foot; display: grid; gap: var(--space-2); }
+html[data-kiosk] .kc-route-foot .finish-btn { margin: 0; min-height: max(var(--target-kiosk-floor), 4.5rem); border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-1); font-size: var(--text-heading); font-weight: var(--weight-heading); }
+.kc-route-foot .fine { margin: 0; padding-inline: var(--space-2); }
 @media (orientation: landscape) {
-  .kc-route { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "info steps" "art steps" "foot steps"; column-gap: var(--space-6); }
-  .kc-route-foot { align-self: end; }
+  .kc-route { grid-template-columns: minmax(0, 9fr) minmax(0, 11fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "info steps" "art steps" "foot steps"; }
+  .kc-route-steps { align-self: stretch; overflow: auto; }
 }
 
 /* 세로 안내로봇의 예약 확인번호 화면: 카드를 바 바로 아래부터 아래 끝까지 채우고, 남는 높이는 자판 단추를 키우는 데 쓴다(위·아래로 크게 비던 것). */

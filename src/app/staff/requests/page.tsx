@@ -39,7 +39,7 @@ export default async function RequestsPage({
           </div>
           <div className="workspace-page-tools">
             {s.isDesk && (
-              <Link className="btn btn-primary" href="/staff/requests/new">
+              <Link className="btn" href="/staff/requests/new">
                 여객 대신 접수
               </Link>
             )}

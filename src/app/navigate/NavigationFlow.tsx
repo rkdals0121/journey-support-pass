@@ -42,14 +42,18 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
     <p role="status">{t(`${target?.name ?? "목적지"}에 도착했어요.`, `You have arrived at ${target?.name ?? "your destination"}.`)}</p>
     <button type="button" className={styles.primary} onClick={()=>setRobotPhase("ended")}>{t("안내 종료", "End guidance")}</button>
   </> : <>
-    {robotPhase === "ended" ? <p role="status">{t("안내가 끝났어요. 안내로봇을 이용해 주셔서 감사합니다.", "Guidance has ended. Thank you for using Guide robot.")}</p> : <button type="button" className={styles.primary} onClick={()=>setRobotPhase("guiding")}>{t("안내 시작", "Start guidance")}</button>}
+    {robotPhase === "ended" ? <p role="status">{t("안내가 끝났어요. 안내로봇을 이용해 주셔서 감사합니다.", "Guidance has ended. Thank you for using Guide robot.")}</p> : <>
+      <button type="button" className={styles.primary} onClick={()=>setRobotPhase("guiding")}>{t("안내 시작", "Start guidance")}</button>
+      {/* 로봇 화면은 경로가 정해지면 검색 칸을 접는다(한 화면). 목적지를 바꾸려면 이 단추로 다시 연다 */}
+      <button type="button" className={styles.clear} onClick={()=>result.clearDestination()}>{t("다른 목적지 고르기", "Choose another destination")}</button>
+    </>}
     <Link className={robotPhase === "ended" ? styles.primary : styles.clear} href={homeHref}>{t("처음 화면으로", "Back to home")}</Link>
   </>;
   const resultTitle = isRobotMode && robotPhase !== "idle"
     ? robotPhase === "guiding" ? t("안내로봇 안내 중", "Guide robot guidance") : robotPhase === "arrived" ? t("목적지 도착", "Destination reached") : t("안내 종료", "Guidance ended")
     : t("경로 확인 완료", "Route ready");
   const summary = (
-<aside ref={resultRef} className={styles.summary} data-collapsed={!open} aria-live="polite" aria-label={t("경로 결과", "Route result")}>
+<aside ref={resultRef} className={styles.summary} data-collapsed={!open} data-route-result={hasResult ? "" : undefined} aria-live="polite" aria-label={t("경로 결과", "Route result")}>
           {isRobotMode ? <Bot aria-hidden="true" /> : <Navigation aria-hidden="true" />}<h2>{hasResult ? resultTitle : t("한 지도에서 바로 찾기", "Find it on one map")}</h2>
           {hasResult ? <><strong className={styles.distance}>{Math.round(distance!)} m</strong>
             <button type="button" className={styles.resultToggle} aria-expanded={open} aria-label={open ? t("결과 접기", "Collapse result") : t("결과 펼치기", "Expand result")} onClick={()=>setOpen(v=>!v)}><ChevronUp aria-hidden="true" /></button>

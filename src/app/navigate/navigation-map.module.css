@@ -1,7 +1,7 @@
 .workspace{width:100%;max-width:var(--col);margin:auto;padding:var(--space-5) var(--space-4) var(--space-7);color:var(--color-text)}
 .heading{margin-bottom:var(--space-4)}.heading>span{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-small);color:var(--color-muted)}.heading h1{font-size:var(--text-page-title);line-height:1.4;margin:var(--space-2) 0 0}
 .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-4);align-items:start}.card{min-width:0;border:1px solid var(--color-line);background:var(--color-surface);border-radius:var(--radius-medium);padding:var(--space-4)}
-.endpoints{display:grid;grid-template-columns:minmax(0,1fr) 2.75rem minmax(0,1fr);gap:var(--space-2);align-items:stretch}.startControl{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);align-content:stretch}.endpoint{width:100%;display:flex;align-items:flex-start;gap:var(--space-2);text-align:left;min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));padding:var(--space-3);border:1px solid var(--color-control-line);border-radius:var(--radius-medium);background:var(--color-surface);color:var(--color-text);cursor:pointer;font:inherit;min-width:0}.endpoint[aria-pressed=true]{border-color:var(--color-primary);background:var(--color-primary-soft)}.endpoint>svg{flex:none;margin-top:var(--space-1)}.endpoint>span{display:grid;gap:var(--space-1);min-width:0}.endpoint small{font-size:var(--text-small);color:var(--color-primary);font-weight:var(--weight-label)}.endpoint strong{font-size:var(--text-body);line-height:1.4;overflow-wrap:anywhere}.endpoint em{font-size:var(--text-caption);line-height:1.5;font-style:normal;color:var(--color-muted);overflow-wrap:anywhere}
+.endpoints{display:grid;grid-template-columns:minmax(0,1fr) 2.75rem minmax(0,1fr);gap:var(--space-2);align-items:stretch}.startControl{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);align-content:stretch}.endpoint{width:100%;display:flex;align-items:flex-start;gap:var(--space-2);text-align:left;min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));padding:var(--space-3);border:1px solid var(--color-control-line);border-radius:var(--radius-medium);background:var(--color-surface);color:var(--color-text);cursor:pointer;font:inherit;min-width:0}.endpoint[aria-pressed=true]{border-color:var(--color-accent);background:var(--color-accent-soft)}.endpoint>svg{flex:none;margin-top:var(--space-1)}.endpoint>span{display:grid;gap:var(--space-1);min-width:0}.endpoint small{font-size:var(--text-small);color:var(--color-muted);font-weight:var(--weight-label)}.endpoint strong{font-size:var(--text-body);line-height:1.4;overflow-wrap:anywhere}.endpoint em{font-size:var(--text-caption);line-height:1.5;font-style:normal;color:var(--color-muted);overflow-wrap:anywhere}
 .current,.swap,.clear{min-height:2.75rem;min-width:2.75rem;display:flex;align-items:center;justify-content:center;gap:var(--space-2);background:var(--color-surface);border:1px solid var(--color-control-line);border-radius:var(--radius-medium);color:var(--color-primary);cursor:pointer;font:inherit;padding:var(--space-2)}.current{font-size:var(--text-small);flex-wrap:wrap;align-content:center;max-width:7rem}.current svg{width:1.5rem;height:1.5rem}.swap{align-self:center;padding:0}.swap:disabled,.current:disabled{opacity:.55;cursor:default}.locationNote{margin:var(--space-2) 0;color:var(--color-muted);font-size:var(--text-small)}
 .instruction{display:flex;align-items:center;gap:var(--space-2);margin:var(--space-3) 0 0;padding:var(--space-3);border-radius:var(--radius-medium);background:var(--color-primary-faint);color:var(--color-primary);font-weight:var(--weight-label);font-size:var(--text-body);line-height:1.5}.instruction>span{display:grid;place-items:center;border-radius:var(--radius-pill);min-width:1.5rem;height:1.5rem;background:var(--color-primary);color:var(--color-surface);font-size:var(--text-caption)}
 /* 「경로 보기」 줄은 옆 칸이 길어도 칸 아래에 붙어 항상 보인다. */
@@ -27,7 +27,7 @@
 .kioskInputs{min-width:0}
 .kioskInputs .endpoints{grid-template-columns:minmax(0,1fr);gap:var(--space-3)}
 .kioskInputs .startControl{grid-template-columns:minmax(0,1fr) auto;grid-column:auto;border:1px solid var(--color-control-line);border-radius:var(--radius-medium);background:var(--color-surface);gap:0;align-items:stretch}
-.kioskInputs .startControl:has(.endpoint[aria-pressed=true]){border-color:var(--color-primary);background:var(--color-primary-faint)}
+.kioskInputs .startControl:has(.endpoint[aria-pressed=true]){border-color:var(--color-accent);background:var(--color-accent-soft)}
 .kioskInputs .startControl .endpoint{border:0;background:transparent;box-shadow:none}
 .kioskInputs .endpoint em{display:none}
 .kioskInputs .endpoint{min-height:var(--map-control-height, max(2.75rem,var(--target-kiosk-floor)));padding:var(--space-3)}
@@ -94,6 +94,12 @@
 .planner[data-device-layout=robot] .kioskInputs .startControl{border-color:var(--color-line)}
 .planner[data-device-layout=robot] .instruction{margin:0;padding:0;background:none;font-size:var(--text-body)}
 .planner[data-device-layout=robot] .primary{font-size:var(--text-body);min-height:max(4.75rem,var(--target-kiosk-floor))}
+/* 키오스크·안내로봇: 첫 화면처럼 주 단추는 노랑, 나머지는 흰 둥근 단추. 결과 카드는 옅은 노랑에서 흰색으로 */
+.planner[data-kiosk=true] .primary{border-radius:var(--radius-pill);background:var(--color-accent);color:var(--color-text);box-shadow:var(--shadow-1)}
+.planner[data-kiosk=true] .clear{border-color:var(--color-line);border-radius:var(--radius-pill);color:var(--color-text);box-shadow:var(--shadow-1)}
+.planner[data-kiosk=true] .summary{background:linear-gradient(110deg,var(--color-accent-soft),var(--color-surface) 72%);border-color:var(--color-line)}
+.planner[data-kiosk=true] .summary>svg,.planner[data-kiosk=true] .distance{color:var(--color-text)}
+.planner[data-kiosk=true] .help,.planner[data-kiosk=true] .moreInfo summary{color:var(--color-text)}
 @media(min-width:761px){
   .planner[data-device-layout=robot] .kioskInputs{display:contents}
   .planner[data-device-layout=robot] .kioskInputs .endpoints{grid-column:1 / -1;grid-template-columns:minmax(0,1fr) var(--target-kiosk-floor) minmax(0,1fr) auto;gap:var(--space-3);align-items:stretch}
@@ -120,11 +126,11 @@
 .planner:not([data-device-layout=robot]) .kioskInputs .endpointActions{display:contents}
 .planner:not([data-device-layout=robot]) .kioskInputs .destinationControl>.endpoint{grid-column:1;grid-row:2}
 .planner:not([data-device-layout=robot]) .kioskInputs .endpoint{border:0;border-radius:var(--radius-small);background:none;align-items:center}
-.planner:not([data-device-layout=robot]) .kioskInputs .endpoint[aria-pressed=true]{background:var(--color-primary-faint);box-shadow:inset .25rem 0 0 var(--color-primary)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint[aria-pressed=true]{background:var(--color-accent-soft);box-shadow:inset .25rem 0 0 var(--color-accent)}
 .planner:not([data-device-layout=robot]) .kioskInputs .endpoint>svg{margin:0;color:var(--color-primary)}
 .planner:not([data-device-layout=robot]) .kioskInputs .endpoint small{font-size:var(--text-caption);color:var(--color-muted)}
 .planner:not([data-device-layout=robot]) .kioskInputs .endpoint strong{font-size:var(--text-body)}
-.planner:not([data-device-layout=robot]) .kioskInputs .endpoint[aria-pressed=true] small{color:var(--color-primary)}
+.planner:not([data-device-layout=robot]) .kioskInputs .endpoint[aria-pressed=true] small{color:var(--color-text)}
 /* 두 줄 사이 가는 선 */
 .planner:not([data-device-layout=robot]) .kioskInputs .destinationControl>.endpoint{margin-top:var(--space-1);position:relative}
 .planner:not([data-device-layout=robot]) .kioskInputs .destinationControl>.endpoint::before{content:"";position:absolute;left:var(--space-3);right:0;top:calc(-1 * var(--space-1) / 2 - .5px);border-top:1px solid var(--color-line)}

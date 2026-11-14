@@ -638,7 +638,7 @@ export function VisitForm({
         </div>
       </form>
       <aside className={styles.panel}>
-        <HubMap hubId={hub} en={en} />
+        <HubMap hubId={hub} en={en} live />
       </aside>
     </div>
   );
