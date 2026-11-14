@@ -1,4 +1,5 @@
 "use client";
+import { ChevronLeft } from "lucide-react";
 import { destinationPlaceOf } from "@/lib/service-locations";
 import Link from "next/link";
 import { taskOf, serviceDetailsLines } from "@/lib/service-tasks";
@@ -853,6 +854,7 @@ export function RequestList({
                     );
                   }}
                 >
+                  <ChevronLeft aria-hidden="true" />
                   요청 목록으로
                 </button>
                 <div className="work-detail-heading">
