@@ -1077,25 +1077,31 @@ export function GuideKiosk({
           onBack={() => setView({ kind: "home" })}
           onHome={reset}
         >
+          {/* 첫 화면과 같은 모양: 옅은 노랑 → 흰색 큰 칸에 제목·걸리는 시간·나랑이(말풍선에 남은 시간), 오른쪽 흰 칸에 가는 길 단계 */}
           <section className="kc-route">
           <div className="kc-route-info">
           <h1>{title}</h1>
           <p className="lead">
             <RouteSummary route={route} t={t} />
           </p>
-          {target.type === "gate" && guide.pace && (
-            <p
-              className={`pace pace-${guide.pace}`}
-              role={guide.pace === "late" ? "alert" : undefined}
-            >
-              {closeText(flight, t)} · {paceText(guide.pace, t)}
-            </p>
-          )}
           </div>
-          <RouteSteps route={route} target={target} from={here} t={t} />
-          {/* 남는 자리에 나랑이(함께 가는 느낌). 그림일 뿐이라 화면 읽기에서는 뺀다 */}
-          <div className="kc-route-art" aria-hidden="true">
-            <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="(orientation: portrait) 30vh, 30vw" />
+          <div className="kc-route-art">
+            {target.type === "gate" && guide.pace && (
+              <p
+                className={`kc-route-bubble pace-${guide.pace}`}
+                role={guide.pace === "late" ? "alert" : undefined}
+              >
+                <span>{closeText(flight, t)}</span>
+                <strong>{paceText(guide.pace, t)}</strong>
+              </p>
+            )}
+            {/* 나랑이(함께 가는 느낌). 그림일 뿐이라 화면 읽기에서는 뺀다 */}
+            <div className="kc-route-ring" aria-hidden="true">
+              <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="(orientation: portrait) 30vh, 24vw" />
+            </div>
+          </div>
+          <div className="kc-route-steps">
+            <RouteSteps route={route} target={target} from={here} t={t} />
           </div>
           <div className="kc-route-foot">
           <button
