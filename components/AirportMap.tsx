@@ -55,6 +55,8 @@ export type NearbyResult = { requestKey: string; results: { id: string | number;
 type Props = {
   state?: MapState;
   height?: number | string;
+  /** 지도 최소 높이. 정해진 칸을 채울 때(키오스크 가는 길)는 0 으로 둔다. 기본 17.5rem */
+  minHeight?: number | string;
   /** 화면 읽기 프로그램이 읽는 지도 칸 이름(영어 화면은 영어로) */
   title?: string;
   className?: string;
@@ -76,6 +78,7 @@ const CHANNEL = "journey-airport-map";
 export default function AirportMap({
   state = {},
   height = 420,
+  minHeight,
   title = "공항 실내지도",
   className,
   ...callbacks
@@ -153,7 +156,7 @@ export default function AirportMap({
         display: "block",
         width: "100%",
         height,
-        minHeight: state.compactMobile ? 0 : "17.5rem",
+        minHeight: minHeight ?? (state.compactMobile ? 0 : "17.5rem"),
         border: 0,
         borderRadius: "var(--radius-medium, .75rem)",
       }}

@@ -1,5 +1,6 @@
 "use client";
 
+import { KioskRouteMap } from "../../components/KioskRouteMap";
 import Image from "next/image";
 
 import {
@@ -74,6 +75,8 @@ interface Props {
   initialLang?: Lang;
   placeLabel: string;
   placeLabelEn: string;
+  /** 이 키오스크가 놓인 자리. 가는 길 지도의 출발점 */
+  placeId?: string | null;
   refreshSec: number;
   idleAskSec: number;
   idleAnswerSec: number;
@@ -131,6 +134,7 @@ const KIOSK_SETUP = "/kiosk";
 export function GuideKiosk({
   initialLang = "ko",
   placeLabel,
+  placeId = null,
   placeLabelEn,
   refreshSec,
   idleAskSec,
@@ -1100,8 +1104,14 @@ export function GuideKiosk({
               <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="(orientation: portrait) 30vh, 24vw" />
             </div>
           </div>
+          {/* 오른쪽: 위에 내비게이션처럼 길을 그린 큰 지도, 아래에 경로 단계(단계가 많으면 이 상자 안에서만 내려간다) */}
           <div className="kc-route-steps">
-            <RouteSteps route={route} target={target} from={here} t={t} />
+            <div className="kc-route-map">
+              <KioskRouteMap fromPlaceId={placeId} gate={target.type === "gate" ? target.gate : target.nearGate} label={title} en={lang === "en"} />
+            </div>
+            <div className="kc-route-list" tabIndex={0} role="region" aria-label={lang === "en" ? "Route steps" : "경로 단계"}>
+              <RouteSteps route={route} target={target} from={here} t={t} />
+            </div>
           </div>
           <div className="kc-route-foot">
           <button

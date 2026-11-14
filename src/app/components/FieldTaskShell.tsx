@@ -20,7 +20,8 @@ export function FieldTaskShell({
   preview?: boolean;
 }) {
   return (
-    <div className="field-task-shell" lang={en ? "en" : "ko"}>
+    // 안내로봇(입구, 세로 1080×1920)에서 연 화면: 로봇 첫 화면과 같은 글자 기준·세로 배치를 쓴다(devices.css)
+    <div className="field-task-shell" lang={en ? "en" : "ko"} data-device={returnTo === "/kiosk/entry" ? "robot" : undefined}>
       <header className="field-task-header">
         <Link
           href={kioskHomeHref(returnTo, en, preview)}

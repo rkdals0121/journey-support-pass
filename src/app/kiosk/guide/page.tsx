@@ -26,6 +26,7 @@ export default async function KioskGuidePage({ searchParams }: { searchParams: P
     <GuideKiosk
       initialLang={q.lang === "en" ? "en" : "ko"}
       placeLabel={place.label}
+      placeId={place.id}
       placeLabelEn={place.labelEn}
       refreshSec={config.guideRefreshSec}
       idleAskSec={idleAskSec}
