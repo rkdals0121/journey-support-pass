@@ -49,8 +49,16 @@ const SCALES = process.env.LAYOUT_SCALES ? process.env.LAYOUT_SCALES.split(",").
 // 빨리 돌려 볼 때: LAYOUT_PAGES=/,/help LAYOUT_WIDTHS=390,1333 LAYOUT_SCALES=1 npx tsx scripts/layout-check.ts
 const ONLY_PAGES = process.env.LAYOUT_PAGES?.split(",");
 const ONLY_WIDTHS = process.env.LAYOUT_WIDTHS?.split(",").map(Number);
-const PAGES = ["/", "/prepare", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login", "/devices", "/devices/kiosk", "/devices/robot"];
-const KIOSK_PAGES = ["/kiosk/guide", "/kiosk/entry", "/kiosk/visits"];
+const PAGES = ["/", "/prepare", "/points/K7Q", "/register", "/services", "/help", "/navigate", "/visits", "/requests", "/stamp", "/staff/login", "/devices", "/devices/kiosk", "/devices/robot"];
+const KIOSK_PAGES = [
+  "/kiosk/guide", "/kiosk/entry", "/kiosk/visits",
+  // 키오스크에서 여는 접수·이동 도움·길 찾기 화면(가로 화면에서 1,388px 스크롤이 생긴 적 있음)
+  "/help?returnTo=/kiosk/guide&fresh=1",
+  "/help?topic=mobility&returnTo=/kiosk/guide&fresh=1",
+  "/help?topic=mobility&flow=staff&returnTo=/kiosk/guide&fresh=1",
+  "/help?topic=mobility&flow=robot&returnTo=/kiosk/entry&fresh=1",
+  "/navigate?returnTo=/kiosk/guide",
+];
 /** 직원 화면. 도움 요청 대신 접수·지원정보 대신 등록은 여객·키오스크 화면을 왼쪽 메뉴 옆 본문 칸에 띄운다. */
 const STAFF_PAGES = ["/staff", "/staff/requests", "/staff/requests/new", "/staff/desk", "/staff/desk/register", "/staff/overview"];
 
@@ -77,7 +85,8 @@ async function inspect(page: Page, where: string) {
     }
     // 키오스크·안내로봇 화면은 스크롤 없이 한 화면이어야 한다(AGENTS.md 「키오스크·안내로봇 화면」, docs/ui-guide.md 3절).
     // 글자 1배에서만 본다. 1.5배에서는 넘치면 페이지가 내려가도 된다.
-    if (doc.hasAttribute("data-kiosk") && scale === 1 && doc.scrollHeight > innerHeight + 1) {
+    // 키오스크의 접수·길 찾기 화면(FieldTaskShell)은 html[data-kiosk] 표시가 없지만 같은 기기 화면이다. 그 화면도 본다.
+    if ((doc.hasAttribute("data-kiosk") || document.querySelector(".field-task-shell")) && scale === 1 && doc.scrollHeight > innerHeight + 1) {
       out.push(`키오스크 화면에 세로 스크롤 ${doc.scrollHeight - innerHeight}px`);
     }
     // 찌그러진 단추: 칸이 좁아 글자가 한 글자씩 세로로 쌓인 단추(폭보다 높이가 훨씬 큼)
@@ -122,12 +131,15 @@ async function inspect(page: Page, where: string) {
       const std = rem * (parseFloat(getComputedStyle(doc).getPropertyValue("--space-4")) || 1);
       const bodyBg = getComputedStyle(document.body).backgroundColor;
       const seen = (e: Element) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none"; };
+      const pinned = (e: Element) => { for (let x: Element | null = e; x && x !== document.body; x = x.parentElement) { const p = getComputedStyle(x).position; if (p === "sticky" || p === "fixed") return true; } return false; };
       const boxes: { e: Element; l: number; t: number; r: number; b: number; name: string }[] = [];
       for (const e of document.querySelectorAll("body *")) {
         if (!seen(e)) continue;
         const r = e.getBoundingClientRect();
         if (r.width < 160 || r.height < 64) continue;
         const cs = getComputedStyle(e);
+        // 화면에 붙는 칸(sticky·fixed: 진행 단추 줄, 길 찾기 지도)과 그 안의 것은 스크롤에 따라 자리가 바뀌어 간격을 잴 수 없다
+        if (pinned(e)) continue;
         const border = parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== "none";
         const fill = (cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== bodyBg) || cs.backgroundImage !== "none";
         if (!border && !fill) continue;
@@ -432,7 +444,7 @@ async function kioskCookie(placeId: string): Promise<string | null> {
       for (const url of KIOSK_PAGES.filter((u) => !ONLY_PAGES || ONLY_PAGES.includes(u)))
         for (const size of KIOSK_SIZES.filter((z) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(z.width)))
           for (const scale of SCALES) {
-            const page = await openAt(browser, size, scale, url, url === "/kiosk/entry" ? entry : guide);
+            const page = await openAt(browser, size, scale, url, url === "/kiosk/entry" || url.includes("returnTo=/kiosk/entry") ? entry : guide);
             await inspect(page, `${url} · ${size.name} · 글자 ×${scale}`);
             if (url === "/kiosk/guide" && scale === 1) await guideSteps(page, `${url} · ${size.name} · 글자 ×${scale}`);
             await page.close();

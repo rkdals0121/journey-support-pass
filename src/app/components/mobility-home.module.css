@@ -27,3 +27,6 @@
 .assistance .welcome h2{padding:0;border:0;background:none}
 .assistance .toolbar{flex:0 1 auto;justify-content:flex-end}
 @media(max-width:760px){.assistance{padding:var(--space-4);gap:var(--space-4)}.assistance .toolbar{width:100%;justify-content:flex-start}.assistance .toolbar>a,.assistance .toolbar>button{flex:1 1 auto}}
+/* 키오스크(FieldTaskShell 안): 위쪽 바↔소개↔칸 사이를 다른 키오스크 화면과 같은 --space-4 로 */
+.content[data-kiosk=true]{gap:var(--space-4);padding-block:var(--space-4)}
+.content[data-kiosk=true] .assistance{padding-block:var(--space-3)}

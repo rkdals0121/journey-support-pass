@@ -110,8 +110,9 @@ html[data-kiosk] .robot-panel { border: 0; background: var(--color-primary-faint
   :is(.service-workspace, .booking-lookup) { width: min(100%, 80rem); max-width: 80rem; padding: 2rem 2.5rem; margin: auto; }
 .field-task-shell :is(h1) { font-size: var(--text-page-title); }
 /* 현장 도움 요청: 키오스크는 누르는 곳이 커서 같은 내용이 더 길다. 한 화면에 들도록 여백부터 줄인다. */
-.field-task-shell .request-experience { padding-top: var(--space-2); }
-.field-task-shell .request-heading { margin-bottom: var(--space-2); }
+/* 박스 간격은 다른 키오스크 화면과 같은 --space-4(위쪽 바↔소개 상자↔첫 칸) */
+.field-task-shell .request-experience { padding-top: var(--space-4); }
+.field-task-shell .request-heading { margin-bottom: var(--space-4); }
 .field-task-shell .request-hero-top { margin-bottom: 0; }
 .field-task-shell .request-form { gap: var(--space-2); }
 .field-task-shell .request-section { border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding-block: var(--space-2); }
