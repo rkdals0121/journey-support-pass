@@ -503,10 +503,11 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kc-directions .kx-guide { display: flex; flex-direction: column; align-items: stretch; justify-content: safe center; gap: var(--space-4); min-height: 0; }
 .kc-directions .kx-guide-main { display: contents; }
 .kc-directions .kx-guide-side { flex: none; min-height: 0; }
-.kc-directions .gate-go { margin: 0; padding: var(--space-4) var(--space-5); gap: var(--space-4); min-height: calc(var(--target-kiosk-floor) * 1.2); border: 1px solid var(--color-accent); border-radius: var(--radius-medium); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%); color: var(--color-text); box-shadow: var(--shadow-1); }
+.kc-directions .gate-go { margin: 0; padding: var(--space-2) var(--space-5); gap: var(--space-4); min-height: calc(var(--target-kiosk-floor) * 1.2); border: 1px solid var(--color-accent); border-radius: var(--radius-medium); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%); color: var(--color-text); box-shadow: var(--shadow-1); }
 .kc-directions .gate-go > svg { flex: none; width: 3rem; height: 3rem; padding: var(--space-3); box-sizing: border-box; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-text); }
 .kc-directions .gate-go .route-sum em { border: 1px solid var(--color-accent); background: var(--color-surface); color: var(--color-accent-ink); }
-.kc-directions .gate-go-pace { color: var(--color-muted); }
+.kc-directions .gate-go-pace { color: var(--color-muted); line-height: 1.35; }
+.kc-directions .gate-go .route-sum em { padding-block: 0; }
 .kc-directions .gate-go strong { font-size: var(--text-title); }
 .kc-directions .gate-go-ico { width: 2.25rem; height: 2.25rem; background: none; color: var(--color-text); }
 .kc-directions .gate-go-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
@@ -663,10 +664,10 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 .kc-route-bubble.pace-late { border-color: var(--color-error); }
 .kc-route-bubble.pace-late strong { color: var(--color-error); }
 /* 가는 길 단계: 흰 칸. 지금 계신 곳은 진한 선 원, 지나는 곳은 회색 선 원, 도착은 노란 원(화면의 강조 한 곳) */
-.kc-route-steps { grid-area: steps; min-height: 0; padding: var(--space-5) var(--space-6); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-1); }
+.kc-route-steps { grid-area: steps; min-height: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-1); }
 /* 단계는 칸 높이에 맞춰 세로로 고르게 펼친다(단계가 적을 때 아래가 휑하게 비지 않게). 너무 벌어지지 않게 한 칸은 9rem 까지 */
 .kc-route-steps .route { display: flex; flex-direction: column; height: 100%; margin: 0; }
-.kc-route .route > li { flex: 1 1 auto; max-height: 9rem; padding-bottom: var(--space-5); }
+.kc-route .route > li { flex: 1 1 auto; max-height: 9rem; padding-bottom: var(--space-4); }
 .kc-route .route > li:last-child { flex: none; padding-bottom: 0; }
 .kc-route .route > li::before { background: var(--color-line); }
 .kc-route .route > li strong { font-size: var(--text-heading); line-height: 1.35; }
@@ -679,7 +680,7 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 html[data-kiosk] .kc-route-foot .finish-btn { margin: 0; min-height: max(var(--target-kiosk-floor), 4.5rem); border: 1px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-1); font-size: var(--text-heading); font-weight: var(--weight-heading); }
 .kc-route-foot .fine { margin: 0; padding-inline: var(--space-2); }
 @media (orientation: landscape) {
-  .kc-route { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "info steps" "art steps" "foot steps"; }
+  .kc-route { grid-template-columns: minmax(0, 9fr) minmax(0, 11fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "info steps" "art steps" "foot steps"; }
   .kc-route-steps { align-self: stretch; overflow: auto; }
 }
 

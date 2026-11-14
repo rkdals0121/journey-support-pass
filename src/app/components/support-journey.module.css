@@ -601,6 +601,8 @@
 .pointLayout { gap:var(--space-4); }
 .pointLayout > .panel { margin:0; }
 .visitLayout { gap:var(--space-4); align-items:stretch; }
+/* 짧은 화면에서는 두 칸이 바닥 줄 바로 위까지 늘어난다(본문 칸이 화면 높이를 채우며 칸과 바닥 줄 사이가 벌어지던 것) */
+:global(.service-short-page) > .visitLayout { flex:1 0 auto; }
 /* 실제 지도: 칸 안에서 남는 높이를 채운다. 가장 작을 때도 지도가 읽히는 높이를 둔다 */
 .liveMap { position:relative; flex:1 1 auto; min-height:16rem; overflow:auto; border:1px solid var(--color-line); border-radius:var(--radius-medium); }
 .visitLayout > aside.panel { display:flex; flex-direction:column; }
