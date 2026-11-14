@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Navigation,
   Accessibility,
-  CarFront,
   Wrench,
   Bus,
   Bot,
@@ -93,11 +92,10 @@ export function TaskLauncher({
           if (id === "guidance" && (device === "robot" || returnTo === "/kiosk/entry")) href.searchParams.set("device", "robot");
           if (id !== "guidance") href.searchParams.set("fresh", "1");
           if (preview && returnTo) href.searchParams.set("preview", "1");
-          // 서비스 이동과 순서는 유지하고 기기에서는 공용 서비스 카드 모양을 쓴다.
-          const KioskIcon = id === "mobility" ? CarFront : Icon;
+          // 서비스 이동과 순서는 유지하고 기기에서는 공용 서비스 카드 모양을 쓴다. 그림은 휴대전화와 같다(이동 도움 = 휠체어).
           if (kioskCards) return (
             <Link key={id} href={href.pathname + href.search} className="svc-card" data-service-topic={id}>
-              <KioskIcon aria-hidden="true" />
+              <Icon aria-hidden="true" />
               <strong>{en ? english : ko}</strong>
               <span>{en ? detailEn : detail}</span>
             </Link>
