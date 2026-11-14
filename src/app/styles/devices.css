@@ -105,6 +105,14 @@ html[data-kiosk] .robot-panel { border: 0; background: var(--color-primary-faint
    웹 크기(16px) 그대로라 글자가 작고 화면 위쪽 40% 만 쓰던 것. 지도 화면(data-device-layout=robot)은 따로 맞춰 둔 배치라 그대로 둔다. */
 html:has(.field-task-shell[data-device=robot]):not(:has([data-device-layout=robot])) { font-size: calc(162.5% * var(--scale, 1)); }
 .field-task-shell[data-device=robot] { display: flex; flex-direction: column; }
+/* 위쪽 바: 바 글자는 px 기준(14px × --scale)이라 로봇 첫 화면 바보다 작게 보이던 것 → 같은 비율로 키운다 */
+@media (orientation: portrait) {
+  .field-task-shell[data-device=robot] .field-task-header { --scale: 1.6; min-height: calc(var(--site-bar-height) * 1.3); }
+  .field-task-shell[data-device=robot] .field-task-header > span { white-space: nowrap; }
+}
+.field-task-shell[data-device=robot] .field-task-header svg { width: 1.5rem; height: 1.5rem; }
+/* 로봇 첫 화면 바처럼 상표는 해바라기 그림만(글자를 키우니 「Journey Support / Pass」·위치가 두 줄로 꺾이던 것) */
+.field-task-shell[data-device=robot] .field-task-header .brand > span { display: none; }
 /* 세로 화면 배치: 위→아래 한 줄. 고르는 칸이 남는 높이를 채우고, 「다음」은 화면 아래에 붙는다(아래가 1,000px 가까이 비던 것) */
 .field-task-shell[data-device=robot] > .request-experience { flex: 1 1 auto; display: flex; flex-direction: column; }
 /* 위쪽 노란 칸(제목)이 남는 높이를 갖고, 그 안에서 큰 나랑이가 채운다. 아래 양식은 내용만큼, 「다음」은 바닥에 */

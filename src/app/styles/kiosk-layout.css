@@ -670,7 +670,15 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 .kc-route-steps { display: flex; flex-direction: column; gap: var(--space-4); }
 .kc-route-steps .route { margin: 0; }
 /* 경로 단계 상자: 지도 아래. 내용만큼 크되 오른쪽 칸 높이의 절반까지, 넘치면 상자 안에서 스크롤(막대는 보인다) */
-.kc-route-list { flex: 0 1 auto; max-height: 50%; min-height: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+/* 경로 단계 상자: 지도 아래의 따로 스크롤되는 칸임이 보이게 — 옅은 회색 바탕·진한 테두리·위쪽 「경로 단계」 머리줄(스크롤해도 위에 남는다).
+   스크롤 막대는 이 상자 안쪽 오른쪽에 늘 자리를 잡고(바깥 흰 칸을 침범하지 않는다), 넘칠 때 막대가 보인다 */
+.kc-route-list { flex: 0 1 auto; max-height: 50%; min-height: 0; overflow-y: auto; overflow-x: auto; scrollbar-gutter: stable; padding: 0 var(--space-3) var(--space-4) var(--space-4); border: 2px solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-canvas); }
+.kc-route-list-title { position: sticky; top: 0; z-index: 1; margin: 0 0 var(--space-3); padding: var(--space-3) 0 var(--space-2); border-bottom: 1px solid var(--color-line); background: var(--color-canvas); color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-heading); }
+.kc-route-list .route-ico { background: var(--color-surface); }
+/* 막대를 직접 그린다: 터치 기기 브라우저는 스크롤 막대를 숨기는 경우가 있어, 넘치는 상자임을 늘 알 수 있게(상자 안쪽 오른쪽) */
+.kc-route-list::-webkit-scrollbar { width: 0.875rem; }
+.kc-route-list::-webkit-scrollbar-track { margin-block: var(--space-2); border-radius: var(--radius-pill); background: var(--color-line); }
+.kc-route-list::-webkit-scrollbar-thumb { border: 3px solid var(--color-line); border-radius: var(--radius-pill); background: var(--color-muted); }
 .kc-route .route > li { padding-bottom: var(--space-4); }
 .kc-route .route > li:last-child { padding-bottom: 0; }
 .kc-route-map { position: relative; flex: 1 1 0; min-height: 12rem; }
