@@ -85,7 +85,7 @@
 .planner[data-kiosk=true] { --map-control-height: max(2.75rem,var(--target-kiosk-floor)); }
 
 .workspace[data-device-layout=robot][data-kiosk]{width:var(--robot-screen-width);max-width:none;margin:auto;padding:0}
-.planner[data-device-layout=robot]{position:relative;z-index:24;width:var(--robot-screen-width);height:auto;margin:var(--space-3) calc((100% - var(--robot-screen-width)) / 2) 0;background:var(--color-canvas)}
+.planner[data-device-layout=robot]{position:relative;z-index:24;width:var(--robot-screen-width);height:auto;margin:var(--space-4) calc((100% - var(--robot-screen-width)) / 2) 0;background:var(--color-canvas)}
 .planner[data-device-layout=robot] .actions{position:static;margin:0;padding:0}
 .planner[data-device-layout=robot] .voiceControls{margin:0}
 .planner[data-device-layout=robot] .voiceButton{font-size:var(--text-body);border-color:var(--color-line);background:var(--color-primary-faint)}

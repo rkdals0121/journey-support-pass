@@ -629,3 +629,5 @@
  .visitLayout .draftSteps button,.visitLayout .button,.visitLayout .secondary { min-height:2.75rem; }
  .visitLayout .actions { margin-top:var(--space-2);padding-block:var(--space-1); }
 }
+/* 만남 장소 상세: 두 칸을 같은 높이로(짧은 칸 아래가 비어 바닥 줄과 간격이 벌어지던 것) */
+.pointLayout { align-items: stretch; }
