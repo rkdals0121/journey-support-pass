@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PLACES, NO_MEETING_PLACE } from "@/lib/airport";
 import {
@@ -1130,6 +1131,10 @@ export function HelpFlow({
                         : "Confirm the service details and location.",
                     )}
               </p>
+            </div>
+            {/* 안내로봇(세로 화면)에서만 보이는 큰 나랑이. 로봇 첫 화면처럼 남는 높이를 나랑이가 쓴다(devices.css) */}
+            <div className="request-robot-art" aria-hidden="true">
+              <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="40vh" />
             </div>
             <ol
               className="request-stepbar"

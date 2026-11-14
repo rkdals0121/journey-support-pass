@@ -101,6 +101,26 @@ html[data-kiosk] .robot-panel { border: 0; background: var(--color-primary-faint
 .robot-pass-entry .robot-scan { width: 100%; border: 0; border-top: 0.0625rem solid var(--color-primary-soft); border-radius: 0; padding: 1rem; }
 /* 바탕은 다른 키오스크 화면과 같은 옅은 회색(흰 바탕 위에 회색 「다음」 줄만 떠 보이던 것) */
 .field-task-shell { min-height: 100dvh; background: var(--color-canvas); font-size: var(--text-body); }
+/* 안내로봇(세로 1080×1920)에서 연 접수·이동 도움 화면: 로봇 첫 화면(html[data-kiosk], 1rem = 26px)과 같은 글자 기준.
+   웹 크기(16px) 그대로라 글자가 작고 화면 위쪽 40% 만 쓰던 것. 지도 화면(data-device-layout=robot)은 따로 맞춰 둔 배치라 그대로 둔다. */
+html:has(.field-task-shell[data-device=robot]):not(:has([data-device-layout=robot])) { font-size: calc(162.5% * var(--scale, 1)); }
+.field-task-shell[data-device=robot] { display: flex; flex-direction: column; }
+/* 세로 화면 배치: 위→아래 한 줄. 고르는 칸이 남는 높이를 채우고, 「다음」은 화면 아래에 붙는다(아래가 1,000px 가까이 비던 것) */
+.field-task-shell[data-device=robot] > .request-experience { flex: 1 1 auto; display: flex; flex-direction: column; }
+/* 위쪽 노란 칸(제목)이 남는 높이를 갖고, 그 안에서 큰 나랑이가 채운다. 아래 양식은 내용만큼, 「다음」은 바닥에 */
+.request-robot-art { display: none; }
+.field-task-shell[data-device=robot] .request-heading { flex: 1 1 auto; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr); align-items: start; }
+.field-task-shell[data-device=robot] .request-robot-art { display: block; grid-column: 1 / -1; grid-row: 2; position: relative; align-self: stretch; min-height: 10rem; container-type: size; }
+.field-task-shell[data-device=robot] .request-robot-art::before { content: ""; position: absolute; left: 50%; top: 50%; width: min(100cqh, 100cqw); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: var(--radius-pill); background: var(--color-accent-soft); border: 1px solid var(--color-accent); }
+.field-task-shell[data-device=robot] .request-robot-art img { position: absolute; left: 50%; top: 50%; width: min(90cqh, 90cqw); height: auto; transform: translate(-50%, -50%); filter: drop-shadow(0 0.5rem 0.75rem var(--color-shadow)); }
+.field-task-shell[data-device=robot] .request-form { flex: none; display: flex; flex-direction: column; gap: var(--space-4); }
+.field-task-shell[data-device=robot] .request-form > *, .field-task-shell[data-device=robot] .request-form-main { width: 100%; max-width: none; }
+.field-task-shell[data-device=robot] .request-form-main > .request-section:first-child { padding: var(--space-5); }
+.field-task-shell[data-device=robot] .request-section > :is(.request-service-options, .request-task-options) { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+.field-task-shell[data-device=robot] .request-section > :is(.request-service-options, .request-task-options) label { font-size: var(--text-heading); }
+.field-task-shell[data-device=robot] .service-task-fields { grid-template-columns: minmax(0, 1fr); }
+.field-task-shell[data-device=robot] .request-mobile-nav .btn { flex: 1 1 auto; min-height: max(4.5rem, var(--target-kiosk-floor)); border-radius: var(--radius-pill); font-size: var(--text-heading); }
+.field-task-shell[data-device=robot] :is(.request-mobile-nav, .request-submit-card) .btn-primary { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
 .field-task-header .brand { margin: 0; }
 .field-task-header > span { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; color: var(--color-primary); font-size: var(--text-small); }
 .robot-portrait .robot-actions { display:grid; grid-template-columns: 1fr; width:100%; gap:0.75rem; }
