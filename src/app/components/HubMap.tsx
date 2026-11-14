@@ -4,15 +4,19 @@ import { hubOf, hubsFor } from "@/lib/service-hubs";
 import { placeOf } from "@/lib/airport";
 import { OFFICIAL_AIRPORT_MAP } from "@/lib/official-map";
 import styles from "./support-journey.module.css";
+import { HubLiveMap, hubHasLiveMap } from "./HubLiveMap";
 /** A labelled prototype zone diagram, deliberately not a claimed official floor plan. */
 export function HubMap({
   hubId,
   photo = false,
   en = false,
+  live = false,
 }: {
   hubId: string;
   photo?: boolean;
   en?: boolean;
+  /** 실제 공항 실내지도에 장소를 표시한다(웹 예약·상세). 키오스크는 한 화면 규칙 때문에 구역도를 그대로 쓴다. */
+  live?: boolean;
 }) {
   const hub = hubOf(hubId);
   if (!hub) return null;
@@ -38,6 +42,9 @@ export function HubMap({
     >
       <h2>{en ? hub.en : hub.label}</h2>
       <p className={styles.landmark}>{en ? hub.landmarkEn : hub.landmark}</p>
+      {live && hubHasLiveMap(hub.id) ? (
+        <HubLiveMap hubId={hub.id} label={en ? hub.en : hub.label} en={en} />
+      ) : (
       <figure style={{ margin: 0 }}>
         <svg
           className={styles.map}
@@ -180,6 +187,7 @@ export function HubMap({
           )}
         </figcaption>
       </figure>
+      )}
       <ul className={styles.mapLegend}>
         {points.map((p, i) => (
           <li key={p.id}>

@@ -600,7 +600,11 @@
 /* 만남 장소 상세: 소개 상자·두 칸 사이를 --space-4 하나로(패널 기본 위아래 여백이 겹쳐 32·48px 이던 것) */
 .pointLayout { gap:var(--space-4); }
 .pointLayout > .panel { margin:0; }
-.visitLayout { gap:var(--space-4); }
+.visitLayout { gap:var(--space-4); align-items:stretch; }
+/* 실제 지도: 칸 안에서 남는 높이를 채운다. 가장 작을 때도 지도가 읽히는 높이를 둔다 */
+.liveMap { position:relative; flex:1 1 auto; min-height:16rem; overflow:auto; border:1px solid var(--color-line); border-radius:var(--radius-medium); }
+.visitLayout > aside.panel { display:flex; flex-direction:column; }
+.visitLayout > aside.panel > .hubMap { flex:1 1 auto; display:flex; flex-direction:column; gap:var(--space-2); }
 /* 단계를 넘기면 화면 읽기용으로 단계 제목에 초점을 옮긴다. 누를 수 없는 제목이라 굵은 테두리를 보이지 않게 한다(「만날 시간」 둘레에 상자가 생기던 것). */
 .visitLayout h2[tabindex="-1"]:focus { outline:0; }
 .visitLayout > .panel { padding:var(--space-4);margin:0;border-color:var(--color-line);border-radius:var(--radius-medium); }
@@ -612,7 +616,9 @@
 .visitLayout .actions { position:sticky;bottom:0;padding-block:var(--space-3);background:var(--color-surface); }
 @media (min-width: 1101px) {
  .visitLayout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }
- .visitLayout .hubMap { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:var(--space-2); }
+ .visitLayout .hubMap:not(:has(.liveMap)) { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:var(--space-2); }
+ /* 실제 지도일 때: 지도 위, 만남 장소 목록은 아래 한 줄 */
+ .visitLayout .hubMap:has(.liveMap) .mapLegend { display:flex; flex-wrap:wrap; gap:var(--space-2) var(--space-4); }
  .visitLayout .hubMap > h2,.visitLayout .hubMap > .landmark,.visitLayout .hubMap > .link { grid-column:1 / -1; }
  .visitLayout .hubMap h2 { margin:0;font-size:var(--text-body); }
  .visitLayout .hubMap .landmark { margin:0; }

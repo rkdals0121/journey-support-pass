@@ -416,7 +416,7 @@ export function VisitStatus({
           </details>
         </div>
         <aside className={styles.panel}>
-          <HubMap hubId={hub.id} en={en} />
+          <HubMap hubId={hub.id} en={en} live />
         </aside>
       </div>
     </main>
