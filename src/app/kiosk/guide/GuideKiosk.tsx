@@ -1110,6 +1110,7 @@ export function GuideKiosk({
               <KioskRouteMap fromPlaceId={placeId} gate={target.type === "gate" ? target.gate : target.nearGate} label={title} en={lang === "en"} />
             </div>
             <div className="kc-route-list" tabIndex={0} role="region" aria-label={lang === "en" ? "Route steps" : "경로 단계"}>
+              <p className="kc-route-list-title" aria-hidden="true">{lang === "en" ? "Route steps" : "경로 단계"}</p>
               <RouteSteps route={route} target={target} from={here} t={t} />
             </div>
           </div>
