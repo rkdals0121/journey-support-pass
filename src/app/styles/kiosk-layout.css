@@ -664,11 +664,18 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 .kc-route-bubble.pace-late { border-color: var(--color-error); }
 .kc-route-bubble.pace-late strong { color: var(--color-error); }
 /* 가는 길 단계: 흰 칸. 지금 계신 곳은 진한 선 원, 지나는 곳은 회색 선 원, 도착은 노란 원(화면의 강조 한 곳) */
-.kc-route-steps { grid-area: steps; min-height: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-1); }
-/* 단계는 칸 높이에 맞춰 세로로 고르게 펼친다(단계가 적을 때 아래가 휑하게 비지 않게). 너무 벌어지지 않게 한 칸은 9rem 까지 */
-.kc-route-steps .route { display: flex; flex-direction: column; height: 100%; margin: 0; }
-.kc-route .route > li { flex: 1 1 auto; max-height: 9rem; padding-bottom: var(--space-4); }
-.kc-route .route > li:last-child { flex: none; padding-bottom: 0; }
+.kc-route-steps { grid-area: steps; min-height: 0; padding: var(--space-3); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-1); }
+/* 단계는 위에 차례로, 그 아래 남는 높이는 길을 그린 지도가 채운다(단계 칸 아래가 비던 것).
+   단계가 많아 지도 자리가 너무 낮아지면(가장 긴 길·작은 화면) 지도는 숨기고 단계만 보인다 */
+.kc-route-steps { display: flex; flex-direction: column; gap: var(--space-4); }
+.kc-route-steps .route { margin: 0; }
+/* 경로 단계 상자: 지도 아래. 내용만큼 크되 오른쪽 칸 높이의 절반까지, 넘치면 상자 안에서 스크롤(막대는 보인다) */
+.kc-route-list { flex: 0 1 auto; max-height: 50%; min-height: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.kc-route .route > li { padding-bottom: var(--space-4); }
+.kc-route .route > li:last-child { padding-bottom: 0; }
+.kc-route-map { position: relative; flex: 1 1 0; min-height: 12rem; }
+.kc-route-map-frame { position: absolute; inset: 0; border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
+.kc-route-map:not(:has(> *)) { display: none; }
 .kc-route .route > li::before { background: var(--color-line); }
 .kc-route .route > li strong { font-size: var(--text-heading); line-height: 1.35; }
 .kc-route .route > li div > span { font-size: var(--text-body); }
@@ -681,7 +688,8 @@ html[data-kiosk] .kc-route-foot .finish-btn { margin: 0; min-height: max(var(--t
 .kc-route-foot .fine { margin: 0; padding-inline: var(--space-2); }
 @media (orientation: landscape) {
   .kc-route { grid-template-columns: minmax(0, 9fr) minmax(0, 11fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "info steps" "art steps" "foot steps"; }
-  .kc-route-steps { align-self: stretch; overflow: auto; }
+  /* 오른쪽 칸은 왼쪽 칸이 정한 높이만 쓴다(단계가 많아도 카드가 늘어나 화면이 넘치지 않게). 넘치는 단계는 아래 상자 안에서 스크롤 */
+  .kc-route-steps { align-self: stretch; contain: size; }
 }
 
 /* 세로 안내로봇의 예약 확인번호 화면: 카드를 바 바로 아래부터 아래 끝까지 채우고, 남는 높이는 자판 단추를 키우는 데 쓴다(위·아래로 크게 비던 것). */
