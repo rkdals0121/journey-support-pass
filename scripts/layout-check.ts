@@ -68,6 +68,8 @@ let checked = 0;
 
 async function inspect(page: Page, where: string) {
   checked++;
+  const status = (page as unknown as { __status?: number }).__status ?? 0;
+  if (status >= 500) problems.push({ where, what: `서버 오류 ${status} (오류 화면이 떴습니다)` });
   // 키오스크는 글자 1배에서 한 화면에 맞추는 기기라서(AGENTS.md), 키오스크 박스 간격은 글자 1배에서만 본다.
   await page.evaluate((skip) => { (window as unknown as { __skipGap: boolean }).__skipGap = skip; }, /×1\.5/.test(where));
   const found = (await page.evaluate(() => {
@@ -235,7 +237,9 @@ async function openAt(browser: Browser, size: (typeof SIZES)[number] | (typeof K
       /* 저장소를 못 쓰면 기본 배율로 본다 */
     }
   }, scale);
-  await page.goto(BASE + url, { waitUntil: "networkidle2", timeout: 120_000 });
+  const res = await page.goto(BASE + url, { waitUntil: "networkidle2", timeout: 120_000 });
+  // 서버 오류(500)는 배치가 멀쩡해 보여도 화면이 깨진 것이다(/points/… 가 500 인 채로 통과한 적이 있다). inspect 가 실패로 센다.
+  (page as unknown as { __status?: number }).__status = res?.status() ?? 0;
   // 나타나는 움직임이 끝나기를 잠깐 기다린다(끝없이 도는 움직임은 기다리지 않는다).
   await new Promise((r) => setTimeout(r, 1500));
   return page;

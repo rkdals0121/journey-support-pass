@@ -88,18 +88,20 @@
 
 .fullscreen[data-kiosk=true] { --map-control-height: max(2.75rem,var(--target-kiosk-floor)); }
 
-/* Robot: one document scroll, map above the controls. */
+/* 안내로봇(세로 1080×1920): 화면 높이가 정해진 한 화면. 위에 지도, 아래에 고르는 칸.
+   「다른 시설」을 펼치거나 검색 결과가 길어지면 화면이 늘어나지 않고 고르는 칸 안에서만 스크롤된다(화면 전체가 세로로 늘어나던 것). */
 .fullscreen[data-device-layout=robot]{
   --map-control-height:max(2.75rem,var(--target-kiosk-floor));
-  --panel-width:100%;position:relative;inset:auto;width:100%;height:auto;
-  min-height:max(1rem,calc(var(--robot-screen-height) - var(--map-header-top) - var(--space-3) - var(--site-bar-gutter)));
+  --robot-panel-h:max(1rem,calc(var(--robot-screen-height) - var(--map-header-top) - var(--space-3) - var(--site-bar-gutter)));
+  --panel-width:100%;position:relative;inset:auto;width:100%;height:var(--robot-panel-h);
+  min-height:var(--robot-panel-h);box-sizing:border-box;
   margin-top:0;display:flex;flex-direction:column;padding:var(--space-5);gap:var(--space-5);box-shadow:var(--shadow-1);background:var(--color-surface);
 }
 /* 지도는 기본 높이에서 시작해 화면 아래 남는 높이까지 채운다(경로를 고른 뒤 카드 아래가 비던 것) */
 .fullscreen[data-device-layout=robot] .mapBackground{position:relative;inset:auto;flex:1 0 clamp(20rem,calc(var(--robot-screen-width) * .6),40.625rem);height:auto}
 .fullscreen[data-device-layout=robot] .sidePanel{
   position:static;inset:auto;width:100%;height:auto;max-height:none;overflow:visible;overscroll-behavior:auto;
-  flex:1;padding:0;gap:var(--space-5);border:0;
+  flex:0 1 auto;min-height:0;display:flex;flex-direction:column;padding:0;gap:var(--space-5);border:0;
   border-radius:0 0 var(--radius-medium) var(--radius-medium);
 }
 .fullscreen[data-device-layout=robot] .mapToolbar{top:var(--space-5);left:var(--space-5);right:var(--space-5);max-height:30%}
@@ -110,7 +112,12 @@
 .fullscreen[data-device-layout=robot] .panelContent,
 .fullscreen[data-device-layout=robot] .panelFooter{gap:var(--space-5)}
 .fullscreen[data-device-layout=robot] .panelHeading{padding:var(--space-4);background:linear-gradient(110deg,var(--color-accent-soft),var(--color-surface) 72%);border:1px solid var(--color-line);gap:var(--space-3)}
-.fullscreen[data-device-layout=robot] .panelContent{padding:var(--space-5);background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-medium)}
+.fullscreen[data-device-layout=robot] .panelContent{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:var(--space-5);background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-medium)}
+.fullscreen[data-device-layout=robot] :is(.panelTop,.panelFooter){flex:none}
+/* 넘칠 때 막대가 늘 보이게(터치 기기 브라우저가 막대를 숨기는 경우) — 칸 안쪽 오른쪽 */
+.fullscreen[data-device-layout=robot] .panelContent::-webkit-scrollbar{width:.875rem}
+.fullscreen[data-device-layout=robot] .panelContent::-webkit-scrollbar-track{margin-block:var(--space-3);border-radius:var(--radius-pill);background:var(--color-line)}
+.fullscreen[data-device-layout=robot] .panelContent::-webkit-scrollbar-thumb{border:3px solid var(--color-line);border-radius:var(--radius-pill);background:var(--color-muted)}
 .fullscreen[data-device-layout=robot] .sidePanel:has([data-route-result]) .panelContent{display:none}
 .fullscreen[data-device-layout=robot] .panelFooter{padding-top:0;border:0}
 .fullscreen[data-device-layout=robot] .searchWrap{width:100%;max-width:40rem}

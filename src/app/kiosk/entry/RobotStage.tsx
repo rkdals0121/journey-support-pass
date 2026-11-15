@@ -29,7 +29,7 @@ export function RobotStage({ lang }: { lang: "ko" | "en" }) {
             title={lang === "en" ? "Guide robot screen" : "안내로봇 화면"}
             src={`/kiosk/entry?inner=1${lang === "en" ? "&lang=en" : ""}`}
             allow="camera; microphone"
-            style={{ width: ROBOT_W, height: ROBOT_H, transform: `scale(${scale})` }}
+            style={{ width: ROBOT_W, height: ROBOT_H, transform: `scale(${scale})`, borderRadius: `calc((var(--radius-medium) - 1px) / ${scale})` }}
           />
         </div>
       )}

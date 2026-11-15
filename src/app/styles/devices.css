@@ -284,6 +284,6 @@ html:has([data-device-layout=robot]) {
 .view-switch .bar-btn { padding-inline: var(--space-3); }
 .view-switch .bar-btn[aria-pressed="true"] { background: var(--color-primary); color: var(--color-surface); }
 .robot-stage { position: fixed; inset: 0; display: grid; place-items: center; background: var(--color-canvas); }
-.robot-stage-screen { position: relative; border: 1px solid var(--color-line); box-shadow: var(--shadow-2); background: var(--color-canvas); }
+.robot-stage-screen { position: relative; border: 1px solid var(--color-line); border-radius: var(--radius-medium); box-shadow: var(--shadow-2); background: var(--color-canvas); }
 .robot-stage-screen iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: top left; }
 .robot-stage-bar { position: absolute; top: var(--space-4); left: var(--space-4); z-index: 1; }

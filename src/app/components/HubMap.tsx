@@ -4,7 +4,8 @@ import { hubOf, hubsFor } from "@/lib/service-hubs";
 import { placeOf } from "@/lib/airport";
 import { OFFICIAL_AIRPORT_MAP } from "@/lib/official-map";
 import styles from "./support-journey.module.css";
-import { HubLiveMap, hubHasLiveMap } from "./HubLiveMap";
+import { HubLiveMap } from "./HubLiveMap";
+import { hubHasLiveMap } from "@/lib/hub-map";
 /** A labelled prototype zone diagram, deliberately not a claimed official floor plan. */
 export function HubMap({
   hubId,
