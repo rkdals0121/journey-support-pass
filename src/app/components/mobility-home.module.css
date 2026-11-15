@@ -36,6 +36,8 @@
 /* 웹 넓은 화면: 카드 최소 높이(24dvh)가 높아 1440×754 에서 88px 넘쳤다 → 카드를 조금 낮춰 한 화면에 */
 /* 아래 단추 줄: 회색 띠(옛 초록빛 바탕)와 위아래 여백 때문에 카드↔단추 간격이 다른 박스 간격과 달랐다 → 띠 없이 같은 --space-4 */
 .content:not([data-kiosk=true]) .footer{margin-top:0;padding-block:0;background:none;position:static}
+/* 넓은 웹 화면: 카드 칸이 남는 높이를 채워 단추 줄이 바닥 줄 위 16px 에 붙는다(1920×937 에서 아래가 196px 비던 것) */
+@media(min-width:1101px) and (min-height:701px){.content:not([data-kiosk=true]) .cards{flex:1 1 auto;grid-auto-rows:1fr}.content:not([data-kiosk=true]) .card{min-height:0}}
 .content:not([data-kiosk=true]) .footer a{border-color:var(--color-line);border-radius:var(--radius-pill);background:var(--color-surface);box-shadow:var(--shadow-1)}
 @media(min-width:1101px){.content:not([data-kiosk=true]){gap:var(--space-4);padding-block:var(--space-4)}.content:not([data-kiosk=true]) .card{display:grid;grid-template-columns:auto minmax(0,1fr);align-content:center;column-gap:var(--space-4);row-gap:var(--space-1);min-height:clamp(6rem,15dvh,14rem)}.content:not([data-kiosk=true]) .card>svg{grid-row:1/3;width:2.75rem;height:2.75rem}.content:not([data-kiosk=true]) .card :is(strong,span){grid-column:2}}
 /* 세로 기기(안내로봇): 카드가 커지는 만큼 그림·글자도 키워 카드 가운데에(큰 카드 안이 휑하던 것) */
