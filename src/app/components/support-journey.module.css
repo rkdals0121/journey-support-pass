@@ -493,8 +493,10 @@
   font: inherit;
 }
 .queueTabs [aria-pressed="true"] {
-  background: var(--color-primary-hover);
-  color: var(--color-surface);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  font-weight: var(--weight-heading);
 }
 .filterDetails {
   margin: 1rem 0;
