@@ -1,5 +1,7 @@
 
-html[data-kiosk] { font-size: calc(clamp(1.125rem, 0.9vw + 1.1vh, 1.625rem) * var(--scale, 1)); --col: min(60rem, 100vw); }
+/* 안내로봇에서 연 접수·이동 도움 화면(FieldTaskShell)도 같은 글자 기준. 지도 화면(data-device-layout)은 따로 맞춘 배치라 뺀다.
+   가로 키오스크에서 연 화면은 글자를 키우면 1024×768 에서 한 화면을 넘어 웹 크기 그대로 둔다 */
+html[data-kiosk], html:has(.field-task-shell[data-device=robot]):not(:has([data-device-layout])) { font-size: calc(clamp(1.125rem, 0.9vw + 1.1vh, 1.625rem) * var(--scale, 1)); --col: min(60rem, 100vw); }
 html[data-kiosk] .flow-body h1.kicker { margin: 0 0 0.5rem; font-size: var(--text-small); line-height: 1.5; letter-spacing: 0.02em; }
 html[data-kiosk] .bar-btn { min-height: max(3rem,var(--target-floor)); font-size: var(--text-body); }
 html[data-kiosk] .flow-cta-inner { display: flex; flex-direction: row-reverse; gap: 0.75rem; }
@@ -103,7 +105,24 @@ html[data-kiosk] .robot-panel { border: 0; background: var(--color-primary-faint
 .field-task-shell { min-height: 100dvh; background: var(--color-canvas); font-size: var(--text-body); }
 /* 안내로봇(세로 1080×1920)에서 연 접수·이동 도움 화면: 로봇 첫 화면(html[data-kiosk], 1rem = 26px)과 같은 글자 기준.
    웹 크기(16px) 그대로라 글자가 작고 화면 위쪽 40% 만 쓰던 것. 지도 화면(data-device-layout=robot)은 따로 맞춰 둔 배치라 그대로 둔다. */
-html:has(.field-task-shell[data-device=robot]):not(:has([data-device-layout=robot])) { font-size: calc(162.5% * var(--scale, 1)); }
+/* 가로 키오스크(1920×1080·1024×768)에서 연 접수 화면: 화면 아래 40% 가 비던 것 → 고르는 칸이 남는 높이를 채우고 「다음」은 바닥에 노란 알약 단추 */
+/* 글자는 화면 높이를 따라 16px(768·800 높이) ~ 20px(1080 높이). 낮은 키오스크는 한 화면에 맞추려고 웹 크기 그대로 */
+html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) { font-size: calc(clamp(1rem, 1.85vh, 1.25rem) * var(--scale, 1)); }
+.field-task-shell[data-device=kiosk] { display: flex; flex-direction: column; }
+.field-task-shell[data-device=kiosk] > .request-experience { flex: 1 1 auto; display: flex; flex-direction: column; width: min(var(--site-bar-width), calc(100vw - 2 * var(--site-bar-gutter))); max-width: none; box-sizing: border-box; padding-inline: 0; }
+.field-task-shell[data-device=kiosk] .request-form { flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-4); }
+.field-task-shell[data-device=kiosk] .request-form > *, .field-task-shell[data-device=kiosk] .request-form-main { width: 100%; max-width: none; }
+.field-task-shell[data-device=kiosk] .request-form-main { flex: 1 1 auto; display: flex; flex-direction: column; }
+.field-task-shell[data-device=kiosk] .request-form-main > .request-section:first-child { flex: 1 1 auto; align-content: center; }
+.field-task-shell[data-device=kiosk] .request-mobile-nav .btn { border-radius: var(--radius-pill); padding-inline: var(--space-6); }
+/* 넓은 가로 키오스크(1280·1920)는 남는 높이가 있어 고르는 칸·단추 글자를 한 단계 키운다(1024×768 은 한 화면에 맞추려고 그대로) */
+@media (min-width: 1101px) {
+  .field-task-shell[data-device=kiosk] .request-form-main > .request-section:first-child { padding: var(--space-5); }
+  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { font-size: var(--text-heading); min-height: 5rem; }
+  .field-task-shell[data-device=kiosk] .service-task-fields :is(input, select, textarea) { min-height: 5rem; font-size: var(--text-heading); }
+  .field-task-shell[data-device=kiosk] .request-mobile-nav .btn { min-height: max(4rem, var(--target-kiosk-floor)); font-size: var(--text-heading); }
+}
+.field-task-shell[data-device=kiosk] :is(.request-mobile-nav, .request-submit-card) .btn-primary { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
 .field-task-shell[data-device=robot] { display: flex; flex-direction: column; }
 /* 위쪽 바: 바 글자는 px 기준(14px × --scale)이라 로봇 첫 화면 바보다 작게 보이던 것 → 같은 비율로 키운다 */
 @media (orientation: portrait) {
