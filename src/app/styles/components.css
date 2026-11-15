@@ -33,8 +33,10 @@ h1.kicker { margin: 0 0 0.5rem; font-size: var(--text-small); line-height: 1.5; 
 .row > * { flex: 1; }
 .btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; min-height: 3.5rem; margin-top: 0.75rem; padding: 0.75rem 1.25rem; border: 0.09375rem solid var(--color-control-line); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); text-align: center; text-decoration: none; cursor: pointer; transition: background var(--motion-normal), transform var(--motion-normal); }
 .btn:disabled { opacity: 0.45; cursor: default; }
-.btn-primary { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); box-shadow: var(--shadow-1); }
-.btn-primary:active { background: var(--color-primary-hover); }
+/* 주 단추: 모든 화면에서 키오스크 「도움 요청하기」와 같은 노란 알약(사용자 결정, 2026-11-15: 진한 초록 단추가 화면마다 섞이던 것) */
+.btn-primary { border-color: var(--color-accent); border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-text); box-shadow: var(--shadow-1); }
+.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-primary:active { background: var(--color-accent-hover); }
 /* 노란 주요 버튼: 여객 웹·사전등록 첫 화면의 큰 버튼과 키오스크 사전등록 흐름의 「다음」. 화면마다 한 곳에만 쓴다. */
 :is(.airport-site, .pretrip-site) .public-button,
 html[data-kiosk] .flow-pretrip .btn-primary {

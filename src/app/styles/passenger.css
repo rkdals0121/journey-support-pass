@@ -245,7 +245,7 @@
 .airport-entry-copy h1 em { font-style: normal; color: var(--airport-green); }
 .airport-service-search:focus-within { border-color: var(--airport-green); box-shadow: 0 0 0 0.1875rem var(--color-primary-hover); }
 .airport-service-search input::placeholder { color: var(--color-muted); }
-.airport-service-search > button:hover { background: var(--color-primary-hover); }
+.airport-service-search > button:hover { background: var(--color-accent-hover); }
 .airport-popular button:hover { text-decoration: underline; color: var(--airport-green); }
 .airport-directory { position: relative; }
 .airport-directory-top > span { font-size: var(--text-caption); color: var(--airport-muted); white-space: nowrap; }
@@ -322,7 +322,7 @@
     box-shadow var(--airport-fast); margin: 0; }
 .airport-service-search > svg { flex: none; color: var(--airport-green); display: none; }
 .airport-service-search input { width: auto; flex: 1; min-width: 0; border: 0 !important; padding: 0.75rem; margin: 0; background: transparent; box-shadow: none; outline: none; font-size: var(--text-body); min-height: max(2.75rem,var(--target-floor)); color: var(--airport-ink); }
-.airport-service-search > button { display: grid; place-items: center; flex: none; width: 3rem; height: 3rem; border: 0; border-radius: var(--radius-small); background: var(--airport-green); color: var(--color-surface); cursor: pointer; padding: 0; transition: background-color var(--motion-fast) var(--ease-out); }
+.airport-service-search > button { display: grid; place-items: center; flex: none; width: 3rem; height: 3rem; border: 0; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-text); cursor: pointer; padding: 0; transition: background-color var(--motion-fast) var(--ease-out); }
 .airport-popular { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; font-size: var(--text-caption); color: var(--airport-muted); }
 .airport-popular > span { color: var(--color-muted); }
 .airport-popular button { min-width:var(--target-floor); border: 0; background: none; padding: 0.5rem 0; min-height: max(2.75rem,var(--target-floor)); font: inherit; color: var(--airport-muted); cursor: pointer; text-underline-offset: 0.3em; text-decoration: underline; text-decoration-color: var(--color-muted); }
@@ -865,6 +865,16 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
   gap: var(--space-4);
 }
 .service-directory { display: grid; gap: var(--space-4); }
+/* 넓은 화면(높이 701px 이상): 서비스 찾기를 한 화면에. 카드는 다섯 칸씩 두 줄로 남는 높이를 나눠 쓴다(세 줄로 아래로 넘치던 것) */
+@media (min-width: 1101px) and (min-height: 701px) {
+  .public-site:has(.service-directory-page) { height: 100dvh; min-height: 0; }
+  .public-site:has(.service-directory-page) > main { flex: 1 1 auto; min-height: 0; }
+  .service-directory-page > .service-directory { flex: 1 1 auto; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); }
+  .service-directory-page .service-directory-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); height: auto; min-height: 0; }
+  .service-directory-page .service-directory-grid .task-action { min-height: 0; align-content: center; }
+  .service-directory-page .service-directory-grid .task-action-icon { width: 1.75rem; height: 1.75rem; padding: var(--space-3); }
+  .service-directory-page .service-directory-grid .task-action-link strong { font-size: var(--text-heading); }
+}
 .service-intro-copy { grid-column: 1 / -1; }
 .service-directory-search { min-width: 0; }
 .service-directory-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }

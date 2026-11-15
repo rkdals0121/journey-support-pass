@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { CalendarClock } from "lucide-react";
 import {
   VISIT_STATES,
   VISIT_SERVICES,
@@ -191,15 +192,17 @@ export function VisitStatus({
   const finished = ["done", "cancelled", "missed"].includes(visit.state);
 
   return (
-    <main id="public-main" className={styles.page}>
-      <p className={styles.eyebrow}>{t("내 예약", "Your appointment")}</p>
-      <h1>{en ? VISIT_STATE_EN[visit.state] : VISIT_STATES[visit.state]}</h1>
-      <p className={styles.demo}>
-        {t(
-          "시연 예약·화면 응대 · 실제 로봇 주행 미연결",
-          "Prototype appointment and on-screen response · no live robot navigation",
-        )}
-      </p>
+    <main id="public-main" className={`service-page service-short-page ${styles.statusPage}`}>
+      <section className="ph-hero" aria-labelledby="visit-status-title">
+        <div className="ph-hero-copy service-intro-copy">
+          <span className="ph-hero-label">
+            <CalendarClock aria-hidden="true" />
+            {t(
+              "내 예약",
+              "Your appointment",
+            )}
+          </span>
+          <h1 id="visit-status-title">{en ? VISIT_STATE_EN[visit.state] : VISIT_STATES[visit.state]}</h1>
       <ol className={styles.progress} aria-label={t("진행 단계", "Progress")}>
         {["booked", "checked_in", "responding", "done"].map((state, i) => (
           <li
@@ -217,8 +220,10 @@ export function VisitStatus({
           </li>
         ))}
       </ol>
-      <div className={styles.layout}>
-        <div>
+        </div>
+      </section>
+      <div className={`${styles.layout} ${styles.visitLayout}`}>
+        <div className={styles.statusMain}>
           <section className={styles.panel}>
             <h2>{en ? hub.en : hub.label}</h2>
             <dl className={styles.summary}>

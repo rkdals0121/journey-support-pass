@@ -289,10 +289,18 @@ html:has([data-device-layout=robot]) {
 
 /* 기기 화면 미리보기(/devices/[device]): 실제 키오스크 화면을 같은 사이트 안의 틀(iframe)에 그대로 띄운다. 화면을 고치면 미리보기도 같이 바뀐다. */
 .dv-preview { display: grid; gap: var(--space-4); }
+/* 세로 안내로봇 미리보기: 넓은 화면에서는 왼쪽에 소개 칸, 오른쪽에 화면 높이만큼의 미리보기(위아래로 쌓으면 화면 아래로 길게 넘쳤다) */
+@media (min-width: 1101px) {
+  .dv-preview-robot { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .dv-home.dv-preview-robot > .ph-hero { grid-column: 1; grid-row: 1; align-self: stretch; align-content: center; padding: var(--space-7) var(--space-6); }
+  .dv-preview-robot .dv-hero-desc { max-width: 32rem; margin: 0 0 var(--space-5); font-size: var(--text-heading); line-height: 1.7; color: var(--color-text); }
+  .dv-preview-robot .ph-hero h1 { font-size: var(--text-display); }
+  .dv-preview-robot > .dv-frame { grid-column: 2; grid-row: 1; }
+}
 .dv-frame { display: grid; gap: var(--space-4); justify-items: center; min-width: 0; }
 .dv-frame-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
 .dv-frame-sizes button { min-height: max(2.75rem, var(--target-floor)); padding: 0 var(--space-4); border: 1px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--text-small); font-weight: var(--weight-label); cursor: pointer; }
-.dv-frame-sizes button[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
+.dv-frame-sizes button[aria-pressed="true"] { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-text); }
 .dv-frame-box { display: grid; justify-items: center; width: 100%; min-width: 0; }
 .dv-frame-screen { position: relative; border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-canvas); box-shadow: var(--shadow-2); }
 .dv-frame-screen iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: top left; }

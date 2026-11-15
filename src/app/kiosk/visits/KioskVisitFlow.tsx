@@ -450,8 +450,8 @@ export function KioskVisitFlow({
         )}
         <p className={styles.demo}>
           {t(
-            "시연 화면 · 실제 로봇 주행 미연결",
-            "Prototype screen · no live robot navigation",
+            "시연 화면",
+            "Prototype screen",
           )}
         </p>
       </div>

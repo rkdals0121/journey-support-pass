@@ -33,6 +33,8 @@
 /* 기기 화면: 카드 칸이 남는 높이를 나눠 채우고(아래가 비던 것), 아래 줄은 화면 바닥에 붙는다 */
 .content[data-kiosk=true] .cards{flex:1 1 auto;grid-auto-rows:minmax(0,1fr)}
 .content[data-kiosk=true] .card{min-height:0}
+/* 웹 넓은 화면: 카드 최소 높이(24dvh)가 높아 1440×754 에서 88px 넘쳤다 → 카드를 조금 낮춰 한 화면에 */
+@media(min-width:1101px){.content:not([data-kiosk=true]){gap:var(--space-4);padding-block:var(--space-4)}.content:not([data-kiosk=true]) .card{display:grid;grid-template-columns:auto minmax(0,1fr);align-content:center;column-gap:var(--space-4);row-gap:var(--space-1);min-height:clamp(6rem,15dvh,14rem)}.content:not([data-kiosk=true]) .card>svg{grid-row:1/3;width:2.75rem;height:2.75rem}.content:not([data-kiosk=true]) .card :is(strong,span){grid-column:2}}
 /* 세로 기기(안내로봇): 카드가 커지는 만큼 그림·글자도 키워 카드 가운데에(큰 카드 안이 휑하던 것) */
 /* 넓은 가로 키오스크도 커진 카드에 맞춰 그림·글자를 키운다 */
 @media(min-width:1101px){.content[data-kiosk=true] .card{gap:var(--space-3);padding:var(--space-6)}.content[data-kiosk=true] .card>svg{width:3.5rem;height:3.5rem}.content[data-kiosk=true] .card strong{font-size:var(--text-title)}.content[data-kiosk=true] .card span{font-size:var(--text-body)}}

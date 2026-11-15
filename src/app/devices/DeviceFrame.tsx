@@ -30,8 +30,11 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
   useEffect(() => {
     const fit = () => {
       const room = box.current?.clientWidth ?? 0;
-      // 화면 높이를 넘지 않게도 줄인다(세로 안내로봇은 너무 길다). 다만 글이 읽히도록 높이 때문에 0.45배 아래로는 줄이지 않는다.
-      const high = Math.max(0.45, (window.innerHeight - 200) / size.h);
+      // 틀 위쪽부터 화면 아래(바닥 줄·설명 몫 9rem 을 뺀 곳)까지에 맞춘다. 페이지가 아래로 길게 넘치던 것(세로 안내로봇은 532px).
+      // 다만 글이 보이도록 0.22배 아래로는 줄이지 않는다.
+      const top = (box.current?.getBoundingClientRect().top ?? 200) + window.scrollY;
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const high = Math.max(0.22, (window.innerHeight - top - 8.5 * rem) / size.h);
       setScale(Math.max(0.1, Math.min(1, room / size.w, high)));
     };
     fit();
