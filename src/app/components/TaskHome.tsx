@@ -33,6 +33,11 @@ export function TaskHome({ en = false }: { en?: boolean }) {
           <h2 id="home-prepare-title">
             {en ? "Not at the airport yet?" : "공항에 가기 전이라면"}
           </h2>
+          <p>
+            {en
+              ? "Tell us your flight and the help you need. Kiosks, robots and staff at the airport pick it up right away."
+              : "항공편과 필요한 도움을 미리 알려 두면 공항의 키오스크·안내로봇·직원이 바로 이어받아요."}
+          </p>
           <Link className="btn btn-primary ph-prepare-go" href={"/prepare" + q}>
             {en ? "Register support before you travel" : "여행 전 지원 등록"}
             <ArrowRight aria-hidden="true" />

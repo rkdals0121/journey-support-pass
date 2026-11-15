@@ -34,6 +34,8 @@
 .content[data-kiosk=true] .cards{flex:1 1 auto;grid-auto-rows:minmax(0,1fr)}
 .content[data-kiosk=true] .card{min-height:0}
 /* 세로 기기(안내로봇): 카드가 커지는 만큼 그림·글자도 키워 카드 가운데에(큰 카드 안이 휑하던 것) */
+/* 넓은 가로 키오스크도 커진 카드에 맞춰 그림·글자를 키운다 */
+@media(min-width:1101px){.content[data-kiosk=true] .card{gap:var(--space-3);padding:var(--space-6)}.content[data-kiosk=true] .card>svg{width:3.5rem;height:3.5rem}.content[data-kiosk=true] .card strong{font-size:var(--text-title)}.content[data-kiosk=true] .card span{font-size:var(--text-body)}}
 @media(orientation:portrait){.content[data-kiosk=true] .card{justify-content:center;gap:var(--space-3);padding:var(--space-6)}.content[data-kiosk=true] .card>svg{width:4.5rem;height:4.5rem}.content[data-kiosk=true] .card strong{font-size:var(--text-title)}.content[data-kiosk=true] .card span{font-size:var(--text-heading)}.content[data-kiosk=true] .assistance .welcome h2{font-size:var(--text-title)}}
 .content[data-kiosk=true] .footer{background:none}
 .content[data-kiosk=true] .footer a{border-color:var(--color-line);border-radius:var(--radius-pill);box-shadow:var(--shadow-1)}

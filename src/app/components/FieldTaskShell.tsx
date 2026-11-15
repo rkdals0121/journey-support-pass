@@ -20,8 +20,8 @@ export function FieldTaskShell({
   preview?: boolean;
 }) {
   return (
-    // 안내로봇(입구, 세로 1080×1920)에서 연 화면: 로봇 첫 화면과 같은 글자 기준·세로 배치를 쓴다(devices.css)
-    <div className="field-task-shell" lang={en ? "en" : "ko"} data-device={returnTo === "/kiosk/entry" ? "robot" : undefined}>
+    // 키오스크·안내로봇에서 연 화면: 기기 첫 화면과 같은 글자 기준으로 화면을 채운다(devices.css). 로봇은 세로 배치
+    <div className="field-task-shell" lang={en ? "en" : "ko"} data-device={returnTo === "/kiosk/entry" ? "robot" : "kiosk"}>
       <header className="field-task-header">
         <Link
           href={kioskHomeHref(returnTo, en, preview)}

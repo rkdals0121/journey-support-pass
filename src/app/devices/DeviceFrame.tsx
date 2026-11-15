@@ -64,7 +64,8 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
               title={en ? "Live device screen" : "실제 기기 화면"}
               src={src}
               allow="camera; microphone 'none'"
-              style={{ width: size.w, height: size.h, transform: `scale(${scale})` }}
+              // 틀(.dv-frame-screen)과 같은 둥근 모서리로 화면을 자른다. 줄이기 전 크기에 그리므로 반지름을 배율로 나눈다(네모 모서리가 틀 밖으로 삐져나오던 것)
+              style={{ width: size.w, height: size.h, transform: `scale(${scale})`, borderRadius: `calc((var(--radius-medium) - 1px) / ${scale})` }}
             />
           </div>
         )}

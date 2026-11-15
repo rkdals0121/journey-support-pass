@@ -589,7 +589,7 @@ a.svc-card { text-decoration:none; }
 .inventory-toolbar { border-block: 0.0625rem solid var(--color-control-line); padding-block: 1rem; }
 .inventory-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .inventory-filters button { display: inline-flex; align-items: center; gap: 0.75rem; min-height: max(2.75rem,var(--target-floor)); padding: 0.5rem 1rem; border: 0.0625rem solid var(--color-control-line); border-radius: var(--radius-small); background: var(--color-surface); color: var(--color-primary-hover); font: inherit; font-weight: var(--weight-label); cursor: pointer; }
-.inventory-filters button[aria-pressed="true"] { background: var(--color-primary-hover); border-color: var(--color-primary-hover); color: var(--color-surface); }
+.inventory-filters button[aria-pressed="true"] { background: var(--color-accent-soft); border-color: var(--color-accent); color: var(--color-text); font-weight: var(--weight-heading); }
 .inventory-filters button span { font-variant-numeric: tabular-nums; }
 .inventory-search { display: grid; grid-template-columns: auto minmax(12rem, 1fr) auto minmax(9rem, 12rem); align-items: center; gap: 0.75rem; margin-top: 1rem; }
 .inventory-search label { margin: 0; font-size: var(--text-small); }
