@@ -31,11 +31,14 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
     const fit = () => {
       // 세로 안내로봇은 미리보기 칸 폭이 화면 크기를 따라가므로(옆 칸과 간격 16px), 폭 제한은 위쪽 바 폭의 절반으로 둔다
       const bar = document.querySelector(".public-header")?.getBoundingClientRect().width ?? window.innerWidth;
-      const room = device === "robot" ? bar / 2 : box.current?.clientWidth ?? 0;
       // 틀 위쪽부터 바닥 줄 위(박스 간격 --space-4 하나)까지 남는 높이에 꼭 맞춘다(아래가 비거나 페이지가 넘치던 것).
       // 다만 글이 보이도록 0.22배 아래로는 줄이지 않는다.
       const top = (box.current?.getBoundingClientRect().top ?? 200) + window.scrollY;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      // 넓은 화면(1101px 이상)에서는 소개 칸 옆에 놓인다(devices.css). 로봇은 바 폭의 절반,
+      // 가로 키오스크는 소개 칸(제목이 한 줄로 들어가는 31rem)과 칸 사이(1rem)를 뺀 나머지 폭을 모두 쓴다.
+      const wide = window.innerWidth >= 1101;
+      const room = device === "robot" ? bar / 2 : wide ? bar - 32 * rem : box.current?.clientWidth ?? 0;
       const footer = document.querySelector(".public-footer");
       const below = footer ? footer.getBoundingClientRect().height + parseFloat(getComputedStyle(footer).marginBottom || "0") + rem : 5.5 * rem;
       const high = Math.max(0.22, (window.innerHeight - top - below) / size.h);
@@ -49,7 +52,7 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
       watch.disconnect();
       window.removeEventListener("resize", fit);
     };
-  }, [size.w, size.h]);
+  }, [device, size.w, size.h]);
 
   const src = `/kiosk/${device === "robot" ? "entry" : "guide"}?preview=1${en ? "&lang=en" : ""}`;
   return (

@@ -358,7 +358,7 @@ size: 50mm 30mm;
 margin: 0;
 }
 /* 기기 점검: 카드 격자. 첫 화면 서비스 카드와 같은 흰 카드 */
-.dc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); }
+.dc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; gap: var(--space-4); flex: 1 0 auto; }
 .dc-item, .dc-qr, .dc-setup { display: flex; flex-direction: column; min-width: 0; gap: var(--space-2); padding: var(--space-4); }
 .dc-item, .dc-qr, .dc-setup { border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
 .dc-item h2 { display: flex; align-items: center; gap: var(--space-3); margin: 0; font-size: var(--text-body); }
@@ -768,6 +768,8 @@ details[open] > :not(summary),[role="status"] { animation:calm-reveal var(--moti
 .dc-setup svg { width: 1.25rem; height: 1.25rem; }
 .dc-setup:hover { border-color: var(--color-primary); }
 @media (min-width: 761px) { .dc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* 노트북: QR 카드는 제목 옆에 QR(위아래로 쌓으면 아래 줄이 QR 높이만큼 길어져 화면이 넘친다) */
+@media (min-width: 1101px) { .dc-qr { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--space-4); text-align: left; } .dc-qr div { margin: 0; flex: none; } }
 @media (max-height: 700px) { .dc-grid { gap: var(--space-3); } .dc-item, .dc-qr, .dc-setup { padding: var(--space-3); gap: var(--space-1); } .dc-item .btn-inline { min-height: 2.75rem; } .dc-item .service-info-icon { width: 2.25rem; height: 2.25rem; } .dc-qr div { width: min(7.5rem, 14dvh); } }
 @media (max-width: 760px) { .dc-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; } .dc-qr div { width: min(12rem, 60vw); } }
 /* ── 움직임: 누르는 것의 손맛을 한 곳에서 (docs/ui-guide.md, AGENTS.md 2절) ──

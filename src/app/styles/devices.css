@@ -289,18 +289,23 @@ html:has([data-device-layout=robot]) {
 
 /* 기기 화면 미리보기(/devices/[device]): 실제 키오스크 화면을 같은 사이트 안의 틀(iframe)에 그대로 띄운다. 화면을 고치면 미리보기도 같이 바뀐다. */
 .dv-preview { display: grid; gap: var(--space-4); }
-/* 세로 안내로봇 미리보기: 넓은 화면에서는 왼쪽에 소개 칸, 오른쪽에 화면 높이만큼의 미리보기(위아래로 쌓으면 화면 아래로 길게 넘쳤다) */
+/* 기기 미리보기(안내로봇·가로 키오스크): 넓은 화면에서는 왼쪽에 소개 칸, 오른쪽에 화면 높이만큼의 미리보기.
+   위아래로 쌓으면 로봇은 화면 아래로 길게 넘쳤고, 가로 키오스크는 작게 그려져 양옆이 비었다 */
 @media (min-width: 1101px) {
   /* 미리보기 칸은 화면 폭만큼만, 남는 폭은 왼쪽 소개 칸이 쓴다(두 칸 사이가 다른 박스 간격 16px 보다 훨씬 넓던 것). 두 칸 위아래 끝도 맞춘다 */
-  .dv-preview-robot { grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; }
-  .dv-preview-robot > .dv-frame { justify-items: end; align-content: start; }
-  .dv-preview-robot .dv-frame-box { justify-items: end; }
-  .dv-home.dv-preview-robot > .ph-hero { grid-template-columns: minmax(0, 1fr); grid-column: 1; grid-row: 1; align-self: stretch; align-content: center; padding: var(--space-7) var(--space-6); }
+  .dv-preview { grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; }
+  .dv-preview > .dv-frame { justify-items: end; align-content: start; }
+  .dv-preview .dv-frame-box { justify-items: end; }
+  .dv-home.dv-preview > .ph-hero { grid-template-columns: minmax(0, 1fr); grid-column: 1; grid-row: 1; align-self: stretch; align-content: center; padding: var(--space-7) var(--space-6); }
   /* 제목은 한 줄, 설명은 두 줄(문장마다 한 줄). 칸 폭에 맞게 글자 크기를 정해 낱말 중간에서 꺾이지 않게 */
-  .dv-home.dv-preview-robot .ph-hero .dv-hero-desc { max-width: none; margin: 0 0 var(--space-5); font-size: var(--text-body); line-height: 1.8; color: var(--color-text); white-space: pre-line; word-break: keep-all; }
+  .dv-home.dv-preview .ph-hero .dv-hero-desc { max-width: none; margin: 0 0 var(--space-5); font-size: var(--text-body); line-height: 1.8; color: var(--color-text); white-space: pre-line; word-break: keep-all; }
   .dv-preview-robot .ph-hero h1 { max-width: none; font-size: var(--text-large); white-space: nowrap; }
-  .dv-preview-robot .dv-hero-note { margin: 0 0 var(--space-5); }
-  .dv-preview-robot > .dv-frame { grid-column: 2; grid-row: 1; }
+  .dv-preview-kiosk .ph-hero h1 { max-width: none; white-space: nowrap; }
+  .dv-preview .dv-hero-note { margin: 0 0 var(--space-5); }
+  .dv-preview > .dv-frame { grid-column: 2; grid-row: 1; }
+  /* 화면 크기 단추는 미리보기 왼쪽 끝선에 맞춘다 */
+  /* 크기 단추는 미리보기 왼쪽 끝선에 맞추고, 칸 폭은 미리보기 폭만 따른다(큰 글씨에서 단추 줄이 더 넓어 소개 칸과 사이가 벌어지던 것) */
+  .dv-preview-kiosk .dv-frame-sizes { justify-self: stretch; justify-content: flex-start; width: 0; min-width: 100%; }
 }
 .dv-frame { display: grid; gap: var(--space-4); justify-items: center; min-width: 0; }
 .dv-frame-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
