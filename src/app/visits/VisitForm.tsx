@@ -357,6 +357,7 @@ export function VisitForm({
             </button>
           ))}
         </nav>
+        <div className={styles.panelBody}>
         <div hidden={step !== 0}>
           <h2 id="visit-stage-0" tabIndex={-1}>
             {t("장소와 지원 선택", "Choose place and assistance")}
@@ -424,7 +425,7 @@ export function VisitForm({
             </div>
           )}
         </div>
-        <div hidden={step !== 1}>
+        <div hidden={step !== 1} className={styles.timeStep}>
           <div className={styles.field}>
             <label htmlFor="visit-day">{t("방문 날짜", "Date")}</label>
             <input
@@ -602,6 +603,7 @@ export function VisitForm({
             {error}
           </p>
         )}
+        </div>
         <div className={styles.actions}>
           {step > 0 && (
             <button

@@ -177,7 +177,9 @@ html[data-kiosk] .flow-body .kx-home-intro h1 {
    두 칸의 위·아래 끝선이 같고, 카드는 남는 높이의 가운데에 놓인다. */
 html[data-kiosk] .kiosk-appointment-page { width: auto; max-width: none; margin: 0; padding: var(--space-4) 0 var(--space-3); }
 html[data-kiosk] .flow-body:has(> .kiosk-appointment-page > .kx-code) { display: flex; flex-direction: column; }
-html[data-kiosk] .kiosk-appointment-page:has(> .kx-code) { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; }
+/* 예약 확인번호 화면: 칸이 바 아래부터 화면 아래까지 채운다(가로 키오스크에서 칸 위아래가 크게 비던 것). 남는 높이는 자판 단추를 키우는 데 쓴다 */
+html[data-kiosk] .kiosk-appointment-page:has(> .kx-code) { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: flex-start; }
+html[data-kiosk] .kiosk-appointment-page > .kx-code { flex: 1 1 auto; grid-template-rows: minmax(0, 1fr); }
 html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
   margin: 0 0 var(--space-3);
   font-size: var(--text-page-title);
@@ -199,7 +201,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
   margin-block: 0;
   margin-inline: calc((100% - var(--kx-card-w)) / 2);
   padding: var(--space-5) var(--space-6);
-  border: 0.0625rem solid var(--color-line);
+  border: 2px solid var(--color-accent);
   border-radius: calc(var(--radius-medium) * 2);
   /* 첫 화면·여권 화면의 나랑이 상자와 같은 옅은 노랑 바탕 */
   background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 60%);
@@ -642,8 +644,9 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "info" "art" "steps" "foot";
   gap: var(--space-4) var(--space-6);
   padding: var(--space-5) var(--space-6);
-  border: 1px solid var(--color-line); border-radius: var(--radius-medium);
+  border: 2px solid var(--color-accent); border-radius: var(--radius-medium);
   background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%);
+  box-shadow: var(--shadow-1);
 }
 .kc-route-info { grid-area: info; display: grid; gap: var(--space-2); }
 html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); line-height: 1.25; font-weight: var(--weight-heading); letter-spacing: -0.03em; }

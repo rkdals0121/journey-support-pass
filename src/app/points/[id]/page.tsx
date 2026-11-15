@@ -27,7 +27,7 @@ export default async function PointPage({
           <div className="ph-hero-copy service-intro-copy">
             <span className="ph-hero-label">
               <MapPin aria-hidden="true" />
-              {t("만남 장소 · 시범 거점(실제 장비 운행 미연결)", "Meeting point · Prototype (hardware not connected)")}
+              {t("만남 장소", "Meeting point")}
             </span>
             <h1 id="point-title">{en ? hub.en : hub.label}</h1>
           </div>

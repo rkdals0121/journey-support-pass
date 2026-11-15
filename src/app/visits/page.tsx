@@ -28,8 +28,8 @@ export default async function VisitsPage({
             <span className="ph-hero-label">
               <CalendarClock aria-hidden="true" />
               {en
-                ? "Prototype appointments · no live device connection"
-                : "시연 예약 · 실제 장비 운행 미연결"}
+                ? "Meeting appointments"
+                : "만남 예약"}
             </span>
             <h1 id="visits-title">
               {en ? "Arrange your assistance" : "로봇·이동지원 예약"}

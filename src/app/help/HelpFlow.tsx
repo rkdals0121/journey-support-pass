@@ -1086,12 +1086,6 @@ export function HelpFlow({
                   <MapPin aria-hidden="true" />
                   {tr("공항 현장 서비스", "Airport services")}
                 </span>
-                <span className="service-demo-label">
-                  {tr(
-                    "공모전 시연 · 실제 출동 없음",
-                    "Contest demo · no real dispatch",
-                  )}
-                </span>
               </div>
               <div className="request-heading-row">
                 <h1>

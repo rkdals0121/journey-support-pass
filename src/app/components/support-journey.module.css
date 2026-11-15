@@ -89,18 +89,20 @@
   gap: 0.5rem;
   min-height: max(3rem,var(--target-floor));
   padding: 0.75rem 1rem;
-  border: 1px solid var(--color-primary-hover);
-  border-radius: var(--radius-small);
+  /* 주 단추는 노란 알약, 보조 단추는 흰 알약(모든 화면 공통, 진한 초록 칠이던 것) */
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-pill);
   font: inherit;
   font-weight: var(--weight-label);
   line-height: 1.4;
   text-decoration: none;
   cursor: pointer;
-  background: var(--color-primary-hover);
-  color: var(--color-surface);
+  background: var(--color-accent);
+  color: var(--color-text);
 }
 .secondary {
-  color: var(--color-primary-hover);
+  border-color: var(--color-line);
+  color: var(--color-text);
   background: var(--color-surface);
 }
 .button:disabled,
@@ -618,6 +620,50 @@
 /* 지도 칸 제목의 기본 윗여백 때문에 휴대전화에서 위 칸보다 위가 비어 보이던 것 */
 @media (max-width: 760px) { .visitLayout .hubMap h2 { margin:0; } }
 .visitLayout .actions { position:sticky;bottom:0;padding-block:var(--space-3);background:var(--color-surface); }
+/* 만날 시간 칸: 시간이 많으면(하루 18칸) 아래 「이전·다음」 줄이 칸을 가려 잘려 보였다.
+   시간 칸은 스크롤 막대가 보이는 상자 안에서만 내려가고, 「이전·다음」은 상자 아래에 따로 둔다(가리지 않는다) */
+.visitLayout .slots { max-height:min(45dvh, 22rem); overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; align-content:start; padding:var(--space-3); border:2px solid var(--color-control-line); border-radius:var(--radius-medium); background:var(--color-canvas); }
+.visitLayout .slot span { background:var(--color-surface); }
+.visitLayout .slot input:checked + span { background:var(--color-accent-soft); border-color:var(--color-accent); }
+.visitLayout .slots::-webkit-scrollbar { width:.875rem; }
+.visitLayout .slots::-webkit-scrollbar-track { margin-block:var(--space-2); border-radius:var(--radius-pill); background:var(--color-line); }
+.visitLayout .slots::-webkit-scrollbar-thumb { border:3px solid var(--color-line); border-radius:var(--radius-pill); background:var(--color-muted); }
+@media (min-width: 761px) { .visitLayout .actions { position:static; } }
+.panelBody { min-width:0; }
+/* 예약 확인: 진행 단계는 머리 칸 안에. 지금 단계는 노랑 */
+.statusPage .progress { margin:var(--space-3) 0 0; }
+.statusPage .progress [aria-current] { border-color:var(--color-accent); color:var(--color-text); }
+.statusMain { display:flex; flex-direction:column; gap:var(--space-4); min-width:0; }
+.statusMain > .panel { margin:0; }
+/* 넓은 화면(높이 701px 이상): 화면 전체가 한 화면. 위쪽 바·머리 칸·아래 줄은 그대로 두고,
+   왼쪽 칸은 단계 탭과 「이전·다음」을 위아래에 고정한 채 가운데 내용만 칸 안에서 스크롤(막대는 칸 안쪽 오른쪽) */
+@media (min-width: 1101px) and (min-height: 701px) {
+  :global(.public-site):has(.visitLayout) { height:100dvh; min-height:0; }
+  :global(.public-site):has(.visitLayout) > main { flex:1 1 auto; min-height:0; }
+  :global(.service-short-page) > .visitLayout { flex:1 1 auto; min-height:0; grid-template-rows:minmax(0,1fr); }
+  .visitLayout > form.panel { display:flex; flex-direction:column; min-height:0; }
+  .visitLayout > form.panel > .panelBody { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:var(--space-2); }
+  /* 「이전·다음」은 칸 바닥에 붙인다(아래 여백 44px 이 겹쳐 스크롤 칸이 그만큼 짧던 것) */
+  .visitLayout > form.panel > .actions { flex:none; margin:var(--space-3) 0 0; padding:0; }
+  .visitLayout > aside.panel { min-height:0; }
+  /* 지도는 칸에 맞춰 줄어든다(아래 「공식 공항 지도」 링크가 칸 밖으로 잘리던 것) */
+  .visitLayout .liveMap { min-height:8rem; }
+  /* 머리 칸 설명 줄은 빼서 고르는 칸에 높이를 준다(754 높이에서 시간 칸이 두 줄도 안 보이던 것) */
+  :global(.service-short-page):has(> .visitLayout) > :global(.ph-hero) p { display:none; }
+  :global(.service-short-page):has(> .visitLayout) > :global(.ph-hero) h1 { margin-bottom:0; }
+  /* 넓은 화면: 날짜와 「만날 시간·새로고침」을 한 줄에, 시간 칸은 테두리 상자 없이 칸 전체 스크롤로(상자 안 상자가 되던 것) */
+  .visitLayout .slots { max-height:none; overflow:visible; padding:0; border:0; background:none; }
+  .visitLayout .slot span { min-height:3.5rem; }
+  .timeStep:not([hidden]) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:var(--space-4); align-items:end; }
+  .timeStep > :not(.field):not(.row) { grid-column:1 / -1; }
+  .timeStep > .field { margin-bottom:var(--space-3); }
+  .timeStep > .row { margin-bottom:var(--space-3); justify-content:space-between; }
+  .timeStep > .row h2 { margin:0; }
+  .statusMain { min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+  .visitLayout > form.panel > .panelBody::-webkit-scrollbar, .statusMain::-webkit-scrollbar { width:.875rem; }
+  .visitLayout > form.panel > .panelBody::-webkit-scrollbar-track, .statusMain::-webkit-scrollbar-track { border-radius:var(--radius-pill); background:var(--color-line); }
+  .visitLayout > form.panel > .panelBody::-webkit-scrollbar-thumb, .statusMain::-webkit-scrollbar-thumb { border:3px solid var(--color-line); border-radius:var(--radius-pill); background:var(--color-muted); }
+}
 @media (min-width: 1101px) {
  .visitLayout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }
  .visitLayout .hubMap:not(:has(.liveMap)) { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:var(--space-2); }
