@@ -62,7 +62,6 @@ export function NavigationResult({en,from,target,homeHref,helpHref,isRobotMode,r
               <div><dt>{t("목적지", "Destination")}</dt><dd>{target?.name}<small>{target?.description}</small></dd></div>
             </dl>
             <p>{t("지도에 표시된 경로를 확인해 주세요.", "Check the route displayed on the map.")}</p>
-            {isRobotMode && <p className={styles.locationNote}>{t("안내 시연 · 실제 로봇 이동과 자동 도착 감지는 연결되지 않았어요.", "Guidance demo · robot movement and automatic arrival detection are not connected.")}</p>}
             <div className={styles.completionActions}>{completionActions}</div></> : <p>{t("출발지와 목적지 칸을 누르고 지도에서 장소를 선택하세요.", "Select Start or Destination, then choose a place on the map.")}</p>}
           <details className={styles.moreInfo}><summary>{t("이용 전 확인", "Before you go")}</summary><p>{t("3층 시연 지도입니다. 실제 이동·계단 없는 접근 가능 여부는 직원에게 확인해 주세요.", "3F prototype. Confirm actual routes and step-free access with staff.")}</p></details>
           <Link className={styles.help} href={helpHref}>

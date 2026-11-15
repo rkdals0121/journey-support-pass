@@ -97,7 +97,12 @@
 /* 키오스크·안내로봇: 첫 화면처럼 주 단추는 노랑, 나머지는 흰 둥근 단추. 결과 카드는 옅은 노랑에서 흰색으로 */
 .planner[data-kiosk=true] .primary{border-radius:var(--radius-pill);background:var(--color-accent);color:var(--color-text);box-shadow:var(--shadow-1)}
 .planner[data-kiosk=true] .clear{border-color:var(--color-line);border-radius:var(--radius-pill);color:var(--color-text);box-shadow:var(--shadow-1)}
-.planner[data-kiosk=true] .summary{background:linear-gradient(110deg,var(--color-accent-soft),var(--color-surface) 72%);border-color:var(--color-line)}
+.planner[data-kiosk=true] .summary{background:var(--color-accent-soft);border-color:var(--color-accent)}
+/* 안내로봇 결과 칸: 출발지·목적지와 안내 문장을 멀리서도 읽히게 키운다 */
+.planner[data-device-layout=robot] .summary p{font-size:var(--text-body)}
+.planner[data-device-layout=robot] .routeEndpoints dt{font-size:var(--text-small)}
+.planner[data-device-layout=robot] .routeEndpoints dd{font-size:var(--text-heading)}
+.planner[data-device-layout=robot] .routeEndpoints dd small{font-size:var(--text-body)}
 .planner[data-kiosk=true] .summary>svg,.planner[data-kiosk=true] .distance{color:var(--color-text)}
 .planner[data-kiosk=true] .help,.planner[data-kiosk=true] .moreInfo summary{color:var(--color-text)}
 @media(min-width:761px){
