@@ -425,7 +425,7 @@ export function VisitForm({
             </div>
           )}
         </div>
-        <div hidden={step !== 1}>
+        <div hidden={step !== 1} className={styles.timeStep}>
           <div className={styles.field}>
             <label htmlFor="visit-day">{t("방문 날짜", "Date")}</label>
             <input

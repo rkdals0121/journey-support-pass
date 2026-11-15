@@ -645,7 +645,19 @@
   .visitLayout > form.panel > .panelBody { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:var(--space-2); }
   .visitLayout > form.panel > .actions { flex:none; margin-top:var(--space-3); }
   .visitLayout > aside.panel { min-height:0; }
-  .visitLayout .slots { max-height:none; }
+  /* 지도는 칸에 맞춰 줄어든다(아래 「공식 공항 지도」 링크가 칸 밖으로 잘리던 것) */
+  .visitLayout .liveMap { min-height:8rem; }
+  /* 머리 칸 설명 줄은 빼서 고르는 칸에 높이를 준다(754 높이에서 시간 칸이 두 줄도 안 보이던 것) */
+  :global(.service-short-page):has(> .visitLayout) > :global(.ph-hero) p { display:none; }
+  :global(.service-short-page):has(> .visitLayout) > :global(.ph-hero) h1 { margin-bottom:0; }
+  /* 넓은 화면: 날짜와 「만날 시간·새로고침」을 한 줄에, 시간 칸은 테두리 상자 없이 칸 전체 스크롤로(상자 안 상자가 되던 것) */
+  .visitLayout .slots { max-height:none; overflow:visible; padding:0; border:0; background:none; }
+  .visitLayout .slot span { min-height:3.5rem; }
+  .timeStep:not([hidden]) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:var(--space-4); align-items:end; }
+  .timeStep > :not(.field):not(.row) { grid-column:1 / -1; }
+  .timeStep > .field { margin-bottom:var(--space-3); }
+  .timeStep > .row { margin-bottom:var(--space-3); justify-content:space-between; }
+  .timeStep > .row h2 { margin:0; }
   .statusMain { min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
   .visitLayout > form.panel > .panelBody::-webkit-scrollbar, .statusMain::-webkit-scrollbar { width:.875rem; }
   .visitLayout > form.panel > .panelBody::-webkit-scrollbar-track, .statusMain::-webkit-scrollbar-track { border-radius:var(--radius-pill); background:var(--color-line); }
