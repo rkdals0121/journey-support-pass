@@ -643,7 +643,8 @@
   :global(.service-short-page) > .visitLayout { flex:1 1 auto; min-height:0; grid-template-rows:minmax(0,1fr); }
   .visitLayout > form.panel { display:flex; flex-direction:column; min-height:0; }
   .visitLayout > form.panel > .panelBody { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:var(--space-2); }
-  .visitLayout > form.panel > .actions { flex:none; margin-top:var(--space-3); }
+  /* 「이전·다음」은 칸 바닥에 붙인다(아래 여백 44px 이 겹쳐 스크롤 칸이 그만큼 짧던 것) */
+  .visitLayout > form.panel > .actions { flex:none; margin:var(--space-3) 0 0; padding:0; }
   .visitLayout > aside.panel { min-height:0; }
   /* 지도는 칸에 맞춰 줄어든다(아래 「공식 공항 지도」 링크가 칸 밖으로 잘리던 것) */
   .visitLayout .liveMap { min-height:8rem; }
