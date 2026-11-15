@@ -826,6 +826,8 @@ function ThemePicker({
     <PublicShell lang={lang}>
     <main className="sb sb-entry" data-theme="pick" id="public-main" lang={lang}>
       <div className="sb-page">
+        {/* 넓은 화면에서는 이 묶음이 왼쪽, 수첩 목록이 오른쪽 칸이 된다(stamp.css) */}
+        <div className="sb-pick-intro">
         <h1 className="sb-pick-title">
           {tr("어떤 수첩으로 ")}<br />
           {tr("공항을 여행할까요? ")}</h1>
@@ -843,6 +845,7 @@ function ThemePicker({
           }
         />
         <p className="sb-pick-sub">{tr("나중에 바꿔도 모은 도장은 그대로예요.")}</p>
+        </div>
         <ul className="sb-pick">
           {THEME_IDS.map((id) => (
             <li key={id}>

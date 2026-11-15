@@ -848,6 +848,12 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
  .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(5,minmax(0,1fr)); }
  .airport-service-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
+/* 큰 글씨(1.25~1.5배)에서는 다섯 칸이 좁아 글자 하나씩 꺾였다(「탑승/구·/시설」). 칸 폭을 글씨 기준(rem)으로 재서 세 칸으로 줄인다 */
+.request-form-main { container-type: inline-size; }
+@container (max-width: 52rem) {
+ .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+.request-service-options label { word-break: keep-all; overflow-wrap: anywhere; }
 /* 첫 단계: 서비스 고르기는 한 줄, 세부 선택과 적는 칸은 두 칸 나란히(태블릿·키오스크 가로 화면 포함). */
 @media (min-width: 761px) {
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-5); }
@@ -885,7 +891,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .service-directory { display: grid; gap: var(--space-4); }
 /* 넓은 화면(높이 701px 이상): 서비스 찾기를 한 화면에. 카드는 다섯 칸씩 두 줄로 남는 높이를 나눠 쓴다(세 줄로 아래로 넘치던 것) */
 @media (min-width: 1101px) and (min-height: 701px) {
-  .public-site:has(.service-directory-page) { height: 100dvh; min-height: 0; }
+  .public-site:has(.service-directory-page) { height: max(100dvh, 47rem); min-height: 0; }
   .public-site:has(.service-directory-page) > main { flex: 1 1 auto; min-height: 0; }
   .service-directory-page > .service-directory { flex: 1 1 auto; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); }
   .service-directory-page .service-directory-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); height: auto; min-height: 0; }
@@ -893,6 +899,19 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
   .service-directory-page .service-directory-grid .task-action-icon { width: 1.75rem; height: 1.75rem; padding: var(--space-3); }
   .service-directory-page .service-directory-grid .task-action-link strong { font-size: var(--text-heading); }
 }
+/* 낮은 노트북(높이 700px 이하, 1366×657 등): 높이를 화면에 묶지는 않고(큰 글씨에서 겹치지 않게) 다섯 칸 두 줄로 줄여 세 줄로 넘치지 않게 */
+@media (min-width: 1101px) and (max-height: 700px) {
+  .service-directory-page .service-directory-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .service-directory-page .service-directory-grid .task-action { min-height: 0; align-content: center; padding-block: var(--space-3); }
+  .service-directory-page .service-directory-grid .task-action-icon { width: 1.5rem; height: 1.5rem; padding: var(--space-2); }
+  .service-directory-page .service-directory, .service-directory-page { gap: var(--space-2); }
+}
+/* 큰 글씨에서는 다섯 칸이 좁아 카드 이름이 글자 하나씩 꺾였다(「찾아오/는」). 목록 폭을 글씨 기준(rem)으로 재서 세 칸으로 */
+.service-directory { container-type: inline-size; }
+@container (max-width: 70rem) {
+  .service-directory-page .service-directory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.service-directory-grid .task-action-link strong { word-break: keep-all; overflow-wrap: anywhere; }
 .service-intro-copy { grid-column: 1 / -1; }
 .service-directory-search { min-width: 0; }
 .service-directory-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
