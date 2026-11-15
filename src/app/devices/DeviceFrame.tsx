@@ -29,12 +29,16 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
 
   useEffect(() => {
     const fit = () => {
-      const room = box.current?.clientWidth ?? 0;
-      // 틀 위쪽부터 화면 아래(바닥 줄·설명 몫 9rem 을 뺀 곳)까지에 맞춘다. 페이지가 아래로 길게 넘치던 것(세로 안내로봇은 532px).
+      // 세로 안내로봇은 미리보기 칸 폭이 화면 크기를 따라가므로(옆 칸과 간격 16px), 폭 제한은 위쪽 바 폭의 절반으로 둔다
+      const bar = document.querySelector(".public-header")?.getBoundingClientRect().width ?? window.innerWidth;
+      const room = device === "robot" ? bar / 2 : box.current?.clientWidth ?? 0;
+      // 틀 위쪽부터 바닥 줄 위(박스 간격 --space-4 하나)까지 남는 높이에 꼭 맞춘다(아래가 비거나 페이지가 넘치던 것).
       // 다만 글이 보이도록 0.22배 아래로는 줄이지 않는다.
       const top = (box.current?.getBoundingClientRect().top ?? 200) + window.scrollY;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const high = Math.max(0.22, (window.innerHeight - top - 8.5 * rem) / size.h);
+      const footer = document.querySelector(".public-footer");
+      const below = footer ? footer.getBoundingClientRect().height + parseFloat(getComputedStyle(footer).marginBottom || "0") + rem : 5.5 * rem;
+      const high = Math.max(0.22, (window.innerHeight - top - below) / size.h);
       setScale(Math.max(0.1, Math.min(1, room / size.w, high)));
     };
     fit();
@@ -73,11 +77,6 @@ export function DeviceFrame({ device, lang }: { device: "robot" | "kiosk"; lang:
           </div>
         )}
       </div>
-      <p className="dv-frame-note">
-        {en
-          ? "This is the real device screen, so it changes whenever the screen is updated. Registration lookup and help requests work only on installed devices."
-          : "모형이 아닌 실제 기기 화면이라, 화면을 고치면 이 미리보기도 같이 바뀝니다. 등록 조회와 도움 요청은 설치한 기기에서만 됩니다."}
-      </p>
     </section>
   );
 }
