@@ -226,13 +226,21 @@
 .service-muted { font-size:var(--text-caption); color:var(--color-muted); }
 .service-route-result>.public-text-link { font-size:var(--text-small); margin-top:1rem; }
 .request-mobile-nav { display:flex; gap: var(--space-3); width: 100%; position: sticky; bottom: 0; padding: var(--space-3) 0; background: var(--color-canvas); z-index: 5; }
+.request-side-art { display: none; }
 /* 웹 넓은 화면(높이 701px 이상): 고르는 칸이 남는 높이를 채우고 「다음」은 칸 바로 아래·바닥 줄 위에 붙는다(칸 아래가 150px 넘게 비던 것) */
 @media (min-width: 1101px) and (min-height: 701px) {
   .public-site > .request-experience { flex: 1 0 auto; display: flex; flex-direction: column; }
-  .public-site > .request-experience > .request-form { flex: 1 0 auto; display: flex; flex-direction: column; gap: var(--space-4); }
-  .public-site > .request-experience > .request-form > .request-form-main { flex: 1 0 auto; display: flex; flex-direction: column; }
+  /* 왼쪽: 고르는 칸(남는 높이를 채움)과 그 바로 아래 「이전·다음」(칸 오른쪽 끝선에 맞춤). 오른쪽: 나랑이 안내 칸(마지막 단계에서는 요청 요약 칸) */
+  .public-site > .request-experience { padding-bottom: 0; }
+  .public-site > .request-experience > .request-form { flex: 1 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4); align-items: stretch; }
+  .public-site > .request-experience > .request-form > .request-form-main { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; }
   .public-site > .request-experience > .request-form > .request-form-main > .request-section:first-child { flex: 1 0 auto; align-content: center; }
-  .public-site > .request-experience .request-mobile-nav { position: static; padding: 0; justify-content: flex-end; }
+  .public-site > .request-experience .request-mobile-nav { grid-column: 1; grid-row: 2; position: static; padding: 0; justify-content: flex-end; }
+  .public-site > .request-experience > .request-form > .request-side-art { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-4); contain: size; padding: var(--space-5); border: 2px solid var(--color-accent); border-radius: var(--radius-medium); background: linear-gradient(160deg, var(--color-accent-soft), var(--color-surface) 75%); box-shadow: var(--shadow-1); }
+  .request-side-art p { margin: 0; padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); font-size: var(--text-body); font-weight: var(--weight-heading); line-height: 1.6; white-space: pre-line; word-break: keep-all; box-shadow: var(--shadow-1); }
+  .request-side-art img { width: 100%; height: 100%; min-height: 0; object-fit: contain; object-position: center bottom; }
+  .public-site > .request-experience > .request-form[data-final-step="true"] > .request-side-art { display: none; }
+  .public-site > .request-experience > .request-form[data-final-step="true"] > .request-submit-card { grid-column: 2; grid-row: 1 / span 2; }
 }
 .request-location-tools { margin-top:1rem; border-top:0.0625rem solid var(--color-line); padding-top:0.75rem; }
 .request-location-tools>summary { cursor:pointer; font-size:var(--text-small); color:var(--color-primary-hover); font-weight:var(--weight-label); min-height:max(2.75rem,var(--target-floor)); line-height:2.75rem; }
@@ -377,7 +385,7 @@
     .service-form-card,
     .service-route-result
   ) { border-radius: var(--radius-small); box-shadow: none; }
-.airport-site .request-submit-card { background: var(--color-primary-faint); border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: 1.5rem; }
+.airport-site .request-submit-card { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); padding: 1.5rem; }
 .airport-site .request-review-card { animation: airport-panel-enter var(--airport-panel) var(--airport-ease); padding: 2rem; }
 .airport-site .place-finder { background: transparent; border: 0; border-radius: 0; padding: 0; }
 .airport-site .place-candidates { gap: 0.75rem; }

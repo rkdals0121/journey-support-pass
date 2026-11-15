@@ -1403,6 +1403,16 @@ export function HelpFlow({
                 )}
                 {service !== "mobility" && requestAdditional}
               </div>
+              {/* 넓은 웹 화면에서만: 고르는 칸 옆 남는 자리에 나랑이가 다음에 일어날 일을 알려 준다(passenger.css) */}
+              <aside className="request-side-art" aria-hidden="true">
+                <p>
+                  {tr(
+                    "필요한 도움을 고르면\n가까운 직원이나 안내로봇이\n지금 계신 곳으로 찾아가요.",
+                    "Choose the help you need.\nNearby staff or a guide robot\nwill come to you.",
+                  )}
+                </p>
+                <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="16rem" />
+              </aside>
               <div className="request-mobile-nav" hidden={service === "mobility"}>
                 {inputStep > 0 && (
                   <button
