@@ -142,7 +142,8 @@
 .request-section .place-confirmed { background:var(--color-primary-faint); }
 .request-service-options { border:0; padding:0; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); }
 .request-service-options label { display:flex; gap:0.5rem; align-items:center; margin:0; padding:var(--space-2) var(--space-3); border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); font-size:var(--text-small); font-weight:var(--weight-label); min-height:2.75rem; cursor:pointer; }
-.request-service-options label.selected, .request-task-options label.selected { border-color:var(--color-primary); background:var(--color-primary-faint); color:var(--color-primary-hover); }
+/* 고른 서비스·내용은 키오스크와 같은 노랑 결(옅은 노랑 칠, 노랑 테두리). 회녹색 칠·초록 테두리이던 것 */
+.request-service-options label.selected, .request-task-options label.selected { border-color:var(--color-accent); background:var(--color-accent-soft); color:var(--color-text); }
 /* 옆 칸의 적는 칸 이름(「안내받을 내용」 등)과 같은 크기·굵기 */
 .request-task-options legend { padding:0; font-size:var(--text-body); font-weight:var(--weight-label); color:var(--color-text); margin-bottom:var(--space-2); }
 .request-experience input[type=radio], .request-experience input[type=checkbox], .service-workspace input[type=checkbox] { width:1.15rem; height:1.15rem; margin:0; accent-color:var(--color-primary); flex:none; }
@@ -385,7 +386,7 @@
 .airport-site .request-selected-service { padding: 0.75rem 0; margin-bottom: 1.5rem; border-radius: 0; background: transparent; border-bottom: 0.0625rem solid var(--color-line); }
 .airport-site .request-task-options { gap: 0.75rem; }
 .airport-site .request-task-options label { border-radius: var(--radius-small); min-height: 2.75rem; font-size: var(--text-body); padding: var(--space-2) var(--space-3); }
-.airport-site .request-task-options label:has(input:checked) { background: var(--color-primary-faint); border-color: var(--color-primary); }
+.airport-site .request-task-options label:has(input:checked) { background: var(--color-accent-soft); border-color: var(--color-accent); }
 .airport-site
   :is(
     .request-submit-card,
