@@ -988,7 +988,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 /* 요청 요약 칸의 나랑이: 넓은 웹 화면에서만. 요약 칸을 세로로 쌓고 나랑이가 남는 높이를 채우며, 동의·확인 단추는 칸 바닥에(아래가 비던 것) */
 .request-submit-art { display: none; }
 @media (min-width: 1101px) and (min-height: 701px) {
-  .public-site > .request-experience > .request-form > .request-submit-card { display: flex; flex-direction: column; position: static; }
-  .public-site > .request-experience > .request-form > .request-submit-card > .request-submit-art { display: block; flex: 1 1 0; min-height: 0; margin-top: var(--space-4); contain: size; }
+  .public-site > .request-experience > .request-form[data-final-step="true"] > .request-submit-card { display: flex; flex-direction: column; position: static; }
+  .public-site > .request-experience > .request-form[data-final-step="true"] > .request-submit-card > .request-submit-art { display: block; flex: 1 1 0; min-height: 0; margin-top: var(--space-4); contain: size; }
   .request-submit-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
 }
