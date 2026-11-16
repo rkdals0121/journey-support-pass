@@ -624,9 +624,13 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
    탑승권 화면은 카메라(또는 안내)와 단추를 위아래로 쌓아 가운데에 */
 @media (orientation: portrait) and (min-width: 761px) {
   .kc-number { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: stretch; padding: var(--space-5); }
-  .kc-number-copy { display: grid; gap: var(--space-3); font-size: var(--text-body); font-weight: var(--weight-heading); }
-  .kc-number-copy input { min-height: calc(var(--target-kiosk-floor) * 1.4); font-size: var(--text-large); letter-spacing: 0.3em; border-width: 2px; border-color: var(--color-accent); background: var(--color-accent-soft); }
-  .kc-number .pad-key { font-size: var(--text-title); }
+  /* 제목 글자는 크게, 번호 칸은 숫자판 한 줄만큼 높게(숫자판 바로 위까지 채움), 숫자판 글자도 크게.
+     번호 칸은 입력칸 공통 규칙(input:not 네 겹)보다 세게 id 로 정한다 */
+  .kc-number-copy { display: grid; gap: var(--space-3); font-size: var(--text-title); font-weight: var(--weight-heading); }
+  .kc-number-copy label { font-size: var(--text-title); }
+  .kc-number-copy #entry-pass-number { min-height: 0; height: calc((100dvh - 30rem) / 5); padding-block: 0; font-family: var(--font-num); font-size: var(--text-display); font-weight: var(--weight-heading); letter-spacing: 0.3em; text-align: center; border: 2px solid var(--color-accent); border-radius: var(--radius-medium); background: var(--color-accent-soft); }
+  .kc-number .pad-key { font-size: var(--text-large); }
+  .kc-number .pad-key svg { width: 3.5rem; height: 3.5rem; }
   .kc-scan .scan { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; align-content: center; justify-items: stretch; gap: var(--space-5); }
   .kc-scan .scanner { grid-row: auto; max-height: 55dvh; }
   .kc-scan .scan > :is(.btn, [role=status]) { font-size: var(--text-body); }
