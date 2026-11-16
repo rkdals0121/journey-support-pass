@@ -648,11 +648,12 @@
 .statusPage .progress [aria-current] { border-color:var(--color-accent); color:var(--color-text); }
 .statusMain { display:flex; flex-direction:column; gap:var(--space-4); min-width:0; }
 .statusMain > .panel { margin:0; }
-/* 넓은 화면(높이 701px 이상): 화면 전체가 한 화면. 위쪽 바·머리 칸·아래 줄은 그대로 두고,
+/* 넓은 화면(낮은 노트북 포함): 화면 전체가 한 화면. 위쪽 바·머리 칸·아래 줄은 그대로 두고,
    왼쪽 칸은 단계 탭과 「이전·다음」을 위아래에 고정한 채 가운데 내용만 칸 안에서 스크롤(막대는 칸 안쪽 오른쪽) */
-@media (min-width: 1101px) and (min-height: 701px) {
-  /* 큰 글씨에서는 한 화면에 묶지 않는다: 높이는 화면 높이와 47rem(글씨를 따라 커짐) 중 큰 쪽. 1배(754 높이)는 한 화면, 1.5배는 페이지가 내려간다 */
-  :global(.public-site):has(.visitLayout) { height:max(100dvh, 47rem); min-height:0; }
+@media (min-width: 1101px) {
+  /* 큰 글씨에서는 한 화면에 묶지 않는다: 높이는 화면 높이와 「60rem - 52dvh」 중 큰 쪽. rem 은 글씨를 따라 커진다.
+     1배는 낮은 노트북(1280×633)까지 한 화면(약 630px), 1.5배는 1,050~1,100px 로 늘어 페이지가 내려간다(칸이 찌그러지지 않게) */
+  :global(.public-site):has(.visitLayout) { height:max(100dvh, calc(60rem - 52dvh)); min-height:0; }
   :global(.public-site):has(.visitLayout) > main { flex:1 1 auto; min-height:0; }
   :global(.service-short-page) > .visitLayout { flex:1 1 auto; min-height:0; grid-template-rows:minmax(0,1fr); }
   .visitLayout > form.panel { display:flex; flex-direction:column; min-height:0; }
