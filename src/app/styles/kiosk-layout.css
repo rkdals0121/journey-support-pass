@@ -620,6 +620,23 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
 @media (max-width: 760px) {
  .kc-number, .kc-scan .scan { grid-template-columns: minmax(0, 1fr); }
 }
+/* 안내로봇(세로): 번호 입력은 위에 번호 칸, 아래에 화면 폭 전체의 큰 숫자판(왼쪽 칸이 거의 비고 번호 칸이 가운데 떠 있던 것).
+   탑승권 화면은 카메라(또는 안내)와 단추를 위아래로 쌓아 가운데에 */
+@media (orientation: portrait) and (min-width: 761px) {
+  .kc-number { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: stretch; padding: var(--space-5); }
+  .kc-number-copy { display: grid; gap: var(--space-3); font-size: var(--text-body); font-weight: var(--weight-heading); }
+  .kc-number-copy input { min-height: calc(var(--target-kiosk-floor) * 1.4); font-size: var(--text-large); letter-spacing: 0.3em; border-width: 2px; border-color: var(--color-accent); background: var(--color-accent-soft); }
+  .kc-number .pad-key { font-size: var(--text-title); }
+  .kc-scan .scan { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; align-content: center; justify-items: stretch; gap: var(--space-5); }
+  .kc-scan .scanner { grid-row: auto; max-height: 55dvh; }
+  .kc-scan .scan > :is(.btn, [role=status]) { font-size: var(--text-body); }
+  .kc-scan .scan > .btn { min-height: calc(var(--target-kiosk-floor) * 1.2); border-radius: var(--radius-pill); }
+}
+.kc-scan-art { display: none; }
+/* 카메라를 쓸 수 없을 때(안내 글만 있을 때): 칸 가운데 큰 나랑이, 그 아래 안내와 단추 */
+.kc-scan:has(.scan > .banner:first-child) { display: flex; flex-direction: column; justify-content: center; gap: var(--space-5); }
+.kc-scan:has(.scan > .banner:first-child) .kc-scan-art { display: block; align-self: center; width: min(70%, 40dvh); height: auto; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
+.kc-scan:has(.scan > .banner:first-child) .scan { height: auto; }
 /* 현장 등록의 선택·서류 단계도 같은 소개 박스와 카드 격자를 사용한다. */
 .kc-choices { margin: 0; min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); }
 .kc-choices .easy-tile { flex-direction: row; min-height: var(--target-kiosk-floor); padding: var(--space-3); gap: var(--space-2); font-size: var(--text-small); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: none; }
