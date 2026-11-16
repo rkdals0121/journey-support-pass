@@ -142,7 +142,8 @@
 .request-section .place-confirmed { background:var(--color-primary-faint); }
 .request-service-options { border:0; padding:0; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); }
 .request-service-options label { display:flex; gap:0.5rem; align-items:center; margin:0; padding:var(--space-2) var(--space-3); border:0.0625rem solid var(--color-line); border-radius:var(--radius-medium); font-size:var(--text-small); font-weight:var(--weight-label); min-height:2.75rem; cursor:pointer; }
-.request-service-options label.selected, .request-task-options label.selected { border-color:var(--color-primary); background:var(--color-primary-faint); color:var(--color-primary-hover); }
+/* 고른 서비스·내용은 키오스크와 같은 노랑 결(옅은 노랑 칠, 노랑 테두리). 회녹색 칠·초록 테두리이던 것 */
+.request-service-options label.selected, .request-task-options label.selected { border-color:var(--color-accent); background:var(--color-accent-soft); color:var(--color-text); }
 /* 옆 칸의 적는 칸 이름(「안내받을 내용」 등)과 같은 크기·굵기 */
 .request-task-options legend { padding:0; font-size:var(--text-body); font-weight:var(--weight-label); color:var(--color-text); margin-bottom:var(--space-2); }
 .request-experience input[type=radio], .request-experience input[type=checkbox], .service-workspace input[type=checkbox] { width:1.15rem; height:1.15rem; margin:0; accent-color:var(--color-primary); flex:none; }
@@ -201,6 +202,14 @@
 .request-list-count { display:inline-flex; align-items:center; gap:var(--space-1); color:var(--color-muted); font-size:var(--text-small); }
 /* 빈 안내 카드는 한 줄을 다 쓰므로, 넓은 화면에서는 단추가 화면 끝까지 늘어나지 않게 */
 @media (min-width: 761px) { .request-empty-card .service-primary-action { align-self:flex-start; width:auto; padding-inline:var(--space-6); } }
+/* 요청이 없을 때: 넓은 화면에서는 안내 칸이 바닥 줄까지 채우고 오른쪽에 나랑이(작은 상자 아래가 크게 비던 것) */
+.request-empty-art { display:none; }
+@media (min-width: 761px) {
+ .service-info-card.request-empty-card { flex:1 0 auto; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto auto auto; align-content:center; align-items:start; padding-inline:var(--space-7); column-gap:var(--space-6); background:linear-gradient(160deg, var(--color-accent-soft), var(--color-surface) 70%); }
+ .service-info-card.request-empty-card > :not(.request-empty-art) { grid-column:1; }
+ .service-info-card.request-empty-card > .service-primary-action { justify-self:start; }
+ .request-empty-art { display:block; grid-column:2; grid-row:1 / -1; align-self:center; width:clamp(8rem, 24dvh, 14rem); height:auto; filter:drop-shadow(0 .5rem .75rem var(--color-shadow)); }
+}
 /* 내 요청 카드: 첫 화면 서비스 카드와 같은 흰 카드. 누르는 곳은 카드 전체 */
 .my-service-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); }
 .my-service-request { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); text-decoration: none; transition: border-color var(--motion-normal) var(--ease-out), box-shadow var(--motion-normal) var(--ease-out); }
@@ -377,7 +386,7 @@
 .airport-site .request-selected-service { padding: 0.75rem 0; margin-bottom: 1.5rem; border-radius: 0; background: transparent; border-bottom: 0.0625rem solid var(--color-line); }
 .airport-site .request-task-options { gap: 0.75rem; }
 .airport-site .request-task-options label { border-radius: var(--radius-small); min-height: 2.75rem; font-size: var(--text-body); padding: var(--space-2) var(--space-3); }
-.airport-site .request-task-options label:has(input:checked) { background: var(--color-primary-faint); border-color: var(--color-primary); }
+.airport-site .request-task-options label:has(input:checked) { background: var(--color-accent-soft); border-color: var(--color-accent); }
 .airport-site
   :is(
     .request-submit-card,
@@ -848,10 +857,13 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
  .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(5,minmax(0,1fr)); }
  .airport-service-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
-/* 큰 글씨(1.25~1.5배)에서는 다섯 칸이 좁아 글자 하나씩 꺾였다(「탑승/구·/시설」). 칸 폭을 글씨 기준(rem)으로 재서 세 칸으로 줄인다 */
-.request-form-main { container-type: inline-size; }
-@container (max-width: 52rem) {
- .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+/* 웹 노트북 화면의 큰 글씨(1.25~1.5배)에서는 다섯 칸이 좁아 글자 하나씩 꺾였다(「탑승/구·/시설」). 칸 폭을 글씨 기준(rem)으로 재서 세 칸으로 줄인다.
+   휴대전화·태블릿(자기 칸 수가 따로 있음)과 키오스크 화면에는 걸지 않는다(휴대전화가 세 칸이 되어 글자가 한 자씩 꺾이던 것) */
+@media (min-width: 1101px) {
+ html:not([data-kiosk]) .request-form-main { container-type: inline-size; }
+ @container (max-width: 52rem) {
+  html:not([data-kiosk]) .request-form:not([data-map-flow="true"]) .request-service-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ }
 }
 .request-service-options label { word-break: keep-all; overflow-wrap: anywhere; }
 /* 첫 단계: 서비스 고르기는 한 줄, 세부 선택과 적는 칸은 두 칸 나란히(태블릿·키오스크 가로 화면 포함). */
@@ -906,10 +918,13 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
   .service-directory-page .service-directory-grid .task-action-icon { width: 1.5rem; height: 1.5rem; padding: var(--space-2); }
   .service-directory-page .service-directory, .service-directory-page { gap: var(--space-2); }
 }
-/* 큰 글씨에서는 다섯 칸이 좁아 카드 이름이 글자 하나씩 꺾였다(「찾아오/는」). 목록 폭을 글씨 기준(rem)으로 재서 세 칸으로 */
-.service-directory { container-type: inline-size; }
-@container (max-width: 70rem) {
-  .service-directory-page .service-directory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 노트북 화면의 큰 글씨에서는 다섯 칸이 좁아 카드 이름이 글자 하나씩 꺾였다(「찾아오/는」). 목록 폭을 글씨 기준(rem)으로 재서 세 칸으로.
+   휴대전화·태블릿에는 걸지 않는다(휴대전화가 세 칸이 되어 글자가 한 자씩 세로로 꺾이던 것) */
+@media (min-width: 1101px) {
+  .service-directory { container-type: inline-size; }
+  @container (max-width: 70rem) {
+    .service-directory-page .service-directory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
 }
 .service-directory-grid .task-action-link strong { word-break: keep-all; overflow-wrap: anywhere; }
 .service-intro-copy { grid-column: 1 / -1; }

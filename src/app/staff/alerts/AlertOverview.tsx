@@ -111,7 +111,7 @@ export function AlertOverview() {
               </div>
             ))}
           </dl>
-          <button className="btn" disabled={busy} onClick={() => void retry()}>
+          <button className="btn alert-retry" disabled={busy} onClick={() => void retry()}>
             재시도 대기 처리
           </button>
           {message && <p role="status">{message}</p>}

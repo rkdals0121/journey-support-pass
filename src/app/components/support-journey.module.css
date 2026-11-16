@@ -507,15 +507,21 @@
   padding: 2rem 0;
   color: var(--color-muted);
 }
+/* 직원 예약 목록: 넓은 화면에서는 카드를 여러 칸으로(한 줄씩 화면 폭 전체로 쌓여 오른쪽이 비고 페이지가 아주 길던 것) */
 .workList {
   list-style: none;
   padding: 0;
+  margin: 0;
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
+  gap: var(--space-4);
 }
 .workList > li {
-  padding: 1.5rem;
-  border: 1px solid var(--color-primary-soft);
+  min-width: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-medium);
   background: var(--color-surface);
 }
 .workTitle {
@@ -628,7 +634,14 @@
 .visitLayout .slots::-webkit-scrollbar { width:.875rem; }
 .visitLayout .slots::-webkit-scrollbar-track { margin-block:var(--space-2); border-radius:var(--radius-pill); background:var(--color-line); }
 .visitLayout .slots::-webkit-scrollbar-thumb { border:3px solid var(--color-line); border-radius:var(--radius-pill); background:var(--color-muted); }
-@media (min-width: 761px) { .visitLayout .actions { position:static; } }
+@media (min-width: 761px) {
+  .visitLayout .actions { position:static; }
+  /* 「다음」은 다른 여객 화면(현장 도움 요청)처럼 칸 오른쪽 아래의 노랑 알약, 「이전」은 왼쪽. 짧은 글자라 동그라미처럼 보이던 것 */
+  .visitLayout .actions { justify-content:flex-end; }
+  .visitLayout .actions > .secondary { margin-right:auto; }
+  .visitLayout .actions > :is(.button, .secondary) { min-width:9rem; padding-inline:var(--space-5); }
+}
+.actions svg { width:1.125rem; height:1.125rem; flex:none; }
 .panelBody { min-width:0; }
 /* 예약 확인: 진행 단계는 머리 칸 안에. 지금 단계는 노랑 */
 .statusPage .progress { margin:var(--space-3) 0 0; }

@@ -14,6 +14,7 @@ import {
   Plug,
   ChevronRight,
   ShieldCheck,
+  ScanLine,
 } from "lucide-react";
 import { Sunflower } from "./Sunflower";
 export function StaffFrame({
@@ -37,6 +38,8 @@ export function StaffFrame({
         },
         { href: "/staff/requests", label: "접수·배정", Icon: Inbox },
         { href: "/staff/resources", label: "장비 현황·배차", Icon: CarFront },
+        // 우대출구 화면도 메뉴에 둔다(메뉴에 없어 위 경로가 「업무 공간」으로 나오던 것)
+        { href: "/staff/exit", label: "교통약자 우대출구", Icon: ScanLine },
         ...(isDesk
           ? [
               {
