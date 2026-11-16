@@ -967,3 +967,28 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
   .service-info-card { padding: var(--space-4); }
   .service-map-panel { padding-block: var(--space-2); }
 }
+
+/* 만남 장소 찾기: 카드 아래 나랑이 안내(넓은 화면에서는 바닥 줄까지 채워 아래가 비지 않게) */
+.points-hint { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 70%); }
+.points-hint img { flex: none; width: 4.5rem; height: auto; filter: drop-shadow(0 .375rem .5rem var(--color-shadow)); }
+.points-hint > div { display: grid; gap: var(--space-2); min-width: 0; }
+.points-hint p { margin: 0; color: var(--color-muted); line-height: 1.6; word-break: keep-all; }
+.points-hint .points-hint-title { color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); }
+@media (min-width: 1101px) {
+  .points-hint { flex: 1 0 auto; padding: var(--space-3) var(--space-6); }
+  .points-hint img { width: clamp(3.5rem, 14dvh, 9rem); }
+}
+/* 낮은 노트북(높이 700px 이하): 안내는 제목과 인쇄물 링크만 남겨 한 화면에 */
+@media (min-width: 1101px) and (max-height: 700px) {
+  .points-hint > div > p:not(.points-hint-title) { display: none; }
+  .points-hint img { width: 3rem; }
+  .points-hint > div { grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--space-5); }
+}
+
+/* 요청 요약 칸의 나랑이: 넓은 웹 화면에서만. 요약 칸을 세로로 쌓고 나랑이가 남는 높이를 채우며, 동의·확인 단추는 칸 바닥에(아래가 비던 것) */
+.request-submit-art { display: none; }
+@media (min-width: 1101px) and (min-height: 701px) {
+  .public-site > .request-experience > .request-form > .request-submit-card { display: flex; flex-direction: column; position: static; }
+  .public-site > .request-experience > .request-form > .request-submit-card > .request-submit-art { display: block; flex: 1 1 0; min-height: 0; margin-top: var(--space-4); contain: size; }
+  .request-submit-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
+}
