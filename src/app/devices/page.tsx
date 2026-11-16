@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bot, Monitor, Settings2 } from "lucide-react";
+import { ArrowRight, Bot, Monitor, Settings2, Stethoscope } from "lucide-react";
 import { PublicShell } from "../components/PublicShell";
 import { Robot } from "../components/Robot";
 import { pageTitle } from "@/lib/page-title";
@@ -73,6 +73,22 @@ export default async function Devices({
               </article>
             ))}
           </div>
+          {/* 카드 아래 빈 자리: 설치 전에 할 일(기기 점검) 안내. 넓은 화면에서는 바닥 줄까지 채운다 */}
+          <aside className="dv-hint">
+            <Stethoscope aria-hidden="true" className="dv-hint-icon" />
+            <div>
+              <p className="dv-hint-title">{en ? "Check the device before setting it up" : "설치하기 전에 기기를 점검해 보세요"}</p>
+              <p>
+                {en
+                  ? "Test the connection, camera, voice guidance and screen sleep on the device in one place."
+                  : "설치할 기기에서 인터넷 연결, 카메라, 소리 안내, 화면 꺼짐을 한 번에 확인할 수 있어요."}
+              </p>
+            </div>
+            <Link className="btn dv-hint-action" href={"/check" + q}>
+              {en ? "Check this device" : "기기 점검하기"}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </aside>
         </div>
       </main>
     </PublicShell>

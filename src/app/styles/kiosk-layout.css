@@ -423,6 +423,8 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 }
 .kiosk-content .flow-workspace { min-height: 0; }
 .kiosk-content .flow-form-area { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4); }
+/* 「다음」 줄이 없는 화면(첫 화면 등)은 빈 두 번째 줄 앞의 간격이 바닥에 남아 아래가 26px 더 비었다. 칸이 하나뿐이면 한 줄로 */
+.kiosk-content .flow-form-area:has(> .flow-body:only-child) { grid-template-rows: minmax(0, 1fr); }
 .flow.kiosk-content .flow-body { min-height: 0; padding: 0; }
 .kiosk-content .flow-cta { padding: 0; position: static; background: var(--color-surface); border-radius: var(--radius-medium); }
 .kiosk-content .flow-cta-inner { width: 100%; max-width: none; margin: 0; gap: var(--space-3); }
@@ -547,6 +549,33 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   .kc-saved-bubble h1 { font-size: var(--text-large); }
   .kc-entry { --hw-art: 26dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
   .kc-menu { grid-template-columns: minmax(0, 1fr); }
+}
+/* 안내로봇(세로 화면): 「탑승권으로 찾기 · 고유 일련 번호로 찾기 · 도움 새로 등록하기」를 가로줄 세 개로 얇게 쌓지 않고
+   세 칸으로 나란히 세운 큰 단추로. 그림 위·글자 아래, 칸 전체가 눌린다(서서 손을 뻗어 누르는 로봇 화면에서 누르는 면이 좁던 것) */
+@media (orientation: portrait) and (min-width: 761px) {
+  .kc-entry-grid .kx-pass { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: none; }
+  /* 위·아래 줄 단추 6개는 테두리까지 포함해 똑같이 10.5rem 높이 */
+  .kc-entry-grid .kx-pass-option { display: flex; box-sizing: border-box; min-width: 0; min-height: 10.5rem; }
+  .kc-entry-grid .kx-pass-option > summary,
+  .kc-entry-grid .kx-pass-new { flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); min-height: 0; padding: var(--space-5) var(--space-3); text-align: center; }
+  .kc-entry-grid .kx-pass-option > summary::after { display: none; }
+  .kc-entry-grid .kx-pass-option :is(strong) { font-size: var(--text-body); word-break: keep-all; }
+  .kc-entry-grid .kx-pass-option :is(small) { word-break: keep-all; }
+  .kc-entry-grid .kx-pass-icon { width: 2rem; height: 2rem; padding: var(--space-3); background: var(--color-accent-soft); color: var(--color-text); }
+  .kc-entry-grid .kx-pass-option:is([open], :hover, :focus-within) { border-color: var(--color-accent); }
+  /* 아래 「바로 이용하기」 세 개도 위 세 개와 같은 크기·모양의 단추로(3칸 × 2줄 = 6개). 두 줄 사이에는 「바로 이용하기」 구분선 하나.
+     남는 높이는 위 나랑이 박스가 모두 쓴다 */
+  .kc-entry { grid-template-rows: minmax(0, 1fr) auto; --hw-art: 40dvh; }
+  .kc-entry-grid { grid-template-rows: auto auto; }
+  .kc-entry-grid .kx-home-services { display: block; }
+  .kc-entry-grid .kx-home-services h2 { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-4); }
+  .kc-entry-grid .kx-home-services h2::after { content: ""; flex: 1; border-top: 1px solid var(--color-line); }
+  .kc-entry-grid .kc-entry-services { flex: none; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: auto; }
+  .kc-entry-grid .kc-entry-services .svc-card { box-sizing: border-box; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; justify-items: center; align-content: center; gap: var(--space-3); min-height: 10.5rem; padding: var(--space-5) var(--space-3); text-align: center; }
+  .kc-entry-grid .kc-entry-services .svc-card svg { grid-row: auto; width: 2rem; height: 2rem; padding: var(--space-3); background: var(--color-accent-soft); color: var(--color-text); }
+  .kc-entry-grid .kc-entry-services .svc-card strong { align-self: auto; font-size: var(--text-body); font-weight: var(--weight-heading); word-break: keep-all; }
+  .kc-entry-grid .kc-entry-services .svc-card span { align-self: auto; margin-top: calc(-1 * var(--space-2)); font-size: var(--text-caption); word-break: keep-all; }
+  .kc-entry-grid .kc-entry-services .svc-card:is(:hover, :focus-visible) { border-color: var(--color-accent); background: var(--color-surface); }
 }
 @media (max-height: 700px) {
   .flow.kiosk-content, .kc-page { gap: var(--space-1); }
