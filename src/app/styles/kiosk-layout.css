@@ -626,9 +626,18 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   .kc-number { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: stretch; padding: var(--space-5); }
   /* 제목 글자는 크게, 번호 칸은 숫자판 한 줄만큼 높게(숫자판 바로 위까지 채움), 숫자판 글자도 크게.
      번호 칸은 입력칸 공통 규칙(input:not 네 겹)보다 세게 id 로 정한다 */
-  .kc-number-copy { display: grid; gap: var(--space-3); font-size: var(--text-title); font-weight: var(--weight-heading); }
-  .kc-number-copy label { font-size: var(--text-title); }
-  .kc-number-copy #entry-pass-number { min-height: 0; height: calc((100dvh - 30rem) / 5); padding-block: 0; font-family: var(--font-num); font-size: var(--text-display); font-weight: var(--weight-heading); letter-spacing: 0.3em; text-align: center; border: 2px solid var(--color-accent); border-radius: var(--radius-medium); background: var(--color-accent-soft); }
+  /* 번호 칸 위: 지금 계신 곳(진한 글자, 지도 표시). 머리 칸 제목은 위아래 가운데 */
+  .kc-number-copy { display: grid; gap: var(--space-3); }
+  .kc-number-here { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); }
+  .kc-number-here svg { flex: none; width: 1.5rem; height: 1.5rem; }
+  .kc-page:has(> .kc-number) > .kc-hero { align-items: center; }
+  .kc-page:has(> .kc-number) > .kc-hero .ph-hero-copy { align-self: center; }
+  /* 숫자판 단추와 아래 「등록한 도움 불러오기」 단추는 같은 높이(--nk) */
+  .flow:has(#entry-number-form) { --nk: calc((100dvh - 23rem) / 6); }
+  .kc-number .pad-num { height: auto; grid-template-rows: repeat(4, var(--nk)); }
+  .kc-number .pad-key { min-height: 0; height: var(--nk); }
+  .flow:has(#entry-number-form) .flow-cta .btn { min-height: var(--nk); font-size: var(--text-title); }
+  .kc-number-copy #entry-pass-number { min-height: 0; height: var(--nk); padding-block: 0; font-family: var(--font-num); font-size: var(--text-display); font-weight: var(--weight-heading); letter-spacing: 0.3em; text-align: center; border: 2px solid var(--color-accent); border-radius: var(--radius-medium); background: var(--color-accent-soft); }
   .kc-number .pad-key { font-size: var(--text-large); }
   .kc-number .pad-key svg { width: 3.5rem; height: 3.5rem; }
   .kc-scan .scan { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; align-content: center; justify-items: stretch; gap: var(--space-5); }

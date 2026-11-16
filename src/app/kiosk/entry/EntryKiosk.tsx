@@ -16,6 +16,7 @@ import {
   Pencil,
   PersonStanding,
   ScanLine,
+  MapPin,
 } from "lucide-react";
 import Link from "next/link";
 import { kioskHelpHref } from "@/lib/help-entry";
@@ -358,13 +359,15 @@ export function EntryKiosk({
 
   let screen: React.ReactNode;
   if (view.kind === "sleep" && (scanOpen || numberOpen)) {
-    const title = numberOpen ? (lang === "en" ? "Enter your registration number" : "고유 일련 번호를 넣어 주세요") : (lang === "en" ? "Show your boarding pass" : "탑승권을 보여 주세요");
+    const title = numberOpen ? (lang === "en" ? "Enter your 6-digit registration number" : "고유 일련번호 6자리를 입력해 주세요") : (lang === "en" ? "Show your boarding pass" : "탑승권을 보여 주세요");
     screen = shell(numberOpen ? "entry-number" : "entry-scan", title,
       <div className="kc-page">
-        <KioskHero title={title} lead={error ? undefined : here}>{error && <div id="entry-number-error"><ErrorNote>{error}</ErrorNote></div>}</KioskHero>
+        <KioskHero title={title} lead={error || numberOpen ? undefined : here}>{error && <div id="entry-number-error"><ErrorNote>{error}</ErrorNote></div>}</KioskHero>
         {numberOpen ? <form id="entry-number-form" className="kc-number" onSubmit={e => { e.preventDefault(); void findNumber(); }}>
           <div className="kc-number-copy">
-            <label htmlFor="entry-pass-number">{lang === "en" ? "6-digit registration number" : "고유 일련 번호 6자리"}</label>
+            <label htmlFor="entry-pass-number" className="sr-only">{lang === "en" ? "6-digit registration number" : "고유 일련 번호 6자리"}</label>
+            {/* 지금 계신 곳(번호 칸 바로 위). 제목은 위 머리 칸에 있으므로 칸 이름은 화면 읽기용으로만 둔다 */}
+            <p className="kc-number-here"><MapPin aria-hidden="true" />{here}</p>
             <input id="entry-pass-number" type="text" inputMode="numeric" autoComplete="off" maxLength={6} pattern="[0-9]{6}" value={passNo} disabled={busy} aria-invalid={!!error} aria-describedby={error ? "entry-number-error" : undefined} onChange={e => setPassNo(e.target.value.replace(/\D/g, "").slice(0, 6))} />
           </div>
           <fieldset disabled={busy} className="entry-number-pad">
