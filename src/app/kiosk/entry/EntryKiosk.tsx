@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import {
   ArrowRight,
@@ -370,7 +371,7 @@ export function EntryKiosk({
             <legend className="sr-only">{lang === "en" ? "Number pad" : "숫자 입력판"}</legend>
             <NumPad onKey={digit => setPassNo(v => (v + digit).slice(0, 6))} onErase={() => setPassNo(v => v.slice(0, -1))} eraseLabel={lang === "en" ? "Delete a digit" : "한 자리 지우기"} />
           </fieldset>
-        </form> : <div className="kc-scan"><Scanner onScan={value => void onScan(value)} paused={busy} prefer="user" text={{ starting: t.camStarting, ready: t.entrySleepHint, read: t.camRead, none: t.entryCamNone, switchCamera: t.camSwitch }} /></div>}
+        </form> : <div className="kc-scan">{/* 카메라를 쓸 수 없는 기기에서 빈 칸이 크게 남지 않게 나랑이를 보인다(카메라가 켜지면 숨김, kiosk-layout.css) */}<Image className="kc-scan-art" src="/images/haneuli/narangi.webp" alt="" aria-hidden="true" width={1024} height={1024} sizes="40vh" /><Scanner onScan={value => void onScan(value)} paused={busy} prefer="user" text={{ starting: t.camStarting, ready: t.entrySleepHint, read: t.camRead, none: t.entryCamNone, switchCamera: t.camSwitch }} /></div>}
       </div>,
       numberOpen ? <button form="entry-number-form" type="submit" className="btn btn-primary" disabled={busy || passNo.length !== 6}>{busy ? (lang === "en" ? "Checking…" : "확인 중…") : (lang === "en" ? "Retrieve saved needs" : "등록한 도움 불러오기")}</button> : undefined,
       () => { seq.current++; lookupBusy.current = false; setBusy(false); setNumberOpen(false); setScanOpen(false); setPassNo(""); setError(null); },
