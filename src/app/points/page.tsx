@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { PublicShell } from "@/app/components/PublicShell";
 import { SERVICE_HUBS } from "@/lib/service-hubs";
@@ -52,10 +53,25 @@ export default async function PointsPage({
             </article>
           ))}
         </div>
-        <Link className="ph-text-link" href="/points/print">
-          <QrCode aria-hidden="true" />
-          {t("거점 QR 인쇄물 보기", "View printable point QR signs")}
-        </Link>
+        {/* 카드 아래 빈 자리를 채우는 나랑이 안내. 넓은 화면에서는 바닥 줄까지 늘어난다 */}
+        <aside className="points-hint">
+          <Image src="/images/haneuli/narangi.webp" alt="" width={1280} height={1280} sizes="144px" />
+          <div>
+            <p className="points-hint-title">
+              {t("표지에 적힌 세 글자 번호를 확인해 주세요", "Look for the three-letter code on the sign")}
+            </p>
+            <p>
+              {t(
+                "만남 표지에는 K7Q처럼 거점 번호가 적혀 있어요. 같은 번호의 거점을 누르면 그곳에서 예약하거나 직원을 부를 수 있어요.",
+                "Each meeting sign shows a point code such as K7Q. Open the matching point to book a time or call staff there.",
+              )}
+            </p>
+            <Link className="ph-text-link" href="/points/print">
+              <QrCode aria-hidden="true" />
+              {t("거점 QR 인쇄물 보기", "View printable point QR signs")}
+            </Link>
+          </div>
+        </aside>
       </main>
     </PublicShell>
   );

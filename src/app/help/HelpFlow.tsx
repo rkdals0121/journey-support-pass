@@ -917,6 +917,10 @@ export function HelpFlow({
                     {tr("사전등록 내용 연결됨", "Pre-registration linked")}
                   </p>
                 )}
+                {/* 넓은 웹 화면에서 요약 칸의 남는 높이를 채우는 나랑이(동의·확인 단추는 칸 바닥에). 휴대전화·키오스크에서는 숨김 */}
+                <div className="request-submit-art" aria-hidden="true">
+                  <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="14rem" />
+                </div>
                 <label className="request-check request-consent">
                   <input
                     type="checkbox"
