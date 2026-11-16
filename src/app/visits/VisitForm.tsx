@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   SERVICE_HUBS,
@@ -612,6 +613,7 @@ export function VisitForm({
               disabled={saving}
               onClick={() => setStep(step - 1)}
             >
+              <ArrowLeft aria-hidden="true" />
               {t("이전", "Back")}
             </button>
           )}
@@ -623,6 +625,7 @@ export function VisitForm({
               onClick={() => setStep(step + 1)}
             >
               {t("다음", "Continue")}
+              <ArrowRight aria-hidden="true" />
             </button>
           ) : (
             <button

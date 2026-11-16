@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, ClipboardList, MapPin, RefreshCw } from "lucide-react";
@@ -180,6 +181,15 @@ export function MyRequests({
             {t("서비스 이용하기", "Find a service")}
             <ArrowRight aria-hidden="true" />
           </Link>
+          {/* 넓은 화면에서 빈 칸 오른쪽을 채우는 나랑이(휴대전화에서는 숨김) */}
+          <Image
+            className="request-empty-art"
+            src="/images/haneuli/narangi.webp"
+            alt=""
+            width={1280}
+            height={1280}
+            sizes="(max-width: 760px) 1px, 224px"
+          />
         </section>
       )}
       {error && (
