@@ -1555,3 +1555,10 @@
 }
 /* QR 스캔 화면의 나랑이 안내(진한 바탕 위) */
 .sb-scan > .sb-says { max-width: 30rem; margin: 0 auto var(--space-3); }
+
+/* 휴대전화: 수첩 표지의 사진 자리를 줄여 이름·탑승구 칸을 넓힌다(좁은 휴대전화에서 「탑승구 번호 (필수)」 안내 글이 잘리던 것) */
+@media (max-width: 760px) {
+  .sb-idcard { grid-template-columns: 4.5rem minmax(0, 1fr); }
+  .sb-photo-slot { padding: var(--space-1); word-break: keep-all; }
+  .sb-fields input { padding-inline: var(--space-3); }
+}

@@ -317,3 +317,30 @@
   .pretrip-site .prepare-intro > .public-button { width: 100%; }
   .pretrip-site .prepare-step { padding: var(--space-3) 0; }
 }
+
+/* ── 휴대전화·태블릿 여객 화면 다듬기 (11-18) ── */
+@media (max-width: 760px) {
+  /* 키오스크·안내로봇 소개: 머리 칸 위에 큰 캐릭터가 따로 한 줄을 차지해 첫 화면 절반이 머리 칸이던 것 → 첫 화면처럼 글 오른쪽에 작게 */
+  .public-site .dv-home > .ph-hero { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .public-site .dv-home > .ph-hero > .ph-hero-copy { grid-column: 1; grid-row: 1; }
+  .public-site .dv-home > .ph-hero > .ph-hero-art { grid-column: 2; grid-row: 1; width: clamp(4.5rem, 22vw, 6.5rem); }
+  .public-site .dv-home > .ph-hero > .ph-hero-art::before { width: 100%; }
+  .public-site .dv-home > .ph-hero > .ph-hero-art .robot { width: 100%; }
+  .public-site .dv-home > .ph-hero > .ph-hero-art .ph-hero-orbit { display: none; }
+  /* 만남 장소 찾기 안내: 나랑이가 왼쪽 한 칸을 차지해 글이 좁은 칸에서 한 줄에 몇 글자씩 꺾이던 것 → 제목 옆 오른쪽 위에 나랑이를 작게, 설명은 칸 전체 폭 */
+  .public-site .points-hint { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2) var(--space-3); padding: var(--space-4); }
+  .public-site .points-hint > img { grid-column: 2; grid-row: 1; width: 3.5rem; }
+  .public-site .points-hint > div { display: contents; }
+  .public-site .points-hint > div > * { grid-column: 1 / -1; }
+  .public-site .points-hint > div > .points-hint-title { grid-column: 1; grid-row: 1; align-self: center; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  /* 첫 화면 「공항에 가기 전이라면」 칸: 아래 절반이 비던 것 → 남는 높이에 나랑이 */
+  .ph-home .ph-prepare { grid-template-rows: repeat(4, auto) minmax(0, 1fr); align-content: stretch; }
+  .ph-home .ph-prepare::after { content: ""; grid-column: 1 / -1; min-height: 9rem; background: url("/images/haneuli/narangi.webp") center bottom / contain no-repeat; }
+  /* 키오스크·안내로봇 소개: 기기 점검 띠가 바닥 줄까지 늘어나 노랑 칸 위아래가 비던 것 → 늘어난 칸 위쪽에 나랑이 */
+  .public-site .dv-home:not(.dv-preview) > .dv-hint::before { content: ""; flex: 1 0 100%; height: 9rem; background: url("/images/haneuli/narangi.webp") center / contain no-repeat; }
+  .public-site .dv-home:not(.dv-preview) > .dv-hint { align-content: space-evenly; }
+  /* 기기 점검: 네 칸이 좁아 「소리/안내」「Englis/h」처럼 꺾이고 「확인 필요」가 잘리던 것 → 두 칸 */
+  html:not([data-kiosk]) .service-short-page .dc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
