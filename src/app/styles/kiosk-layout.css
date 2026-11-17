@@ -449,7 +449,9 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 .kiosk-content .flow-cta-inner { width: 100%; max-width: none; margin: 0; gap: var(--space-3); }
 /* 아래 단추 줄: 키오스크는 서서 누르는 화면이라 단추를 높게, 글자를 크게(얇은 띠처럼 보이던 것) */
 .kiosk-content .flow-cta .btn { flex: 1; min-height: calc(var(--target-kiosk-floor) * 1.4); padding: var(--space-2) var(--space-3); font-size: var(--text-heading); }
-.kc-page { min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-4); }
+.kc-page { min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-2); }
+/* 서비스 카드·만족도 화면: 제목 상자와 카드 사이도 다른 박스 사이와 같은 --space-4 */
+.kc-page:has(> .kc-menu, > .kc-survey) { gap: var(--space-4); }
 /* 만족도: 얼굴 단추 세 개와 「답하지 않고 끝내기」를 제목 상자 아래 가운데에 */
 .flow.kiosk-route .flow-body > .kc-page:has(> .kc-survey) { flex: 1 1 auto; height: auto; }
 .kc-survey { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-4); min-height: 0; }
