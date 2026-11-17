@@ -40,22 +40,28 @@ export function OperationsSummary({ value: s }: { value: OperationalSummary }) {
           </dd>
         </div>
       </dl>
-      <h3>서비스별 접수</h3>
-      <ul>
-        {Object.entries(s.byService).map(([service, n]) => (
-          <li key={service}>
-            {SERVICE_LABEL[service as keyof typeof SERVICE_LABEL]}: {n}건
-          </li>
-        ))}
-      </ul>
-      <h3>접수 경로</h3>
-      <ul>
-        {Object.entries(s.bySource).map(([source, n]) => (
-          <li key={source}>
-            {channels[source] ?? source}: {n}건
-          </li>
-        ))}
-      </ul>
+      <div className="dx-breakdown">
+        <div>
+        <h3>서비스별 접수</h3>
+        <ul>
+          {Object.entries(s.byService).map(([service, n]) => (
+            <li key={service}>
+              {SERVICE_LABEL[service as keyof typeof SERVICE_LABEL]}: {n}건
+            </li>
+          ))}
+        </ul>
+        </div>
+        <div>
+        <h3>접수 경로</h3>
+        <ul>
+          {Object.entries(s.bySource).map(([source, n]) => (
+            <li key={source}>
+              {channels[source] ?? source}: {n}건
+            </li>
+          ))}
+        </ul>
+        </div>
+      </div>
       <p className="fine">
         이전 기록: 직원 호출 {s.byQueue.call}건 · 이동지원 {s.byQueue.assist}건.
         등록 연결은 접수 건수의 부분집합이며 별도 접수로 더하지 않습니다.

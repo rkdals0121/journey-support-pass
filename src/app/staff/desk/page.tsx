@@ -32,33 +32,42 @@ export default async function DeskPage() {
   }
   return (
     <>
-      <main className="page has-nav">
-        <h1>안내데스크</h1>
-        <p className="muted">예매 완료 화면의 링크를 보지 못한 여객을 대신 등록하고, 여객의 등록을 찾거나 지웁니다.</p>
+      <main className="page has-nav staff-desk-page">
+        <header className="workspace-page-head">
+          <div>
+            <p className="eyebrow">현장 업무</p>
+            <h1>안내데스크</h1>
+            <p className="muted">예매 완료 화면의 링크를 보지 못한 여객을 대신 등록하고, 여객의 등록을 찾거나 지웁니다.</p>
+          </div>
+        </header>
 
-        <Link className="desk-card" href="/staff/desk/register">
-          <span className="bubble">
-            <UserPlus size={24} aria-hidden="true" />
-          </span>
-          <span>
-            <strong>여객 대신 등록하기</strong>
-            <small>여객께 여쭤보며 대신 등록하고 기존 탑승권에 연결합니다</small>
-          </span>
-          <ChevronRight size={22} aria-hidden="true" />
-        </Link>
-        <Link className="desk-card" href="/staff/desk/stats">
-          <span className="bubble">
-            <BarChart3 size={24} aria-hidden="true" />
-          </span>
-          <span>
-            <strong>오늘 현황</strong>
-            <small>등록, 안내, 직원 호출 건수</small>
-          </span>
-          <ChevronRight size={22} aria-hidden="true" />
-        </Link>
+        <div className="staff-desk-links">
+          <Link className="desk-card" href="/staff/desk/register">
+            <span className="bubble">
+              <UserPlus size={24} aria-hidden="true" />
+            </span>
+            <span>
+              <strong>여객 대신 등록하기</strong>
+              <small>여객께 여쭤보며 대신 등록하고 기존 탑승권에 연결합니다</small>
+            </span>
+            <ChevronRight size={22} aria-hidden="true" />
+          </Link>
+          <Link className="desk-card" href="/staff/desk/stats">
+            <span className="bubble">
+              <BarChart3 size={24} aria-hidden="true" />
+            </span>
+            <span>
+              <strong>오늘 현황</strong>
+              <small>등록, 안내, 직원 호출 건수</small>
+            </span>
+            <ChevronRight size={22} aria-hidden="true" />
+          </Link>
+        </div>
 
-        <h2>등록 찾기</h2>
-        <DeskFind />
+        <section className="staff-desk-find" aria-labelledby="desk-find-title">
+          <h2 id="desk-find-title">등록 찾기</h2>
+          <DeskFind />
+        </section>
       </main>
       <StaffNav isDesk />
     </>

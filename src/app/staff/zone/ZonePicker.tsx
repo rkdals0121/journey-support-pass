@@ -156,6 +156,7 @@ function Picker({ first }: { first: boolean }) {
             <MapPin size={18} aria-hidden="true" />
             {g.terminal}
           </h2>
+          <div className="staff-zone-grid">
           {g.zones.map((z) => {
             const { name, gates } = split(z.label);
             const on = z.id === current;
@@ -175,6 +176,7 @@ function Picker({ first }: { first: boolean }) {
               </button>
             );
           })}
+          </div>
         </section>
       ))}
       {first && (
