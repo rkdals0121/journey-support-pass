@@ -148,6 +148,13 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   .field-task-shell[data-device=kiosk] .request-form[data-final-step="true"] > .request-submit-card { grid-column: 2; grid-row: 1 / span 2; }
   /* 첫 칸: 제목 아래 고르는 칸들이 남는 높이를 나눠 갖는다(큰 누르는 칸). 서비스 다섯 개는 3·2 로 빈 칸 없이 */
   .field-task-shell[data-device=kiosk] .request-form-main > .request-section:first-child { display: flex; flex-direction: column; gap: var(--space-4); }
+  /* 서비스 고르기와 적는 칸이 함께 있는 첫 화면: 아래로 쌓으면 1280×800 에서 넘쳐서, 서비스 다섯 개는 한 줄, 「이용할 서비스」와 적는 칸은 나란히(원래 배치) */
+  .field-task-shell[data-device=kiosk] .request-form-main > .request-section:first-child:has(> .request-service-options):has(> .service-task-fields) { flex-flow: row wrap; align-content: center; }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .request-service-options):has(> .service-task-fields) > * { flex: 1 1 100%; }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .request-service-options):has(> .service-task-fields) > :is(.request-task-options, .service-task-fields) { flex: 1 1 0; min-width: 0; }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .request-service-options):has(> .service-task-fields) > .request-privacy-warning { order: 1; }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .request-service-options { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .request-service-options label { grid-column: auto; }
   .field-task-shell[data-device=kiosk] .request-section:first-child > :is(h2, .request-privacy-warning, .service-task-fields) { margin: 0; }
   .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) { flex: 1 1 auto; grid-auto-rows: minmax(4rem, 1fr); gap: var(--space-4); margin: 0; }
   .field-task-shell[data-device=kiosk] .request-section > .request-service-options { grid-template-columns: repeat(6, minmax(0, 1fr)); }
