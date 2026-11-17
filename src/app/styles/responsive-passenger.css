@@ -304,7 +304,7 @@ html:not([data-kiosk]) .flow-pretrip .flight-methods .pick.on { border-color: va
   html:not([data-kiosk]) .flow-pretrip .flow-body > .choices > .choice { border: 1px solid var(--color-line); }
   /* 남는 아래 공간은 나랑이가 채운다(고를 것이 적은 단계에서 흰 칸 아래 절반이 비던 것). 남는 공간이 없으면 높이 0 이라 보이지 않는다 */
   html:not([data-kiosk]) .flow-pretrip:not([data-screen="consent"]):not([data-screen="note"]) .flow-body { display: flex; flex-direction: column; }
-  html:not([data-kiosk]) .flow-pretrip .flow-body::after { content: ""; flex: 1 1 0; min-height: 0; max-height: 14rem; margin-top: var(--space-4); background: url("/images/haneuli/narangi.webp") right bottom / contain no-repeat; }
+  html:not([data-kiosk]) .flow-pretrip .flow-body::after { content: ""; flex: 1 1 0; min-height: 0; margin-top: var(--space-4); background: url("/images/haneuli/narangi.webp") right bottom / contain no-repeat; }
 }
 @media (max-width: 760px) {
   /* 좁은 휴대전화(320)에서 위쪽 바의 소리 단추만 아래 줄로 떨어지던 것: 언어 고르기 칸을 조금 줄여 한 줄에 */
