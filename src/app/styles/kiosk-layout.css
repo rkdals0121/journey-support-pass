@@ -419,7 +419,7 @@ html[data-kiosk] .flow-body .kx-guide-side h2 { margin: 0; color: var(--color-mu
 html[data-kiosk] .flow-body .kx-guide-side h2 ~ h2 { margin-top: var(--space-3); }
 html[data-kiosk] .kx-guide-side .tiles { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
 html[data-kiosk] .kx-guide-side .tile { min-height: var(--target-kiosk-floor); border-width: 0.0625rem; box-shadow: none; }
-html[data-kiosk] .kx-guide-side .tile:hover { border-color: var(--color-primary); background: var(--color-primary-faint); }
+html[data-kiosk] .kx-guide-side .tile:hover { border-color: var(--color-accent); background: var(--color-accent-soft); }
 html[data-kiosk] .kx-guide .gate-go { box-shadow: none; }
 .kx-guide-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
 html[data-kiosk] .flow-body .kx-guide-actions .btn { flex: 1 1 14rem; width: auto; margin: 0; }
