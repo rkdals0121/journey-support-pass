@@ -140,7 +140,7 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   .field-task-shell[data-device=kiosk] .service-task-fields :is(input, select, textarea) { min-height: 5rem; font-size: var(--text-heading); }
   .field-task-shell[data-device=kiosk] .request-mobile-nav .btn { min-height: max(4rem, var(--target-kiosk-floor)); font-size: var(--text-heading); }
   /* 웹 넓은 화면과 같은 틀: 왼쪽 고르는 칸(남는 높이를 채움)과 그 아래 「다음」, 오른쪽 나랑이 안내 칸이 바닥 줄까지(흰 칸 위아래와 오른쪽 절반이 비던 것) */
-  .field-task-shell[data-device=kiosk] .request-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); grid-template-rows: minmax(min-content, 1fr) auto; gap: var(--space-4); align-items: stretch; }
+  .field-task-shell[data-device=kiosk] .request-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem); grid-template-rows: minmax(min-content, 1fr) auto; gap: var(--space-4); align-items: stretch; }
   .field-task-shell[data-device=kiosk] .request-form > .request-form-main { grid-column: 1; grid-row: 1; }
   .field-task-shell[data-device=kiosk] .request-mobile-nav { grid-column: 1; grid-row: 2; position: static; padding: 0; justify-content: flex-end; }
   .field-task-shell[data-device=kiosk] .request-form > .request-side-art { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-4); contain: size; padding: var(--space-5); border: 2px solid var(--color-accent); border-radius: var(--radius-medium); background: linear-gradient(160deg, var(--color-accent-soft), var(--color-surface) 75%); box-shadow: var(--shadow-1); }
@@ -149,13 +149,13 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   /* 첫 칸: 제목 아래 고르는 칸들이 남는 높이를 나눠 갖는다(큰 누르는 칸). 서비스 다섯 개는 3·2 로 빈 칸 없이 */
   .field-task-shell[data-device=kiosk] .request-form-main > .request-section:first-child { display: flex; flex-direction: column; gap: var(--space-4); }
   .field-task-shell[data-device=kiosk] .request-section:first-child > :is(h2, .request-privacy-warning, .service-task-fields) { margin: 0; }
-  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) { flex: 1 1 auto; grid-auto-rows: minmax(5rem, 1fr); gap: var(--space-4); margin: 0; }
+  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) { flex: 1 1 auto; grid-auto-rows: minmax(4rem, 1fr); gap: var(--space-4); margin: 0; }
   .field-task-shell[data-device=kiosk] .request-section > .request-service-options { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .field-task-shell[data-device=kiosk] .request-service-options label { grid-column: span 2; }
   .field-task-shell[data-device=kiosk] .request-service-options label:nth-of-type(4):nth-last-of-type(2),
   .field-task-shell[data-device=kiosk] .request-service-options label:nth-of-type(5):last-of-type { grid-column: span 3; }
   .field-task-shell[data-device=kiosk] .request-section > .request-task-options { grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
-  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { padding: var(--space-4) var(--space-5); font-size: var(--text-title); }
+  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { min-height: 4rem; padding: var(--space-3) var(--space-4); font-size: var(--text-heading); word-break: keep-all; }
   .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) input { width: 1.75rem; height: 1.75rem; flex: none; }
   .field-task-shell[data-device=kiosk] .request-side-art p { font-size: var(--text-heading); line-height: 1.5; }
   /* 마지막 단계(요청 요약): 왼쪽 흰 칸이 바닥 줄까지(「다음」 줄이 없어 아래가 비던 것), 오른쪽 요약 칸은 나랑이가 남는 높이를 채우고 동의·확인 단추는 바닥에 */

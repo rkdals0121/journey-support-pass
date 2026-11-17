@@ -540,10 +540,10 @@ html[data-kiosk] .kc-survey > .btn-ghost { justify-self: stretch; width: auto; m
 .kc-directions .kx-guide-side { flex: 1 1 auto; display: flex; min-height: 0; }
 .kc-directions .kc-pages { flex: 1 1 auto; }
 .kc-directions .kc-facilities { flex: 1 1 auto; grid-auto-rows: minmax(var(--target-kiosk-floor), 1fr); gap: var(--space-4); }
-.kc-directions .kc-facilities .tile { padding: var(--space-3) var(--space-5); gap: var(--space-4); }
-.kc-directions .kc-facilities .tile-ico { width: 2.5rem; height: 2.5rem; padding: var(--space-3); }
-.kc-directions .kc-facilities .tile-text strong { font-size: var(--text-heading); }
-.kc-directions .kc-facilities .tile-text > span { font-size: var(--text-body); }
+/* 넓고 높은 가로 키오스크(1920×1080)에서만 시설 카드 글자를 한 단계 키운다(1280×800 은 한 화면에 맞추려고 그대로) */
+@media (orientation: landscape) and (min-width: 1101px) and (min-height: 701px) {
+  .kc-directions .kc-facilities .tile-text strong { font-size: var(--text-heading); }
+}
 .kc-directions .kc-facilities .tile.tile-chosen { background: var(--color-accent-soft); box-shadow: none; }
 /* 「이전·다음」은 같은 크기 */
 .kc-directions .kc-pager .btn { min-width: 9rem; justify-content: center; }
