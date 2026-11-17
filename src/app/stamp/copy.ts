@@ -53,7 +53,6 @@ const EN: Record<string, string> = {
   "내 수첩 보기": "View my notebook",
   "어떤 수첩으로": "Which notebook",
   "공항을 여행할까요?": "will you explore with?",
-  "나중에 바꿔도 모은 도장은 그대로예요.": "Switch notebooks any time. Your stamps stay saved.",
   "내 수첩 열어 보기": "Open my notebook",
   "탐험 진행도": "Exploration progress",
   "도장 진행도": "Stamp progress",

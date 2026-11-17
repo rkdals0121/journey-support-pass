@@ -844,7 +844,6 @@ function ThemePicker({
               : "수첩을 골라 같이 떠나요! 도장을 다 모으면 특별한 사진 필터를 줄게요."
           }
         />
-        <p className="sb-pick-sub">{tr("나중에 바꿔도 모은 도장은 그대로예요.")}</p>
         </div>
         <ul className="sb-pick">
           {THEME_IDS.map((id) => (
