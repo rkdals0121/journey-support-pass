@@ -270,6 +270,18 @@
     pois.clear();
     // 출발지·목적지 표시(큰 이름표)가 붙은 시설은 시설 이름표를 또 쓰지 않는다(같은 이름이 두 번 겹쳐 보이던 것)
     const marked = new Set(Object.values(state.markers || {}).filter(m => m && m.poiId !== undefined).map(m => String(m.poiId)));
+    // 큰 이름표(지금 계신 곳·목적지) 자리를 먼저 잡아 두어 시설 이름표가 그 위에 겹치지 않게 한다
+    const markerPx = state.touchTargetSize >= 18 ? 20 : 16;
+    if (labelMeasure) labelMeasure.font = `bold ${markerPx}px Arial,sans-serif`;
+    for (const [kind, m] of Object.entries(state.markers || {})) {
+      if (!m) continue;
+      try {
+        const at = resolve(m), px = map.getPixelFromCoordinate(E.fromLonLat([at.lon, at.lat]));
+        const text = m.label || labels[kind] || "", w = labelMeasure ? labelMeasure.measureText(text).width : text.length * markerPx;
+        const dy = kind === "robot" ? -36 : -32, h = Math.ceil(markerPx * 0.7);
+        if (px) labelBoxes.push([px[0] - w / 2 - 4, px[1] + dy - h, px[0] + w / 2 + 4, px[1] + dy + h], [px[0] - 18, px[1] - 18, px[0] + 18, px[1] + 18]);
+      } catch { /* 지도 밖 위치는 건너뛴다 */ }
+    }
     for (const {p, display} of candidates) {
       if (p.building !== state.building) continue;
       const context = display.context;
