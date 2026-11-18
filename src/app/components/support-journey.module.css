@@ -716,3 +716,20 @@
   .visitLayout > form.panel > .actions { order:2; margin-top:0; }
   .visitLayout > form.panel::after { content:""; order:1; flex:1 1 0; min-height:0; max-height:14rem; margin-block:var(--space-3); background:url("/images/haneuli/narangi.webp") center bottom / contain no-repeat; }
 }
+
+/* 어르신도 읽기 쉽게(11-19): 휴대전화 본문은 1rem. 보조 글자도 .875rem 아래로 내려가지 않게(여객 화면에서만) */
+.mapLegend a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-floor);
+}
+@media (max-width: 760px) {
+  :global(html:not([data-kiosk])) :is(.page p, .muted, .warning, .summary, .timeline, .check, .status, .mapLegend, .field > label, .field > legend, .printGrid p) {
+    font-size: var(--text-body);
+  }
+}
+.warning a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-floor);
+}
