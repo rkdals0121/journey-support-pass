@@ -54,6 +54,12 @@ export function PublicShell({
         nav.scrollWidth > nav.clientWidth + 1 ||
         (!!logo && !!first && first.width > 0 && first.left < logo.right);
       if (tight) el.setAttribute("data-compact", "");
+      // 좁은 휴대전화(320)에서 로고 글자 때문에 오른쪽 단추들이 아래 줄로 떨어지면 로고는 해바라기만 남긴다(이름은 화면 읽기용으로 남김).
+      el.removeAttribute("data-logo-short");
+      const logoBox = el.querySelector(".public-logo")?.getBoundingClientRect();
+      const tools = el.querySelector(".public-tools")?.getBoundingClientRect();
+      if (logoBox && tools && tools.height > 0 && tools.top >= logoBox.top + logoBox.height / 2)
+        el.setAttribute("data-logo-short", "");
     };
     measure();
     const watch = new ResizeObserver(measure);

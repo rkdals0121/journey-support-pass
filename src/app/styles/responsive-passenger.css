@@ -323,3 +323,52 @@ html:not([data-kiosk]) .flow-pretrip .flight-methods .pick.on { border-color: va
   /* 두 칸 카드 수가 홀수면(들를 곳 7개) 마지막 줄 빈 칸에 나랑이 */
   html:not([data-kiosk]) .flow-pretrip:is([data-screen="trouble"], [data-screen="stops"]) .flow-body > .choices:has(> .choice:last-child:nth-child(odd))::after { content: ""; background: url("/images/haneuli/narangi.webp") center / contain no-repeat; }
 }
+
+/* ── 어르신도 읽기 쉽게 (11-19) ──
+   여객 웹에서 가장 작은 글자는 .875rem(14px). 「작은 보조 글자」(.75rem, 12px)를 쓰던 곳을 한꺼번에 올린다.
+   키오스크(html[data-kiosk])와 직원 화면에는 번지지 않게 여객 화면의 바깥 틀(.public-site·.flow·.sb)에만 묶는다. */
+html:not([data-kiosk]) :is(.public-site, .flow, .sb) { --text-caption: var(--text-small); }
+/* 좁은 휴대전화(320): 위쪽 바가 두 줄로 나뉘지 않게 로고는 해바라기만(PublicShell 이 넘칠 때만 data-logo-short 를 단다) */
+html:not([data-kiosk]) .public-site .public-header[data-logo-short] .public-logo { flex: 0 0 auto; }
+html:not([data-kiosk]) .public-site .public-header[data-logo-short] .public-logo > span { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); white-space: nowrap; }
+html:not([data-kiosk]) .public-site .public-header[data-logo-short] .public-logo .sunflower { width: 2rem; height: 2rem; flex-basis: 2rem; }
+/* 누르는 곳은 높이 44px 이상(--target-floor). 글자 줄 높이만큼(16~26px)이던 작은 글자 링크·접기 제목·확인란 */
+html:not([data-kiosk]) .public-site :is(.public-back, .request-change-service, .prepare-lookup-link, .public-caption > a) {
+  display: inline-flex; align-items: center; min-height: max(2.75rem, var(--target-floor));
+}
+/* 넓은 화면의 아래쪽 바 링크는 위쪽 바처럼 44px(휴대전화는 site-bar.css 에서 2.75rem) */
+@media (min-width: 761px) {
+  html:not([data-kiosk]) .airport-site .public-footer-links a { display: inline-flex; align-items: center; min-height: var(--target-floor); }
+  /* 누르는 면만 위아래 여백까지 넓히고 바 높이는 거의 그대로(빈 줄처럼 두꺼워지지 않게) */
+  html:not([data-kiosk]) .airport-site .public-footer-links { margin-block: calc(-1 * var(--space-2)); }
+}
+/* 접기 제목은 펼침 표시(▶)가 남도록 display 는 그대로 두고 높이만 */
+html:not([data-kiosk]) .public-site main summary { min-height: max(2.75rem, var(--target-floor)); align-content: center; }
+html:not([data-kiosk]) .public-site .request-check { align-items: center; min-height: max(2.75rem, var(--target-floor)); }
+html:not([data-kiosk]) .public-site .public-header .public-logo { min-height: var(--target-floor); line-height: 1.4; }
+html:not([data-kiosk]) :is(.public-site .public-header, .flow .flow-bar) .text-size-control { height: auto; }
+html:not([data-kiosk]) :is(.public-site .public-header, .flow .flow-bar) .text-size-control button { width: var(--target-floor); height: var(--target-floor); min-height: var(--target-floor); }
+/* 아래쪽 바: 작은 회색 글자(12px)를 보조 글자 크기(14px)로, 링크는 진한 색으로 */
+html:not([data-kiosk]) .airport-site .public-footer { font-size: var(--text-small); }
+html:not([data-kiosk]) .airport-site .public-footer-links { font-size: var(--text-small); column-gap: var(--space-4); row-gap: 0; }
+html:not([data-kiosk]) .airport-site .public-footer-links a { color: var(--color-text); }
+html:not([data-kiosk]) .airport-site .public-footer .public-caption { color: var(--color-text); }
+@media (max-width: 1100px) {
+  /* 현장 도움 요청(1단계·기타 업무 요청): 태블릿에서 폼 아래가 비던 곳을 나랑이가 채운다. 남는 공간이 없으면 높이 0 */
+  html:not([data-kiosk]) .public-site > main.request-experience::after { content: ""; flex: 1 1 0; min-height: 0; max-height: 16rem; margin-top: var(--space-4); background: url("/images/haneuli/narangi.webp") right bottom / contain no-repeat; }
+}
+html:not([data-kiosk]) .public-site .prepare-footer a { display: inline-flex; align-items: center; min-height: max(2.75rem, var(--target-floor)); }
+@media (max-width: 760px) {
+  /* 휴대전화: 설명 문장은 본문 크기(1rem). 14px 회색 글자로 두 줄 넘게 이어지던 안내 문장들 */
+  html:not([data-kiosk]) :is(.public-site, .flow) :is(
+    .fine, .ready-row > div > span, .info-row span:not(.bubble), .request-privacy-warning p, .ph-prepare > p,
+    .dc-item > p, .dc-qr > p, .service-business-reference > p, .traffic-intent small, .flight-search-note, .my-request-panel > p,
+    .registration-page-heading .lead, .assist-box > p.muted
+  ) { font-size: var(--text-body); line-height: 1.6; }
+}
+html:not([data-kiosk]) .public-site :is(.service-map-panel, .official-map-panel) > a { display: inline-flex; align-items: center; min-height: max(2.75rem, var(--target-floor)); }
+html:not([data-kiosk]) .public-site .place-area-filter label { min-height: max(2.75rem, var(--target-floor)); }
+@media (max-width: 760px) {
+  html:not([data-kiosk]) .public-site .request-submit-card .request-consent { font-size: var(--text-body); line-height: 1.6; }
+  html:not([data-kiosk]) .sb .sb-promise { font-size: var(--text-body); }
+}
