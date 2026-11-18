@@ -313,7 +313,8 @@
       // Numbered signs already carry their label; do not print it twice in overview.
       const label = wide && compact ? (context ? compact : "") : p.name.replace("체크인카운터 ", "체크인 ");
       // 시설 이름표: 예전 11~12px 회색 → 14~15px(키오스크·로봇 16~17px) 진한 글자. 겹침 계산(placeLabel)도 같은 높이로 한다.
-      const labelPx = (display.major ? 15 : 14) + (state.touchTargetSize >= 18 ? 2 : 0);
+      // 여객 휴대전화·웹은 주요 이름을 본문 크기(16px)로(11-19)
+      const labelPx = state.touchTargetSize >= 18 ? (display.major ? 17 : 16) : (display.major ? 16 : 14);
       const font = `${display.major ? "bold" : "600"} ${labelPx}px Arial,sans-serif`;
       const preferredOffset = context && wide && compact ? 0 : counter && wide && counter.charCodeAt(0) % 2 === 0 ? -22 : context ? 18 : 25;
       const pixel = map.getPixelFromCoordinate(xy);

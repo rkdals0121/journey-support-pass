@@ -372,3 +372,52 @@ html:not([data-kiosk]) .public-site .place-area-filter label { min-height: max(2
   html:not([data-kiosk]) .public-site .request-submit-card .request-consent { font-size: var(--text-body); line-height: 1.6; }
   html:not([data-kiosk]) .sb .sb-promise { font-size: var(--text-body); }
 }
+@media (max-width: 760px) {
+  /* 사전등록 동의 화면: 큰 글자(1.5배)에서 설명이 동그라미 그림 옆 좁은 칸(한 줄 8자 안팎)에 갇혀 길게 늘어지던 것.
+     그림과 제목은 한 줄, 설명은 그 아래 칸 전체 너비로 */
+  html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .info-row { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-3); row-gap: var(--space-2); align-items: center; }
+  html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .info-row > div { display: contents; }
+  html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .info-row > div > :not(strong) { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  /* 내 등록(/p/…) 머리 칸: 큰 글자(1.5배)에서 「등록을 마쳤습니 / 다」처럼 낱말 중간이 꺾이던 것.
+     자리가 모자라면 고유 일련 번호가 아래 줄로 내려간다(글자 1배는 그대로 한 줄) */
+  html:not([data-kiosk]) .ph-pass-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--space-4); row-gap: var(--space-3); }
+  html:not([data-kiosk]) .ph-pass-head .ph-hero-copy { flex: 1 1 11rem; }
+  html:not([data-kiosk]) .ph-pass-head .success-head { word-break: keep-all; }
+  /* 사전등록 고르는 칸 이름이 「수유실 · 기저귀 갈 / 곳」처럼 낱말 중간에서 꺾이지 않게 */
+  html:not([data-kiosk]) .flow-pretrip .choice { word-break: keep-all; }
+}
+/* 사전등록 항공편: 고른 항공편 카드도 다른 고르는 칸처럼 노랑(초록 테두리·초록 체크였던 것) */
+html:not([data-kiosk]) .flow-pretrip .flight-opt.on { border-color: var(--color-accent); background: var(--color-accent-soft); }
+html:not([data-kiosk]) .flow-pretrip .flight-opt.on .choice-mark { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
+html:not([data-kiosk]) .flow-pretrip .flight-opt.on .flight-opt-main span { color: var(--color-text); }
+
+/* ── 현장 도움 요청·기타 업무 요청(태블릿·낮은 노트북) (11-19) ──
+   노란 진행 단추(「다음」·「요청 내용 확인」 옆 「이전」)가 흰 칸 밖 아래에 떠 있던 것 → 왼쪽 흰 칸 안 맨 아래로.
+   오른쪽 요약 칸이 있으면 왼쪽 칸과 위·아래 끝선을 맞춘다. 넓고 높은 노트북(1101px·701px 이상)은 passenger.css 에서 이미 같은 모양 */
+@media (min-width: 761px) and (max-width: 1100px), (min-width: 1101px) and (max-height: 700px) {
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) { grid-template-rows: minmax(0, 1fr) auto; align-items: stretch; row-gap: 0; }
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) > .request-form-main {
+    grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column;
+    background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium);
+  }
+  /* 단추 줄이 있을 때만 그 높이만큼 칸 아래를 비워 둔다(내용과 겹치지 않게) */
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]):has(> .request-mobile-nav:not(:empty)) > .request-form-main { padding-bottom: calc(max(2.75rem, var(--target-floor)) + var(--space-4) * 2); }
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) > .request-form-main > .request-section { border: 0; }
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) > .request-mobile-nav {
+    grid-column: 1; grid-row: 2; align-self: end; z-index: 1; position: static; box-sizing: border-box;
+    padding: 0 var(--space-4) var(--space-4); background: none; justify-content: flex-end;
+  }
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) > .request-submit-card { grid-column: 2; grid-row: 1 / span 2; position: static; }
+}
+
+/* ── 사전등록(태블릿·노트북) (11-19): 노란 진행 단추가 흰 칸 밖 아래에 떠 있던 것 → 흰 칸 안 맨 아래.
+   흰 칸(테두리·바탕)을 본문(.flow-body)에서 본문+단추 줄을 감싸는 .flow-form-area 로 옮긴다 */
+@media (min-width: 761px) {
+  html:not([data-kiosk]) .flow-pretrip .flow-form-area { border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+  html:not([data-kiosk]) .flow-pretrip .flow-body { border: 0; border-radius: var(--radius-medium) var(--radius-medium) 0 0; }
+  html:not([data-kiosk]) .flow-pretrip .flow-cta { padding: var(--space-3) var(--form-inset) var(--form-inset); background: none; }
+  html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: var(--space-6); }
+  html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .consent-decline { background: var(--color-surface); }
+}

@@ -196,3 +196,8 @@
 .planner[data-kiosk=true] .summary h2,.planner[data-kiosk=true] .summary p,.planner[data-kiosk=true] .help,.planner[data-kiosk=true] .moreInfo summary{font-size:var(--text-heading)}
 .planner[data-kiosk=true] .summary .distance{font-size:var(--text-title)}
 .planner[data-kiosk=true] .completionActions>p{font-size:var(--text-heading)}
+
+/* 어르신도 읽기 쉽게(11-19): 여객 휴대전화·웹은 설명·누르는 글자를 본문 1rem, 보조 설명은 .875rem 이상(키오스크·로봇은 그대로) */
+:global(html:not([data-kiosk])) :is(.destinationChange, .deviceMode legend, .deviceMode label, .moreInfo summary, .summary p, .help, .error){font-size:var(--text-body)}
+:global(html:not([data-kiosk])) :is(.deviceMode p, .summary small, .endpoint em){font-size:var(--text-small)}
+:global(html:not([data-kiosk])) .moreInfo summary{min-height:max(2.75rem,var(--target-floor))}
