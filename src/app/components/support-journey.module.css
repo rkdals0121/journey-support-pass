@@ -721,7 +721,7 @@
 .mapLegend a {
   display: inline-flex;
   align-items: center;
-  min-height: var(--target-floor);
+  min-height: max(2.75rem, var(--target-floor));
 }
 @media (max-width: 760px) {
   :global(html:not([data-kiosk])) :is(.page p, .muted, .warning, .summary, .timeline, .check, .status, .mapLegend, .field > label, .field > legend, .printGrid p) {
@@ -731,5 +731,5 @@
 .warning a {
   display: inline-flex;
   align-items: center;
-  min-height: var(--target-floor);
+  min-height: max(2.75rem, var(--target-floor));
 }
