@@ -13,7 +13,7 @@ export default async function ZonePage() {
   if (!session) redirect("/staff/login");
   if (!session.canSwitch) redirect("/staff");
   return (
-    <main className="page">
+    <main className="page staff-zone-page">
       <ZonePicker first={session.needsZone} />
     </main>
   );

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { todaySummary, type Completion } from "@/lib/metrics";
@@ -32,13 +33,24 @@ export default async function DeskStatsPage() {
 
   return (
     <>
-      <main className="page has-nav">
-        <h1>
-          오늘 현황{" "}
-          <span className="h1-sub">
-            {Number(month)}월 {Number(day)}일
-          </span>
-        </h1>
+      <main className="page has-nav staff-stats-page">
+        <header className="workspace-page-head">
+          <div>
+            <p className="eyebrow">안내데스크</p>
+            <h1>
+              오늘 현황{" "}
+              <span className="h1-sub">
+                {Number(month)}월 {Number(day)}일
+              </span>
+            </h1>
+          </div>
+          <div className="workspace-page-tools">
+            <Link href="/staff/desk">안내데스크</Link>
+            <Link className="btn btn-primary" href="/staff/overview">
+              통합 운영 현황
+            </Link>
+          </div>
+        </header>
         <OperationsSummary value={s.operations}/>
         <ResourceAvailability resources={resources}/>
         <div className="stat-grid">

@@ -78,7 +78,7 @@ export function AlertOverview() {
     }
   }
   return (
-    <section>
+    <section className="staff-alerts">
       {error && <p role="alert">{error}</p>}
       {value ? (
         <>
@@ -111,14 +111,20 @@ export function AlertOverview() {
               </div>
             ))}
           </dl>
-          <button className="btn alert-retry" disabled={busy} onClick={() => void retry()}>
-            재시도 대기 처리
-          </button>
-          {message && <p role="status">{message}</p>}
         </>
       ) : (
         <p role="status">알림 현황 확인 중</p>
       )}
+      <div className="staff-alerts-notes">
+        <div className="staff-alerts-notes-head">
+          <h2>발송·재시도 기준</h2>
+          {value && (
+            <button className="btn alert-retry" disabled={busy} onClick={() => void retry()}>
+              재시도 대기 처리
+            </button>
+          )}
+        </div>
+        {message && <p role="status">{message}</p>}
       <p>
         푸시 서버 접수, 브라우저 수신, 직원의 접수 확인은 각각 다른 기록입니다.
         직원 확인은 출동·배정을 뜻하지 않습니다.
@@ -133,6 +139,7 @@ export function AlertOverview() {
         기기별 발송 기록은 24시간 보관합니다. 처리 대기열의 이중 실행을 막지만
         외부 푸시의 네트워크 응답이 유실되면 같은 알림이 재전송될 수 있습니다.
       </p>
+      </div>
     </section>
   );
 }
