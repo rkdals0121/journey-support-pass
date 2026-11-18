@@ -149,7 +149,7 @@ export default function AirportMap({
     <iframe
       ref={frame}
       title={title}
-      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=mobile-service-map" : "/airport-map/index.html?v=mobile-service-map"}
+      src={state.checkpointSelection === false ? "/airport-map/index.html?mode=facility&v=readable-1119" : "/airport-map/index.html?v=readable-1119"}
       loading="eager"
       className={className}
       style={{
