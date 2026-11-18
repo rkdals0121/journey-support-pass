@@ -410,6 +410,10 @@ html:not([data-kiosk]) .flow-pretrip .flight-opt.on .flight-opt-main span { colo
     padding: 0 var(--space-4) var(--space-4); background: none; justify-content: flex-end;
   }
   html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) > .request-submit-card { grid-column: 2; grid-row: 1 / span 2; position: static; }
+  /* 흰 칸이 바닥 줄 바로 위까지 오므로 본문 아래 여백은 빼고 바닥 줄의 위 여백(16px) 하나만 남긴다 */
+  html:not([data-kiosk]) .public-site > .request-experience:has(> .request-form:not([data-map-flow="true"])) { padding-bottom: 0; }
+  /* 태블릿 나랑이(남는 공간이 없으면 높이 0)는 위 여백 없이 칸 바로 아래에서 시작한다(높이 0일 때 간격이 두 배로 벌어지던 것). 그림은 아래쪽에 붙어 칸과 떨어져 보인다 */
+  html:not([data-kiosk]) .public-site > main.request-experience:has(> .request-form:not([data-map-flow="true"]))::after { margin-top: 0; }
 }
 
 /* ── 사전등록(태블릿·노트북) (11-19): 노란 진행 단추가 흰 칸 밖 아래에 떠 있던 것 → 흰 칸 안 맨 아래.
@@ -420,4 +424,8 @@ html:not([data-kiosk]) .flow-pretrip .flight-opt.on .flight-opt-main span { colo
   html:not([data-kiosk]) .flow-pretrip .flow-cta { padding: var(--space-3) var(--form-inset) var(--form-inset); background: none; }
   html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .flow-body { margin-bottom: var(--space-6); }
   html:not([data-kiosk]) .flow-pretrip[data-screen="consent"] .consent-decline { background: var(--color-surface); }
+}
+@media (min-width: 1101px) and (max-height: 700px) {
+  /* 낮은 노트북: 흰 칸이 남는 높이를 채워 바닥 줄과 16px 간격(칸 아래가 30px 쯤 비던 것) */
+  html:not([data-kiosk]) .public-site > .request-experience > .request-form:not([data-map-flow="true"]) { flex: 1 0 auto; }
 }
