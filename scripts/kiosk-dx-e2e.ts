@@ -177,7 +177,7 @@ async function main() {
     check(
       "status lookup without a saved request explains the empty state",
       await kiosk.evaluate(() =>
-        document.body.innerText.includes("이 탭에 접수 내역이 없어요"),
+        document.body.innerText.includes("이 기기에 남은 접수 내역이 없어요"),
       ),
     );
     const passengerContext = await browser.createBrowserContext();

@@ -7,8 +7,11 @@ export function TrafficEntry({
   onInfo,
   onDispatch,
   onBack,
+  kiosk = false,
 }: {
   en: boolean;
+  /** 키오스크·안내로봇에서 연 화면 */
+  kiosk?: boolean;
   info: boolean;
   onInfo: () => void;
   onDispatch: () => void;
@@ -19,7 +22,8 @@ export function TrafficEntry({
       {/* 현장 도움 요청과 같은 소개 박스. 모든 화면 같은 자리의 「이전」: 안내 화면이면 고르는 화면으로, 고르는 화면이면 앞 화면으로. */}
       <header className="ph-hero request-heading">
         <div className="ph-hero-copy">
-          <div className="request-hero-top">
+          {/* 키오스크·안내로봇: 「이전」은 위쪽 바에, 꼬리표·설명 줄은 두지 않는다 */}
+          {!kiosk && <div className="request-hero-top">
             <button
               type="button"
               className="request-back"
@@ -37,9 +41,9 @@ export function TrafficEntry({
               <CarFront aria-hidden="true" />
               {en ? "Airport services" : "공항 현장 서비스"}
             </span>
-          </div>
+          </div>}
           <h1>{en ? "Transport and parking" : "교통·주차 지원"}</h1>
-          <p>
+          {!kiosk && <p>
             {info
               ? en
                 ? "Official guides and phone numbers."
@@ -47,7 +51,7 @@ export function TrafficEntry({
               : en
                 ? "Choose on-site help or information."
                 : "직원 도움과 이용 안내 중 하나를 골라 주세요."}
-          </p>
+          </p>}
         </div>
       </header>
       {!info ? (
@@ -65,11 +69,11 @@ export function TrafficEntry({
               <strong>
                 {en ? "I need help on site" : "직원이 와서 도와주세요"}
               </strong>
-              <small>
+              {!kiosk && <small>
                 {en
                   ? "Parking, taxi boarding, bus or shuttle assistance"
                   : "주차장 현장 지원 · 택시 승차 · 버스·셔틀 이용 도움"}
-              </small>
+              </small>}
             </span>
           </button>
           <button
@@ -85,11 +89,11 @@ export function TrafficEntry({
               <strong>
                 {en ? "I only need information" : "이용 방법만 알고 싶어요"}
               </strong>
-              <small>
+              {!kiosk && <small>
                 {en
                   ? "Routes, stops, parking and fares"
                   : "노선·승차장·주차 위치·요금 안내"}
-              </small>
+              </small>}
             </span>
           </button>
         </div>
