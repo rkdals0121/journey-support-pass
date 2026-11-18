@@ -1044,7 +1044,7 @@ async function resetFlights(clearLocks = false) {
   check("고르지 않은 시설은 '다른 시설'로 뒤에 나온다", (await has(page, "다른 시설")) && tiles.length === 6);
   check("안내 화면에서도 「도움 요청하기」가 같은 자리에 있다", sameSpot(await callSpot(page), callAt));
   check("'제가 필요할 때 부를게요'를 고른 여객에게는 「도움 요청하기」가 크게 보인다", (await count(page, ".call-btn.call-big")) === 1);
-  check("모의 자료라는 안내가 화면에 있다", await has(page, "시연용 모의 자료"));
+  // 「시연용 모의 자료」 작은 꼬리 글은 서서 읽는 화면에서 뺐다(2026-11-19).
   check("안내 화면에 이름이 없다", !(await has(page, "이름")));
   check("안내 화면에서도 「도움 요청하기」가 위쪽 줄의 버튼을 가리지 않는다", await callClearOfBar(page));
   await clickText(page, ".bar-btn", "설정");

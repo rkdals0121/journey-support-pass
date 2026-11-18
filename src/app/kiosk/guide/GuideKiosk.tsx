@@ -1104,15 +1104,12 @@ export function GuideKiosk({
               <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="(orientation: portrait) 30vh, 24vw" />
             </div>
           </div>
-          {/* 오른쪽: 위에 내비게이션처럼 길을 그린 큰 지도, 아래에 경로 단계(단계가 많으면 이 상자 안에서만 내려간다) */}
-          <div className="kc-route-steps">
-            <div className="kc-route-map">
-              <KioskRouteMap fromPlaceId={placeId} gate={target.type === "gate" ? target.gate : target.nearGate} label={title} en={lang === "en"} />
-            </div>
-            <div className="kc-route-list" tabIndex={0} role="region" aria-label={lang === "en" ? "Route steps" : "경로 단계"}>
-              <p className="kc-route-list-title" aria-hidden="true">{lang === "en" ? "Route steps" : "경로 단계"}</p>
-              <RouteSteps route={route} target={target} from={here} t={t} />
-            </div>
+          {/* 가는 길 단계: 왼쪽(세로는 지도 아래)에 상자 없이 큰 글자로 다 보인다. 오른쪽은 길을 그린 지도가 칸 높이를 다 쓴다 */}
+          <div className="kc-route-list" role="region" aria-label={lang === "en" ? "Route steps" : "경로 단계"}>
+            <RouteSteps route={route} target={target} from={here} t={t} />
+          </div>
+          <div className="kc-route-map">
+            <KioskRouteMap fromPlaceId={placeId} gate={target.type === "gate" ? target.gate : target.nearGate} label={title} en={lang === "en"} />
           </div>
           <div className="kc-route-foot">
           <button
@@ -1121,7 +1118,6 @@ export function GuideKiosk({
           >
             {t.guideBack}
           </button>
-          <p className="fine">{t.mock}</p>
           </div>
           </section>
         </FlowShell>
@@ -1180,9 +1176,9 @@ export function GuideKiosk({
       </span>
       <span className="tile-text">
         <strong>{t.facility[f.kind]}</strong>
+        {/* 칸 안에는 걸리는 시간과 위치만(거리 m 는 가는 길 화면에서). 두 줄로 꺾이던 작은 글자를 한 줄로 */}
         <span>
-          {t.routeSummary(f.route.minutes, f.route.meters)} ·{" "}
-          {t.nearGate(f.nearGate)}
+          {t.routeSummary(f.route.minutes, 0)} · {t.nearGate(f.nearGate)}
           {floorOf(f) && ` · ${floorOf(f)}`}
         </span>
       </span>
@@ -1231,7 +1227,7 @@ export function GuideKiosk({
         {/* 이 화면의 제목. 화면이 바뀌면 초점이 제목으로 온다. 제목이 없으면 초점이 사라져 화면 읽기 프로그램이 어디인지 모른다. */}
         {/* 「미리 등록하신 내용이에요」와 같은 틀: 왼쪽(세로는 위) 말풍선·큰 나랑이, 오른쪽에 항공편·탑승구 가는 길·가까운 시설 */}
         <div className="kc-page kc-saved kc-directions">
-        <KioskNarangiSide title={t.guideHello} lead={`${here} · ${lang === "en" ? "Demo data" : "시연용 모의 자료"}`} />
+        <KioskNarangiSide title={t.guideHello} lead={here} />
         <div className="kx-guide kc-saved-main">
           <div className="kx-guide-main">
             {edited && <Banner role="status">{t.editSaved}</Banner>}
