@@ -25,16 +25,17 @@
     return {context, label:true, priority:tier, major, tier};
   }
   // Place names independently of icons: a busy label never removes a facility.
-  function placeLabel(occupied, pixel, width, preferred, focused = false) {
-    const offsets = [...new Set([preferred, -24, 38])];
+  // half: 이름표 높이의 절반(px). 글자를 키우면 겹침 상자도 같이 키운다.
+  function placeLabel(occupied, pixel, width, preferred, focused = false, half = 9) {
+    const offsets = [...new Set([preferred, -(half + 15), half + 29])];
     for (const offset of offsets) {
-      const box = [pixel[0]-width/2-4,pixel[1]+offset-9,pixel[0]+width/2+4,pixel[1]+offset+9];
+      const box = [pixel[0]-width/2-4,pixel[1]+offset-half,pixel[0]+width/2+4,pixel[1]+offset+half];
       if (occupied.some(b => box[0]<b[2] && box[2]>b[0] && box[1]<b[3] && box[3]>b[1])) continue;
       occupied.push(box);
       return offset;
     }
     if (focused) {
-      occupied.push([pixel[0]-width/2-4,pixel[1]+preferred-9,pixel[0]+width/2+4,pixel[1]+preferred+9]);
+      occupied.push([pixel[0]-width/2-4,pixel[1]+preferred-half,pixel[0]+width/2+4,pixel[1]+preferred+half]);
       return preferred;
     }
     return null;

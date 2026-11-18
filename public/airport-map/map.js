@@ -178,11 +178,12 @@
         height: kind === "robot" ? 52 : 34,
       }),
       text: new E.Text({
+        // 「지금 계신 곳」·목적지 이름표: 어르신도 멀리서 읽게 크고 굵게(예전 12px)
         text: label || labels[kind],
-        font: "600 12px Arial,sans-serif",
+        font: `bold ${state.touchTargetSize >= 18 ? 20 : 16}px Arial,sans-serif`,
         fill: new E.Fill({ color: colors[kind] }),
-        stroke: new E.Stroke({ color: "#fff", width: 5 }),
-        offsetY: kind === "robot" ? -32 : -28,
+        stroke: new E.Stroke({ color: "#fff", width: 6 }),
+        offsetY: kind === "robot" ? -36 : -32,
       }),
       zIndex: 1000,
     });
@@ -247,8 +248,9 @@
         { featureProjection: "EPSG:3857" },
       )[0];
       f.setStyle([
-        new E.Style({ stroke: new E.Stroke({ color: "white", width: 8 }) }),
-        new E.Style({ stroke: new E.Stroke({ color: "#15966d", width: 4 }) }),
+        // 경로 선: 굵고 진하게(예전 4px 옅은 초록) — 지도 위에서 한눈에 보이게
+        new E.Style({ stroke: new E.Stroke({ color: "white", width: 11 }) }),
+        new E.Style({ stroke: new E.Stroke({ color: "#0b6e4f", width: 6 }) }),
       ]);
       routes.addFeature(f);
     }
@@ -266,6 +268,8 @@
     const candidates = data.pois.filter(p => !state.securityArea || p.area === state.securityArea).map(p => ({p, display: window.airportPoiVisibility(p, zoom, !!visiblePoiIds, !visiblePoiIds || visiblePoiIds.has(String(p.id)), state.showLandmarkLabels, String(selected) === String(p.id), state.facilityFilterActive ?? !!visiblePoiIds)}))
       .filter(x => x.display).sort((a,b) => a.display.priority - b.display.priority || String(a.p.id).localeCompare(String(b.p.id)));
     pois.clear();
+    // 출발지·목적지 표시(큰 이름표)가 붙은 시설은 시설 이름표를 또 쓰지 않는다(같은 이름이 두 번 겹쳐 보이던 것)
+    const marked = new Set(Object.values(state.markers || {}).filter(m => m && m.poiId !== undefined).map(m => String(m.poiId)));
     for (const {p, display} of candidates) {
       if (p.building !== state.building) continue;
       const context = display.context;
@@ -296,12 +300,14 @@
       const compact = gateNumber ? gateNumber : entrance ? `입${entrance}` : counter;
       // Numbered signs already carry their label; do not print it twice in overview.
       const label = wide && compact ? (context ? compact : "") : p.name.replace("체크인카운터 ", "체크인 ");
-      const font = display.major ? "bold 12px Arial,sans-serif" : "11px Arial,sans-serif";
-      const preferredOffset = context && wide && compact ? 0 : counter && wide && counter.charCodeAt(0) % 2 === 0 ? -20 : context ? 18 : 23;
+      // 시설 이름표: 예전 11~12px 회색 → 14~15px(키오스크·로봇 16~17px) 진한 글자. 겹침 계산(placeLabel)도 같은 높이로 한다.
+      const labelPx = (display.major ? 15 : 14) + (state.touchTargetSize >= 18 ? 2 : 0);
+      const font = `${display.major ? "bold" : "600"} ${labelPx}px Arial,sans-serif`;
+      const preferredOffset = context && wide && compact ? 0 : counter && wide && counter.charCodeAt(0) % 2 === 0 ? -22 : context ? 18 : 25;
       const pixel = map.getPixelFromCoordinate(xy);
       if (labelMeasure) labelMeasure.font = font;
-      const labelOffset = display.label && label && pixel
-        ? window.airportPoiVisibility.placeLabel(labelBoxes, pixel, labelMeasure ? labelMeasure.measureText(label).width : label.length * 11, preferredOffset, focused)
+      const labelOffset = display.label && label && pixel && !marked.has(String(p.id))
+        ? window.airportPoiVisibility.placeLabel(labelBoxes, pixel, labelMeasure ? labelMeasure.measureText(label).width : label.length * labelPx, preferredOffset, focused, Math.ceil(labelPx * 0.7))
         : null;
       const iconSize = focused ? 34 : display.match ? 30 : display.major && wide ? 22 : 26;
       f.setStyle(
@@ -315,8 +321,8 @@
           text: new E.Text({
             text: labelOffset === null ? "" : label,
             font,
-            fill: new E.Fill({ color: focused ? "#087ba6" : context ? "#73817c" : "#354b41" }),
-            stroke: new E.Stroke({ color: "white", width: 3 }),
+            fill: new E.Fill({ color: focused ? "#065f80" : context ? "#4f5d57" : "#1f2a24" }),
+            stroke: new E.Stroke({ color: "white", width: 4 }),
             offsetY: labelOffset ?? preferredOffset,
           }),
           zIndex: focused ? 20 : display.major ? 15 : context ? 0 : 10,
