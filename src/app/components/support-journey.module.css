@@ -702,3 +702,17 @@
 }
 /* 만남 장소 상세: 두 칸을 같은 높이로(짧은 칸 아래가 비어 바닥 줄과 간격이 벌어지던 것) */
 .pointLayout { align-items: stretch; }
+
+/* ── 휴대전화·태블릿 다듬기 (11-18) ── */
+@media (max-width: 760px) {
+  /* 만날 시간: 칸 안 작은 스크롤 상자(두꺼운 테두리) 대신 페이지가 내려간다. 「이전·다음」은 아래에 붙어 있다(엄지 닿는 곳) */
+  .visitLayout .slots { max-height:none; overflow:visible; padding:0; border:0; background:none; }
+  /* 좁은 휴대전화에서 「1. 장소·/지원」처럼 단계 이름이 두 줄로 꺾이던 것 */
+  .visitLayout .draftSteps button { font-size:var(--text-small); padding-inline:var(--space-1); word-break:keep-all; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  /* 태블릿: 왼쪽 고르는 칸이 오른쪽 지도 칸 높이만큼 늘어나 아래 절반이 비던 것 → 「이전·다음」은 칸 바닥, 그 위 남는 곳에 나랑이 */
+  .visitLayout > form.panel { display:flex; flex-direction:column; }
+  .visitLayout > form.panel > .actions { order:2; margin-top:0; }
+  .visitLayout > form.panel::after { content:""; order:1; flex:1 1 0; min-height:0; max-height:14rem; margin-block:var(--space-3); background:url("/images/haneuli/narangi.webp") center bottom / contain no-repeat; }
+}

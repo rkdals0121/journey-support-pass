@@ -292,3 +292,34 @@ html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 5.5rem; 
   .flow-pretrip .flow-body, .flow-pretrip[data-screen] .flow-body { padding: 16px; }
   html[data-kiosk] .flow-pretrip .registration-page-heading { min-height: 4.25rem; }
 }
+
+/* ── 사전등록 휴대전화·태블릿 다듬기 (11-18) ── */
+/* 고른 칸은 노랑(옅은 노랑 칠 + 노랑 테두리). 왼쪽 초록 띠·초록 테두리·초록 칠 표시이던 것. 키오스크는 따로 정한다 */
+html:not([data-kiosk]) .flow-pretrip .choice.choice-on { border-color: var(--color-accent); background: var(--color-accent-soft); box-shadow: none; }
+html:not([data-kiosk]) .flow-pretrip .choice-on .choice-icon { background: var(--color-accent); color: var(--color-text); }
+html:not([data-kiosk]) .flow-pretrip .choice-on .choice-mark { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
+html:not([data-kiosk]) .flow-pretrip .flight-methods .pick.on { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-text); }
+@media (max-width: 1100px) {
+  /* 고르는 칸은 테두리 있는 둥근 카드(위쪽에 옅은 선 하나만 남아 칸 경계가 흐리던 것) */
+  html:not([data-kiosk]) .flow-pretrip .flow-body > .choices > .choice { border: 1px solid var(--color-line); }
+  /* 남는 아래 공간은 나랑이가 채운다(고를 것이 적은 단계에서 흰 칸 아래 절반이 비던 것). 남는 공간이 없으면 높이 0 이라 보이지 않는다 */
+  html:not([data-kiosk]) .flow-pretrip:not([data-screen="consent"]):not([data-screen="note"]) .flow-body { display: flex; flex-direction: column; }
+  html:not([data-kiosk]) .flow-pretrip .flow-body::after { content: ""; flex: 1 1 0; min-height: 0; max-height: 16rem; margin-top: var(--space-4); background: url("/images/haneuli/narangi.webp") right bottom / contain no-repeat; }
+}
+@media (max-width: 760px) {
+  /* 좁은 휴대전화(320)에서 위쪽 바의 소리 단추만 아래 줄로 떨어지던 것: 언어 고르기 칸을 조금 줄여 한 줄에 */
+  html:not([data-kiosk]) .flow-pretrip .registration-language select { min-width: 5.25rem; padding-inline: var(--space-2); }
+  /* 불편한 점·들를 곳(8개): 첫 화면처럼 두 칸 카드(한 줄 목록이 화면 두 배로 길던 것). 좁은 휴대전화·큰 글자는 한 칸 */
+  html:not([data-kiosk]) .flow-pretrip:is([data-screen="trouble"], [data-screen="stops"]) .flow-body > .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); grid-auto-rows: 1fr; gap: var(--space-2); }
+  /* 칸이 좁으면(두 칸) 그림 아래로 이름이 내려가고, 넓으면(한 칸: 좁은 휴대전화·큰 글자) 그림 옆에 이름. 고름 표시는 늘 오른쪽 위 */
+  html:not([data-kiosk]) .flow-pretrip:is([data-screen="trouble"], [data-screen="stops"]) .flow-body > .choices > .choice {
+    position: relative; display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start;
+    gap: var(--space-2); min-height: 0; padding: var(--space-3) calc(var(--space-3) + 1.25rem + var(--space-2)) var(--space-3) var(--space-3);
+  }
+  html:not([data-kiosk]) .flow-pretrip:is([data-screen="trouble"], [data-screen="stops"]) .choice-text { flex: 1 1 6.5rem; min-width: 0; word-break: keep-all; }
+  html:not([data-kiosk]) .flow-pretrip:is([data-screen="trouble"], [data-screen="stops"]) .choice-mark { position: absolute; top: var(--space-3); right: var(--space-3); }
+}
+@media (max-width: 760px) {
+  /* 두 칸 카드 수가 홀수면(들를 곳 7개) 마지막 줄 빈 칸에 나랑이 */
+  html:not([data-kiosk]) .flow-pretrip:is([data-screen="trouble"], [data-screen="stops"]) .flow-body > .choices:has(> .choice:last-child:nth-child(odd))::after { content: ""; background: url("/images/haneuli/narangi.webp") center / contain no-repeat; }
+}
