@@ -51,7 +51,7 @@ export function MobilityMapPlanner({initialSupportMode="staff",placeId,destinati
       <PlaceFinder id="mobility-start-fallback" value={placeId} en={en} disabled={disabled} photos={!kiosk} showMap={false} onChange={updatePlace}/>
     </details>;
   const fallback=<>
-    {!from&&fromPlace&&<p className={styles.locationNote}>{t("선택한 위치는 3층 지도에 연결되지 않았어요. 위치 정보는 그대로 담당자에게 전달합니다.","This location is not linked to the 3F map. Its details will still be sent to staff.")}</p>}
+    {!kiosk&&!from&&fromPlace&&<p className={styles.locationNote}>{t("선택한 위치는 3층 지도에 연결되지 않았어요. 위치 정보는 그대로 담당자에게 전달합니다.","This location is not linked to the 3F map. Its details will still be sent to staff.")}</p>}
     {notice&&<p role="alert" className={styles.error}>{notice}</p>}
   </>;
   if (!expanded) return <div className={styles.planner}><p>{fromPlace?(en?fromPlace.labelEn:fromPlace.label):""}{target?` → ${target.name}`:""}</p><button type="button" className={styles.primary} onClick={()=>setExpanded(true)}>{t("전체 화면 지도로 선택","Choose on full-screen map")}</button>{fallback}{alternateFinder}</div>;
