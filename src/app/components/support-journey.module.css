@@ -733,3 +733,18 @@
   align-items: center;
   min-height: max(2.75rem, var(--target-floor));
 }
+/* 여객 웹(.public-site)의 태블릿·노트북(761px~)도 같은 글자. 직원 화면은 그대로: 만남 예약 3단계(확인)의 칸 이름·예약 내용·동의 글이 14px 로 남던 것 */
+:global(html:not([data-kiosk]) .public-site) :is(.summary, .field > label, .field > legend, .check, .muted, .mapLegend) {
+  font-size: var(--text-body);
+}
+:global(html:not([data-kiosk]) .public-site) .check {
+  align-items: center;
+  min-height: max(2.75rem, var(--target-floor));
+}
+:global(html:not([data-kiosk]) .public-site) .check input { margin-top: 0; }
+@media (max-width: 760px) {
+  /* 만남 예약 휴대전화 큰 글자(1.5배): 「이전」과 「다음·이 시간으로 예약」이 두 줄로 쌓여 아래 고정 줄이 화면의 1/5 을 가리던 것 → 한 줄에(이전은 글자 폭만큼) */
+  :global(html:not([data-kiosk]) .public-site) .visitLayout .actions { flex-wrap: nowrap; }
+  :global(html:not([data-kiosk]) .public-site) .visitLayout .actions > .secondary { flex: 0 0 auto; padding-inline: var(--space-3); }
+  :global(html:not([data-kiosk]) .public-site) .visitLayout .actions > .button { flex: 1 1 0; min-width: 0; padding-inline: var(--space-3); text-align: center; word-break: keep-all; }
+}

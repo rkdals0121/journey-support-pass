@@ -176,3 +176,8 @@
 .fullscreen[data-kiosk=true] .filters button svg,.fullscreen[data-kiosk=true] .moreFacilities summary>svg{width:1.75rem;height:1.75rem}
 /* 구역(터미널) 고르기: 크고 진한 알약 */
 .fullscreen[data-kiosk=true] .terminalSelect{width:17rem;flex-basis:17rem;font-size:var(--text-heading)}
+
+/* 어르신도 읽기 쉽게(11-19): 여객 휴대전화·웹의 지도 안내는 본문 1rem, 누르는 시설 단추·검색 결과도 1rem(키오스크·로봇은 그대로) */
+:global(html:not([data-kiosk])) :is(.mapHelp summary, .hint, .mapMeta, .landmarkToggle, .nearby p, .nearbyTitle strong, .nearbyCards strong, .results button, .tabs button, .filters button){font-size:var(--text-body)}
+:global(html:not([data-kiosk])) .landmarkToggle input{width:1.25rem;height:1.25rem}
+:global(html:not([data-kiosk])) .mapHelp summary{min-height:max(2.75rem,var(--target-floor))}

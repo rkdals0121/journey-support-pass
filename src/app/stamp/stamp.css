@@ -504,13 +504,17 @@
 }
 .sb-stop {
   display: grid;
+  min-width: 0;
 }
 .sb-stop strong {
   font-size: var(--text-body);
 }
 .sb-stop small {
   color: var(--muted);
-  font-size: var(--text-caption);
+  /* 장소 설명은 어르신도 읽게 본문 크기(11-19). 긴 장소 이름은 좁은 화면(320)에서 줄을 바꾼다 */
+  font-size: var(--text-body);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 .next .sb-stop small {
   color: var(--ink);
@@ -1562,3 +1566,18 @@
   .sb-photo-slot { padding: var(--space-1); word-break: keep-all; }
   .sb-fields input { padding-inline: var(--space-3); }
 }
+
+/* 큰 글자(1.5배)·좁은 휴대전화(11-19): 「내 / 수첩」「테마 / 바꾸기」처럼 단추 글자가 낱말 중간에서 꺾이던 것과,
+   도장판 나랑이 말풍선이 한 줄에 한 낱말씩 좁게 늘어지던 것. 자리가 모자라면 말풍선이 나랑이 아래 줄로 내려간다 */
+.sb-tools { flex-wrap: wrap; }
+.sb-head { flex-wrap: wrap; }
+.sb-tools button { white-space: nowrap; }
+@media (max-width: 760px) {
+  .sb-board-card .sb-says { display: flex; flex-wrap: wrap; align-items: center; }
+  .sb-board-card .sb-says-face { flex: none; width: min(4rem, 18vw); }
+  .sb-board-card .sb-says-bubble { flex: 1 1 9rem; min-width: 0; }
+}
+/* 스탬프북 첫 화면: 화면이 나타날 때 4px 아래에서 올라오는 움직임 때문에 위쪽 바와의 간격이 잠깐 20px 로 재지던 것(기준 16px).
+   (컴퓨터가 느리면 움직이는 도중에 재게 된다). 여기서는 자리를 옮기지 않고 흐려졌다 또렷해지기만 한다 */
+html:not([data-kiosk]) #public-main.sb { animation-name: sb-enter; }
+@keyframes sb-enter { from { opacity: .2; } to { opacity: 1; } }
