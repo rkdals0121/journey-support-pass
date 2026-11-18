@@ -7,6 +7,7 @@ import { PublicShell } from "@/app/components/PublicShell";
 import { FieldTaskShell } from "@/app/components/FieldTaskShell";
 import { placeOf } from "@/lib/airport";
 import { prefsOf } from "@/lib/catalog";
+import { supportTopic } from "@/lib/service-catalog";
 import { pageTitle } from "@/lib/page-title";
 
 export const generateMetadata = pageTitle("도움 요청", "Request help");
@@ -18,6 +19,7 @@ export default async function RegisteredHelp({
   params: Promise<{ token: string }>;
   searchParams: Promise<{
     service?: string;
+    topic?: string;
     returnTo?: string;
     fresh?: string;
     resume?: string;
@@ -27,11 +29,14 @@ export default async function RegisteredHelp({
   const { token } = await params;
   const session = await currentSession();
   const q = await searchParams;
+  // 키오스크 서비스 카드(시설 불편·교통·주차·그 밖의 도움)는 ?topic= 으로 주제를 넘긴다. /help 와 같이 그 주제 화면을 연다.
+  const topic = supportTopic(q.topic);
   const shared = {
     initialPlace: session?.isKiosk ? (session.placeId ?? "") : "",
     sharedDevice: session?.isKiosk === true,
     lockedPlace: session?.isKiosk === true,
-    initialService: helpService(q.service),
+    initialService: topic?.service ?? helpService(q.service),
+    initialTopic: topic?.id,
     returnTo: session?.isKiosk ? kioskReturn(q.returnTo) : undefined,
     freshShared: session?.isKiosk === true && q.fresh === "1",
     checkExisting: q.resume === "1",
@@ -49,7 +54,7 @@ export default async function RegisteredHelp({
     q.lang === "en" ? "en" : q.lang === "ko" ? "ko" : found.journey.lang;
   const flow = (
     <HelpFlow
-      key={token}
+      key={`${token}:${topic?.id ?? "generic"}`}
       lang={lang}
       {...shared}
       registrationToken={token}
