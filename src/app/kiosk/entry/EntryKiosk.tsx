@@ -683,7 +683,7 @@ export function EntryKiosk({
     screen = shell(
       "declined",
       t.entryDeclined,
-      <div className="kc-page"><KioskHero title={t.entryDecline} /><section className="kc-notice"><p>{t.entryDeclined}</p></section></div>,
+      <div className="kc-page"><KioskHero title={t.entryDecline} /><section className="kc-notice kc-declined"><Image className="kc-consent-art" src="/images/haneuli/narangi.webp" alt="" aria-hidden="true" width={1024} height={1024} sizes="22vh" /><p>{t.entryDeclined}</p></section></div>,
       <button className="btn btn-primary" onClick={reset}>
         {t.entryEnd}
       </button>,

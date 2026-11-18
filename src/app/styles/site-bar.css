@@ -323,5 +323,20 @@ html[data-kiosk] body:has(.call-dock) .flow-bar { margin-bottom: 0; }
 /* 모든 키오스크 바: 큰 글자(1.5배) 등으로 단추가 한 줄에 다 들어가지 않으면 바가 아래로 늘어나 안에 담는다.
    한 줄에 들어가면 높이는 그대로(--site-bar-height). 「도움 요청하기」는 첫 줄 기준 자리 그대로. */
 html[data-kiosk] .flow .flow-bar { height: auto; min-height: var(--site-bar-height); flex-wrap: wrap; row-gap: var(--space-2); }
+/* 키오스크·안내로봇 바의 단추(이전·처음으로·설정·English·화면 버전·소리): 웹 바와 같은 14px 라 서서 보면 글자가 너무 작았다.
+   글자를 옆에 붙인 채 키우면 1080 폭에서 바가 세 줄로 꺾였으므로, 그림을 위·글자를 아래로 세워 폭을 줄이고 글자와 그림을 키운다.
+   「도움 요청하기」처럼 큰 글씨 설정(--scale)으로 나눠 기기 위 크기는 그대로 둔다(1.5배에서도 바가 여러 줄로 꺾이지 않게). */
+html[data-kiosk] .flow .flow-bar .bar-btn {
+  flex-direction: column; justify-content: center; gap: 0;
+  /* 바 높이(--site-bar-height) 안에 들어가는 만큼 높게. 글자만 있는 단추(English·화면 버전)도 같은 높이 */
+  min-height: calc(var(--site-bar-height) - 1.5rem / var(--scale, 1)); padding: 0 calc(0.625rem / var(--scale, 1));
+  font-size: calc(var(--text-small) / var(--scale, 1)); line-height: 1.15;
+}
+html[data-kiosk] .flow .flow-bar .bar-btn svg { width: calc(1.5rem / var(--scale, 1)); height: calc(1.5rem / var(--scale, 1)); }
+html[data-kiosk] .flow .flow-bar .bar-icon { width: auto; min-width: calc(3.5rem / var(--scale, 1)); align-self: stretch; }
+html[data-kiosk] .flow .flow-bar .bar-icon svg { width: calc(1.75rem / var(--scale, 1)); height: calc(1.75rem / var(--scale, 1)); }
+html[data-kiosk] .flow .flow-bar .flow-bar-side { gap: calc(0.25rem / var(--scale, 1)); }
+html[data-kiosk] .flow .flow-bar .view-switch .bar-btn { padding-inline: calc(0.75rem / var(--scale, 1)); }
+html[data-kiosk] .flow .flow-bar .flow-bar-here { color: var(--color-text); }
 /* 접은 메뉴를 펼치면 바가 두 줄이 된다. 알약 모양 그대로면 양 끝이 크게 깎이므로 아래쪽 바(좁은 화면)와 같은 둥글기로. */
 .airport-site .public-header:has(.public-nav.is-open) { height: auto; border-radius: calc(var(--radius-medium) * 2); }
