@@ -674,6 +674,24 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
    탑승권 화면은 카메라(또는 안내)와 단추를 위아래로 쌓아 가운데에 */
 @media (orientation: portrait) and (min-width: 761px) {
   .kc-number { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: stretch; padding: var(--space-5); }
+  /* 서서 보는 세로 화면: 제목 아래 설명 글자를 한 단계 크게 */
+  .kc-hero p { font-size: var(--text-heading); }
+  /* 「미리 등록하신 내용이에요」: 나랑이가 큰 만큼 아래 항공편·등록한 도움 글자도 크게(작은 회색 글자가 읽기 어렵던 것) */
+  .kc-saved-bubble p { font-size: var(--text-heading); }
+  .kc-saved .board-label, .kc-saved .board-time { font-size: var(--text-heading); }
+  .kc-saved .board-time b { font-size: var(--text-title); }
+  .kc-saved .board-dest { font-size: var(--text-large); }
+  .kc-saved .board-close { font-size: var(--text-heading); }
+  .kc-saved .kc-need { padding: var(--space-4) var(--space-5); }
+  .kc-saved .kc-need dt { font-size: var(--text-body); }
+  .kc-saved .kc-need dd { font-size: var(--text-title); }
+  .kc-saved .kc-need dd svg { width: 2.25rem; height: 2.25rem; }
+  /* 등록한 도움이 홀수 개면 마지막 칸이 한 줄을 다 써서 옆 빈 칸이 남지 않게 */
+  .kc-saved .kc-needs-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  /* 우대 서류: 대상을 고르면 서류 카메라가 옆이 아니라 아래에 붙는다(세로 화면에서 칸이 반으로 좁아져 글자가 꺾이던 것) */
+  .kc-proof:has(.docscan) { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .kc-proof:has(.docscan) .kc-proof-choices { grid-auto-rows: auto; }
+  .kc-proof:has(.docscan) .kc-proof-choices .choice { min-height: 12rem; }
   /* 제목 글자는 크게, 번호 칸은 숫자판 한 줄만큼 높게(숫자판 바로 위까지 채움), 숫자판 글자도 크게.
      번호 칸은 입력칸 공통 규칙(input:not 네 겹)보다 세게 id 로 정한다 */
   /* 번호 칸 위: 지금 계신 곳(진한 글자, 지도 표시). 머리 칸 제목은 위아래 가운데 */
@@ -700,26 +718,40 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
 .kc-scan:has(.scan > .banner:first-child) { display: flex; flex-direction: column; justify-content: center; gap: var(--space-5); }
 .kc-scan:has(.scan > .banner:first-child) .kc-scan-art { display: block; align-self: center; width: min(70%, 40dvh); height: auto; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
 .kc-scan:has(.scan > .banner:first-child) .scan { height: auto; }
-/* 현장 등록의 선택·서류 단계도 같은 소개 박스와 카드 격자를 사용한다. */
-.kc-choices { margin: 0; min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); }
-.kc-choices .easy-tile { flex-direction: row; min-height: var(--target-kiosk-floor); padding: var(--space-3); gap: var(--space-2); font-size: var(--text-small); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: none; }
-.kc-choices .easy-tile svg { width: 1.5rem; height: 1.5rem; flex: none; padding: var(--space-2); box-sizing: content-box; border-radius: var(--radius-medium); background: var(--color-primary-faint); }
-.kc-choices .easy-tile.on { border-color: var(--color-primary); background: var(--color-primary-soft); }
-.kc-proof { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+/* 현장 등록의 선택·서류·동의 단계도 같은 소개 박스와 카드 격자를 사용한다.
+   서서 보는 키오스크·안내로봇 화면이라 칸 안 글자와 그림을 크게, 가운데에 둔다
+   (큰 칸 가운데 작은 글자만 떠 있어 어르신이 읽기 어렵던 것, 11-18 피드백). 고른 칸은 노랑. */
+.kc-choices { margin: 0; min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-4); }
+.kc-choices .easy-tile { flex-direction: column; align-items: center; justify-content: center; min-height: var(--target-kiosk-floor); padding: var(--space-4); gap: var(--space-4); font-size: var(--text-title); font-weight: var(--weight-heading); text-align: center; word-break: keep-all; border: 2px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: none; }
+.kc-choices .easy-tile svg { width: 3rem; height: 3rem; flex: none; padding: var(--space-4); box-sizing: content-box; border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
+.kc-choices .easy-tile.on { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.kc-choices .easy-tile.on svg { background: var(--color-accent); }
+.kc-proof { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 .kc-proof:has(.docscan) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.kc-proof .kc-proof-choices { --choice-columns: repeat(2, minmax(0, 1fr)); grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; min-height: 0; grid-auto-rows: 1fr; }
-.kc-proof-choices .choice { min-height: var(--target-kiosk-floor); padding: var(--space-2); gap: var(--space-1); font-size: var(--text-small); }
-.kc-proof-choices .choice-icon { width: 1rem; height: 1rem; flex: none; }
-.kc-proof-choices .choice-icon svg { width: 1rem; height: 1rem; }
-.kc-proof-choices .choice-mark { width: 1rem; height: 1rem; flex: none; }
-.kc-proof-choices .choice-text { min-width: 0; font-size: inherit; line-height: 1.3; }
-.kc-proof-choices .choice-note { font-size: var(--text-caption); line-height: 1.3; }
+.kc-proof .kc-proof-choices { --choice-columns: repeat(2, minmax(0, 1fr)); grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; min-height: 0; grid-auto-rows: 1fr; gap: var(--space-4); }
+.kc-proof-choices .choice { position: relative; flex-direction: column; justify-content: center; min-height: var(--target-kiosk-floor); padding: var(--space-4); gap: var(--space-3); text-align: center; word-break: keep-all; box-shadow: none; }
+.kc-proof-choices .choice-icon { width: 4.5rem; height: 4.5rem; flex: none; border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
+.kc-proof-choices .choice-icon svg { width: 2.5rem; height: 2.5rem; }
+.kc-proof-choices .choice-mark { position: absolute; top: var(--space-4); right: var(--space-4); width: 2.25rem; height: 2.25rem; flex: none; }
+.kc-proof-choices .choice-text { flex: none; min-width: 0; font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.3; }
+.kc-proof-choices .choice-note { margin-top: var(--space-2); font-size: var(--text-heading); line-height: 1.35; }
+.kc-proof-choices .choice-on { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.kc-proof-choices .choice-on .choice-icon { background: var(--color-accent); color: var(--color-text); }
+.kc-proof-choices .choice-on .choice-mark { border-color: var(--color-text); background: var(--color-text); }
 .kc-proof .docscan { min-height: 0; height: 100%; display: grid; grid-template-rows: minmax(0, 1fr); margin: 0; }
-.kc-proof .docscan-cam { min-height: 0; height: 100%; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-2); }
+.kc-proof .docscan-cam { min-height: 0; height: 100%; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-3); }
 .kc-proof .docscan-cam video { min-height: 0; height: 100%; max-height: 100%; }
-.kc-proof .docscan-cam .btn { min-height: var(--target-kiosk-floor); font-size: var(--text-small); }
+.kc-proof .docscan-cam .btn { min-height: var(--target-kiosk-floor); font-size: var(--text-heading); border-radius: var(--radius-pill); }
 .kc-notice { display: grid; place-items: center; padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
-.kc-notice p { margin: 0; font-size: var(--text-body); line-height: 1.5; }
+.kc-notice p { margin: 0; font-size: var(--text-title); line-height: 1.5; word-break: keep-all; text-align: center; }
+/* 등록 동의: 긴 한 문단 대신 약속 네 가지를 한 줄씩 큰 글자로, 위에 나랑이 */
+.kc-consent { align-content: center; gap: var(--space-5); }
+.kc-consent-art { width: min(40%, 22dvh); height: auto; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
+.kc-consent ul { display: grid; gap: var(--space-4); width: 100%; margin: 0; padding: 0; list-style: none; }
+.kc-consent li { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); font-size: var(--text-title); font-weight: var(--weight-label); line-height: 1.4; word-break: keep-all; border-radius: var(--radius-medium); background: var(--color-accent-soft); }
+.kc-consent li svg { width: 2.25rem; height: 2.25rem; flex: none; }
+/* 「등록하지 않기」도 밑줄 글자가 아니라 같은 크기의 흰 알약 단추 */
+.kiosk-content .flow-cta .btn-ghost { text-decoration: none; border: 2px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); }
 @media (min-width: 761px) and (max-width: 1100px) {
  .kc-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

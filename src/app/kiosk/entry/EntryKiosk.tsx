@@ -14,6 +14,7 @@ import {
   Keyboard,
   Navigation,
   Pencil,
+  ShieldCheck,
   PersonStanding,
   ScanLine,
   MapPin,
@@ -653,7 +654,7 @@ export function EntryKiosk({
     screen = shell(
       "consent",
       `${t.entryConsentTitle}. ${t.entryConsentBody}`,
-      <div className="kc-page"><KioskHero title={t.entryConsentTitle} /><section className="kc-notice"><p>{t.entryConsentBody}</p></section></div>,
+      <div className="kc-page"><KioskHero title={t.entryConsentTitle} /><section className="kc-notice kc-consent">{/* 긴 한 문단 대신 약속을 한 줄씩 큰 글자로(어르신이 읽기 어렵던 것) */}<Image className="kc-consent-art" src="/images/haneuli/narangi.webp" alt="" aria-hidden="true" width={1024} height={1024} sizes="22vh" /><ul>{t.entryConsentBody.split(/(?<=[.!?])\s+/).filter(Boolean).map((line) => <li key={line}><ShieldCheck aria-hidden="true" />{line}</li>)}</ul></section></div>,
       <>
         <button
           className="btn btn-primary"
