@@ -677,7 +677,7 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .request-local-tools button { font-size:var(--text-caption); }
 .service-form-card, .service-route-result { padding:1.25rem; }
 }
-.request-form:not([data-map-flow="true"])[data-active-step="0"] [data-request-step]:not([data-request-step="0"]), .request-form:not([data-map-flow="true"])[data-active-step="1"] [data-request-step]:not([data-request-step="1"]), .request-form:not([data-map-flow="true"])[data-active-step="2"] [data-request-step]:not([data-request-step="2"]) { display:none; }
+.request-form:not([data-map-flow="true"])[data-active-step="0"] [data-request-step]:not([data-request-step="0"]), .request-form:not([data-map-flow="true"])[data-active-step="1"] [data-request-step]:not([data-request-step="1"]), .request-form:not([data-map-flow="true"])[data-active-step="2"] [data-request-step]:not([data-request-step="2"]), .request-form:not([data-map-flow="true"])[data-active-step="3"] [data-request-step]:not([data-request-step="3"]) { display:none; }
 /* 넓은 화면이라도 메뉴가 바에 다 들어가지 않으면(영어·큰 글자) PublicShell 이 data-compact 를 붙인다.
    그때는 아래 1100px 이하 규칙과 같이 「메뉴」 단추로 접는다. */
 .airport-site .public-header[data-compact] { grid-template-columns: minmax(0, 1fr) auto; column-gap: 1rem; }
@@ -878,7 +878,8 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .request-service-options label { word-break: keep-all; overflow-wrap: anywhere; }
 /* 첫 단계: 서비스 고르기는 한 줄, 세부 선택과 적는 칸은 두 칸 나란히(태블릿·키오스크 가로 화면 포함). */
 @media (min-width: 761px) {
- .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-5); }
+ /* 첫 단계일 때만(이 규칙이 단계 숨김보다 세서 2·3단계에도 첫 칸이 그대로 보이던 것) */
+ .request-form:not([data-map-flow="true"])[data-active-step="0"] .request-section[data-request-step="0"]:has(> .request-service-options) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-5); }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > h2 { grid-column:1 / -1;margin:0; }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"] > .request-service-options { grid-column:1 / -1; }
  .request-form:not([data-map-flow="true"]) .request-section[data-request-step="0"]:has(> .request-service-options) > .request-task-options { grid-column:1;grid-row:3;margin:0;grid-template-columns:1fr; }

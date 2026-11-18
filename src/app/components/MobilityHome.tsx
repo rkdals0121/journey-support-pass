@@ -34,12 +34,13 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk,p
   const content=<main id="public-main" data-mobility-home data-kiosk={!!place} className={styles.content}>
       <header className={`ph-hero ${styles.intro}`}>
         <div className="ph-hero-copy">
-          <div className={`service-kicker ${styles.introTop}`}>
+          {/* 키오스크·안내로봇: 「이전」은 위쪽 바에, 꼬리표·설명 줄은 두지 않는다 */}
+          {!kiosk && <div className={`service-kicker ${styles.introTop}`}>
             <Link href={homeHref} className="public-back"><ArrowLeft aria-hidden="true"/>{t("이전","Back")}</Link>
             <span><MapPin aria-hidden="true"/>{t("공항 현장 서비스","Airport assistance")}</span>
-          </div>
+          </div>}
           <h1>{t("이동 도움받기","Mobility assistance")}</h1>
-          <p>{t("필요한 도움을 골라 주세요.","Choose the help you need.")}</p>
+          {!kiosk && <p>{t("필요한 도움을 골라 주세요.","Choose the help you need.")}</p>}
         </div>
       </header>
       <section className={styles.assistance} aria-labelledby="mobility-welcome">
@@ -49,7 +50,7 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk,p
         <Link className={styles.call} href={staff}><BellRing aria-hidden="true"/><span>{t("도움 요청하기","Request help")}</span></Link>
       </div>
       </section>
-      <div className={styles.cards}>{cards.map(({title,detail,Icon,url},i)=><Link key={title} data-mobility-action={["directions","cart","robot","requests"][i]} href={url} className={`${styles.card} ${i===0?styles.featured:""}`}><Icon aria-hidden="true"/><strong>{title}</strong><span>{detail}</span></Link>)}</div>
+      <div className={styles.cards}>{cards.map(({title,detail,Icon,url},i)=><Link key={title} data-mobility-action={["directions","cart","robot","requests"][i]} href={url} className={`${styles.card} ${i===0?styles.featured:""}`}><Icon aria-hidden="true"/><strong>{title}</strong>{!kiosk && <span>{detail}</span>}</Link>)}</div>
     <div className={styles.footer} role="group" aria-label={t("안내 마무리","Finish assistance")}><Link href={homeHref}>{t("안내 끝내기","Finish")}</Link><Link href={href("/visits")}><CalendarCheck aria-hidden="true"/>{t("만남 예약 확인","Appointments")}</Link></div>
     </main>;
   return kiosk

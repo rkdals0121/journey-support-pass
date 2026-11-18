@@ -27,6 +27,7 @@ import { ReportLocationPicker } from "../components/ReportLocationPicker";
 import { TrafficEntry } from "../components/TrafficEntry";
 import { PlaceFinder } from "../components/PlaceFinder";
 import { RequestStatusPanel } from "./RequestStatusPanel";
+import { FIELD_TASK_BACK } from "../components/FieldTaskNav";
 import { Robot } from "../components/Robot";
 import { ServiceDetailsView } from "../components/ServiceDetailsView";
 import {
@@ -43,12 +44,20 @@ import {
   ClipboardCheck,
   Check,
   Volume2,
+  Accessibility,
+  Signpost,
+  Bot,
+  Wrench,
+  Bus,
+  Briefcase,
+  MessagesSquare,
 } from "lucide-react";
 import { useSpeech } from "../components/useSpeech";
 import { SERVICE_CATALOG, passengerLabel, supportTopic } from "@/lib/service-catalog";
 import { MobilityMapPlanner } from "../components/MobilityMapPlanner";
 import { userErrorMessage } from "@/lib/user-error";
 
+const SERVICE_ICONS = { accessibility: Accessibility, signpost: Signpost, bot: Bot, wrench: Wrench, bus: Bus, briefcase: Briefcase, messages: MessagesSquare };
 const STORAGE = "jsp-dx-receipt-v1";
 // 작성 중인 요청(피드백: 뒤로 갔다 다시 들어와도 내용이 남아 있게). 접수하거나 30분이 지나면 지운다.
 // 여러 사람이 쓰는 키오스크에서는 남기지 않는다. 다음 사람에게 앞사람의 내용이 보이면 안 된다.
@@ -221,8 +230,13 @@ export function HelpFlow({
   const topic = supportTopic(topicId),
     referral = topic?.mode === "referral";
   const needsDetails = service === "robot" && !referral;
+  // 키오스크·안내로봇(서서 보는 화면)에서는 「함께 전달할 내용」을 두 단계로 나눈다: 필요한 도움(체크 칸) → 전할 말·동의.
+  // 한 단계에 다 두면 1920×1080 에서도 600px 가까이 넘쳤다(칸 안 스크롤 대신 단계를 나눔).
+  const splitDetails = needsDetails && sharedDevice;
+  // 키오스크에서 서비스를 아직 고르지 않은 첫 단계: 서비스 칸만 보이고, 고르면 바로 그 서비스의 첫 질문으로 간다(이동 도움 지도 흐름은 제외)
+  const chooseServiceFirst = sharedDevice && !topic && service !== "mobility";
   const noMeeting = topic?.id === "other" && placeId === NO_MEETING_PLACE;
-  const lastInputStep = noMeeting ? 0 : needsDetails ? 2 : 1;
+  const lastInputStep = noMeeting ? 0 : needsDetails ? (splitDetails ? 3 : 2) : 1;
   const lastPresentation = useRef(`${service}:${inputStep}:${review}`);
   useEffect(() => {
     const key = `${service}:${inputStep}:${review}`;
@@ -237,7 +251,7 @@ export function HelpFlow({
     });
     return () => cancelAnimationFrame(frame);
   }, [service, inputStep, review]);
-  const reviewIndex = noMeeting ? 1 : 2;
+  const reviewIndex = noMeeting ? 1 : splitDetails ? 3 : 2;
   const stepNow = service === "mobility" ? (mobilityConfirming ? 1 : 0) : inputStep;
   // 작성 중인 내용 되살리기. 같은 서비스로 다시 들어왔을 때만, 키오스크가 아닐 때만, 새로 시작하기(fresh)가 아닐 때만.
   const draftReady = useRef(false);
@@ -619,6 +633,27 @@ export function HelpFlow({
   const readText = request
     ? `${requestStateLabel(request, lang)}. ${en ? request.placeEn : request.place}. ${request.reason}`
     : `${tr("지금 도움 요청하기", "Request help now")}. ${tr("현재 위치와 필요한 도움을 확인해 주세요. 사전등록은 서비스 예약 확정이 아닙니다.", "Confirm your pickup point and assistance. Pre-registration is not a confirmed service booking.")}`;
+  const stepLabels = (noMeeting
+                ? [tr("요청 내용", "Request"), tr("내용 확인", "Review")]
+                : service === "mobility"
+                ? [
+                    tr("만날 곳", "Meeting place"),
+                    tr("필요한 도움", "Help needed"),
+                    tr("내용 확인", "Review"),
+                  ]
+                : splitDetails
+                ? [
+                    sharedDevice && topic ? tr("요청 내용", "Request") : tr("서비스 선택", "Service"),
+                    tr("위치 확인", "Location"),
+                    tr("필요한 도움", "Help needed"),
+                    tr("내용 확인", "Details"),
+                  ]
+                : [
+                    sharedDevice && topic ? tr("요청 내용", "Request") : tr("서비스 선택", "Service"),
+                    tr("위치 확인", "Location"),
+                    tr("내용 확인", "Details"),
+                  ]);
+  const stepIndex = review ? reviewIndex : stepNow;
   const atStart = !review && inputStep === 0 && !(topic?.id === "traffic" && trafficIntent === "dispatch");
   function goBack() {
     setError("");
@@ -634,6 +669,36 @@ export function HelpFlow({
     if (window.history.length > 1) window.history.back();
     else window.location.assign("/services" + (en ? "?lang=en" : ""));
   }
+  // 키오스크 위쪽 바의 「이전」(FieldTaskNav): 이 흐름 안에서 한 단계 뒤로. 처음 단계면 받지 않아 처음 화면으로 간다.
+  const kioskBack = useRef<() => boolean>(() => false);
+  kioskBack.current = () => {
+    if (request || service === "mobility") return false;
+    if (review || inputStep > 0 || (topic?.id === "traffic" && trafficIntent === "dispatch")) {
+      goBack();
+      return true;
+    }
+    if (topic?.id === "traffic" && trafficIntent === "info") {
+      setTrafficIntent("choose");
+      return true;
+    }
+    if (!initialTopic && topicId) {
+      setTopicId(undefined);
+      setService(initialService);
+      setTaskId("");
+      setTaskFields({});
+      setError("");
+      return true;
+    }
+    return false;
+  };
+  useEffect(() => {
+    if (!sharedDevice) return;
+    const onBack = (e: Event) => {
+      if (kioskBack.current()) e.preventDefault();
+    };
+    window.addEventListener(FIELD_TASK_BACK, onBack);
+    return () => window.removeEventListener(FIELD_TASK_BACK, onBack);
+  }, [sharedDevice]);
   const requestDetails = (<section
                   className="request-section"
                   data-request-step="0"
@@ -644,7 +709,17 @@ export function HelpFlow({
                     {topic
                       ? tr("요청 내용", "Request details")
                       : tr("필요한 서비스", "Your service")}
-                    {topic && (
+                    {/* 키오스크: 여객 웹의 서비스 목록으로 나가지 않고 이 화면의 서비스 고르기로 돌아간다 */}
+                    {topic && sharedDevice && !initialTopic && (
+                      <button
+                        type="button"
+                        className="request-change-service"
+                        onClick={() => kioskBack.current()}
+                      >
+                        {tr("서비스 변경", "Change service")}
+                      </button>
+                    )}
+                    {topic && !sharedDevice && (
                       <Link
                         className="request-change-service"
                         href={"/services" + (en ? "?lang=en" : "")}
@@ -664,14 +739,15 @@ export function HelpFlow({
                         <label
                           key={s.id}
                           className={
-                            (topicId ?? service) === s.id ? "selected" : ""
+                            !chooseServiceFirst && (topicId ?? service) === s.id ? "selected" : ""
                           }
                         >
                           <input
                             type="radio"
                             name="service"
                             value={s.id}
-                            checked={(topicId ?? service) === s.id}
+                            // 키오스크: 고르기 전에는 아무것도 골라 두지 않는다(기본값 칸을 누르면 바뀐 것이 없어 다음으로 넘어가지 않던 것)
+                            checked={chooseServiceFirst ? false : (topicId ?? service) === s.id}
                             onChange={() => {
                               setService(s.service);
                               if (placeId === NO_MEETING_PLACE) setPlaceId("");
@@ -682,15 +758,17 @@ export function HelpFlow({
                               setDestinationId("");
                             }}
                           />
+                          {sharedDevice && (() => { const Icon = SERVICE_ICONS[s.icon]; return <Icon aria-hidden="true" className="request-option-icon" />; })()}
                           <span>{en ? s.en : passengerLabel(s)}</span>
                         </label>
                       ))}
                     </fieldset>
                   )}
                   {topic?.id === "robot" && <RobotIntro en={en} />}
-                  {task && (
+                  {/* 키오스크: 한 단계에 질문 하나. 서비스를 고르기 전에는 서비스만, 세부 항목이 하나뿐이면 그 칸은 두지 않는다 */}
+                  {task && !chooseServiceFirst && (
                     <>
-                      <fieldset className="request-task-options">
+                      {(!sharedDevice || availableTasks.length > 1) && <fieldset className="request-task-options">
                         <legend className={topic ? "sr-only" : undefined}>
                           {tr("이용할 서비스", "Service option")}
                         </legend>
@@ -713,14 +791,14 @@ export function HelpFlow({
                             {en ? t.en : t.label}
                           </label>
                         ))}
-                      </fieldset>
+                      </fieldset>}
                       {/* 피드백: 직접 적는 칸 바로 위에 눈에 띄는 개인정보 경고. */}
                       {task.fields.some(
                         (f) =>
                           !f.legacy &&
                           !f.options &&
                           f.type !== "datetime-local",
-                      ) && <PrivacyWarning en={en} />}
+                      ) && <PrivacyWarning en={en} short={sharedDevice} />}
                       <div className="service-task-fields">
                         {task.fields
                           .filter((f) => !f.legacy)
@@ -812,7 +890,91 @@ export function HelpFlow({
                     </label>
                   )}
                 </section>);
-  const requestAdditional = <>{needsDetails && (
+  const needsOptions = (
+    <div className="request-needs-options">
+      {Array.from(new Set([...savedChoices, ...supportCodes])).map((code) => (
+        <label className="request-check" key={code}>
+          <input
+            type="checkbox"
+            checked={choices.includes(code)}
+            onChange={() =>
+              setChoices((v) =>
+                v.includes(code) ? v.filter((c) => c !== code) : [...v, code],
+              )
+            }
+          />
+          {labelOf(code, lang)}
+        </label>
+      ))}
+    </div>
+  );
+  const noteFields = (
+    <>
+      <PrivacyWarning en={en} short={sharedDevice} />
+      <label htmlFor="dx-note">
+        {tr("추가 말씀 · 선택", "Additional message · optional")}
+      </label>
+      <textarea
+        id="dx-note"
+        maxLength={200}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder={tr(
+          "필요한 내용을 200자 이내로 적어 주세요.",
+          "Up to 200 characters.",
+        )}
+      />
+      <p className="request-privacy-note">
+        {tr("접수 정보는 24시간 후 만료돼요.", "Details expire after 24 hours.")}
+      </p>
+    </>
+  );
+  // 키오스크에서는 인원을 「위치 확인」 단계에 둔다(필요한 도움 단계가 체크 칸만으로 한 화면을 채우게)
+  const partyField = (
+    <div className="request-party">
+      <label htmlFor="dx-party">
+        {tr("함께 도움받을 인원", "Number of people needing help")}
+      </label>
+      <input
+        id="dx-party"
+        type="number"
+        min={1}
+        max={20}
+        value={party}
+        required
+        onChange={(e) => setParty(Number(e.target.value))}
+      />
+    </div>
+  );
+  const requestAdditional = splitDetails ? (
+    <>
+      <section
+        className="request-section request-needs-step"
+        data-request-step="2"
+        onFocusCapture={() => setInputStep(2)}
+      >
+        <h2 tabIndex={-1}>
+          <span>3</span>
+          {tr("필요한 도움", "Help needed")}
+        </h2>
+        <fieldset className="request-needs-set">
+          <legend>{tr("안내 방식·필요한 도움", "Communication & assistance needs")}</legend>
+          {needsOptions}
+        </fieldset>
+      </section>
+      <section
+        className="request-section"
+        data-request-step="3"
+        onFocusCapture={() => setInputStep(3)}
+      >
+        <h2 tabIndex={-1}>
+          <span>4</span>
+          {tr("더 전할 말", "Anything else")}
+        </h2>
+        {noteFields}
+      </section>
+    </>
+  ) : <>{needsDetails && (
                   <section
                     className="request-section"
                     data-request-step="2"
@@ -849,51 +1011,37 @@ export function HelpFlow({
                               "Communication & assistance needs",
                             )}
                           </summary>
-                          <div className="request-needs-options">
-                            {Array.from(
-                              new Set([...savedChoices, ...supportCodes]),
-                            ).map((code) => (
-                              <label className="request-check" key={code}>
-                                <input
-                                  type="checkbox"
-                                  checked={choices.includes(code)}
-                                  onChange={() =>
-                                    setChoices((v) =>
-                                      v.includes(code)
-                                        ? v.filter((c) => c !== code)
-                                        : [...v, code],
-                                    )
-                                  }
-                                />
-                                {labelOf(code, lang)}
-                              </label>
-                            ))}
-                          </div>
+                          {needsOptions}
                         </details>
                       </>
                     )}
-                    <PrivacyWarning en={en} />
-                    <label htmlFor="dx-note">
-                      {tr("추가 말씀 · 선택", "Additional message · optional")}
-                    </label>
-                    <textarea
-                      id="dx-note"
-                      maxLength={200}
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder={tr(
-                        "필요한 내용을 200자 이내로 적어 주세요.",
-                        "Up to 200 characters.",
-                      )}
-                    />
-                    <p className="request-privacy-note">
-                      {tr(
-                        "접수 정보는 24시간 후 만료돼요.",
-                        "Details expire after 24 hours.",
-                      )}
-                    </p>
+                    {noteFields}
                   </section>
                 )}</>;
+  // 키오스크·안내로봇: 동의와 「요청 내용 확인」은 왼쪽 흰 칸 안 맨 아래(다른 단계의 「다음」 자리). 오른쪽 칸은 요약과 나랑이만
+  const kioskSubmitInNav = sharedDevice && service !== "mobility";
+  const consentAndSubmit = (<>
+                <label className="request-check request-consent">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                  />
+                  {tr(
+                    noMeeting
+                      ? "요청 내용을 담당자에게 전달하는 데 동의합니다."
+                      : "위치와 서비스 요청 내용을 담당자에게 전달하는 데 동의합니다.",
+                    noMeeting
+                      ? "I agree to share the request with the handling team."
+                      : "I agree to share my location and service details with the handling team.",
+                  )}
+                </label>
+                <button className="btn btn-primary" type="submit" disabled={busy}>
+                  {tr("요청 내용 확인", "Review request")}
+                  <ArrowRight aria-hidden="true" />
+                </button>
+</>);
   const requestSummary = (<aside className="request-submit-card">
                 <span className="service-kicker">
                   <ClipboardCheck aria-hidden="true" />
@@ -921,26 +1069,7 @@ export function HelpFlow({
                 <div className="request-submit-art" aria-hidden="true">
                   <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="14rem" />
                 </div>
-                <label className="request-check request-consent">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                  />
-                  {tr(
-                    noMeeting
-                      ? "요청 내용을 담당자에게 전달하는 데 동의합니다."
-                      : "위치와 서비스 요청 내용을 담당자에게 전달하는 데 동의합니다.",
-                    noMeeting
-                      ? "I agree to share the request with the handling team."
-                      : "I agree to share my location and service details with the handling team.",
-                  )}
-                </label>
-                <button className="btn btn-primary" type="submit" disabled={busy}>
-                  {tr("요청 내용 확인", "Review request")}
-                  <ArrowRight aria-hidden="true" />
-                </button>
+                {!kioskSubmitInNav && consentAndSubmit}
               </aside>);
   if (!request && topic?.id === "traffic" && trafficIntent !== "dispatch")
     return (
@@ -949,7 +1078,7 @@ export function HelpFlow({
         info={trafficIntent === "info"}
         onInfo={() => setTrafficIntent("info")}
         onDispatch={() => setTrafficIntent("dispatch")}
-        onBack={() => setTrafficIntent("choose")}
+        onBack={() => setTrafficIntent("choose")} kiosk={sharedDevice}
       />
     );
   return (
@@ -1056,6 +1185,28 @@ export function HelpFlow({
           )}
         </RequestStatusPanel>
       ) : checkExisting && !receipt ? (
+        sharedDevice ? (
+          // 키오스크·안내로봇: 여객 웹(내 요청·서비스 목록)으로 나가지 않고 이 기기 안에서 다시 고르게 한다
+          <section className="request-empty-state">
+            <ClipboardCheck aria-hidden="true" />
+            <h1>{tr("이 기기에 남은 접수 내역이 없어요", "No request on this kiosk")}</h1>
+            <p>
+              {tr(
+                "접수할 때 받은 QR을 휴대전화로 찍으면 진행 상황을 볼 수 있어요.",
+                "Scan the QR code from your receipt with your phone to see progress.",
+              )}
+            </p>
+            <Link
+              href={withPreview(`/help?returnTo=${encodeURIComponent(returnTo ?? "/kiosk/guide")}&fresh=1${en ? "&lang=en" : ""}`, preview)}
+              className="public-button"
+            >
+              {tr("새로 도움 요청하기", "Request help now")}
+            </Link>
+            <Link href={withPreview((returnTo ?? "/kiosk/guide") + (en ? "?lang=en" : ""), preview)}>
+              {tr("처음으로", "Home")}
+            </Link>
+          </section>
+        ) : (
         <section className="request-empty-state">
           <ClipboardCheck aria-hidden="true" />
           <h1>{tr("이 탭에 접수 내역이 없어요", "No request in this tab")}</h1>
@@ -1075,22 +1226,27 @@ export function HelpFlow({
             {tr("서비스 이용하기", "Find a service")}
           </Link>
         </section>
+        )
       ) : (
         <>
           <header className="ph-hero request-heading">
             <div className="ph-hero-copy">
               {/* 피드백: 모든 화면 같은 자리에 「이전」. 확인 화면 → 입력, 입력 단계 → 앞 단계, 첫 단계 → 앞 화면. */}
-              <div className="request-hero-top">
+              {/* 키오스크·안내로봇은 위쪽 바에 「이전」이 있다(FieldTaskNav 가 이 흐름의 goBack 을 부른다) */}
+              {!sharedDevice && <div className="request-hero-top">
                 <button type="button" className="request-back" onClick={goBack}>
                   <ArrowLeft aria-hidden="true" />
                   {/* 내 등록에서 온 첫 단계는 「이전」이 내 등록으로 돌아간다. 따로 있던 「내 등록으로」 줄을 이 자리로 옮겼다. */}
                   {registrationHome && atStart ? tr("내 등록으로", "My registration") : tr("이전", "Back")}
                 </button>
-                <span className="service-kicker">
-                  <MapPin aria-hidden="true" />
-                  {tr("공항 현장 서비스", "Airport services")}
-                </span>
-              </div>
+                {/* 키오스크·안내로봇은 위쪽 바에 위치가 있어 꼬리표를 두지 않는다 */}
+                {!sharedDevice && (
+                  <span className="service-kicker">
+                    <MapPin aria-hidden="true" />
+                    {tr("공항 현장 서비스", "Airport services")}
+                  </span>
+                )}
+              </div>}
               <div className="request-heading-row">
                 <h1>
                   {review
@@ -1098,7 +1254,7 @@ export function HelpFlow({
                     : cartTitle ?? (topic
                       ? en
                         ? topic.en
-                        : topic.label
+                        : sharedDevice ? passengerLabel(topic) : topic.label
                       : tr("어떤 도움이 필요하세요?", "How can we help?"))}
                 </h1>
                 {speech.supported && (
@@ -1114,7 +1270,8 @@ export function HelpFlow({
                   </button>
                 )}
               </div>
-              <p>
+              {/* 제목 아래 설명 줄: 키오스크·안내로봇에서는 단계 표시와 같은 말이라 두지 않는다 */}
+              {!sharedDevice && <p>
                 {review
                   ? tr(
                       "제출하면 담당 업무로 전달돼요.",
@@ -1128,30 +1285,24 @@ export function HelpFlow({
                         ? "Review the request you want to send."
                         : "Confirm the service details and location.",
                     )}
-              </p>
+              </p>}
             </div>
             {/* 안내로봇(세로 화면)에서만 보이는 큰 나랑이. 로봇 첫 화면처럼 남는 높이를 나랑이가 쓴다(devices.css) */}
             <div className="request-robot-art" aria-hidden="true">
               <Image src="/images/haneuli/narangi.webp" alt="" width={1024} height={1024} sizes="40vh" />
             </div>
+            {/* 키오스크·안내로봇: 단계 표시는 큰 글자 한 줄(「2 / 3 위치 확인」). 작은 동그라미 줄이 제목 칸을 높게 만들던 것 */}
+            {sharedDevice ? (
+              <p className="request-step-now" aria-label={tr("접수 단계", "Request steps")}>
+                <span>{Math.min(stepIndex, stepLabels.length - 1) + 1} / {stepLabels.length}</span>
+                {stepLabels[Math.min(stepIndex, stepLabels.length - 1)]}
+              </p>
+            ) : (
             <ol
               className="request-stepbar"
               aria-label={tr("접수 단계", "Request steps")}
             >
-              {(noMeeting
-                ? [tr("요청 내용", "Request"), tr("내용 확인", "Review")]
-                : service === "mobility"
-                ? [
-                    tr("만날 곳", "Meeting place"),
-                    tr("필요한 도움", "Help needed"),
-                    tr("내용 확인", "Review"),
-                  ]
-                : [
-                    tr("서비스 선택", "Service"),
-                    tr("위치 확인", "Location"),
-                    tr("내용 확인", "Details"),
-                  ]
-              ).map((label, i) => (
+              {stepLabels.map((label, i) => (
                 <li
                   key={label}
                   aria-current={
@@ -1169,6 +1320,7 @@ export function HelpFlow({
                 </li>
               ))}
             </ol>
+            )}
           </header>
           {registrationError && (
             <p role="status">
@@ -1368,6 +1520,15 @@ export function HelpFlow({
                           "Staff will classify your request.",
                         )}
                       </p>
+                    ) : lockedPlace && sharedDevice ? (
+                      // 키오스크: 이 기기 자리는 바꿀 수 없다. 잠긴 고르기 칸 대신 큰 글자로 보여 준다
+                      <p className="request-place-now">
+                        <MapPin aria-hidden="true" />
+                        <span>
+                          <small>{tr("지금 계신 곳(이 기기 자리)", "You are here (this kiosk)")}</small>
+                          {en ? currentPlace?.labelEn : currentPlace?.label}
+                        </span>
+                      </p>
                     ) : lockedPlace ? (
                       <>
                         <label htmlFor="dx-place">
@@ -1402,7 +1563,7 @@ export function HelpFlow({
                         }}
                       />
                     )}
-
+                    {splitDetails && partyField}
                   </section>
                 )}
                 {service !== "mobility" && requestAdditional}
@@ -1430,7 +1591,8 @@ export function HelpFlow({
                     {tr("이전", "Back")}
                   </button>
                 )}
-                {inputStep < lastInputStep && (
+                {kioskSubmitInNav && inputStep === lastInputStep && consentAndSubmit}
+                {inputStep < lastInputStep && !(chooseServiceFirst && inputStep === 0) && (
                   <button
                     type="button"
                     className="btn btn-primary"
@@ -1439,7 +1601,9 @@ export function HelpFlow({
                   >
                     {inputStep === 0
                       ? tr("다음 · 위치 확인", "Next · location")
-                      : tr("다음 · 추가 내용", "Next · details")}
+                      : splitDetails && inputStep === 1
+                        ? tr("다음 · 필요한 도움", "Next · help needed")
+                        : tr("다음 · 추가 내용", "Next · details")}
                     <ArrowRight aria-hidden="true" />
                   </button>
                 )}
@@ -1454,12 +1618,19 @@ export function HelpFlow({
 }
 
 /** 직접 적는 칸 위의 개인정보 경고. 이 서비스는 이름·연락처 등을 받지 않는다. */
-function PrivacyWarning({ en }: { en: boolean }) {
+function PrivacyWarning({ en, short = false }: { en: boolean; short?: boolean }) {
   return (
     <div className="request-privacy-warning" role="note">
       <AlertTriangle aria-hidden="true" />
       <p>
-        {en ? (
+        {/* 키오스크·안내로봇: 서서 읽는 화면이라 한 줄로 짧게(긴 목록은 작은 글자로 두 줄이던 것) */}
+        {short ? (
+          <strong>
+            {en
+              ? "Do not enter personal details such as your name or phone number."
+              : "이름·전화번호 등 개인정보는 적지 마세요."}
+          </strong>
+        ) : en ? (
           <>
             <strong>Do not enter personal information.</strong> Name, phone
             number, address, resident registration number, passport number, card

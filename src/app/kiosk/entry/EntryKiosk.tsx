@@ -703,7 +703,6 @@ export function EntryKiosk({
           >
             <Navigation size={36} aria-hidden="true" />
             <strong>{t.svcGuide}</strong>
-            <span>{t.svcGuideBody}</span>
           </button>
           <Link
             className="svc-card"
@@ -712,11 +711,6 @@ export function EntryKiosk({
           >
             <CarFront size={36} aria-hidden="true" />
             <strong>{t.svcAssist}</strong>
-            <span>
-              {lang === "en"
-                ? "Confirm the help you need"
-                : "필요한 도움 확인 후 접수"}
-            </span>
           </Link>
           <Link
             className="svc-card"
@@ -725,7 +719,6 @@ export function EntryKiosk({
           >
             <ClipboardCheck size={36} aria-hidden="true" />
             <strong>{t.svcStatus}</strong>
-            <span>{t.svcStatusBody}</span>
           </Link>
         </div>
         </div>

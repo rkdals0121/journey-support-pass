@@ -49,3 +49,8 @@
 .content[data-kiosk=true] .footer{background:none}
 .content[data-kiosk=true] .footer a{border-color:var(--color-line);border-radius:var(--radius-pill);box-shadow:var(--shadow-1)}
 .content[data-kiosk=true] .assistance{padding-block:var(--space-3)}
+/* 키오스크·안내로봇: 칸은 그림 + 제목 한 줄(설명 줄 없음), 가운데. 아래 단추 글자는 서서 읽는 크기 */
+.content[data-kiosk=true] .card{align-items:center;text-align:center;white-space:nowrap}
+.content[data-kiosk=true] .card strong{font-size:var(--text-title)}
+.content[data-kiosk=true] .footer a{min-height:max(4rem,var(--target-kiosk-floor));font-size:var(--text-heading)}
+.content[data-kiosk=true] .toolbar>a,.content[data-kiosk=true] .toolbar>button{font-size:var(--text-heading)}
