@@ -2,6 +2,7 @@
 
 // 시연용 전환 버튼: 「PC 버전」(창 크기대로, 스크롤 있음) ↔ 「실제 키오스크 버전」(로봇 크기 1080×1920에 맞춤, 스크롤 없음).
 // 실제 키오스크 버전은 틀(iframe) 안에서 열리므로, 눌렀을 때는 바깥 창의 주소를 바꾼다.
+// 위쪽 바 글자를 키우며 바가 꺾이지 않게 화면에는 「키오스크 버전」으로 줄여 쓰고, 화면 읽기에는 원래 이름을 읽어 준다.
 export function ViewSwitch({ mode, lang }: { mode: "pc" | "device"; lang: "ko" | "en" }) {
   const go = (next: "pc" | "device") => {
     if (next === mode) return;
@@ -16,8 +17,8 @@ export function ViewSwitch({ mode, lang }: { mode: "pc" | "device"; lang: "ko" |
       <button type="button" className="bar-btn" aria-pressed={mode === "pc"} onClick={() => go("pc")}>
         {en ? "PC version" : "PC 버전"}
       </button>
-      <button type="button" className="bar-btn" aria-pressed={mode === "device"} onClick={() => go("device")}>
-        {en ? "Real kiosk version" : "실제 키오스크 버전"}
+      <button type="button" className="bar-btn" aria-pressed={mode === "device"} aria-label={en ? "Real kiosk version" : "실제 키오스크 버전"} onClick={() => go("device")}>
+        {en ? "Kiosk version" : "키오스크 버전"}
       </button>
     </div>
   );

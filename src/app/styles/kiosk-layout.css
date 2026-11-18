@@ -214,7 +214,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page h1 {
 .kx-says-bubble { position: relative; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: calc(var(--radius-medium) * 2); background: var(--color-surface); box-shadow: var(--shadow-1); }
 .kx-says-bubble::after { content: ""; position: absolute; inset-inline-start: -0.5625rem; top: calc(50% - 0.5rem); width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: rotate(135deg); }
 html[data-kiosk] .flow-body .kx-says-bubble h1 { margin: 0; font-size: var(--text-title); line-height: 1.3; font-weight: var(--weight-heading); letter-spacing: -0.03em; text-wrap: balance; }
-.kx-says-bubble p { margin: var(--space-2) 0 0; color: var(--color-muted); font-size: var(--text-body); line-height: 1.5; }
+.kx-says-bubble p { margin: var(--space-2) 0 0; color: var(--color-text); font-size: var(--text-body); line-height: 1.5; }
 /* 글자를 크게(1.5배) 하면 왼쪽 칸이 좁아져 말풍선이 한두 글자 폭이 되고 「확인번/호」처럼 낱말이 끊겼다.
    낱말은 끊지 않고, 칸이 아주 좁을 때(글자 1배 키오스크에서는 생기지 않는 폭)만 나랑이를 말풍선 위로 올린다. */
 .kx-says-bubble { word-break: keep-all; overflow-wrap: break-word; }
@@ -238,10 +238,10 @@ html[data-kiosk] .flow-body .kx-booking .kx-says-bubble h1 { font-size: var(--te
   align-items: baseline;
   margin: 0 0 var(--space-2);
   color: var(--color-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
+  font-size: var(--text-body);
+  font-weight: var(--weight-heading);
 }
-.kx-code-label span { color: var(--color-muted); font-weight: var(--weight-body); }
+.kx-code-label span { color: var(--color-text); font-weight: var(--weight-label); }
 
 /* 여덟 칸. 네 칸씩 두 묶음(예약 확인번호를 읽기 쉽게). 다음에 들어갈 칸에 테두리를 굵게 둔다. */
 .kx-code-slots { position: relative; margin-bottom: var(--space-4); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) var(--space-2) repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
@@ -296,7 +296,7 @@ html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key {
 html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-letter { color: var(--color-primary); }
 .kiosk-appointment-page .kx-key:active:not(:disabled) { background: var(--color-primary-soft); }
 .kiosk-appointment-page .kx-key:disabled { color: var(--color-line); cursor: default; }
-html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family: var(--font-body); font-size: var(--text-small); color: var(--color-muted); }
+html[data-kiosk] .flow-body .kiosk-appointment-page .kx-key-erase { font-family: var(--font-body); font-size: var(--text-heading); color: var(--color-text); }
 .kx-key-erase svg { width: 1.75rem; height: 1.75rem; flex: none; }
 .kx-keypad .kx-key-wide { grid-column: 3 / -1; }
 .kiosk-appointment-page .kx-key:focus-visible { outline: 0.1875rem solid var(--color-focus); outline-offset: 0.125rem; }
@@ -463,7 +463,8 @@ body:has(.kiosk-content) { background: var(--color-canvas); }
 html[data-kiosk] .kc-survey > .btn-ghost { justify-self: stretch; width: auto; min-height: calc(var(--target-kiosk-floor) * 1.4); margin: 0; border: 1px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); font-size: var(--text-heading); text-decoration: none; }
 .kc-hero { min-height: 0; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-3) var(--space-5); }
 .kc-hero h1 { max-width: none; margin: 0; font-size: var(--text-page-title); line-height: 1.25; }
-.kc-hero p { margin: var(--space-1) 0 0; font-size: var(--text-small); line-height: 1.4; }
+/* 제목 아래 설명: 작은 회색 글자라 서서 읽기 어렵던 것 → 진한 글자, 한 단계 큰 글자 */
+.kc-hero p { margin: var(--space-1) 0 0; color: var(--color-text); font-size: var(--text-heading); line-height: 1.4; word-break: keep-all; }
 .kc-hero .ph-hero-art { width: clamp(3rem, 10dvh, 6rem); }
 .kc-hero .ph-hero-art img { width: 100%; max-height: 10dvh; }
 .kc-hero .ph-hero-art::before, .kc-hero .ph-hero-orbit { width: 100%; }
@@ -484,37 +485,49 @@ html[data-kiosk] .kc-survey > .btn-ghost { justify-self: stretch; width: auto; m
 .kc-saved-bubble { position: relative; text-align: center; padding: var(--space-4) var(--space-6); border: 1px solid var(--color-line); border-radius: calc(var(--radius-medium) * 2); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 60%); box-shadow: var(--shadow-1); }
 .kc-saved-bubble::after { content: ""; position: absolute; inset-inline-start: calc(50% - 0.5rem); bottom: -0.5625rem; width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: rotate(45deg); }
 .kc-saved-bubble h1 { margin: 0; font-size: var(--text-title); line-height: 1.25; letter-spacing: -0.03em; text-wrap: balance; }
-.kc-saved-bubble p { margin: var(--space-1) 0 0; font-size: var(--text-body); color: var(--color-muted); text-wrap: balance; }
+.kc-saved-bubble p { margin: var(--space-1) 0 0; font-size: var(--text-heading); color: var(--color-text); text-wrap: balance; word-break: keep-all; }
 .kc-saved .board { margin: 0; flex: none; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-text); }
 .kc-saved .board-main { padding: var(--space-3) var(--space-4); gap: var(--space-3); flex-wrap: nowrap; }
 .kc-saved .board-flight { flex-basis: 0; min-width: 0; }
-.kc-saved .board-label, .kc-saved .board-time { color: var(--color-muted); font-size: var(--text-body); }
+.kc-saved .board-label, .kc-saved .board-time { color: var(--color-text); font-size: var(--text-body); }
 .kc-saved .board-dest { font-size: var(--text-title); }
 .kc-saved .board-time b { color: var(--color-text); font-size: var(--text-heading); }
 .kc-saved .gate-sign { flex: 0 0 auto; min-width: 0; padding: var(--space-2) var(--space-4); border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
 .kc-saved .gate-sign b { font-size: var(--text-large); }
-.kc-saved .gate-sign :is(small, span) { font-size: var(--text-small); }
-.kc-saved .board-close { padding: var(--space-2) var(--space-4); border-top: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-text); font-size: var(--text-body); }
+.kc-saved .gate-sign :is(small, span) { font-size: var(--text-body); font-weight: var(--weight-label); }
+.kc-saved .board-close { padding: var(--space-2) var(--space-4); border-top: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-text); font-size: var(--text-heading); }
 .kc-saved .kc-needs { flex: none; }
 .kc-saved .kc-needs-grid { flex: none; grid-auto-rows: auto; gap: var(--space-4); }
 .kc-saved .kc-need { padding: var(--space-3) var(--space-4); }
-.kc-saved .kc-need dt { font-size: var(--text-small); }
-.kc-saved .kc-need dd { align-items: center; font-size: var(--text-heading); font-weight: var(--weight-label); line-height: 1.35; }
-.kc-saved .kc-need dd svg { width: 1.75rem; height: 1.75rem; }
+.kc-saved .kc-need dt { font-size: var(--text-heading); }
+.kc-saved .kc-need dd { align-items: center; font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.35; word-break: keep-all; }
+.kc-saved .kc-need dd svg { width: 2.25rem; height: 2.25rem; }
+/* 가로 화면: 등록한 도움 칸이 남는 높이를 채워 크다. 큰 칸 왼쪽 위에 작은 글자만 있던 것 → 칸 가운데에 그림(노란 원)·글자를 크게 세운다(로봇 등록 단계 칸과 같은 모양) */
+@media (orientation: landscape) {
+  .kc-saved:not(.kc-directions) .kc-need { align-items: center; justify-content: center; text-align: center; }
+  .kc-saved:not(.kc-directions) .kc-need dd { flex-direction: column; justify-content: center; gap: var(--space-3); margin-top: var(--space-3); }
+  .kc-saved:not(.kc-directions) .kc-need dd svg { box-sizing: content-box; width: 3rem; height: 3rem; padding: var(--space-4); border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
+}
 .kc-needs { min-height: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .kc-needs-grid[data-note] { grid-template-columns: minmax(0, 1fr); }
 .kc-needs-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--space-3); margin: 0; }
 .kc-need { min-width: 0; padding: var(--space-3); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
-.kc-need dt { color: var(--color-primary); font-size: var(--text-caption); font-weight: var(--weight-heading); }
-.kc-need dd { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-2) 0 0; font-size: var(--text-small); line-height: 1.4; overflow-wrap: anywhere; }
-.kc-need dd svg { flex: none; width: 1rem; height: 1rem; color: var(--color-primary); }
-.kc-pager { display: flex; gap: var(--space-2); justify-content: space-between; align-items: center; font-size: var(--text-small); }
-.kc-pager .btn { min-height: var(--target-kiosk-floor); margin: 0; padding: var(--space-1) var(--space-3); width: auto; font-size: var(--text-small); }
+.kc-need dt { color: var(--color-primary); font-size: var(--text-body); font-weight: var(--weight-heading); }
+.kc-need dd { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-2) 0 0; font-size: var(--text-heading); line-height: 1.4; overflow-wrap: anywhere; }
+.kc-need dd svg { flex: none; width: 1.5rem; height: 1.5rem; color: var(--color-primary); }
+.kc-pager { display: flex; gap: var(--space-2); justify-content: space-between; align-items: center; font-size: var(--text-heading); font-weight: var(--weight-heading); }
+.kc-pager .btn { min-height: var(--target-kiosk-floor); margin: 0; padding: var(--space-1) var(--space-3); width: auto; font-size: var(--text-heading); }
 /* 기기별 바깥 배치와 무관하게 서비스 카드 규격은 한 곳에서 관리한다. */
 .svc-card { box-sizing: border-box; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: var(--space-1) var(--space-4); min-width: 0; min-height: var(--svc-card-min); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text); text-align: left; font: inherit; cursor: pointer; }
 .svc-card svg { grid-row: 1 / -1; align-self: center; width: 1.75rem; height: 1.75rem; box-sizing: content-box; padding: var(--space-3); border-radius: var(--radius-medium); background: var(--color-primary-faint); color: var(--color-primary); }
 .svc-card strong { align-self: end; font-size: var(--text-heading); line-height: 1.3; color: var(--color-text); }
-.svc-card span { align-self: start; font-size: var(--text-body); line-height: 1.4; color: var(--color-muted); }
+.svc-card span { align-self: start; font-size: var(--text-body); line-height: 1.4; color: var(--color-text); }
+/* 서비스 고르기 카드(안내로봇 3개·안내 키오스크 8개): 큰 칸 왼쪽에 작은 그림·작은 회색 글자만 떠 있던 것 →
+   칸 가운데에 노란 원 그림, 그 아래 큰 제목과 진한 설명(로봇 등록 단계 칸과 같은 모양) */
+.kc-menu .svc-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; justify-items: center; align-content: center; gap: var(--space-2); padding: var(--space-4); text-align: center; word-break: keep-all; border-width: 2px; }
+.kc-menu .svc-card svg { grid-row: auto; width: clamp(2rem, 6dvh, 3rem); height: clamp(2rem, 6dvh, 3rem); margin-bottom: var(--space-1); padding: var(--space-3); border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
+.kc-menu .svc-card strong { align-self: auto; font-size: var(--text-title); font-weight: var(--weight-heading); }
+.kc-menu .svc-card span { align-self: auto; font-size: var(--text-heading); }
 /* 누를 때·마우스를 올렸을 때도 키오스크 노랑 결(회녹색 칠이던 것) */
 .svc-card:hover { border-color: var(--color-accent); background: var(--color-accent-soft); }
 .svc-card:disabled { opacity: 0.6; }
@@ -554,7 +567,7 @@ html[data-kiosk] .kc-survey > .btn-ghost { justify-self: stretch; width: auto; m
 .kc-directions .gate-go { margin: 0; padding: var(--space-2) var(--space-5); gap: var(--space-4); min-height: calc(var(--target-kiosk-floor) * 1.2); border: 1px solid var(--color-accent); border-radius: var(--radius-medium); background: linear-gradient(110deg, var(--color-accent-soft), var(--color-surface) 72%); color: var(--color-text); box-shadow: var(--shadow-1); }
 .kc-directions .gate-go > svg { flex: none; width: 3rem; height: 3rem; padding: var(--space-3); box-sizing: border-box; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-text); }
 .kc-directions .gate-go .route-sum em { border: 1px solid var(--color-accent); background: var(--color-surface); color: var(--color-accent-ink); }
-.kc-directions .gate-go-pace { color: var(--color-muted); line-height: 1.35; }
+.kc-directions .gate-go-pace { color: var(--color-text); font-weight: var(--weight-label); line-height: 1.35; }
 .kc-directions .gate-go .route-sum em { padding-block: 0; }
 .kc-directions .gate-go strong { font-size: var(--text-title); }
 .kc-directions .gate-go-ico { width: 2.25rem; height: 2.25rem; background: none; color: var(--color-text); }
@@ -568,23 +581,44 @@ html[data-kiosk] body.kiosk-guide .kiosk-content .kx-guide-actions .btn { flex-b
 html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
 .kc-facilities { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; gap: var(--space-3); }
 .kc-facilities .tile { min-width: 0; min-height: var(--target-kiosk-floor); padding: var(--space-2) var(--space-4); gap: var(--space-3); margin: 0; align-items: center; background: var(--color-surface); box-shadow: none; }
-.kc-facilities .tile-ico { width: 2rem; height: 2rem; padding: var(--space-2); background: var(--color-accent-soft); color: var(--color-text); }
+.kc-facilities .tile-ico { width: 2rem; height: 2rem; padding: var(--space-2); border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
 .kc-facilities .tile { border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
 .kc-facilities .tile.tile-chosen { border-color: var(--color-accent); box-shadow: 0 0 0 0.1875rem var(--color-accent-soft); }
-.kc-facilities .tile-text strong { font-size: var(--text-body); }
-.kc-facilities .tile-text > span { font-size: var(--text-small); text-wrap: pretty; } /* 「115번 탑승구 / 옆」처럼 한 낱말만 다음 줄에 남지 않게 */
-.kc-facilities .tile > svg { width: 1.25rem; height: 1.25rem; }
+.kc-facilities .tile-text strong { font-size: var(--text-heading); word-break: keep-all; }
+.kc-facilities .tile-text > span { color: var(--color-text); font-size: var(--text-body); text-wrap: pretty; word-break: keep-all; } /* 「115번 탑승구 / 옆」처럼 한 낱말만 다음 줄에 남지 않게 */
+.kc-facilities .tile > svg { width: 1.75rem; height: 1.75rem; }
+/* 「나에게 맞춘 안내」의 가까운 시설 칸: 큰 칸 한쪽에 작은 글자만 떠 있던 것 → 이름·걸리는 시간을 한 단계씩 크게, 진한 글자 */
+.kc-directions .kc-facilities .tile { padding: var(--space-2) var(--space-4); }
+.kc-directions .kc-facilities .tile-text { line-height: 1.2; }
+.kc-directions .board-close { font-size: var(--text-body); }
+/* 시설 칸이 넓은 화면(1920 가로 키오스크)은 칸이 높게 남는다 → 칸 가운데에 그림(노란 원)·이름(칸 제목 크기)·걸리는 시간을 세운다.
+   좁은 1280 화면은 칸 높이가 모자라 한 화면을 넘으므로(86px) 그림 옆에 글자를 두는 모양 그대로 */
+@media (min-width: 1101px) {
+  .kc-directions .kc-pages { container: kc-facilities / inline-size; }
+  @container kc-facilities (min-width: 40rem) {
+    html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { font-size: var(--text-heading); }
+    .kc-directions .kc-facilities .tile { flex-direction: column; justify-content: center; gap: var(--space-2); padding-block: var(--space-3); text-align: center; }
+    .kc-directions .kc-facilities .tile-ico { padding: var(--space-3); }
+    .kc-directions .kc-facilities .tile-ico { width: clamp(2rem, 6dvh, 3rem); height: clamp(2rem, 6dvh, 3rem); }
+    .kc-directions .kc-facilities .tile-text { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); }
+    .kc-directions .kc-facilities .tile-text strong { font-size: var(--text-title); line-height: 1.25; }
+    .kc-directions .kc-facilities .tile-text > span { font-size: var(--text-heading); line-height: 1.3; }
+    .kc-directions .kc-facilities .tile > svg { display: none; }
+  }
+}
 @media (min-width: 761px) and (max-width: 1100px) {
   .kc-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* 넓은 가로 키오스크(1280·1920): 안내 키오스크 서비스 카드 8개를 4개씩 2줄로(3·3·2 로 한 칸이 비던 것). 카드 3개인 입구 키오스크는 그대로. 카드는 그림 위·글자 아래로 세우고
    두 줄이 남는 높이를 나눠 쓴다. */
 @media (min-width: 1101px) {
-  .guide-services .kc-menu { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(var(--svc-card-min), 1fr); align-content: stretch; }
-  /* 그림·제목이 줄마다 같은 높이에 오도록 위에서부터 채운다(설명이 두 줄인 카드가 있어도 끝선이 맞게) */
-  .guide-services .kc-menu .svc-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: start; justify-items: start; gap: var(--space-2); padding: var(--space-5); }
-  .guide-services .kc-menu .svc-card svg { grid-row: auto; width: 2.25rem; height: 2.25rem; margin-bottom: var(--space-2); }
-  .guide-services .kc-menu .svc-card :is(strong, span) { align-self: auto; }
+  .guide-services .kc-menu { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(var(--svc-card-min), 1fr); align-content: stretch; container: kc-menu / inline-size; }
+  /* 1280×800 처럼 카드가 좁고 낮으면 설명이 두 줄로 꺾여 카드를 넘쳤다 → 설명은 본문 크기, 그림 둘레는 좁게(1920 은 그대로) */
+  @container kc-menu (max-width: 66rem) {
+    .kc-menu .svc-card { padding-block: var(--space-3); }
+    .kc-menu .svc-card svg { padding: var(--space-2); }
+    .kc-menu .svc-card span { font-size: var(--text-body); line-height: 1.3; }
+  }
 }
 @media (orientation: portrait) {
   .kc-entry-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
@@ -595,10 +629,10 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   .kc-menu { grid-template-columns: minmax(0, 1fr); }
   /* 세로 화면 서비스 카드: 제목 상자 아래부터 아래 단추 줄까지 칸을 나눠 채운다(카드 셋이 위에만 있고 아래 1/3 이 비던 것). 그림·글자도 크게 */
   .kc-menu { grid-auto-rows: minmax(var(--svc-card-min), 1fr); align-content: stretch; }
-  .kc-menu .svc-card { gap: var(--space-2) var(--space-5); padding: var(--space-5) var(--space-6); }
-  .kc-menu .svc-card svg { width: 2.5rem; height: 2.5rem; padding: var(--space-4); background: var(--color-accent-soft); color: var(--color-text); }
-  .kc-menu .svc-card strong { font-size: var(--text-title); }
-  .kc-menu .svc-card span { font-size: var(--text-heading); }
+  .kc-menu .svc-card { gap: var(--space-3); padding: var(--space-5) var(--space-6); }
+  .kc-menu .svc-card svg { padding: var(--space-5); }
+  .kc-menu .svc-card strong { font-size: var(--text-large); }
+  .kc-menu .svc-card span { font-size: var(--text-title); }
 }
 /* 안내로봇(세로 화면): 「탑승권으로 찾기 · 고유 일련 번호로 찾기 · 도움 새로 등록하기」를 가로줄 세 개로 얇게 쌓지 않고
    세 칸으로 나란히 세운 큰 단추로. 그림 위·글자 아래, 칸 전체가 눌린다(서서 손을 뻗어 누르는 로봇 화면에서 누르는 면이 좁던 것) */
@@ -609,22 +643,23 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   .kc-entry-grid .kx-pass-option > summary,
   .kc-entry-grid .kx-pass-new { flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); min-height: 0; padding: var(--space-5) var(--space-3); text-align: center; }
   .kc-entry-grid .kx-pass-option > summary::after { display: none; }
-  .kc-entry-grid .kx-pass-option :is(strong) { font-size: var(--text-body); word-break: keep-all; }
-  .kc-entry-grid .kx-pass-option :is(small) { word-break: keep-all; }
-  .kc-entry-grid .kx-pass-icon { width: 2rem; height: 2rem; padding: var(--space-3); background: var(--color-accent-soft); color: var(--color-text); }
+  /* 단추 글자: 작은 글자·회색 보조 글자라 서서 읽기 어렵던 것 → 제목은 칸 제목 크기, 보조 글자도 진하게 한 단계 크게 */
+  .kc-entry-grid .kx-pass-option :is(strong) { font-size: var(--text-title); line-height: 1.25; word-break: keep-all; }
+  .kc-entry-grid .kx-pass-option :is(small) { margin-top: var(--space-2); color: var(--color-text); font-size: var(--text-heading); line-height: 1.3; word-break: keep-all; }
+  .kc-entry-grid .kx-pass-icon { width: 2.5rem; height: 2.5rem; padding: var(--space-3); border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
   .kc-entry-grid .kx-pass-option:is([open], :hover, :focus-within) { border-color: var(--color-accent); }
   /* 아래 「바로 이용하기」 세 개도 위 세 개와 같은 크기·모양의 단추로(3칸 × 2줄 = 6개). 두 줄 사이에는 「바로 이용하기」 구분선 하나.
      남는 높이는 위 나랑이 박스가 모두 쓴다 */
-  .kc-entry { grid-template-rows: minmax(0, 1fr) auto; --hw-art: 40dvh; }
+  .kc-entry { grid-template-rows: minmax(0, 1fr) auto; --hw-art: 30dvh; }
   .kc-entry-grid { grid-template-rows: auto auto; }
   .kc-entry-grid .kx-home-services { display: block; }
-  .kc-entry-grid .kx-home-services h2 { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-4); }
+  .kc-entry-grid .kx-home-services h2 { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-4); color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); }
   .kc-entry-grid .kx-home-services h2::after { content: ""; flex: 1; border-top: 1px solid var(--color-line); }
   .kc-entry-grid .kc-entry-services { flex: none; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: auto; }
   .kc-entry-grid .kc-entry-services .svc-card { box-sizing: border-box; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; justify-items: center; align-content: center; gap: var(--space-3); min-height: 10.5rem; padding: var(--space-5) var(--space-3); text-align: center; }
-  .kc-entry-grid .kc-entry-services .svc-card svg { grid-row: auto; width: 2rem; height: 2rem; padding: var(--space-3); background: var(--color-accent-soft); color: var(--color-text); }
-  .kc-entry-grid .kc-entry-services .svc-card strong { align-self: auto; font-size: var(--text-body); font-weight: var(--weight-heading); word-break: keep-all; }
-  .kc-entry-grid .kc-entry-services .svc-card span { align-self: auto; margin-top: calc(-1 * var(--space-2)); font-size: var(--text-caption); word-break: keep-all; }
+  .kc-entry-grid .kc-entry-services .svc-card svg { grid-row: auto; width: 2.5rem; height: 2.5rem; padding: var(--space-3); border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
+  .kc-entry-grid .kc-entry-services .svc-card strong { align-self: auto; font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.25; word-break: keep-all; }
+  .kc-entry-grid .kc-entry-services .svc-card span { align-self: auto; margin-top: calc(-1 * var(--space-1)); font-size: var(--text-heading); line-height: 1.3; word-break: keep-all; }
   .kc-entry-grid .kc-entry-services .svc-card:is(:hover, :focus-visible) { border-color: var(--color-accent); background: var(--color-surface); }
 }
 @media (max-height: 700px) {
@@ -665,8 +700,8 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
 .kc-scan { min-height: 0; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
 .kc-scan .scan { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 4fr); align-items: center; gap: var(--space-3); height: 100%; }
 .kc-scan .scanner { grid-row: 1 / 3; width: 100%; max-height: 35dvh; margin: 0; }
-.kc-scan .scan-hint { font-size: var(--text-small); }
-.kc-scan .scan > .btn { min-height: var(--target-kiosk-floor); font-size: var(--text-small); }
+.kc-scan .scan-hint { color: var(--color-text); font-size: var(--text-heading); word-break: keep-all; }
+.kc-scan .scan > .btn { min-height: var(--target-kiosk-floor); font-size: var(--text-heading); }
 @media (max-width: 760px) {
  .kc-number, .kc-scan .scan { grid-template-columns: minmax(0, 1fr); }
 }
@@ -683,7 +718,7 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   .kc-saved .board-dest { font-size: var(--text-large); }
   .kc-saved .board-close { font-size: var(--text-heading); }
   .kc-saved .kc-need { padding: var(--space-4) var(--space-5); }
-  .kc-saved .kc-need dt { font-size: var(--text-body); }
+  .kc-saved .kc-need dt { font-size: var(--text-heading); }
   .kc-saved .kc-need dd { font-size: var(--text-title); }
   .kc-saved .kc-need dd svg { width: 2.25rem; height: 2.25rem; }
   /* 등록한 도움이 홀수 개면 마지막 칸이 한 줄을 다 써서 옆 빈 칸이 남지 않게 */
@@ -709,8 +744,8 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
   .kc-number .pad-key { font-size: var(--text-large); }
   .kc-number .pad-key svg { width: 3.5rem; height: 3.5rem; }
   .kc-scan .scan { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; align-content: center; justify-items: stretch; gap: var(--space-5); }
-  .kc-scan .scanner { grid-row: auto; max-height: 55dvh; }
-  .kc-scan .scan > :is(.btn, [role=status]) { font-size: var(--text-body); }
+  .kc-scan .scanner { grid-row: auto; max-height: 55dvh; justify-self: center; }
+  .kc-scan .scan > :is(.btn, [role=status]) { font-size: var(--text-heading); }
   .kc-scan .scan > .btn { min-height: calc(var(--target-kiosk-floor) * 1.2); border-radius: var(--radius-pill); }
 }
 .kc-scan-art { display: none; }
@@ -744,6 +779,10 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
 .kc-proof .docscan-cam .btn { min-height: var(--target-kiosk-floor); font-size: var(--text-heading); border-radius: var(--radius-pill); }
 .kc-notice { display: grid; place-items: center; padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-medium); }
 .kc-notice p { margin: 0; font-size: var(--text-title); line-height: 1.5; word-break: keep-all; text-align: center; }
+/* 「등록하지 않기」 뒤 안내: 큰 빈 칸 가운데 글 한 줄만 있던 것 → 위에 나랑이, 글자는 크게 */
+.kc-declined { align-content: center; gap: var(--space-6); }
+.kc-declined .kc-consent-art { width: min(60%, 34dvh); }
+.kc-declined p { max-width: 40rem; font-size: var(--text-large); font-weight: var(--weight-heading); line-height: 1.35; }
 /* 등록 동의: 긴 한 문단 대신 약속 네 가지를 한 줄씩 큰 글자로, 위에 나랑이 */
 .kc-consent { align-content: center; gap: var(--space-5); }
 .kc-consent-art { width: min(40%, 22dvh); height: auto; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
@@ -767,8 +806,10 @@ html[data-kiosk] .flow-body .kc-directions .kx-guide-side h2 { margin: 0; color:
 .kc-robot { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
 /* 상자가 남는 높이를 다 채운다(가로 키오스크에서 상자가 위쪽 절반에만 있던 것) */
 .kc-robot > .hw-hero { height: 100%; box-sizing: border-box; }
+/* 안내로봇 화면·입구 첫 화면의 나랑이 말풍선: 큰 칸에 비해 글자가 작던 것 → 칸 제목 크기 */
+.kc-robot .haneuli-bubble, .kc-entry .haneuli-bubble { max-width: 56%; padding: var(--space-4) var(--space-5); font-size: var(--text-title); word-break: keep-all; }
 @media (orientation: portrait) {
-  .kc-robot { --hw-art: 36dvh; grid-template-rows: minmax(0, 1fr); }
+  .kc-robot { --hw-art: 46dvh; grid-template-rows: minmax(0, 1fr); }
 }
 
 /* 길 안내(탑승구·시설 가는 길): 위쪽 바와 같은 너비·같은 끝선의 카드 하나에 담는다(바보다 넓게 나오던 것). */
@@ -795,7 +836,7 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 /* 걸리는 시간은 멀리서도 읽히게 크게. 「같은 층」·「계단 없는 길」은 흰 바탕 작은 띠 */
 .kc-route-info .route-sum { gap: var(--space-3); }
 .kc-route-info .route-sum b { font-size: var(--text-large); font-weight: var(--weight-heading); line-height: 1.1; letter-spacing: -0.03em; color: var(--color-text); }
-.kc-route-info .route-sum em { padding: var(--space-1) var(--space-3); border: 1px solid var(--color-accent); background: var(--color-surface); color: var(--color-accent-ink); font-size: var(--text-small); }
+.kc-route-info .route-sum em { padding: var(--space-1) var(--space-3); border: 1px solid var(--color-accent); background: var(--color-surface); color: var(--color-accent-ink); font-size: var(--text-body); }
 /* 나랑이: 첫 화면처럼 큰 노란 원 안에. 말풍선(남은 시간)은 원 오른쪽 위에 걸치고 꼬리가 나랑이 쪽 */
 .kc-route-art { grid-area: art; container-type: size; position: relative; min-height: 0; }
 .kc-route-ring { position: absolute; left: 0; bottom: 0; width: min(100cqh, 72cqw); aspect-ratio: 1; }
@@ -803,8 +844,8 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 .kc-route-ring img { position: absolute; inset: 6%; width: 88%; height: 88%; object-fit: contain; filter: drop-shadow(0 0.5rem 0.75rem var(--color-shadow)); }
 .kc-route-bubble { position: absolute; top: 0; right: 0; z-index: 1; display: grid; gap: var(--space-1); max-width: 46cqw; margin: 0; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-line); border-radius: calc(var(--radius-medium) * 2); background: var(--color-surface); box-shadow: var(--shadow-1); text-align: left; word-break: keep-all; text-wrap: balance; }
 .kc-route-bubble::after { content: ""; position: absolute; left: var(--space-5); bottom: -0.5625rem; width: 1rem; height: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); background: var(--color-surface); transform: rotate(45deg); }
-.kc-route-bubble span { color: var(--color-muted); font-size: var(--text-small); }
-.kc-route-bubble strong { font-size: var(--text-heading); line-height: 1.3; letter-spacing: -0.02em; }
+.kc-route-bubble span { color: var(--color-text); font-size: var(--text-body); }
+.kc-route-bubble strong { font-size: var(--text-title); line-height: 1.3; letter-spacing: -0.02em; }
 .kc-route-bubble.pace-late { border-color: var(--color-error); }
 .kc-route-bubble.pace-late strong { color: var(--color-error); }
 /* 가는 길 단계: 흰 칸. 지금 계신 곳은 진한 선 원, 지나는 곳은 회색 선 원, 도착은 노란 원(화면의 강조 한 곳) */
@@ -817,7 +858,7 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 /* 경로 단계 상자: 지도 아래의 따로 스크롤되는 칸임이 보이게 — 옅은 회색 바탕·진한 테두리·위쪽 「경로 단계」 머리줄(스크롤해도 위에 남는다).
    스크롤 막대는 이 상자 안쪽 오른쪽에 늘 자리를 잡고(바깥 흰 칸을 침범하지 않는다), 넘칠 때 막대가 보인다 */
 .kc-route-list { flex: 0 1 auto; max-height: 64%; min-height: 0; overflow-y: auto; overflow-x: auto; scrollbar-gutter: stable; padding: 0 var(--space-3) var(--space-4) var(--space-4); border: 2px solid var(--color-control-line); border-radius: var(--radius-medium); background: var(--color-canvas); }
-.kc-route-list-title { position: sticky; top: 0; z-index: 1; margin: 0 0 var(--space-3); padding: var(--space-3) 0 var(--space-2); border-bottom: 1px solid var(--color-line); background: var(--color-canvas); color: var(--color-muted); font-size: var(--text-small); font-weight: var(--weight-heading); }
+.kc-route-list-title { position: sticky; top: 0; z-index: 1; margin: 0 0 var(--space-3); padding: var(--space-3) 0 var(--space-2); border-bottom: 1px solid var(--color-line); background: var(--color-canvas); color: var(--color-text); font-size: var(--text-body); font-weight: var(--weight-heading); }
 .kc-route-list .route-ico { background: var(--color-surface); }
 /* 막대를 직접 그린다: 터치 기기 브라우저는 스크롤 막대를 숨기는 경우가 있어, 넘치는 상자임을 늘 알 수 있게(상자 안쪽 오른쪽) */
 .kc-route-list::-webkit-scrollbar { width: 0.875rem; }
@@ -830,7 +871,7 @@ html[data-kiosk] .kc-route-info h1 { margin: 0; font-size: var(--text-title); li
 .kc-route-map:not(:has(> *)) { display: none; }
 .kc-route .route > li::before { background: var(--color-line); }
 .kc-route .route > li strong { font-size: var(--text-heading); line-height: 1.35; }
-.kc-route .route > li div > span { font-size: var(--text-body); }
+.kc-route .route > li div > span { color: var(--color-text); font-size: var(--text-heading); }
 .kc-route .route-ico { border-color: var(--color-control-line); background: var(--color-surface); color: var(--color-text); }
 .kc-route .route-here .route-ico { border-color: var(--color-text); background: var(--color-surface); color: var(--color-text); }
 .kc-route .route-end .route-ico { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }

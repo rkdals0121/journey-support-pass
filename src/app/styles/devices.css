@@ -136,6 +136,8 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
 /* 넓은 가로 키오스크(1280·1920)는 남는 높이가 있어 고르는 칸·단추 글자를 한 단계 키운다(1024×768 은 한 화면에 맞추려고 그대로) */
 @media (min-width: 1101px) {
   .field-task-shell[data-device=kiosk] .request-form-main > .request-section:first-child { padding: var(--space-5); }
+  /* 위쪽 바: 바 글자는 px 기준(14px × --scale)이라 서서 보기 작던 것 → 안내로봇 바처럼 같은 비율로 키운다 */
+  .field-task-shell[data-device=kiosk] .field-task-header { --scale: 1.4; }
   .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { font-size: var(--text-heading); min-height: 5rem; }
   .field-task-shell[data-device=kiosk] .service-task-fields :is(input, select, textarea) { min-height: 5rem; font-size: var(--text-heading); }
   .field-task-shell[data-device=kiosk] .request-mobile-nav .btn { min-height: max(4rem, var(--target-kiosk-floor)); font-size: var(--text-heading); }
@@ -162,7 +164,8 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   .field-task-shell[data-device=kiosk] .request-service-options label:nth-of-type(4):nth-last-of-type(2),
   .field-task-shell[data-device=kiosk] .request-service-options label:nth-of-type(5):last-of-type { grid-column: span 3; }
   .field-task-shell[data-device=kiosk] .request-section > .request-task-options { grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
-  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { min-height: 4rem; padding: var(--space-3) var(--space-4); font-size: var(--text-heading); word-break: keep-all; }
+  /* 고르는 칸: 큰 칸 왼쪽에 작은 글자만 있던 것 → 칸 가운데에 칸 제목 크기 글자 */
+  .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { justify-content: center; min-height: 4rem; padding: var(--space-3) var(--space-4); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: 1.25; text-align: center; word-break: keep-all; }
   .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) input { width: 1.75rem; height: 1.75rem; flex: none; }
   .field-task-shell[data-device=kiosk] .request-side-art p { font-size: var(--text-heading); line-height: 1.5; }
   /* 마지막 단계(요청 요약): 왼쪽 흰 칸이 바닥 줄까지(「다음」 줄이 없어 아래가 비던 것), 오른쪽 요약 칸은 나랑이가 남는 높이를 채우고 동의·확인 단추는 바닥에 */
@@ -182,6 +185,20 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   .field-task-shell[data-device=kiosk] .traffic-intent small { font-size: var(--text-heading); word-break: keep-all; }
   .field-task-shell[data-device=kiosk] .traffic-intent:is(:hover, :focus-visible) { border-color: var(--color-accent); background: var(--color-accent-soft); }
 }
+/* 키오스크·안내로봇에서 연 접수 화면의 회색 글자(분류 글·단계 표시·개인정보 안내·제목 아래 설명): 서서 읽게 진한 글자로 */
+.field-task-shell:is([data-device=kiosk], [data-device=robot]) :is(.service-kicker, .request-stepbar li, .request-privacy-warning, .ph-hero-copy p) { color: var(--color-text); }
+/* 안내로봇(세로 1080, 1rem = 26px)과 넓은 가로 키오스크(1920)는 자리가 넉넉하다 → 작은 글자를 본문 크기 이상, 할 일 칸 글자를 칸 제목 크기로.
+   1280×800 가로 키오스크는 지금도 한 화면에 꽉 차서(키우면 넘친다) 색만 진하게 둔다 */
+.field-task-shell[data-device=robot] :is(.service-kicker, .request-stepbar li, .request-privacy-warning) { font-size: var(--text-body); }
+.field-task-shell[data-device=robot] .ph-hero-copy p { font-size: var(--text-heading); }
+@media (min-width: 1101px) {
+  .field-task-shell[data-device=kiosk] > .request-experience { container: kx-request / inline-size; }
+  @container kx-request (min-width: 85rem) {
+    .field-task-shell[data-device=kiosk] :is(.service-kicker, .request-stepbar li, .request-privacy-warning) { font-size: var(--text-body); }
+    .field-task-shell[data-device=kiosk] .ph-hero-copy p { font-size: var(--text-heading); }
+    .field-task-shell[data-device=kiosk] .request-section > .request-task-options label { font-size: var(--text-title); }
+  }
+}
 /* 키오스크·안내로봇: 체크 칸과 「서비스 변경」도 손가락으로 누르기 쉬운 크기(작은 네모·파란 밑줄 글자이던 것) */
 .field-task-shell .request-check input[type=checkbox] { flex: none; width: 1.75rem; height: 1.75rem; margin-top: 0; accent-color: var(--color-primary); }
 .field-task-shell .request-check { align-items: center; min-height: var(--target-kiosk-floor); font-size: var(--text-body); }
@@ -192,9 +209,9 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
 .field-task-shell .request-empty-state::before { content: ""; width: min(24rem, 32dvh); aspect-ratio: 1; background: url(/images/haneuli/narangi.webp) center / contain no-repeat; filter: drop-shadow(0 .5rem .75rem var(--color-shadow)); }
 .field-task-shell .request-empty-state > svg { display: none; }
 .field-task-shell .request-empty-state h1 { font-size: var(--text-page-title); }
-.field-task-shell .request-empty-state p { font-size: var(--text-body); }
+.field-task-shell .request-empty-state p { color: var(--color-text); font-size: var(--text-heading); }
 .field-task-shell .request-empty-state > a { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-width: min(22rem, 100%); min-height: max(4rem, var(--target-kiosk-floor)); margin: 0; padding: 0 var(--space-6); border: 1px solid var(--color-control-line); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text); font-size: var(--text-heading); font-weight: var(--weight-heading); text-decoration: none; }
-.field-task-shell .request-empty-state > a.public-button { border-color: var(--color-accent); background: var(--color-accent); }
+.field-task-shell .request-empty-state > a.public-button { min-height: max(4rem, var(--target-kiosk-floor)); border-color: var(--color-accent); background: var(--color-accent); }
 .field-task-shell[data-device=kiosk] :is(.request-mobile-nav, .request-submit-card) .btn-primary { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-text); }
 .field-task-shell[data-device=robot] { display: flex; flex-direction: column; }
 /* 위쪽 바: 바 글자는 px 기준(14px × --scale)이라 로봇 첫 화면 바보다 작게 보이던 것 → 같은 비율로 키운다 */
@@ -381,7 +398,12 @@ html:has([data-device-layout=robot]) {
   .dv-preview > .dv-frame { grid-column: 2; grid-row: 1; }
   /* 화면 크기 단추는 미리보기 왼쪽 끝선에 맞춘다 */
   /* 크기 단추는 미리보기 왼쪽 끝선에 맞추고, 칸 폭은 미리보기 폭만 따른다(큰 글씨에서 단추 줄이 더 넓어 소개 칸과 사이가 벌어지던 것) */
-  .dv-preview-kiosk .dv-frame-sizes { justify-self: stretch; justify-content: flex-start; width: 0; min-width: 100%; }
+  /* 단추 줄의 폭은 칸 폭을 넓히지 않게 셈에서 빼고(contain), 칸 폭만큼 펼친다. 예전에는 width: 0 으로 뺐는데, 미리보기 화면이 그려지기 전(칸 폭 0)에
+     단추가 한 글자 폭으로 눌려 세로로 길쭉해졌다(1920×937 글자 ×1.5 「찌그러진 단추」). 단추 글은 꺾지 않고, 넘치면 줄을 바꾼다 */
+  .dv-preview-kiosk .dv-frame-sizes { justify-self: stretch; justify-content: flex-start; contain: inline-size; }
+  .dv-preview-kiosk .dv-frame-sizes button { white-space: nowrap; }
+  /* 미리보기 화면이 아직 없으면(칸 폭 0) 단추 줄도 그리지 않는다(좁은 칸에서 단추가 눌리거나 옆으로 넘치지 않게) */
+  .dv-preview-kiosk .dv-frame:not(:has(.dv-frame-screen)) .dv-frame-sizes { display: none; }
 }
 .dv-frame { display: grid; gap: var(--space-4); justify-items: center; min-width: 0; }
 .dv-frame-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
