@@ -209,6 +209,8 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
     .field-task-shell[data-device=kiosk] .request-section > .request-task-options label { font-size: var(--text-title); }
     /* 1920 가로 키오스크: 이 화면들은 웹 글자 기준(1024×768 때문에)이라 넓은 화면에서 작아 보이던 것 → 칸·글자·단추를 한 단계씩 크게 */
     .field-task-shell[data-device=kiosk] .request-form .request-mobile-nav :is(.btn, .public-button) { min-width: 22rem; min-height: 5.5rem; font-size: var(--text-title); }
+    /* 단추가 커진 만큼 지금 단계 칸 아래에 단추 자리를 비운다(인원 칸 아래 끝이 단추에 닿던 것) */
+    .field-task-shell[data-device=kiosk] .request-form:not([data-map-flow="true"]) .request-section[data-request-step]:not([data-request-step="0"]) { padding-bottom: calc(5.5rem + var(--space-5) + var(--space-4)); }
     .field-task-shell[data-device=kiosk] .request-section > .request-place-now { font-size: var(--text-display); }
     .field-task-shell[data-device=kiosk] .request-section > .request-place-now small { font-size: var(--text-large); }
     .field-task-shell[data-device=kiosk] .request-section:has(> .request-place-now) > .request-party > label[for] { font-size: var(--text-large); }

@@ -1527,7 +1527,7 @@ export function HelpFlow({
                       <p className="request-place-now">
                         <MapPin aria-hidden="true" />
                         <span>
-                          <small>{tr("지금 계신 곳(이 기기 자리)", "You are here (this kiosk)")}</small>
+                          <span className="sr-only">{tr("지금 계신 곳", "You are here")}</span>
                           {en ? currentPlace?.labelEn : currentPlace?.label}
                         </span>
                       </p>
@@ -1605,7 +1605,7 @@ export function HelpFlow({
                       ? tr("다음 · 위치 확인", "Next · location")
                       : splitDetails && inputStep === 1
                         ? tr("다음 · 필요한 도움", "Next · help needed")
-                        : tr("다음 · 추가 내용", "Next · details")}
+                        : tr("다음 · 추가 요청사항", "Next · anything else")}
                     <ArrowRight aria-hidden="true" />
                   </button>
                 )}
