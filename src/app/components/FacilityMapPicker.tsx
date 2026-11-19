@@ -285,11 +285,12 @@ export function FacilityMapPicker({
       {panelVisible && <aside ref={panel} className={styles.sidePanel} aria-label={t("지도 검색과 경로 설정", "Map search and route settings")}>
         <div className={styles.panelTop}>{!(pageHeading && compactMobile) && <header className={styles.panelHeading}>
           <div className={styles.panelHeadingTop}>
-            {kioskBackHref && !onKioskClose && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")}>
+            {/* 키오스크·안내로봇은 위쪽 바에 「이전」「처음으로」가 있다. 칸 안의 「이전」·「3층 안내」 꼬리표는 겹쳐서 뺀다 */}
+            {kioskBackHref && !onKioskClose && !kiosk && <a className={styles.backButton} href={kioskBackHref} aria-label={t("뒤로 가기", "Go back")}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg>
               <span>{t("이전", "Back")}</span>
             </a>}
-            <span className={styles.headingKicker}><Navigation aria-hidden="true"/>{t("3층 안내", "3F guide")}</span>
+            {!kiosk && <span className={styles.headingKicker}><Navigation aria-hidden="true"/>{t("3층 안내", "3F guide")}</span>}
             {onKioskClose && <button type="button" onClick={onKioskClose}>{t("선택 완료", "Done")}</button>}
           </div>
           {kioskHeadingAction ? <div className={styles.headingTitleRow}>
