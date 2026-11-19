@@ -646,7 +646,7 @@ export function HelpFlow({
                     sharedDevice && topic ? tr("요청 내용", "Request") : tr("서비스 선택", "Service"),
                     tr("위치 확인", "Location"),
                     tr("필요한 도움", "Help needed"),
-                    tr("내용 확인", "Details"),
+                    tr("추가 요청사항", "Anything else"),
                   ]
                 : [
                     sharedDevice && topic ? tr("요청 내용", "Request") : tr("서비스 선택", "Service"),
@@ -704,7 +704,8 @@ export function HelpFlow({
                   data-request-step="0"
                   onFocusCapture={() => setInputStep(0)}
                 >
-                  <h2 tabIndex={-1}>
+                  {/* 키오스크·안내로봇: 칸 제목(「필요한 서비스」「요청 내용」 등)은 위 단계 표시 「1 / 3 요청 내용」과 같은 말이라 화면에서는 빼고 화면 읽기에만 남긴다 */}
+                  <h2 tabIndex={-1} className={sharedDevice ? "sr-only" : undefined}>
                     <span>{service === "mobility" ? 2 : 1}</span>
                     {topic
                       ? tr("요청 내용", "Request details")
@@ -798,7 +799,7 @@ export function HelpFlow({
                           !f.legacy &&
                           !f.options &&
                           f.type !== "datetime-local",
-                      ) && <PrivacyWarning en={en} short={sharedDevice} />}
+                      ) && !sharedDevice && <PrivacyWarning en={en} />}
                       <div className="service-task-fields">
                         {task.fields
                           .filter((f) => !f.legacy)
@@ -910,9 +911,10 @@ export function HelpFlow({
   );
   const noteFields = (
     <>
-      <PrivacyWarning en={en} short={sharedDevice} />
+      {/* 키오스크·안내로봇: 이 단계에는 「추가 요청사항 (선택)」 한 줄과 큰 글 상자만(경고·만료 안내·겹치는 제목을 뺐다) */}
+      {!sharedDevice && <PrivacyWarning en={en} />}
       <label htmlFor="dx-note">
-        {tr("추가 말씀 · 선택", "Additional message · optional")}
+        {sharedDevice ? tr("추가 요청사항 (선택)", "Anything else (optional)") : tr("추가 말씀 · 선택", "Additional message · optional")}
       </label>
       <textarea
         id="dx-note"
@@ -924,9 +926,9 @@ export function HelpFlow({
           "Up to 200 characters.",
         )}
       />
-      <p className="request-privacy-note">
+      {!sharedDevice && <p className="request-privacy-note">
         {tr("접수 정보는 24시간 후 만료돼요.", "Details expire after 24 hours.")}
-      </p>
+      </p>}
     </>
   );
   // 키오스크에서는 인원을 「위치 확인」 단계에 둔다(필요한 도움 단계가 체크 칸만으로 한 화면을 채우게)
@@ -953,12 +955,12 @@ export function HelpFlow({
         data-request-step="2"
         onFocusCapture={() => setInputStep(2)}
       >
-        <h2 tabIndex={-1}>
+        <h2 tabIndex={-1} className={sharedDevice ? "sr-only" : undefined}>
           <span>3</span>
           {tr("필요한 도움", "Help needed")}
         </h2>
         <fieldset className="request-needs-set">
-          <legend>{tr("안내 방식·필요한 도움", "Communication & assistance needs")}</legend>
+          <legend className={sharedDevice ? "sr-only" : undefined}>{tr("안내 방식·필요한 도움", "Communication & assistance needs")}</legend>
           {needsOptions}
         </fieldset>
       </section>
@@ -967,7 +969,7 @@ export function HelpFlow({
         data-request-step="3"
         onFocusCapture={() => setInputStep(3)}
       >
-        <h2 tabIndex={-1}>
+        <h2 tabIndex={-1} className={sharedDevice ? "sr-only" : undefined}>
           <span>4</span>
           {tr("더 전할 말", "Anything else")}
         </h2>
@@ -980,7 +982,7 @@ export function HelpFlow({
                     data-request-step="2"
                     onFocusCapture={() => setInputStep(2)}
                   >
-                    <h2 tabIndex={-1}>
+                    <h2 tabIndex={-1} className={sharedDevice ? "sr-only" : undefined}>
                       <span>3</span>
                       {tr("함께 전달할 내용", "Additional details")}
                     </h2>
@@ -1490,7 +1492,7 @@ export function HelpFlow({
                     hidden={noMeeting}
                     onFocusCapture={() => setInputStep(1)}
                   >
-                    <h2 tabIndex={-1}>
+                    <h2 tabIndex={-1} className={sharedDevice ? "sr-only" : undefined}>
                       <span>2</span>
                       {topic?.id === "facility" || topic?.id === "lost-property"
                           ? tr("신고할 위치", "Report location")

@@ -166,6 +166,12 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   .field-task-shell[data-device=kiosk] .request-service-options label:nth-of-type(4):nth-last-of-type(2),
   .field-task-shell[data-device=kiosk] .request-service-options label:nth-of-type(5):last-of-type { grid-column: span 3; }
   .field-task-shell[data-device=kiosk] .request-section > .request-task-options { grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
+  /* 고르는 칸과 적는 칸이 함께 있는 첫 단계(시설 불편 등): 고르는 칸이 화면 절반을 차지하고 적는 칸이 작게 눌리던 것 →
+     고르는 칸은 알맞은 높이, 적는 칸은 키오스크 크기로 남는 높이 가운데에 */
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .request-task-options { flex: 0 0 auto; grid-auto-rows: minmax(8rem, auto); }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .service-task-fields { flex: 1 1 auto; align-content: center; gap: var(--space-4) var(--space-5); }
+  .field-task-shell[data-device=kiosk] .request-section:first-child > .service-task-fields label { font-size: var(--text-heading); font-weight: var(--weight-label); }
+  .field-task-shell[data-device=kiosk] .request-section:first-child > .service-task-fields :is(input, select, textarea) { min-height: 5.5rem; border-radius: var(--radius-medium); }
   /* 고르는 칸: 큰 칸 왼쪽에 작은 글자만 있던 것 → 칸 가운데에 칸 제목 크기 글자 */
   .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) label { justify-content: center; min-height: 4rem; padding: var(--space-3) var(--space-4); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: 1.25; text-align: center; word-break: keep-all; }
   .field-task-shell[data-device=kiosk] .request-section > :is(.request-service-options, .request-task-options) input { width: 1.75rem; height: 1.75rem; flex: none; }
@@ -255,10 +261,16 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
 .field-task-shell .request-mobile-nav > :is(.public-button, .btn) { flex: 0 1 20rem; min-width: 0; min-height: max(4rem, var(--target-kiosk-floor)); border-radius: var(--radius-pill); font-size: var(--text-heading); }
 .field-task-shell[data-device=robot] .request-mobile-nav > :is(.public-button, .btn) { flex: 1 1 0; min-height: max(4.5rem, var(--target-kiosk-floor)); }
 /* 안내로봇 소개: 작은 회색 글자(12px)이던 것 → 본문 크기 이상, 진한 글자 */
-.field-task-shell .robot-intro { margin: 0; padding: var(--space-3) var(--space-4); }
-.field-task-shell .robot-intro h3 { margin-bottom: var(--space-1); font-size: var(--text-heading); }
-.field-task-shell .robot-intro ul { font-size: var(--text-body); line-height: 1.4; }
-.field-task-shell .robot-intro-note { margin-top: var(--space-1); font-size: var(--text-body); color: var(--color-text); }
+/* 안내로봇 호출 첫 단계: 회색 작은 상자에 작은 목록만 있고 아래가 비던 것 → 칸을 채우는 옅은 노랑 칸, 큰 로봇 그림과 큰 글자. 「공모전 시연용」 작은 글은 기기 화면에서 뺀다 */
+.field-task-shell .robot-intro { flex: 1 1 auto; margin: 0; padding: var(--space-6); flex-direction: column; align-items: center; justify-content: center; gap: var(--space-5); border: 1px solid var(--color-accent); background: var(--color-accent-soft); text-align: center; }
+.field-task-shell .robot-intro .robot { width: 9rem; height: 9rem; }
+.field-task-shell .robot-intro h3 { margin: 0 0 var(--space-4); font-size: var(--text-title); }
+.field-task-shell .robot-intro ul { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; font-size: var(--text-heading); font-weight: var(--weight-label); line-height: 1.35; }
+.field-task-shell .robot-intro-note { display: none; }
+.field-task-shell .request-section:has(> .robot-intro) { display: flex; flex-direction: column; }
+/* 함께 도움받을 인원: 작은 입력칸 → 키오스크 크기 */
+.field-task-shell .request-party > label[for] { font-size: var(--text-heading); font-weight: var(--weight-label); }
+.field-task-shell .request-party > input[type=number] { min-height: max(4rem, var(--target-kiosk-floor)); font-size: var(--text-heading); }
 /* 접수 전 확인: 항목·단추를 서서 읽는 크기로, 두 단추는 같은 크기 */
 .field-task-shell .request-review-card :is(.service-detail-list > div, ul, p) { font-size: var(--text-heading); }
 .field-task-shell .request-review-card .service-detail-list dt { color: var(--color-text); }

@@ -54,3 +54,14 @@
 .content[data-kiosk=true] .card strong{font-size:var(--text-title)}
 .content[data-kiosk=true] .footer a{min-height:max(4rem,var(--target-kiosk-floor));font-size:var(--text-heading)}
 .content[data-kiosk=true] .toolbar>a,.content[data-kiosk=true] .toolbar>button{font-size:var(--text-heading)}
+
+/* 제목·나랑이·「무엇을 도와드릴까요?」·소리/도움 단추를 한 칸에. 나랑이는 크게 */
+.merged{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-4) var(--space-5)}
+.mergedArt{flex:none;width:clamp(5rem,13dvh,8rem);height:auto}
+.merged :global(.ph-hero-copy){flex:1 1 14rem;min-width:0}
+.merged :global(.ph-hero-copy) h1{margin:0}
+.mergedAsk{margin:var(--space-1) 0 0;color:var(--color-text);font-size:var(--text-heading);font-weight:var(--weight-label)}
+.merged .toolbar{flex:0 1 auto;justify-content:flex-end}
+.content[data-kiosk=true] .mergedArt{width:clamp(7rem,17dvh,12rem)}
+.content[data-kiosk=true] .mergedAsk{font-size:var(--text-title)}
+@media(max-width:760px){.merged{flex-wrap:wrap}.mergedArt{width:4.5rem}.merged :global(.ph-hero-copy){flex:1 1 0}.merged .toolbar{width:100%;justify-content:flex-start}.merged .toolbar>a,.merged .toolbar>button{flex:1 1 auto}}
