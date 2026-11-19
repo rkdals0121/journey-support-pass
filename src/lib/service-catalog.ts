@@ -92,7 +92,7 @@ const PASSENGER_LABEL: Partial<Record<(typeof SERVICE_CATALOG)[number]["id"], st
   guidance: "탑승구·시설 찾기",
   facility: "시설 불편 알리기",
   traffic: "교통·주차 이용",
-  other: "그 밖의 도움",
+  other: "기타 도움 요청",
 };
 export function passengerLabel(s: { id: (typeof SERVICE_CATALOG)[number]["id"]; label: string }) {
   return PASSENGER_LABEL[s.id] ?? s.label;

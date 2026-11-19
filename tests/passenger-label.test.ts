@@ -4,7 +4,7 @@ import { passengerLabel, SERVICE_CATALOG } from "@/lib/service-catalog";
 describe("여객에게 보여 주는 서비스 이름", () => {
   it.each([
     ["mobility", "이동 도움받기"], ["guidance", "탑승구·시설 찾기"],
-    ["facility", "시설 불편 알리기"], ["traffic", "교통·주차 이용"], ["other", "그 밖의 도움"],
+    ["facility", "시설 불편 알리기"], ["traffic", "교통·주차 이용"], ["other", "기타 도움 요청"],
   ] as const)("%s는 직원용 이름 대신 쉬운 이름을 쓴다", (id, expected) => {
     expect(passengerLabel({ id, label: "직원용 이름" })).toBe(expected);
   });

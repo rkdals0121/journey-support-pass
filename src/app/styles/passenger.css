@@ -164,7 +164,8 @@
 .request-submit-card>p { display:flex; align-items:flex-start; gap:0.5rem; font-size:var(--text-small); color:var(--color-muted); line-height:1.65; }
 .request-submit-card .request-consent { border-top:0.0625rem solid var(--color-line); padding-top:1rem; margin-top:1.25rem; font-size:var(--text-caption); }
 .request-submit-card .public-button { width:100%; margin-top:0.75rem; font-size:var(--text-body); cursor:pointer; }
-.request-linked-note { font-size:var(--text-caption)!important; color:var(--color-primary)!important; }
+.request-linked-note { font-size: var(--text-small); color: var(--color-text); font-weight: var(--weight-label); }
+.field-task-shell .request-linked-note { font-size: var(--text-body); }
 .request-review-card h2 { font-size:var(--text-heading); margin:0 0 1rem; }
 .request-review-actions { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1.75rem; }
 .request-review-actions button { cursor:pointer; }
