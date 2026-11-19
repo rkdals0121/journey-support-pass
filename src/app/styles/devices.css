@@ -168,8 +168,8 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
   .field-task-shell[data-device=kiosk] .request-section > .request-task-options { grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
   /* 고르는 칸과 적는 칸이 함께 있는 첫 단계(시설 불편 등): 고르는 칸이 화면 절반을 차지하고 적는 칸이 작게 눌리던 것 →
      고르는 칸은 알맞은 높이, 적는 칸은 키오스크 크기로 남는 높이 가운데에 */
-  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .request-task-options { flex: 0 0 auto; grid-auto-rows: minmax(8rem, auto); }
-  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .service-task-fields { flex: 1 1 auto; align-content: center; gap: var(--space-4) var(--space-5); }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .request-task-options { flex: 1 1 auto; grid-auto-rows: minmax(8rem, 1fr); }
+  .field-task-shell[data-device=kiosk] .request-section:first-child:has(> .service-task-fields) > .service-task-fields { flex: none; gap: var(--space-4) var(--space-5); }
   .field-task-shell[data-device=kiosk] .request-section:first-child > .service-task-fields label { font-size: var(--text-heading); font-weight: var(--weight-label); }
   .field-task-shell[data-device=kiosk] .request-section:first-child > .service-task-fields :is(input, select, textarea) { min-height: 5.5rem; border-radius: var(--radius-medium); }
   /* 고르는 칸: 큰 칸 왼쪽에 작은 글자만 있던 것 → 칸 가운데에 칸 제목 크기 글자 */
@@ -207,6 +207,22 @@ html:has(.field-task-shell[data-device=kiosk]):not(:has([data-device-layout])) {
     .field-task-shell[data-device=kiosk] .service-kicker { font-size: var(--text-body); }
     .field-task-shell[data-device=kiosk] .ph-hero-copy p { font-size: var(--text-heading); }
     .field-task-shell[data-device=kiosk] .request-section > .request-task-options label { font-size: var(--text-title); }
+    /* 1920 가로 키오스크: 이 화면들은 웹 글자 기준(1024×768 때문에)이라 넓은 화면에서 작아 보이던 것 → 칸·글자·단추를 한 단계씩 크게 */
+    .field-task-shell[data-device=kiosk] .request-form .request-mobile-nav :is(.btn, .public-button) { min-width: 22rem; min-height: 5.5rem; font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .request-section > .request-place-now { font-size: var(--text-display); }
+    .field-task-shell[data-device=kiosk] .request-section > .request-place-now small { font-size: var(--text-large); }
+    .field-task-shell[data-device=kiosk] .request-section:has(> .request-place-now) > .request-party > label[for] { font-size: var(--text-large); }
+    .field-task-shell[data-device=kiosk] .request-section:has(> .request-place-now) > .request-party > input[type=number] { width: 14rem; min-height: 7rem; font-size: var(--text-display); }
+    .field-task-shell[data-device=kiosk] .request-section:first-child > .service-task-fields label { font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .request-section:first-child > .service-task-fields :is(input, select, textarea) { min-height: 6.5rem; font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .request-section > .request-task-options label { font-size: var(--text-large); }
+    .field-task-shell[data-device=kiosk] .robot-intro h3 { font-size: var(--text-large); }
+    .field-task-shell[data-device=kiosk] .robot-intro ul { font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .robot-intro .robot { width: 12rem; height: 12rem; }
+    .field-task-shell[data-device=kiosk] .request-needs-options .request-check { min-height: 6rem; font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .request-side-art p { font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .request-section label[for="dx-note"] { font-size: var(--text-title); }
+    .field-task-shell[data-device=kiosk] .request-section textarea { font-size: var(--text-title); }
   }
 }
 /* 키오스크·안내로봇: 체크 칸과 「서비스 변경」도 손가락으로 누르기 쉬운 크기(작은 네모·파란 밑줄 글자이던 것) */
@@ -524,6 +540,14 @@ html:has([data-device-layout=robot]) {
 .field-task-shell .request-place-now { display: flex; align-items: center; gap: var(--space-4); margin: 0; padding: var(--space-5); border: 2px solid var(--color-accent); border-radius: var(--radius-medium); background: var(--color-accent-soft); color: var(--color-text); font-size: var(--text-title); font-weight: var(--weight-heading); line-height: 1.3; }
 .field-task-shell .request-place-now > svg { flex: none; width: 2.5rem; height: 2.5rem; }
 .field-task-shell .request-place-now small { display: block; font-size: var(--text-heading); font-weight: var(--weight-label); }
+/* 위치 확인 단계: 지금 계신 곳 칸과 인원 칸이 위에 작게 붙고 아래 절반 넘게 비던 것 → 두 칸이 남는 높이를 나눠 채우는 큰 칸 */
+.field-task-shell .request-section:has(> .request-place-now) { display: flex; flex-direction: column; gap: var(--space-4); }
+.field-task-shell .request-section > .request-place-now { flex: 3 1 0; justify-content: center; padding: var(--space-6); font-size: var(--text-large); text-align: left; }
+.field-task-shell .request-section > .request-place-now > svg { width: 4rem; height: 4rem; }
+.field-task-shell .request-section > .request-place-now small { margin-bottom: var(--space-2); font-size: var(--text-title); }
+.field-task-shell .request-section:has(> .request-place-now) > .request-party { flex: 2 1 0; display: flex; align-items: center; justify-content: center; gap: var(--space-6); padding: var(--space-5); border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: var(--color-surface); }
+.field-task-shell .request-section:has(> .request-place-now) > .request-party > label[for] { font-size: var(--text-title); }
+.field-task-shell .request-section:has(> .request-place-now) > .request-party > input[type=number] { width: 12rem; min-height: 6rem; font-size: var(--text-large); font-weight: var(--weight-heading); text-align: center; }
 /* 마지막 단계: 동의 칸은 단추 줄 위 한 줄 전체, 그 아래 「이전」·「요청 내용 확인」 */
 .field-task-shell .request-mobile-nav { flex-wrap: wrap; align-items: center; row-gap: var(--space-3); }
 .field-task-shell .request-mobile-nav > .request-consent { flex: 1 1 100%; margin: 0; }
