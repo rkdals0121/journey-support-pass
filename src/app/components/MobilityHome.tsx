@@ -32,24 +32,23 @@ export function MobilityHome({en=false,homeHref="/",place="",returnTo="",kiosk,p
   ];
   const menuText=t("무엇을 도와드릴까요? 길 안내, 전동차 타기, 안내로봇 동행, 내 신청 중에서 선택해 주세요.","How can we help? Choose directions, electric cart, guide robot assistance, or my requests.");
   const content=<main id="public-main" data-mobility-home data-kiosk={!!place} className={styles.content}>
-      <header className={`ph-hero ${styles.intro}`}>
+      {/* 제목 칸과 「무엇을 도와드릴까요?」 칸을 하나로 합쳤다. 나랑이를 크게 왼쪽에, 소리로 듣기·도움 요청하기는 오른쪽에(두 박스가 겹쳐 쌓이던 것) */}
+      <header className={`ph-hero ${styles.intro} ${styles.merged}`} aria-labelledby="mobility-title">
+        <Image className={styles.mergedArt} src="/images/haneuli/narangi.webp" width={320} height={320} alt={t("안내 도우미 나랑이","Narangi, your airport guide")} priority/>
         <div className="ph-hero-copy">
           {/* 키오스크·안내로봇: 「이전」은 위쪽 바에, 꼬리표·설명 줄은 두지 않는다 */}
           {!kiosk && <div className={`service-kicker ${styles.introTop}`}>
             <Link href={homeHref} className="public-back"><ArrowLeft aria-hidden="true"/>{t("이전","Back")}</Link>
             <span><MapPin aria-hidden="true"/>{t("공항 현장 서비스","Airport assistance")}</span>
           </div>}
-          <h1>{t("이동 도움받기","Mobility assistance")}</h1>
-          {!kiosk && <p>{t("필요한 도움을 골라 주세요.","Choose the help you need.")}</p>}
+          <h1 id="mobility-title">{t("이동 도움받기","Mobility assistance")}</h1>
+          <p id="mobility-welcome" className={styles.mergedAsk}>{t("무엇을 도와드릴까요?","How can we help?")}</p>
+        </div>
+        <div className={styles.toolbar}>
+          <button className={styles.listen} type="button" disabled={!supported} aria-pressed={speaking} aria-label={speaking?t("소리 안내 멈추기","Stop voice"):t("소리로 듣기","Listen")} onClick={()=>speaking?stop():speak(menuText)}>{speaking?<VolumeX aria-hidden="true"/>:<Volume2 aria-hidden="true"/>}<span>{t("소리로 듣기","Listen")}</span></button>
+          <Link className={styles.call} href={staff}><BellRing aria-hidden="true"/><span>{t("도움 요청하기","Request help")}</span></Link>
         </div>
       </header>
-      <section className={styles.assistance} aria-labelledby="mobility-welcome">
-      <div className={styles.welcome}><Image src="/images/haneuli/narangi.webp" width={160} height={160} alt={t("안내 도우미 나랑이","Narangi, your airport guide")} priority/><h2 id="mobility-welcome">{t("무엇을 도와드릴까요?","How can we help?")}</h2></div>
-      <div className={styles.toolbar}>
-        <button className={styles.listen} type="button" disabled={!supported} aria-pressed={speaking} aria-label={speaking?t("소리 안내 멈추기","Stop voice"):t("소리로 듣기","Listen")} onClick={()=>speaking?stop():speak(menuText)}>{speaking?<VolumeX aria-hidden="true"/>:<Volume2 aria-hidden="true"/>}<span>{t("소리로 듣기","Listen")}</span></button>
-        <Link className={styles.call} href={staff}><BellRing aria-hidden="true"/><span>{t("도움 요청하기","Request help")}</span></Link>
-      </div>
-      </section>
       <div className={styles.cards}>{cards.map(({title,detail,Icon,url},i)=><Link key={title} data-mobility-action={["directions","cart","robot","requests"][i]} href={url} className={`${styles.card} ${i===0?styles.featured:""}`}><Icon aria-hidden="true"/><strong>{title}</strong>{!kiosk && <span>{detail}</span>}</Link>)}</div>
     <div className={styles.footer} role="group" aria-label={t("안내 마무리","Finish assistance")}><Link href={homeHref}>{t("안내 끝내기","Finish")}</Link><Link href={href("/visits")}><CalendarCheck aria-hidden="true"/>{t("만남 예약 확인","Appointments")}</Link></div>
     </main>;
