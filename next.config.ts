@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   // 초기 설정 경로가 실행 중에 읽는 파일. 적어 두지 않으면 배포 묶음에서 빠진다.
   outputFileTracingIncludes: {
     "/api/admin/setup": ["./db/schema.sql", "./db/seed-zones.json"],
+    // 「시연용 코드값 입력」 단추가 시연 코드를 읽는 화면(src/lib/demo-codes.ts).
+    "/kiosk": ["./db/seed-zones.json"],
+    "/staff/login": ["./db/seed-zones.json"],
   },
   // 패스 QR 의 주소는 전부 대문자다(QR 을 작게 만들기 위해서). 대문자 /P/ 로 온 것을 /p/ 로 받아 준다.
   // 기기 점검 화면의 점검용 QR 도 같은 까닭으로 대문자(/CHECK)다. 휴대전화 기본 카메라로 찍어도 점검 화면이 열리게 한다.

@@ -23,9 +23,12 @@ interface PlaceOption {
 export function KioskSetup({
   places,
   currentPlace,
+  demoCode,
 }: {
   places: PlaceOption[];
   currentPlace: PlaceOption | null;
+  /** 시연용 설치 코드. 서버가 꺼 두면 null 이고 단추가 없다. */
+  demoCode: string | null;
 }) {
   const [code, setCode] = useState("");
   const [use, setUse] = useState<"register" | "guide" | "entry">("entry");
@@ -203,6 +206,18 @@ export function KioskSetup({
       >
         {busy ? "확인하는 중…" : "이 기기를 키오스크로 쓰기"}
       </button>
+      {demoCode && (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            setCode(demoCode);
+            setError(null);
+          }}
+        >
+          시연용 코드값 입력
+        </button>
+      )}
       {currentPlace && (
         <Link className="btn btn-ghost" href="/help">
           이 위치에서 통합 도움 접수 열기
