@@ -68,6 +68,50 @@ function load(): BookState {
   }
 }
 
+/**
+ * 인증 사진 저장. data URL 을 <a download> 로 바로 내려받게 하면 휴대전화(특히 아이폰 사파리, 카카오톡 등 앱 안 브라우저)에서
+ * 아무 일도 일어나지 않았다. 사진 파일로 바꿔 휴대전화는 공유창(「이미지 저장」)을 열고, 안 되면 파일 내려받기로 한다.
+ */
+async function savePhoto(dataUrl: string, name: string, title: string) {
+  try {
+    // 누른 순간 안에서 공유창을 열어야 해서(아이폰 사파리) fetch 를 기다리지 않고 바로 바꾼다
+    const [head, body] = dataUrl.split(",");
+    const type = head.match(/data:([^;]+)/)?.[1] ?? "image/jpeg";
+    const bin = atob(body);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type });
+    const file = new File([blob], name, { type: blob.type || "image/jpeg" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title });
+        return;
+      } catch (e) {
+        // 사용자가 공유창을 닫았으면 그대로 끝낸다. 다른 이유로 실패하면 내려받기로 넘어간다.
+        if (e instanceof DOMException && e.name === "AbortError") return;
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch {
+    // 마지막 수단: 새 창에 사진을 띄운다(길게 눌러 저장). data URL 로 바로 이동하는 것은 브라우저가 막아 그림 태그로 띄운다.
+    const w = window.open("", "_blank");
+    if (w) {
+      const img = w.document.createElement("img");
+      img.src = dataUrl;
+      img.alt = title;
+      img.style.maxWidth = "100%";
+      w.document.body.appendChild(img);
+    }
+  }
+}
+
 function save(s: BookState) {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
@@ -351,7 +395,7 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
   }
 
   return (
-    <div className="sb" data-theme={theme} lang={lang}>
+    <div className="sb" data-theme={theme} data-view={view} lang={lang}>
       <nav className="sb-return" lang={lang} aria-label={lang === "en" ? "Leave the stamp book" : tr("스탬프북 나가기")}>
         <Link href={"/services" + (lang === "en" ? "?lang=en" : "")} className="sb-link">
           <ArrowLeft aria-hidden="true" /> {lang === "en" ? "Back to services" : tr("서비스로 돌아가기")}
@@ -696,15 +740,20 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
                   />
                 </section>
               )}
-              <figure className="sb-portrait">
+              {/* 인증 사진 자리: 살짝 기운 폴라로이드 카드. 찍기 전에는 필터 미리보기 가운데에 「여기에 내 얼굴이 쏙!」 */}
+              <figure className={`sb-portrait ${s.photo ? "has-photo" : ""}`}>
                 {s.photo ? (
                   <img src={s.photo} alt={tr(`${role.filter}로 찍은 인증 사진`)} />
                 ) : (
                   <>
                     <Portrait role={role.id} />
-                    <figcaption>{role.filter}</figcaption>
+                    <span className="sb-portrait-hint" aria-hidden="true">
+                      <Camera />
+                      {lang === "en" ? "Your face goes here!" : "여기에 내 얼굴이 쏙!"}
+                    </span>
                   </>
                 )}
+                <figcaption>{role.filter}</figcaption>
               </figure>
               {t.roles.length > 1 && !s.certId && (
                 <div
@@ -728,10 +777,11 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
               {s.certId && <CertCard lang={lang} theme={theme} s={s} badge={role.badge} />}
               <div className="sb-actions">
                 {s.photo && (
-                  <a
+                  <button
+                    type="button"
                     className="sb-btn sb-btn-main"
-                    href={s.photo}
                     onClick={() => {
+                      void savePhoto(s.photo, `${s.certId || "stamp"}.jpg`, t.title);
                       if (!s.telemetry?.includes("stamp_share")) {
                         update({
                           telemetry: [...(s.telemetry || []), "stamp_share"],
@@ -743,13 +793,12 @@ export function StampBook({ scanned, lang = "ko" }: { scanned?: string; lang?: "
                         }).catch(() => {});
                       }
                     }}
-                    download={`${s.certId || "stamp"}.jpg`}
                   >
-                    <Download aria-hidden="true" /> {tr("사진 저장하기 ")}</a>
+                    <Download aria-hidden="true" /> {tr("사진 저장하기 ")}</button>
                 )}
                 <button
                   type="button"
-                  className={`sb-btn ${s.photo ? "sb-btn-line" : "sb-btn-accent"}`}
+                  className={`sb-btn ${s.photo ? "sb-btn-line" : "sb-btn-cta sb-btn-big"}`}
                   onClick={() => go("camera")}
                 >
                   <Camera aria-hidden="true" />{" "}
