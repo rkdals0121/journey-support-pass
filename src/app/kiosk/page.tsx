@@ -2,6 +2,7 @@ import Image from "next/image";
 import { PLACES, placeOf } from "@/lib/airport";
 import { currentSession } from "@/lib/session-server";
 import { KioskSetup } from "./KioskSetup";
+import { demoCodes } from "@/lib/demo-codes";
 import { pageTitle } from "@/lib/page-title";
 
 export const generateMetadata = pageTitle("키오스크 설치");
@@ -27,6 +28,7 @@ export default async function KioskPage() {
         <KioskSetup
           places={PLACES.map((p) => ({ id: p.id, label: p.label, landside: p.landside }))}
           currentPlace={current ? { id: current.id, label: current.label, landside: current.landside } : null}
+          demoCode={demoCodes().kiosk}
         />
       </main>
     </div>
