@@ -168,6 +168,14 @@
   background: var(--accent);
   color: var(--accent-ink);
 }
+/* 크게 눌리는 주요 단추(사진 찍기) */
+.sb-btn-big {
+  min-height: 4.25rem;
+  font-size: var(--text-heading);
+  border-color: var(--cta);
+  box-shadow: var(--shadow-1);
+}
+.sb-btn-big svg.lucide { width: 1.5rem; height: 1.5rem; }
 .sb-btn-line {
   background: transparent;
   color: var(--ink);
@@ -925,37 +933,62 @@
 }
 
 /* 3. 완성 */
+/* 인증 사진 자리: 흰 테두리 폴라로이드 카드가 살짝 기울어 놓인 모양(밋밋한 회색 큰 사각형이던 것) */
 .sb-portrait {
   position: relative;
   flex: none;
-  /* 위·아래 박스와 같은 끝선(칸 너비 100%) */
-  width: 100%;
+  width: 78%;
   box-sizing: border-box;
-  margin: 0;
-  overflow: hidden;
-  aspect-ratio: 3 / 4;
-  border: 3px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--soft);
+  margin: var(--space-2) auto var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-7);
+  aspect-ratio: 3 / 4.05;
+  border: 0;
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-2);
+  transform: rotate(-1.5deg);
 }
 .sb-portrait img,
 .sb-portrait .sb-art {
   display: block;
   width: 100%;
   height: 100%;
+  border-radius: calc(var(--radius-medium) * 0.6);
   object-fit: cover;
 }
-.sb-portrait figcaption {
+/* 찍기 전: 필터 가운데에 얼굴 자리 */
+.sb-portrait-hint {
   position: absolute;
-  left: 0.75rem;
-  bottom: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-pill);
+  left: 50%;
+  top: 46%;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  width: 58%;
+  aspect-ratio: 1;
+  place-content: center;
+  border: 3px dashed var(--ink);
+  border-radius: 50%;
   background: var(--color-surface);
   color: var(--ink);
-  font-size: var(--text-caption);
+  font-size: var(--text-body);
   font-weight: var(--weight-heading);
+  text-align: center;
+  word-break: keep-all;
+  transform: translate(-50%, -50%) rotate(1.5deg);
+  opacity: 0.92;
+}
+.sb-portrait-hint svg.lucide { width: 2.25rem; height: 2.25rem; }
+/* 필터 이름은 폴라로이드 아래 흰 여백에 손글씨처럼 */
+.sb-portrait figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--space-2);
+  color: var(--ink);
+  font-size: var(--text-heading);
+  font-weight: var(--weight-heading);
+  text-align: center;
 }
 .sb-roles {
   display: grid;
@@ -1466,13 +1499,17 @@
 .sb-finish {
   position: relative;
   display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border: 3px solid var(--color-accent);
   border-radius: var(--radius);
-  background: var(--color-accent-soft);
+  background: linear-gradient(170deg, var(--color-accent-soft), var(--color-surface) 80%);
   box-shadow: var(--shadow-1);
 }
+/* 반짝이: 도장판 둘레로 퍼진다 */
 .sb-finish .sb-burst { display: none; }
+.sb-finish .sb-board { position: relative; }
+.sb-finish .sb-slot.is-filled { filter: drop-shadow(0 0.25rem 0.25rem var(--color-shadow)); }
 .sb-finish .sb-slot.is-filled { animation: sb-slam var(--motion-slow) var(--ease-in) both; }
 .sb-finish .sb-slot:nth-child(2) { animation-delay: 60ms; }
 .sb-finish .sb-slot:nth-child(3) { animation-delay: 120ms; }
@@ -1581,3 +1618,7 @@
    (컴퓨터가 느리면 움직이는 도중에 재게 된다). 여기서는 자리를 옮기지 않고 흐려졌다 또렷해지기만 한다 */
 html:not([data-kiosk]) #public-main.sb { animation-name: sb-enter; }
 @keyframes sb-enter { from { opacity: .2; } to { opacity: 1; } }
+
+/* 완성 화면: 위에서 노란 빛이 번지는 축하 바탕(회청색 한 가지이던 것) */
+.sb[data-view="done"] { background: linear-gradient(180deg, var(--color-accent-soft), var(--bg) 45%); }
+.sb[data-view="done"] .sb-head h1 { font-size: var(--text-title); }
