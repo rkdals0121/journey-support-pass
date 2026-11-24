@@ -140,7 +140,8 @@ export function PublicShell({
             Journey Support Pass
           </span>
           <p className="public-caption">
-            {en ? "2026 Inha University ESG Idea Contest · Team 분(分)실" : "2026 인하대학교 ESG 아이디어 공모전 팀 분(分)실"}
+            {en ? "2026 Inha University ESG Idea Contest · " : "2026 인하대학교 ESG 아이디어 공모전 "}
+            <span className="public-footer-team">{en ? "Team 분(分)실" : "팀 분(分)실"}</span>
           </p>
         </div>
         <div className="public-footer-links">

@@ -336,8 +336,8 @@ html:not([data-kiosk]) .public-site .public-header[data-logo-short] .public-logo
 html:not([data-kiosk]) .public-site :is(.public-back, .request-change-service, .prepare-lookup-link, .public-caption > a) {
   display: inline-flex; align-items: center; min-height: max(2.75rem, var(--target-floor));
 }
-/* 넓은 화면의 아래쪽 바 링크는 위쪽 바처럼 44px(휴대전화는 site-bar.css 에서 2.75rem) */
-@media (min-width: 761px) {
+/* PC 아래쪽 바 링크는 위쪽 바처럼 44px(태블릿·휴대전화는 site-bar.css 의 묶음 목록에서 2.75rem) */
+@media (min-width: 1101px) {
   html:not([data-kiosk]) .airport-site .public-footer-links a { display: inline-flex; align-items: center; min-height: var(--target-floor); }
   /* 누르는 면만 위아래 여백까지 넓히고 바 높이는 거의 그대로(빈 줄처럼 두꺼워지지 않게) */
   html:not([data-kiosk]) .airport-site .public-footer-links { margin-block: calc(-1 * var(--space-2)); }
