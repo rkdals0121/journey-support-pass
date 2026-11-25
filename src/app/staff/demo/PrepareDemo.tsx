@@ -67,11 +67,6 @@ export function PrepareDemo({ initial }: { initial: DemoFlight | null }) {
               <dd>탑승동 {flight.gate}번 탑승구 앞</dd>
             </div>
           </dl>
-          <p className="fine">
-            실제 운항·항공사 예약이 아닙니다. 이 편명과 날짜를 여객용 등록
-            화면에 직접 입력합니다. 항공사 예약 정보가 자동 전송되는 시연이
-            아닙니다.
-          </p>
         </div>
       )}
     </section>

@@ -18,9 +18,7 @@ export default async function OverviewPage() {
       <main className="page has-nav dx-page overview-page">
         <div className="workspace-page-head">
           <div>
-            <p className="eyebrow">현장 업무</p>
             <h1>통합 운영 현황</h1>
-            <p className="muted">접수 경로를 함께 보고, 담당 업무별로 처리합니다 · 모의 시연</p>
           </div>
           <div className="workspace-page-tools">
             <Link href="/staff/demo">시연 준비</Link>

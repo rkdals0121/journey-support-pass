@@ -13,15 +13,10 @@ export default async function IntegrationsPage() {
     <main className="page dx-page integration-page">
       <div className="workspace-page-head">
         <div>
-          <p className="eyebrow">시스템 연결</p>
           <h1>외부 연동</h1>
         </div>
         <span className="integration-mode">연동 준비 단계</span>
       </div>
-      <p>
-        앱 내 접수·직원 처리는 운영 중입니다. 기관 접수와 실물 장비 연결은
-        명세·시험 환경을 받은 뒤 검증합니다.
-      </p>
       <div className="integration-grid">
         {integrationReadiness().map((c) => (
           <section className="integration-card" key={c.channel}>
@@ -59,7 +54,6 @@ export default async function IntegrationsPage() {
           <li>접수 응답·재시도·서명된 상태 수신 검증</li>
           <li>실제 운영 전 별도 어댑터와 현장 검증</li>
         </ol>
-        <p>시험 응답은 여객의 처리 완료나 실물 출동으로 반영하지 않습니다.</p>
       </section>
     </main>
   );

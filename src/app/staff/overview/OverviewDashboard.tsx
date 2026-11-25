@@ -133,10 +133,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
       )}
       <section aria-labelledby="overview-live-title">
         <h2 id="overview-live-title">지금 처리할 요청</h2>
-        <p className="fine">
-          오늘 이전 접수도 포함합니다. 지연 표시는 미배정 10분·진행 상태 30분
-          기준의 시연 점검 대상이며 확정 지원 시간을 뜻하지 않습니다.
-        </p>
         <div className="overview-kpis">
           <Metric
             label="진행 중"
@@ -160,7 +156,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
           <div className="overview-kpi">
             <span>가장 오래 기다린 미배정 요청</span>
             <strong>{overviewDuration(s.oldestWaitingSec)}</strong>
-            <small>미배정 요청이 없으면 자료 없음</small>
           </div>
         </div>
       </section>
@@ -171,10 +166,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
         <div className="overview-section-head">
           <div>
             <h2 id="overview-workload-title">담당 업무별 요청</h2>
-            <p className="fine">
-              현재 앱의 업무 분류 기준입니다. 부서의 실제 근무 인원·처리 용량을
-              나타내지 않습니다.
-            </p>
           </div>
           <div>
             <label htmlFor="overview-group">표·카드 표시 분야</label>
@@ -193,10 +184,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
             </select>
           </div>
         </div>
-        <p className="overview-count" role="status">
-          표시 업무 {rows.length}개 · 상단 전체 수치는 분야 선택과 관계없이 전체
-          요청 기준입니다.
-        </p>
         <table className="overview-table">
           <caption className="sr-only">
             담당 업무별 오늘 접수와 현재 진행·미배정·지연 요청. 지연이 큰
@@ -297,11 +284,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
             </article>
           ))}
         </div>
-        <p className="fine">
-          오늘 접수는 한국시간 00시부터 현재까지입니다. 업무 미기록·이전
-          요청·상세 보관 종료로 분류가 지워진 기록은 미분류에 포함합니다. 진행
-          수치의 막대는 업무 간 상대 건수이며 가용률이 아닙니다.
-        </p>
       </section>
       <div className="overview-bottom-grid">
         <section
@@ -335,11 +317,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
               <dd>{overviewDuration(s.medianCompletionSec)}</dd>
             </div>
           </dl>
-          <p className="fine">
-            사전등록 연결은 접수의 일부입니다. 완료·기타 종료는 오늘 종료된 요청
-            기준으로 전날 접수도 포함합니다. 시간은 각각 오늘 배정·완료 처리된
-            요청 기준이며 문제 해결 시간과는 구분됩니다.
-          </p>
         </section>
         <section
           className="overview-panel"
@@ -360,11 +337,6 @@ export function OverviewDashboard({ initial }: { initial: BusinessOverview }) {
               </dd>
             </div>
           </dl>
-          <p className="fine">
-            오늘 완료 처리된 요청 {s.todayCompleted}건의 결과 구분입니다. 창구
-            안내는 부서의 접수 완료가 아니며, 인계 확인은 문의한 문제의 해결
-            완료가 아닙니다. 과거 기록의 결과를 추정하지 않습니다.
-          </p>
         </section>
       </div>
     </div>

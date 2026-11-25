@@ -647,10 +647,6 @@ export function RequestList({
             <option value="oldest">오래된 접수순</option>
             <option value="newest">최신 접수순</option>
           </select>
-          <p className="fine">
-            확인 필요 우선: 위치 변경 → 확인 지연 → 미배정 → 진행 중. 같은
-            분류에서는 오래된 접수부터 표시합니다.
-          </p>
           <label htmlFor="queue-limit">페이지당 표시</label>
           <select
             id="queue-limit"
@@ -1024,11 +1020,6 @@ export function RequestList({
                     />
                   </details>
                 )}
-                {r.service === "robot" && (
-                  <p className="fine">
-                    로봇 출발·도착은 이 화면에서 바꾸는 모의 상태입니다.
-                  </p>
-                )}
                 {current && open && r.service !== "guidance" && (
                   <ResourceDispatch
                     request={r}
@@ -1151,8 +1142,7 @@ export function RequestList({
                       {history[r.id] &&
                         (history[r.id].length === 0 ? (
                           <p className="fine">
-                            이전 처리의 시간별 이력은 수집되지 않았습니다.
-                            운영자 종료는 이번 버전부터 기록합니다.
+                            기록된 처리 이력이 없습니다.
                           </p>
                         ) : (
                           <ol>

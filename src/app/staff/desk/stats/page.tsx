@@ -36,7 +36,6 @@ export default async function DeskStatsPage() {
       <main className="page has-nav staff-stats-page">
         <header className="workspace-page-head">
           <div>
-            <p className="eyebrow">안내데스크</p>
             <h1>
               오늘 현황{" "}
               <span className="h1-sub">
@@ -103,10 +102,8 @@ export default async function DeskStatsPage() {
           <Stat label="우대출구에서 탑승권으로 확인" value={`${s.exit.ok}`} unit="건" />
         </div>
         <p className="hint">
-          우대출구에서 확인되지 않아 체크인 카운터로 안내한 것 {s.exit.notOk}건. 체크인은 시연용 모의 체크인입니다. 증빙서류와 대상 유형은 세지
-          않습니다(공항이 갖지 않습니다).
+          우대출구에서 확인되지 않아 체크인 카운터로 안내한 것 {s.exit.notOk}건.
         </p>
-        <p className="fine">건수와 시간만 셉니다. 항공편이나 여객이 고른 항목은 여기에 쓰이지 않습니다.</p>
       </main>
       <StaffNav isDesk />
     </>

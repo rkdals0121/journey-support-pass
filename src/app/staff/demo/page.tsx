@@ -42,8 +42,7 @@ export default async function DemoPreparation() {
           <Link href="/demo/booking">여객 시작 화면 · 예매 완료 시연</Link>
           <p className="fine">
             여객은 걷기·보기 어려움, 계단 없는 이동, 큰 글씨, 동행인 2명을
-            등록하고 위 시연편을 선택합니다. 등록만으로 현장 요청은 만들어지지
-            않습니다.
+            등록하고 위 시연편을 선택합니다.
           </p>
         </section>
         <section className="dx-card">
@@ -66,10 +65,6 @@ export default async function DemoPreparation() {
               여객의 요청·내 등록과 통합 운영 현황에서 확인합니다.
             </li>
           </ol>
-          <p className="fine">
-            모든 이동·장비·직원 조작은 공모전 시연입니다. 실제 장비 출동이나
-            부서 시스템 수신 확인으로 설명하지 않습니다.
-          </p>
         </section>
         <div className="demo-preparation-links">
           <Link href="/staff/requests">통합 요청 처리</Link>

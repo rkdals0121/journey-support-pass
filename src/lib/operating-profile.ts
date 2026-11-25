@@ -242,8 +242,8 @@ export const ACCESS_EN = {
   internal: "Specialist staff operations",
 };
 export const PILOT_RULES = {
-  reception: "24시간 시연 접수",
-  service: "24시간 직원 판단·시연 처리",
+  reception: "24시간 접수",
+  service: "24시간 직원 판단 처리",
   equipment: "가용 상태 + 활성 구역 + 같은 장비 종류 + 기존 배차 없음",
   route: "같은 터미널·같은 보안 구역 안에서 직원 확인 후 이동",
   ownership:

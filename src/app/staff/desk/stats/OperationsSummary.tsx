@@ -10,10 +10,6 @@ export function OperationsSummary({ value: s }: { value: OperationalSummary }) {
   return (
     <section className="dx-card">
       <h2>통합 업무 현황</h2>
-      <p>
-        새 통합 요청과 이전 호출·이동지원을 함께 집계합니다. 시간 초과는 완료에
-        포함하지 않습니다.
-      </p>
       <dl className="dx-summary">
         {[
           ["전체 접수", s.total],
@@ -64,7 +60,6 @@ export function OperationsSummary({ value: s }: { value: OperationalSummary }) {
       </div>
       <p className="fine">
         이전 기록: 직원 호출 {s.byQueue.call}건 · 이동지원 {s.byQueue.assist}건.
-        등록 연결은 접수 건수의 부분집합이며 별도 접수로 더하지 않습니다.
       </p>
     </section>
   );

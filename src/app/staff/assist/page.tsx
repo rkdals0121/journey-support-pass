@@ -18,7 +18,6 @@ export default async function AssistPage() {
       <main className="page has-nav staff-console staff-legacy-console">
         <header className="workspace-page-head">
           <div>
-            <p className="eyebrow">기타 업무 · 이전 요청</p>
             <h1>이동지원 요청</h1>
           </div>
           <div className="workspace-page-tools">
@@ -28,9 +27,6 @@ export default async function AssistPage() {
             </Link>
           </div>
         </header>
-        <p className="staff-reference-intro">
-          통합 전 이동지원 요청입니다. 새 접수는 통합 요청에서 확인해 주세요.
-        </p>
         <AssistList refreshSec={config.callRefreshSec} />
       </main>
       <StaffNav isDesk={session.isDesk} />

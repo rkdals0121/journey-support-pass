@@ -1149,5 +1149,14 @@ export async function experienceSummary(
     `select (percentile_cont(.5) within group(order by extract(epoch from (accepted_at-created_at))) filter(where accepted_at is not null))::int as "medianAcceptSec",(percentile_cont(.5) within group(order by extract(epoch from (arrived_at-accepted_at))) filter(where arrived_at is not null))::int as "medianArrivalSec" from request_work_ledger where created_at>$1::timestamptz - interval '30 days'`,
     [now],
   );
-  return ok({ visits, events, response, simulation: true });
+  // 제안서 「시범 운영 평가 항목」: 만족도 응답(도움이 됐어요 3·보통 2·도움이 안 됐어요 1), 직원 호출 수와 등록 수.
+  const [survey] = await db.query(
+    `select count(*) filter(where value=3)::int as good,count(*) filter(where value=2)::int as fair,count(*) filter(where value=1)::int as poor from events where kind='survey' and at>$1::timestamptz - interval '30 days'`,
+    [now],
+  );
+  const [usage] = await db.query(
+    `select (select count(*)::int from calls where created_at>$1::timestamptz - interval '30 days') as calls,(select count(*)::int from registrations where submitted_at>$1::timestamptz - interval '30 days') as registrations`,
+    [now],
+  );
+  return ok({ visits, events, response, survey, usage, simulation: true });
 }

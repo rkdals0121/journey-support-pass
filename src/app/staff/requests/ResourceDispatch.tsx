@@ -52,12 +52,6 @@ export function ResourceDispatch({
       <p>
         <strong>배차 장비: {current ? current.label : "미배차"}</strong>
       </p>
-      {!current && (
-        <p className="fine">
-          장비를 배차하지 않은 이동 단계는 장비 가용 수량을 반영하지 않는 모의
-          시연입니다.
-        </p>
-      )}
       {r.state === "assigned" && canEdit && (
         <>
           <label htmlFor={`resource-${r.id}`}>

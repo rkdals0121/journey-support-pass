@@ -9,7 +9,6 @@ export default async function DesignGallery() {
     <main className="page design-gallery">
       <header className="workspace-page-head">
         <div>
-          <p className="eyebrow">디자인 기준</p>
           <h1>화면 부품 미리보기</h1>
         </div>
       </header>
