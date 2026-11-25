@@ -57,6 +57,13 @@
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="10" fill="${color}" stroke="white" stroke-width="3"/><text x="18" y="24" text-anchor="middle" font-size="${String(symbol).length > 1 ? 12 : 18}" font-family="Arial" fill="white">${symbol}</text></svg>`;
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }
+  // 넓게 본 지도의 탑승구 번호 알약: 작은 네모(글자 6px 안팎)로는 번호가 안 읽혀서 같은 파란색 알약에 번호를 크게 쓴다.
+  // 그림은 두 배 크기로 만들어 두고 표시 크기로 줄여 그려 흐리지 않게 한다.
+  function gatePill(number, width, height, fontPx) {
+    const w = width * 2, h = height * 2, f = fontPx * 2;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect x="2.5" y="2.5" width="${w - 5}" height="${h - 5}" rx="${(h - 5) / 2}" fill="#4876bd" stroke="white" stroke-width="5"/><text x="${w / 2}" y="${h / 2 + f * 0.36}" text-anchor="middle" font-size="${f}" font-weight="bold" font-family="Arial,sans-serif" fill="white">${number}</text></svg>`;
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
   function publicPoi(p) {
     return {
       id: p.id,
@@ -282,9 +289,11 @@
         if (px) labelBoxes.push([px[0] - w / 2 - 4, px[1] + dy - h, px[0] + w / 2 + 4, px[1] + dy + h], [px[0] - 18, px[1] - 18, px[0] + 18, px[1] + 18]);
       } catch { /* 지도 밖 위치는 건너뛴다 */ }
     }
+    const wide = zoom < 18.5;
+    // 1) 그릴 시설과 그 아이콘 자리를 먼저 정한다(탑승구 번호 알약이 다른 아이콘을 덮지 않게 보려고).
+    const drawn = [];
     for (const {p, display} of candidates) {
       if (p.building !== state.building) continue;
-      const context = display.context;
       const xy = E.fromLonLat([p.lon, p.lat]);
       if (
         xy[0] < extent[0] ||
@@ -302,11 +311,21 @@
         if (cells.has(cell)) continue;
         cells.add(cell);
       }
-      const f = new E.Feature({ geometry: new E.Point(xy), poiId: p.id, contextOnly: context });
       const focused = String(selected) === String(p.id);
+      const iconSize = focused ? 34 : display.match ? 30 : display.major && wide ? 22 : 26;
+      drawn.push({p, display, xy, focused, iconSize, pixel: map.getPixelFromCoordinate(xy)});
+    }
+    const iconBoxes = drawn.filter(d => d.pixel && !d.display.context).map(d => {
+      const r = d.iconSize / 2;
+      return {p: d.p, box: [d.pixel[0] - r, d.pixel[1] - r, d.pixel[0] + r, d.pixel[1] + r]};
+    });
+    const overlaps = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+    // 2) 그린다.
+    for (const {p, display, xy, focused, iconSize, pixel} of drawn) {
+      const context = display.context;
+      const f = new E.Feature({ geometry: new E.Point(xy), poiId: p.id, contextOnly: context });
       const gateNumber = p.name.match(/^탑승구\s*(\d+)$/)?.[1];
 
-      const wide = zoom < 18.5;
       const entrance = p.name.match(/^3층\s*(\d+)번\s*입구$/)?.[1];
       const counter = p.name.match(/^체크인카운터\s*([A-Z]+)$/)?.[1];
       const compact = gateNumber ? gateNumber : entrance ? `입${entrance}` : counter;
@@ -317,18 +336,29 @@
       const labelPx = state.touchTargetSize >= 18 ? (display.major ? 17 : 16) : (display.major ? 16 : 14);
       const font = `${display.major ? "bold" : "600"} ${labelPx}px Arial,sans-serif`;
       const preferredOffset = context && wide && compact ? 0 : counter && wide && counter.charCodeAt(0) % 2 === 0 ? -22 : context ? 18 : 25;
-      const pixel = map.getPixelFromCoordinate(xy);
       if (labelMeasure) labelMeasure.font = font;
       const labelOffset = display.label && label && pixel && !marked.has(String(p.id))
         ? window.airportPoiVisibility.placeLabel(labelBoxes, pixel, labelMeasure ? labelMeasure.measureText(label).width : label.length * labelPx, preferredOffset, focused, Math.ceil(labelPx * 0.7))
         : null;
-      const iconSize = focused ? 34 : display.match ? 30 : display.major && wide ? 22 : 26;
+      // 넓게 본 지도에서 탑승구는 번호를 읽을 수 있는 알약으로 그린다. 다른 아이콘·이름표와 겹치면 알약을 쓰지 않고
+      // 예전 작은 네모로 둔다(탑승구 자체는 언제나 그대로 보이고 눌린다).
+      let pill = null;
+      if (gateNumber && wide && !context && pixel) {
+        const fontPx = (state.touchTargetSize >= 18 ? 16 : 14) + (focused || display.match ? 2 : 0);
+        if (labelMeasure) labelMeasure.font = `bold ${fontPx}px Arial,sans-serif`;
+        const textWidth = labelMeasure ? labelMeasure.measureText(gateNumber).width : gateNumber.length * fontPx * 0.6;
+        const height = Math.round(fontPx * 1.7), width = Math.max(height, Math.ceil(textWidth + fontPx * 1.1));
+        const box = [pixel[0] - width / 2, pixel[1] - height / 2, pixel[0] + width / 2, pixel[1] + height / 2];
+        const free = !iconBoxes.some(o => o.p !== p && overlaps(box, o.box)) && !labelBoxes.some(b => overlaps(box, b));
+        if (free) { labelBoxes.push(box); pill = {width, height, fontPx}; }
+        if (labelMeasure) labelMeasure.font = font;
+      }
       f.setStyle(
         new E.Style({
           image: context ? undefined : new E.Icon({
-            src: gateNumber ? badge(gateNumber, "#4876bd") : entrance ? badge(`입${entrance}`, "#286d59") : p.icon || badge("i", "#3689ac"),
-            width: iconSize,
-            height: iconSize,
+            src: pill ? gatePill(gateNumber, pill.width, pill.height, pill.fontPx) : gateNumber ? badge(gateNumber, "#4876bd") : entrance ? badge(`입${entrance}`, "#286d59") : p.icon || badge("i", "#3689ac"),
+            width: pill ? pill.width : iconSize,
+            height: pill ? pill.height : iconSize,
             opacity: context && !focused ? 0.55 : 1,
           }),
           text: new E.Text({
