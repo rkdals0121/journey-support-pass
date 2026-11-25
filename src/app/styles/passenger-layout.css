@@ -122,6 +122,9 @@
 }
 @media (min-width: 761px) {
   .public-site:is(:has(.ph-home), :has(.dv-home), :has(.dm-home)) > .task-home { padding-block: 0; margin-top: var(--space-4); }
+}
+/* 첫 화면 아래쪽 바(PC 둥근 바). 태블릿 이하는 site-bar.css 의 묶음 목록 */
+@media (min-width: 1101px) {
   .public-site:is(:has(.ph-home), :has(.dv-home), :has(.dm-home)) > .public-footer { padding-block: var(--space-2); gap: var(--space-4); }
   .public-site:is(:has(.ph-home), :has(.dv-home), :has(.dm-home)) > .public-footer > div:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
   .public-site:is(:has(.ph-home), :has(.dv-home), :has(.dm-home)) > .public-footer .public-caption { margin: 0; }

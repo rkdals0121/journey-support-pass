@@ -709,8 +709,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .airport-portal-support { gap: 1rem; }
 .airport-portal-support .my-request-panel { display: block; }
 .airport-portal-support .my-request-panel > .public-button { display: inline-flex; padding: 0.5rem 0; margin-top: 0.5rem; }
-.airport-site .public-footer { padding: 1.5rem 2rem; }
-.airport-site .public-footer-links { gap: 1rem; }
 }
 @media (max-width: 760px) {
 .airport-site .public-logo .sunflower { width: 1.9rem; height: 1.9rem; }
@@ -776,9 +774,6 @@ html:not([data-kiosk]) .flow-pretrip .choice-icon { box-sizing: content-box; wid
 .airport-service-item > a { position: absolute; right: 1rem; top: 1.45rem; align-self: center; margin-top: 0; }
 .airport-service-item > a > svg { position: static; right: 1rem; top: 1.4rem; width: 1.25rem; height: 1.25rem; }
 .airport-portal-support { grid-template-columns: 1fr; gap: 0; margin-top: 1.25rem; padding-top: 1.5rem; }
-.airport-site .public-footer { display: block; padding: 1.5rem 1.25rem; }
-/* 휴대전화 바닥 줄: 링크 줄 사이가 넓던 것(누르는 높이 44px 위에 줄 간격 12px 이 더 붙음). 누르는 높이 44px 은 그대로 */
-.airport-site .public-footer-links { display: flex; gap: 0 var(--space-4); margin-top: 1rem; align-items: center; }
 .airport-site :is(.service-heading, .public-page-heading) > p { font-size: var(--text-small); line-height: 1.65; }
 .airport-site .request-stepbar { gap: 0.5rem; }
 .airport-site .request-stepbar li { font-size: var(--text-caption); }
