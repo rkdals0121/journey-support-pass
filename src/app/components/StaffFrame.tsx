@@ -64,7 +64,7 @@ export function StaffFrame({
               { href: "/staff/alerts", label: "알림 운영", Icon: Bell },
               {
                 href: "/staff/experience",
-                label: "운영 효과·체험 집계",
+                label: "운영 집계",
                 Icon: ChartColumn,
               },
               { href: "/staff/integrations", label: "외부 연동", Icon: Plug },

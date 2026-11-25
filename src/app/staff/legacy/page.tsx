@@ -13,14 +13,9 @@ export default async function LegacyRequests() {
       <main className="page has-nav staff-reference-page">
         <header className="workspace-page-head">
           <div>
-            <p className="eyebrow">기타 업무</p>
             <h1>이전 요청·인계</h1>
           </div>
         </header>
-        <p className="staff-reference-intro">
-          통합 전에 접수된 기록과 남아 있는 요청을 확인합니다. 새 현장 요청은
-          모두 통합 요청에서 처리합니다.
-        </p>
         <div className="staff-destination-grid">
           <Link
             className="staff-destination-card is-primary"

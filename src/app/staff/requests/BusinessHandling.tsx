@@ -103,12 +103,6 @@ export function BusinessHandling({
             : "안내한 내용, 연결한 창구, 다음 행동 등을 적어 주세요."
         }
       />
-      {kind === "referral" && (
-        <p className="fine">
-          창구 안내만 완료한 경우입니다. 부서 접수나 조치 완료로 기록하지
-          않습니다.
-        </p>
-      )}
       {confirmNeeded && (
         <label className="business-confirm">
           <input
@@ -145,10 +139,6 @@ export function BusinessHandling({
             void onAction("classify_business", { businessId, reason });
           }}
         >
-          <p className="fine">
-            업무 분류를 바꾸어도 담당 구역이나 실제 부서로 자동 전송되지
-            않습니다.
-          </p>
           <label htmlFor={prefix + "-target"}>담당 업무</label>
           <select
             id={prefix + "-target"}

@@ -34,7 +34,6 @@ export default async function RequestsPage({
       <main className="page has-nav dx-page staff-console">
         <div className="workspace-page-head">
           <div>
-            <p className="eyebrow">지원 운영</p>
             <h1>접수·배정</h1>
           </div>
           <div className="workspace-page-tools">

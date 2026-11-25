@@ -35,9 +35,7 @@ export default async function DeskPage() {
       <main className="page has-nav staff-desk-page">
         <header className="workspace-page-head">
           <div>
-            <p className="eyebrow">현장 업무</p>
             <h1>안내데스크</h1>
-            <p className="muted">예매 완료 화면의 링크를 보지 못한 여객을 대신 등록하고, 여객의 등록을 찾거나 지웁니다.</p>
           </div>
         </header>
 

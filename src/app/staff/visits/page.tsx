@@ -11,7 +11,6 @@ export default async function VisitOperations() {
     <main className="page staff-console staff-visit-console">
       <header className="workspace-page-head">
         <div>
-          <p className="eyebrow">현장 업무</p>
           <h1>거점 예약·현장 응대</h1>
         </div>
         <div className="workspace-page-tools">

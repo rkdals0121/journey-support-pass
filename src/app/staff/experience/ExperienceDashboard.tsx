@@ -1,16 +1,94 @@
 "use client";
 import { StudyComparison } from "./StudyComparison";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import styles from "@/app/components/support-journey.module.css";
-interface Summary { visits: { total: number; robotResolved: number; handovers: number; missed: number; cancelled: number }; events: { kind: string; n: number; value: number }[]; response: { medianAcceptSec: number | null; medianArrivalSec: number | null }; }
+interface Summary {
+  visits: { total: number; robotResolved: number; handovers: number; missed: number; cancelled: number };
+  events: { kind: string; n: number; value: number }[];
+  response: { medianAcceptSec: number | null; medianArrivalSec: number | null };
+  survey: { good: number; fair: number; poor: number };
+  usage: { calls: number; registrations: number };
+}
+const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 100) : null);
+const time = (n: number | null | undefined) => (n == null ? "—" : n < 60 ? `${n}초` : `${Math.round(n / 60)}분`);
+
+/** 최종보고서 「표 3. 시범 운영 평가 항목과 목표」를 그대로 쓴다. */
+function goals(s: Summary) {
+  const answers = s.survey.good + s.survey.fair + s.survey.poor;
+  // 만족도 세 칸(도움이 됐어요·보통·도움이 안 됐어요)을 5점 만점 5·3·1점으로 바꿔 평균을 낸다.
+  const score = answers ? (s.survey.good * 5 + s.survey.fair * 3 + s.survey.poor) / answers : null;
+  const share = pct(s.visits.robotResolved, s.visits.robotResolved + s.visits.handovers);
+  const per100 = s.usage.registrations ? (s.usage.calls / s.usage.registrations) * 100 : null;
+  const escort = pct(s.visits.robotResolved, s.visits.total - s.visits.cancelled);
+  return [
+    { label: "이용자 만족도", value: score == null ? "—" : `${score.toFixed(1)}점`, sub: `응답 ${answers}명`, goal: "응답 100명 이상 · 평균 3.5점 이상", met: score == null ? null : answers >= 100 && score >= 3.5 },
+    { label: "로봇 업무 분담률", value: share == null ? "—" : `${share}%`, sub: `로봇 ${s.visits.robotResolved}건 · 직원 ${s.visits.handovers}건`, goal: "30% 이상", met: share == null ? null : share >= 30 },
+    { label: "단순 안내 직원 호출", value: per100 == null ? "—" : `${per100.toFixed(1)}건`, sub: "이용객 100명당", goal: "운영 전보다 15% 이상 감소", met: null },
+    { label: "목적지 동행 완료율", value: escort == null ? "—" : `${escort}%`, sub: `완료 ${s.visits.robotResolved}건`, goal: "90% 이상", met: escort == null ? null : escort >= 90 },
+  ];
+}
+
 export function ExperienceDashboard() {
-  const [summary, setSummary] = useState<Summary | null>(null), [error, setError] = useState(""), [value, setValue] = useState(0), [notice, setNotice] = useState(""), [busy, setBusy] = useState(false);
-  async function load(signal?: AbortSignal) { const r = await fetch("/api/staff/visits?summary=1", { cache: "no-store", signal }); const b = await r.json(); if (!r.ok) throw Error(b.error); setSummary(b); }
-  useEffect(() => { const ctrl = new AbortController(); void load(ctrl.signal).catch(e => { if (!ctrl.signal.aborted) setError(String(e)); }); return () => ctrl.abort(); }, []);
-  const event = (kind: string) => summary?.events.find(e => e.kind === kind);
-  const time = (n: number | null | undefined) => n == null ? "측정 자료 없음" : n < 60 ? `${n}초` : `${Math.round(n / 60)}분`;
-  return <>{error && <p role="alert" className={styles.error}>{error}</p>}{summary ? <><div className={`${styles.stats} staff-exp-stats`}>{[["예약 접수", summary.visits.total], ["로봇 직접 안내 완료", summary.visits.robotResolved], ["직원 인계", summary.visits.handovers], ["미도착", summary.visits.missed], ["스탬프 시작", event("stamp_start")?.n ?? 0], ["스탬프 완주", event("stamp_finish")?.n ?? 0], ["공유·저장 선택", event("stamp_share")?.n ?? 0], ["지연 안내", event("delay")?.n ?? 0], ["확인한 인쇄물 대체", event("paper_replaced")?.value ?? 0]].map(([label, number]) => <div key={label}><span>{label}</span><strong>{number}</strong></div>)}</div><dl className={`${styles.summary} staff-exp-medians`}><div><dt>직원 수락 중앙값</dt><dd>{time(summary.response.medianAcceptSec)}</dd></div><div><dt>이동·도착 중앙값</dt><dd>{time(summary.response.medianArrivalSec)}</dd></div><div><dt>직접 안내 완료율</dt><dd>{summary.visits.total ? `${Math.round(summary.visits.robotResolved / summary.visits.total * 100)}% (전체 예약 대비)` : "측정 자료 없음"}</dd></div></dl></> : <p role="status">집계를 확인하고 있습니다.</p>}
-    <div className="staff-exp-panels"><section className={`${styles.panel} staff-exp-panel`}><h2>확인한 인쇄물 대체 수량</h2><p className={styles.muted}>종이를 실제로 대체한 수량만 누적 기록하세요. 자동 추정 탄소 절감량이나 효과 개선율로 환산하지 않습니다.</p><form className={`${styles.toolbar} staff-exp-paper`} onSubmit={async e => { e.preventDefault(); setBusy(true); setError(""); setNotice(""); try { const r = await fetch("/api/staff/visits", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "paper", value }) }); const b = await r.json(); if (!r.ok) throw Error(b.error); await load(); setNotice("확인한 수량을 기록했습니다."); setValue(0); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}><label>수량<input type="number" min={1} max={1000} required value={value} onChange={e => setValue(Number(e.target.value))} /></label><button className={styles.button} type="submit" disabled={busy || value < 1}>기록</button></form><p role="status">{notice}</p></section>
-    <section className={`${styles.panel} staff-exp-panel`}><h2>전후 비교를 위한 기록</h2><p>같은 과제로 기존 전화 전달 방식과 웹·QR 방식을 비교해 접수 시간, 중계 횟수, 반복 질문, 담당자 수락, 완료 여부를 기록하세요. 시제품 테스트 통과 수는 직원 부담 감소의 실증 결과와 다릅니다.</p><Link className={styles.link} href="/staff/overview">기존 접수·처리 통계 함께 보기 →</Link></section></div><StudyComparison /></>;
+  const [summary, setSummary] = useState<Summary | null>(null), [error, setError] = useState("");
+  useEffect(() => {
+    const ctrl = new AbortController();
+    void (async () => {
+      const r = await fetch("/api/staff/visits?summary=1", { cache: "no-store", signal: ctrl.signal });
+      const b = await r.json();
+      if (!r.ok) throw Error(b.error);
+      setSummary(b);
+    })().catch((e) => { if (!ctrl.signal.aborted) setError(String(e)); });
+    return () => ctrl.abort();
+  }, []);
+  const n = (kind: string) => summary?.events.find((e) => e.kind === kind)?.n ?? 0;
+  return (
+    <>
+      {error && <p role="alert" className={styles.error}>{error}</p>}
+      {summary ? (
+        <>
+          <section className="staff-exp-group" aria-labelledby="exp-goals">
+            <h2 id="exp-goals">시범 운영 평가 항목</h2>
+            <div className="staff-exp-goals">
+              {goals(summary).map((g) => (
+                <div key={g.label} className="staff-exp-goal" data-met={g.met == null ? undefined : String(g.met)}>
+                  <span>{g.label}</span>
+                  <strong>{g.value}</strong>
+                  <span>{g.sub}</span>
+                  <span className="staff-exp-target">목표 {g.goal}{g.met != null && <b>{g.met ? "달성" : "미달"}</b>}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="staff-exp-group" aria-labelledby="exp-stamp">
+            <h2 id="exp-stamp">전자 스탬프</h2>
+            <div className={`${styles.stats} staff-exp-stats is-four`}>
+              {([
+                ["참여", `${n("stamp_start")}건`],
+                ["완주", `${n("stamp_finish")}건`],
+                // 시작 기록은 기기마다 한 번, 완주는 코스마다 남아 완주가 더 많을 수 있다. 비율이 100%를 넘지 않게 큰 쪽을 기준으로 한다.
+                ["완주율", n("stamp_start") || n("stamp_finish") ? `${pct(n("stamp_finish"), Math.max(n("stamp_start"), n("stamp_finish")))}%` : "—"],
+                ["사진 공유·저장", `${n("stamp_share")}건`],
+              ] as const).map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
+            </div>
+          </section>
+          <section className="staff-exp-group" aria-labelledby="exp-visits">
+            <h2 id="exp-visits">로봇 예약·직원 인계</h2>
+            <div className={`${styles.stats} staff-exp-stats`}>
+              {([
+                ["예약 접수", `${summary.visits.total}건`],
+                ["직원 인계", `${summary.visits.handovers}건`],
+                ["미도착", `${summary.visits.missed}건`],
+                ["지연 안내", `${n("delay")}건`],
+                ["직원 수락 중앙값", time(summary.response.medianAcceptSec)],
+                ["이동·도착 중앙값", time(summary.response.medianArrivalSec)],
+              ] as const).map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
+            </div>
+          </section>
+        </>
+      ) : (
+        <p role="status">집계를 확인하고 있습니다.</p>
+      )}
+      <StudyComparison />
+    </>
+  );
 }

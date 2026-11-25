@@ -167,7 +167,7 @@ async function main() {
       "staff sees explicitly simulated hours and equipment rules",
       await staff.evaluate(
         () =>
-          document.body.innerText.includes("24시간 시연 접수") &&
+          document.body.innerText.includes("24시간 접수") &&
           document.body.innerText.includes("기존 배차 없음") &&
           document.body.innerText.includes("배차 중"),
       ),

@@ -13,7 +13,6 @@ export default async function ResourcesPage() {
       <main className="page has-nav dx-page resource-console">
         <div className="workspace-page-head">
           <div>
-            <p className="eyebrow">지원 운영</p>
             <h1>장비 현황·배차</h1>
           </div>
           <span className="integration-mode">

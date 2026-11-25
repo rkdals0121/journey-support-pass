@@ -135,7 +135,6 @@ function Picker({ first }: { first: boolean }) {
       <h1 ref={heading} tabIndex={-1}>
         {first ? "오늘 근무하는 구역을 골라 주세요" : "어느 구역으로 옮기나요?"}
       </h1>
-      <p className="muted">이 구역의 키오스크에서 온 호출이 먼저 보입니다. 근무 중에 언제든 바꿀 수 있습니다.</p>
       {error && <ErrorNote>{error}</ErrorNote>}
       {!groups && (error || retrying) && (
         <button className="btn" onClick={retry} aria-disabled={retrying}>

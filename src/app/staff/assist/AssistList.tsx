@@ -96,9 +96,6 @@ export function AssistList({ refreshSec }: { refreshSec: number }) {
         <h2>
           진행 중 <span>{open.length}건</span>
         </h2>
-        <p className="staff-reference-intro">
-          여객이 요청한 지원과 항공편을 확인합니다.
-        </p>
       </section>
       {open.length === 0 && (
         <div className="staff-queue-empty">
