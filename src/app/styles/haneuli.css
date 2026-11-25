@@ -56,8 +56,10 @@ html[data-kiosk] .hw-hero h1 { margin: 0; color: var(--color-text); font-size: v
 .haneuli-zzz { position: absolute; top: -4%; right: -8%; color: var(--color-blue); font-size: var(--text-title); font-weight: var(--weight-heading); opacity: 0; }
 .is-idle .haneuli-zzz { animation: haneuli-dream 3s ease-in-out infinite; }
 .is-idle .haneuli-character { animation: haneuli-breathe var(--motion-breathe) ease-in-out infinite; }
-/* 깨어날 때 한 번 「통」 튀고(240ms), 그다음부터 둥실 */
-.is-awake .haneuli-character { animation: haneuli-pop var(--motion-slow) var(--ease-out), haneuli-bob 3s ease-in-out var(--motion-slow) infinite; }
+/* 깨어날 때 그림이 한 번 「통」 튀고(240ms), 틀은 그다음부터 둥실.
+   한 칸에 transform 움직임 두 개를 겹치면 브라우저가 그래픽 칩에 맡기지 못하고 매 장면을 다시 그려 끊긴다. 그래서 둘을 다른 칸에 건다. */
+.is-awake .haneuli-character { animation: haneuli-bob 3s ease-in-out var(--motion-slow) infinite; }
+.is-awake .haneuli-character img { animation: haneuli-pop var(--motion-slow) var(--ease-out); }
 
 /* 첫 화면의 큰 나랑이 상자: 왼쪽 위에 제목·위치(작게), 가운데 큰 나랑이, 오른쪽에 말풍선(꼬리가 나랑이 쪽) */
 .hw-welcome-hero { gap: var(--space-2); }
@@ -138,7 +140,7 @@ html[data-kiosk] .hw-listen .listen-start.on { background: var(--color-primary);
 @keyframes haneuli-dream { 0% { opacity: 0; transform: translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-1.5rem); } }
 @keyframes haneuli-wake { 0% { transform: translateY(0.5rem) scale(0.96); } 100% { transform: translateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
-  .haneuli-welcome .haneuli-character, .haneuli-welcome .haneuli-zzz, .haneuli-saved-greeting { animation: none; }
+  .haneuli-welcome .haneuli-character, .haneuli-welcome .haneuli-character img, .haneuli-welcome .haneuli-zzz, .haneuli-saved-greeting { animation: none; }
   .is-idle .haneuli-zzz { opacity: 1; }
 }
 
